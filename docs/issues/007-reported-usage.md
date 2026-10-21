@@ -36,3 +36,7 @@ Use metadata-only usage by default; omit user identity and content-bearing telem
 ## Relative size
 
 M
+
+## Implementation checkpoint
+
+Implemented early reported request usage, independent unknown fields, evidence drill-down and an explicit cache-share formula. Counter/status reconciliation views and deeper multi-source coverage remain later work; this issue stays open.

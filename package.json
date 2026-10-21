@@ -1,0 +1,29 @@
+{
+  "name": "traceframe",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.12.0",
+  "engines": {
+    "node": ">=24.16.0 <25"
+  },
+  "scripts": {
+    "dev": "node --import tsx scripts/dev.ts",
+    "demo": "node --import tsx scripts/dev.ts --demo",
+    "seed": "node --import tsx scripts/seed.ts",
+    "privacy:preview": "node --import tsx scripts/privacy-preview.ts",
+    "typecheck": "tsc --noEmit && pnpm --filter @traceframe/web typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:e2e": "playwright test",
+    "smoke": "node --import tsx scripts/smoke.ts",
+    "build": "pnpm --filter @traceframe/web build"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "@types/node": "24.19.2",
+    "@biomejs/biome": "2.6.2",
+    "@playwright/test": "1.64.1"
+  }
+}

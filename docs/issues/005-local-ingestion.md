@@ -36,3 +36,7 @@ Keep tokens out of URLs/browser bundles/logs. Raw requests cannot be spooled; ve
 ## Relative size
 
 M
+
+## Implementation checkpoint
+
+Authenticated bounded loopback ingestion, rotation, origin checks and storage/rejection health are implemented. A durable producer spool and fuller overload/gap protocol remain for live-adapter work; this issue stays open for scope reconciliation.

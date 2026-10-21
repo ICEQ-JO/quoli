@@ -20,10 +20,10 @@ No guarantee of perfect secret removal, live hooks, remote redaction or raw debu
 
 ## Acceptance criteria
 
-- [ ] The same pipeline is usable by bridge, receiver, repository capture and fixtures; no raw payload reaches logs, errors, spool or artifacts.
-- [ ] Disabled code is removed even inside tool input/output; overlapping categories use the stricter policy.
-- [ ] Preview shows sanitized values, policy version, redaction/truncation markers and byte counts where known.
-- [ ] Oversized structures fail safely; redaction precedes allowed-content truncation and uses bounded processing.
+- [x] The same pipeline is usable by bridge, receiver, repository capture and fixtures; no raw payload reaches logs, errors, spool or artifacts.
+- [x] Disabled code is removed even inside tool input/output; overlapping categories use the stricter policy.
+- [x] Preview shows sanitized values, policy version, redaction/truncation markers and byte counts where known.
+- [x] Oversized structures fail safely; redaction precedes allowed-content truncation and uses bounded processing.
 
 ## Test plan
 
@@ -36,3 +36,7 @@ Never use real credentials in tests. Restrict policy configuration and explain t
 ## Relative size
 
 M
+
+## Implementation checkpoint
+
+Implemented conservative in-memory content controls, redaction, truncation, exclusions and synthetic preview. Opaque prompts require prompt + code consent; tool content requires tool + code consent.
