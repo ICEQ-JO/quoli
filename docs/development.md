@@ -27,6 +27,8 @@ pnpm build
 pnpm demo
 ```
 
+`pnpm typecheck` generates Next route/environment types before checking the dashboard; the generated `next-env.d.ts` is ignored because each isolated output directory rewrites its imports.
+
 `pnpm test` uses Node's test runner, disposable stores and a lifecycle startup/restart test. Browser tests use separate ports, a temporary synthetic store, a separate Next output directory and graceful cleanup. No Claude account is used. `pnpm build` creates `.next-build`, separate from `.next` development output. `pnpm format` formats source/config files; Markdown is maintained deliberately rather than rewritten automatically. CSS selector-specificity linting is disabled for the component stylesheet because the rule compares unrelated component selectors; other recommended checks remain enabled.
 
 `pnpm privacy:preview` shows how metadata-only policy filters a synthetic prompt. `pnpm privacy:preview --synthetic-content` displays explicitly enabled fixture content. Never pipe personal sessions into this command.
