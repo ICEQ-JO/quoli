@@ -46,11 +46,12 @@ Collector base: `http://127.0.0.1:4318`. All collector routes require `Authoriza
 | `GET /v1/projects/:project/sessions` | Up to 50 sessions; title comes from retained start content. |
 | `GET /v1/projects/:project/sessions/:session/events?cursor=N` | Eight events after receipt sequence N; `{events,nextCursor,total}`. Cursor does not use source timestamps. |
 | `GET …/events?event=ID` | One project/session-scoped evidence observation. |
+| `POST …/events/query` | Strict `{search,kind,order,cursor}` query; session-wide filtering and keyset pagination. Search ≤200 characters; source order uses timestamp and receipt-sequence tie-break. Search stays out of URL/access-log paths. |
 | `GET …/summary` | Bounded usage, tool-ID evidence relationships and kind counts over retained session observations. |
 
 Status codes: 400 malformed/unsupported schema, 401 credential required, 403 host/origin denied, 404 missing resource, 409 conflicting identity/unregistered project/write unavailable, 413 transport cap, 415 content type, 429 local request cap, 503 missing credential. Error bodies intentionally do not serialize payloads or exception messages. Global local rate cap is 300 requests/minute; no durable transport spool is implemented in this demo. Producers retry the identical delivery ID after a lost acknowledgment. Never retry changed content under the same identity.
 
-The browser accesses only read-only `/api/data` routes on the Next server using its HttpOnly cookie; it cannot forward arbitrary collector paths or POST controls. `/api/health` exposes only local readiness. All meaningful access is checked server-side. Next telemetry is disabled in the scripts and no fonts, renderers, analytics or model APIs are fetched at runtime.
+The browser accesses read-only `/api/data` operations on the Next server using its HttpOnly cookie: GET metadata/evidence and POST bounded session queries. The POST body is limited to 4 KiB and strictly validated. It cannot forward arbitrary collector paths or ingestion/control actions. `/api/health` exposes only local readiness. All meaningful access is checked server-side. Next telemetry is disabled in the scripts and no fonts, renderers, analytics or model APIs are fetched at runtime.
 
 ## Event and evidence semantics
 

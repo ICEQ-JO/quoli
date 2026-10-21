@@ -19,9 +19,13 @@ export function validHost(host: string | null) {
 export function validSite(site: string | null) {
   return !site || site === "none" || site === "same-origin";
 }
-export async function collector(path: string) {
+export async function collector(path: string, init?: { method: "POST"; body: string }) {
   return fetch(`http://127.0.0.1:${runtime().collectorPort}${path}`, {
-    headers: { Authorization: `Bearer ${credential()}` },
+    ...init,
+    headers: {
+      Authorization: `Bearer ${credential()}`,
+      ...(init ? { "Content-Type": "application/json" } : {}),
+    },
     cache: "no-store",
     signal: AbortSignal.timeout(3000),
   });

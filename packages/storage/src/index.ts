@@ -1,10 +1,11 @@
 import { chmodSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import {
   batchSchema,
   type CapturePolicy,
   defaultPolicy,
+  type EventQuery,
   type NormalizedEvent,
   type Project,
   policySchema,
@@ -141,23 +142,62 @@ export class Store {
     }
     return { accepted, duplicates: events.length - accepted };
   }
-  events(project: string, session: string, cursor = 0, limit = 8) {
+  events(project: string, session: string, cursor = 0, limit = 8, query?: EventQuery) {
+    const order = query?.order ?? "receipt";
+    const conditions = ["project_id=?", "session_id=?"];
+    const values: SQLInputValue[] = [project, session];
+    const kind = "json_extract(body,'$.payload.kind')";
+    const tool = "json_extract(body,'$.payload.toolName')";
+    if (query?.kind && query.kind !== "all") {
+      if (query.kind === "tools") conditions.push(`${kind} IN ('tool_call','tool_result')`);
+      else if (query.kind === "commands")
+        conditions.push(`${kind} IN ('tool_call','tool_result') AND ${tool}='Bash'`);
+      else if (query.kind === "files")
+        conditions.push(
+          `${kind} IN ('tool_call','tool_result') AND ${tool} IN ('Read','Write','Edit')`,
+        );
+      else {
+        conditions.push(`${kind}=?`);
+        values.push(query.kind);
+      }
+    }
+    if (query?.search.trim()) {
+      conditions.push(
+        `instr(lower(coalesce(json_extract(body,'$.payload.content.text'),'') || ' ' || coalesce(json_extract(body,'$.payload.path'),'') || ' ' || coalesce(${tool},'') || ' ' || coalesce(${kind},'') || ' ' || coalesce(json_extract(body,'$.payload.reason'),'')),lower(?))>0`,
+      );
+      values.push(query.search.trim());
+    }
+    const base = conditions.join(" AND ");
+    const total = Number(
+      this.db.prepare(`SELECT count(*) AS count FROM events WHERE ${base}`).get(...values)?.count ??
+        0,
+    );
+    const sourceTime =
+      "coalesce(strftime('%Y-%m-%dT%H:%M:%fZ',json_extract(body,'$.sourceTime')),'9999')";
+    if (order === "source" && cursor) {
+      const anchor = this.db
+        .prepare(
+          `SELECT ${sourceTime} AS time FROM events WHERE project_id=? AND session_id=? AND sequence=?`,
+        )
+        .get(project, session, cursor);
+      if (!anchor) throw new Error("Unknown source-order cursor");
+      conditions.push(`(${sourceTime}>? OR (${sourceTime}=? AND sequence>?))`);
+      values.push(anchor.time as string, anchor.time as string, cursor);
+    } else if (order === "receipt") {
+      conditions.push("sequence>?");
+      values.push(cursor);
+    }
     const rows = this.db
       .prepare(
-        "SELECT * FROM events WHERE project_id=? AND session_id=? AND sequence>? ORDER BY sequence LIMIT ?",
+        `SELECT * FROM events WHERE ${conditions.join(" AND ")} ORDER BY ${order === "source" ? `${sourceTime},` : ""}sequence LIMIT ?`,
       )
-      .all(project, session, cursor, limit + 1);
+      .all(...values, limit + 1);
     const hasMore = rows.length > limit;
     const events: StoredEvent[] = rows.slice(0, limit).map((r) => ({
       ...JSON.parse(String(r.body)),
       sequence: Number(r.sequence),
       receivedAt: String(r.received_at),
     }));
-    const total = Number(
-      this.db
-        .prepare("SELECT count(*) AS count FROM events WHERE project_id=? AND session_id=?")
-        .get(project, session)?.count ?? 0,
-    );
     return { events, total, nextCursor: hasMore ? (events.at(-1)?.sequence ?? null) : null };
   }
   allEvents(project: string, session: string): StoredEvent[] {

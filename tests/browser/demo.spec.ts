@@ -3,68 +3,117 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { demoEvents } from "../../fixtures/demo";
 
-test("explore persisted fixtures, paginate, inspect evidence and distinguish unknown usage", async ({
+test("review activity, search the entire session and retain evidence links through reload", async ({
   page,
 }) => {
-  const errors: string[] = [];
-  const outbound: string[] = [];
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  const errors: string[] = [],
+    outbound: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("request", (r) => {
     if (!["127.0.0.1", "localhost"].includes(new URL(r.url()).hostname)) outbound.push(r.url());
   });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "The evidence behind the change." }),
+    page.getByRole("heading", { level: 1, name: "Handle an empty cache response" }),
   ).toBeVisible();
   await expect(page.getByText("Collector connected")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Handle an empty cache response" })).toBeVisible();
   await expect(page.locator(".event-row")).toHaveCount(8);
+  await page.getByRole("button", { name: "Copy evidence link" }).click();
+  await expect(page).toHaveURL(/event=demo-14/);
+  await expect(
+    page.getByRole("status").filter({ hasText: "Local evidence link copied." }),
+  ).toBeVisible();
   await page.getByRole("button", { name: /Run command/ }).click();
-  await expect(page.getByRole("button", { name: /Open matching tool result/ })).toBeVisible();
   await page.getByRole("button", { name: /Open matching tool result/ }).click();
-  await expect(page.locator(".payload")).toContainText("FAIL usage.test.ts");
+  await expect(page.locator(".desktop-inspector .payload")).toContainText("FAIL usage.test.ts");
+  await expect(page).toHaveURL(/event=demo-21/);
+  await page.reload();
+  await expect(page.locator(".desktop-inspector .payload")).toContainText("FAIL usage.test.ts");
+  await page.getByRole("button", { name: "Copy evidence link" }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Local evidence link copied." }),
+  ).toBeVisible();
   await page.getByRole("button", { name: /Load more/ }).click();
   await expect(page.locator(".event-row")).toHaveCount(16);
   await page.getByRole("button", { name: /Load more/ }).click();
   await expect(page.locator(".event-row")).toHaveCount(17);
-  await page.getByRole("button", { name: /Use source time/ }).click();
-  await expect(page.getByText("SOURCE TIME", { exact: false }).first()).toBeVisible();
-  await page.getByRole("tab", { name: "Reported usage" }).click();
-  await expect(page.locator(".usage-card").filter({ hasText: "Cache read" })).toContainText(
+  await page.getByRole("textbox", { name: "Search entire session" }).fill("pnpm typecheck");
+  await expect(page.locator(".event-row")).toHaveCount(1);
+  await expect(page.locator(".event-row")).toContainText("pnpm typecheck");
+  expect(new URL(page.url()).searchParams.has("search")).toBe(false);
+  expect(new URL(page.url()).searchParams.has("event")).toBe(false);
+  await page.getByRole("textbox", { name: "Search entire session" }).fill("no-such-observation");
+  await expect(page.getByRole("heading", { name: "No matching observations" })).toBeVisible();
+  await page.getByRole("button", { name: "Clear filters" }).click();
+  await page.getByRole("button", { name: /Review gaps/ }).click();
+  await expect(page.locator(".event-row")).toHaveCount(1);
+  await expect(page.locator(".event-row")).toContainText("missing result");
+  await page.getByRole("tab", { name: "Usage", exact: true }).click();
+  await expect(page.locator(".usage-table tr").filter({ hasText: "Cache read" })).toContainText(
     "30,500",
   );
-  await expect(page.locator(".cache-share")).toContainText("84.7%");
-  await page.getByRole("tab", { name: "Capture coverage" }).click();
+  await expect(page.locator(".usage-explanation")).toContainText("84.7%");
+  await page.reload();
+  await expect(page.getByRole("tab", { name: "Usage", exact: true })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await page.getByRole("tab", { name: "Coverage", exact: true }).click();
   await expect(page.getByText("Feature correctness unknown")).toBeVisible();
   await page.getByRole("button", { name: /Investigate a slow repository scan/ }).click();
-  await page.getByRole("tab", { name: "Reported usage" }).click();
-  await expect(page.locator(".usage-card").filter({ hasText: "Output" })).toContainText("—");
+  await page.getByRole("tab", { name: "Usage", exact: true }).click();
+  await expect(page.locator(".usage-table tr").filter({ hasText: "Output tokens" })).toContainText(
+    "—",
+  );
   await page.getByRole("button", { name: /Content capture disabled/ }).click();
-  await expect(page.locator(".payload")).toContainText("[Content disabled]");
-  await page.reload();
-  await expect(page.getByText("Collector connected")).toBeVisible();
+  await expect(page.locator(".desktop-inspector .payload")).toContainText("[Content disabled]");
   expect(errors).toEqual([]);
   expect(outbound).toEqual([]);
-  await page.screenshot({ path: "test-results/traceframe-desktop.png", fullPage: true });
 });
-test("small-screen layout and read endpoint origin/session protection", async ({
+
+test("mobile evidence opens with protected focus and Escape returns to the selected activity", async ({
   page,
   request,
 }) => {
-  const noCookie = await request.get("/api/data?resource=projects");
-  expect(noCookie.status()).toBe(401);
-  const crossSite = await request.get("/connect", { headers: { "Sec-Fetch-Site": "cross-site" } });
-  expect(crossSite.status()).toBe(403);
+  expect((await request.get("/api/data?resource=projects")).status()).toBe(401);
+  expect(
+    (
+      await request.post("/api/data", {
+        data: { project: "demo-quoli", session: "session-cache", query: {} },
+      })
+    ).status(),
+  ).toBe(401);
+  expect(
+    (await request.get("/connect", { headers: { "Sec-Fetch-Site": "cross-site" } })).status(),
+  ).toBe(403);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByText("Collector connected")).toBeVisible();
   await expect(page.locator(".event-row")).toHaveCount(8);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true,
+  await page.locator(".event-row").nth(1).click();
+  const dialog = page.getByRole("dialog", { name: "Evidence details" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator(".payload")).toContainText("The usage panel crashes");
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(page.locator(".event-row").nth(1)).toBeFocused();
+  await page
+    .getByRole("combobox", { name: "Session", exact: true })
+    .selectOption("session-interrupted");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Investigate a slow repository scan" }),
+  ).toBeVisible();
+  await page.locator(".event-row").nth(1).click();
+  await page.reload();
+  await expect(page.getByRole("dialog", { name: "Evidence details" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("combobox", { name: "Session", exact: true })).toHaveValue(
+    "session-interrupted",
   );
-  await page.getByRole("tab", { name: "Capture coverage" }).click();
-  await expect(page.getByText("Known boundaries, in plain sight.")).toBeVisible();
-  await page.screenshot({ path: "test-results/traceframe-mobile.png", fullPage: true });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole("tab", { name: "Activity", exact: false }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "Usage", exact: true })).toBeFocused();
 });
 
 test("captured HTML and instructions stay inert and never trigger external requests", async ({
@@ -113,8 +162,26 @@ test("captured HTML and instructions stay inert and never trigger external reque
   });
   await page.goto("/");
   await page.getByRole("button", { name: /Inspect untrusted source text/ }).click();
-  await expect(page.locator(".payload")).toHaveText(unsafe);
+  await expect(page.locator(".desktop-inspector .payload")).toHaveText(unsafe);
   expect(await page.evaluate(() => "__traceframeInjected" in window)).toBe(false);
   expect(await page.locator(".payload img").count()).toBe(0);
   expect(outbound).toEqual([]);
+});
+
+test("query errors recover with Retry without changing stored observations", async ({ page }) => {
+  await page.route("**/api/data", (route) =>
+    route.request().method() === "POST"
+      ? route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Collector temporarily unavailable." }),
+        })
+      : route.continue(),
+  );
+  await page.goto("/");
+  await expect(page.locator(".error-notice")).toContainText("Collector temporarily unavailable.");
+  await page.unroute("**/api/data");
+  await page.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(page.locator(".event-row")).toHaveCount(8);
+  await expect(page.locator(".error-notice")).not.toBeVisible();
 });

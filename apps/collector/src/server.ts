@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { relationships, usage } from "@traceframe/analysis";
-import { batchSchema, MAX_BODY, safeId } from "@traceframe/schema";
+import { batchSchema, eventQuerySchema, MAX_BODY, safeId } from "@traceframe/schema";
 import { Store } from "@traceframe/storage";
 import { credential, initializeCredential, runtime } from "@traceframe/storage/runtime";
 import { demoEvents, demoPolicy } from "../../../fixtures/demo";
@@ -92,6 +92,26 @@ export function startCollector(
           return;
         }
         send(200, store.append(parsed.data.events));
+        return;
+      }
+      const queryMatch = /^\/v1\/projects\/([^/]+)\/sessions\/([^/]+)\/events\/query$/.exec(
+        url.pathname,
+      );
+      if (req.method === "POST" && queryMatch) {
+        const project = safeId.parse(queryMatch[1]),
+          session = safeId.parse(queryMatch[2]);
+        if (!store.project(project) || !store.sessions(project).some((s) => s.id === session)) {
+          send(404, { error: "Unknown project or session" });
+          return;
+        }
+        if (req.headers["content-type"] !== "application/json") {
+          send(415, { error: "Use application/json" });
+          return;
+        }
+        const text = await body(req, res);
+        if (text === null) return;
+        const query = eventQuerySchema.parse(JSON.parse(text));
+        send(200, store.events(project, session, query.cursor, 8, query));
         return;
       }
       const match = /^\/v1\/projects\/([^/]+)\/sessions(?:\/([^/]+)\/(events|summary))?$/.exec(

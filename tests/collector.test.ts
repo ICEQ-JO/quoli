@@ -87,6 +87,44 @@ test("collector enforces auth, origins, atomic bounded input, replay and rotatio
       headers,
     });
     assert.equal((await page.json()).events.length, 8);
+    const queryUrl = `${url}/v1/projects/demo-quoli/sessions/session-cache/events/query`;
+    const search = await fetch(queryUrl, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        search: "pnpm typecheck",
+        kind: "commands",
+        order: "source",
+        cursor: 0,
+      }),
+    });
+    const found = await search.json();
+    assert.equal(found.total, 1);
+    assert.equal(found.events[0].toolId, "tool-typecheck");
+    assert.equal(
+      (
+        await fetch(queryUrl, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ search: "x".repeat(201) }),
+        })
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await fetch(queryUrl, {
+          method: "POST",
+          headers: {
+            ...headers,
+            Origin: "https://attacker.invalid",
+            "Content-Type": "application/json",
+          },
+          body: "{}",
+        })
+      ).status,
+      403,
+    );
     rotateCredential();
     assert.equal((await fetch(`${url}/health`, { headers })).status, 401);
     assert.equal(

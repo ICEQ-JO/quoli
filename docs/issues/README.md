@@ -27,6 +27,10 @@ Every core issue inherits the [architecture](../architecture.md), [MVP scope](..
 | [019](019-pilot-release.md) | Validate the full local pilot against evidence and privacy guarantees | M | 018 | M5 | [#20](https://github.com/ICEQ-JO/quoli/issues/20) |
 | [020](020-experimental-transcripts.md) | Evaluate an opt-in version-gated historical transcript importer | M | 019 | Deferred | Deferred draft |
 
+## Follow-up UI work
+
+[021 — Session review UX](021-session-review-ux.md), [GitHub #23](https://github.com/ICEQ-JO/quoli/issues/23), is a medium-sized refinement of the implemented preview. It adds session-wide search, local evidence links, gap review and responsive inspection; the original MVP issue IDs remain unchanged.
+
 ## Implementation checkpoint
 
 The first testable feature is the [synthetic local preview](../local-demo.md): it covers the scaffold and timeline, with foundational schema/privacy/storage/ingestion work and an early reported-usage view. GitHub issue checklists and the implementation PR record the exact completed criteria and remaining scope. Planned features must not be inferred to exist merely because they appear in this index.
