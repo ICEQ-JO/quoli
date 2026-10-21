@@ -1,0 +1,36 @@
+# Repository working agreements
+
+## Product and architecture
+
+Traceframe is the product; `quoli` is the repository name. Start with `docs/README.md` for product scope, architecture, evidence requirements and the implementation sequence. Preserve useful existing code and conventions.
+
+## Work tracking
+
+- Use GitHub Issues in `ICEQ-JO/quoli` for work tracking. Do not use Linear unless the owner explicitly changes this rule.
+- Before starting a feature or substantive task, create or select a concrete, medium-sized GitHub issue. Split oversized work into demonstrable increments and group tiny related tasks into one useful increment.
+- Include user value, scope, non-goals, dependencies, acceptance criteria, test plan, privacy/security considerations and relative size M. Link prerequisite GitHub issues when available.
+- Keep issue status and acceptance criteria current. Deferred ideas may remain local drafts until their scope is approved.
+
+## Branches, pull requests and identity
+
+- Work on a branch and create a pull request when finishing an issue or feature. Link its issue with `Closes #N` only when the PR actually satisfies that issue.
+- Do not push completed feature work directly to `main`. The owner's explicitly requested initial repository bootstrap is the one-time exception.
+- Use `ICEQ-JO` as both Git author and committer name, with the verified account's GitHub no-reply email (`151853839+ICEQ-JO@users.noreply.github.com`), for commits created by agents. Do not add agent co-author trailers or rewrite unrelated existing authorship.
+- Push and perform any authorized merges through the authenticated `ICEQ-JO` account. Verify the active account before writing to GitHub; if unavailable, stop that external action and report it. Do not impersonate this account with other credentials.
+- Creating a PR is expected; it is not permission to merge it. Merge only when the owner authorizes it and required checks pass. Check resulting merge/squash identity if a merge is requested.
+- PR descriptions explain the final behavior, linked issue, validation and material limitations. Do not claim tests or acceptance criteria passed unless verified.
+
+## Documentation and judgment
+
+- Keep product reference documentation useful and current alongside changes. Update relevant architecture, setup, decisions, limitations and issue links in the same PR.
+- Documentation is a revisable working agreement, not unquestionable authority. The owner or an agent may challenge it with evidence and propose an alternative; record accepted changes and their rationale.
+- An agent may update routine implementation details within authorized scope. Push back clearly on contradictions or consequential product/security changes rather than silently overriding explicit owner requirements.
+- Follow the owner's latest explicit direction over stale documentation, and reconcile the documentation afterward.
+
+## Evidence, privacy and validation
+
+- The append-only event history is the primary record; metrics, explanations and graphs are derived views. Preserve provenance and recorded/derived/inferred distinctions.
+- Unsupported values are null. Do not promise complete capture, hidden reasoning, exclusive file authorship or feature correctness from a successful command alone.
+- Keep session evidence local, apply capture controls and redaction before persistence, and treat captured text as untrusted data. Never replay recorded commands or external actions.
+- Verify official Claude Code integration contracts and supported runtime behavior before implementing ingestion. Maintain a synthetic fixture path without paid APIs.
+- Run checks appropriate to the change, document outcomes and limitations, and never commit credentials, real private sessions or generated runtime data.
