@@ -1,328 +1,279 @@
 ---
 name: Traceframe
-description: A local evidence workspace with municipal wayfinding, ruled registers, and paired inspection.
+description: A session-first local evidence workspace with readable review documents and source-linked triage.
 colors:
-  bg: "#f7f8fb"
-  surface: "#ffffff"
-  sidebar: "#171e30"
-  ink: "#20283f"
-  muted: "#626d82"
-  subtle: "#6b7588"
-  line: "#e1e5ed"
-  line-soft: "#eef0f5"
-  accent: "#3659da"
-  accent-dark: "#2647bd"
-  selected: "#eef2ff"
-  warning: "#91600e"
-  warning-bg: "#fff8e9"
-  negative: "#b13d4c"
-  negative-bg: "#fff0f2"
-  nav-selected: "#324ec0"
-  nav-hover: "#242e46"
-  nav-session-selected: "#273148"
-  recorded: "#4965a4"
-  recorded-bg: "#f0f4ff"
-  derived: "#7257a6"
-  derived-bg: "#f7f2ff"
-  result: "#426d5d"
-  result-bg: "#edf3f1"
-  code-bg: "#202a40"
-  code-text: "#d5dff5"
-  failed-code-bg: "#342531"
-  failed-code-text: "#f2bdc9"
-  diff-code: "#3b4b69"
-  diff-gutter: "#f9fafe"
-  diff-add: "#307354"
-  diff-add-bg: "#eff9f3"
-  diff-add-gutter: "#e5f3eb"
-  diff-delete-bg: "#fff1f3"
-  diff-delete-gutter: "#fbe4e9"
-  diff-delete-number: "#924354"
-  diff-absent: "#f4f6fa"
+  bg: 'light-dark(#ffffff, #171719)'
+  surface: 'light-dark(#ffffff, #1c1c1f)'
+  sidebar: 'light-dark(#f6f6f7, #111113)'
+  ink: 'light-dark(#242428, #ededf0)'
+  muted: 'light-dark(#62626c, #aaaab5)'
+  subtle: 'light-dark(#6b6b76, #a1a1ad)'
+  line: 'light-dark(#e7e7eb, #323237)'
+  line-soft: 'light-dark(#ededf0, #2a2a2f)'
+  accent: 'light-dark(#6653c2, #b1a5ff)'
+  accent-dark: 'light-dark(#5745b0, #c5bcff)'
+  selected: 'light-dark(#f0edf9, #2b273a)'
+  warning: 'light-dark(#855a18, #dfbd7d)'
+  warning-bg: 'light-dark(#fff8ed, #2c271f)'
+  negative: 'light-dark(#a33d49, #efa2aa)'
+  negative-bg: 'light-dark(#fff2f2, #302124)'
+  primary-fill: 'light-dark(#6653c2, #7360ce)'
+  primary-border: 'light-dark(#6653c2, #8c79e2)'
+  primary-hover: 'light-dark(#5745b0, #6752bd)'
+  primary-text: '#ffffff'
+  nav-selected: 'light-dark(#e9e8ed, #29292e)'
+  nav-hover: 'light-dark(#ebebef, #202023)'
+  recorded: 'light-dark(#57547d, #c2baf2)'
+  derived: 'light-dark(#67529d, #c9b5ed)'
+  derived-bg: 'light-dark(#f3eff9, #2a2533)'
+  capture-end: 'light-dark(#387859, #8bc5a3)'
+  diff-add-bg: 'light-dark(#eff7f2, #202e26)'
+  diff-delete-bg: 'light-dark(#fff2f2, #332326)'
+  diff-add-number: 'light-dark(#386b50, #9acdaf)'
+  diff-add-gutter: 'light-dark(#e4f0e9, #25372c)'
+  diff-delete-gutter: 'light-dark(#f9e6e8, #40282c)'
 typography:
   headline:
     fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
-    fontSize: "28px"
-    fontWeight: 600
-    lineHeight: 1.3
-    letterSpacing: "-0.9px"
-  title:
-    fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
-    fontSize: "20px"
+    fontSize: 22px
     fontWeight: 550
     lineHeight: 1.3
-    letterSpacing: "-0.4px"
-  inspector-title:
+    letterSpacing: -0.5px
+  session-title:
     fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
-    fontSize: "17px"
+    fontSize: 24px
+    fontWeight: 560
+    lineHeight: 1.3
+    letterSpacing: -0.6px
+  section-title:
+    fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
+    fontSize: 15px
     fontWeight: 550
     lineHeight: 1.3
-    letterSpacing: "-0.35px"
+    letterSpacing: -0.2px
+  request:
+    fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
+    fontSize: 15px
+    fontWeight: 400
+    lineHeight: 1.8
   body:
     fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
-    fontSize: "14px"
+    fontSize: 14px
     fontWeight: 400
     lineHeight: 1.55
   row-title:
     fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
-    fontSize: "13px"
-    fontWeight: 550
+    fontSize: 13px
+    fontWeight: 450
     lineHeight: 1.55
   label:
     fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
-    fontSize: "12px"
+    fontSize: 12px
     fontWeight: 500
     lineHeight: 1.55
   metadata:
     fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
-    fontSize: "10px"
+    fontSize: 11px
     fontWeight: 400
     lineHeight: 1.55
-  payload:
+  source-code:
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace'
-    fontSize: "11px"
+    fontSize: 12px
     fontWeight: 400
-    lineHeight: 1.9
-  diff-code:
-    fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace'
-    fontSize: "11px"
-    fontWeight: 400
-    lineHeight: 1.85
+    lineHeight: 1.8
   diff-line-number:
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace'
-    fontSize: "10px"
+    fontSize: 11px
     fontWeight: 400
     lineHeight: 1.85
 rounded:
-  badge: "3px"
-  chip: "4px"
-  field: "5px"
-  control: "6px"
-  project: "7px"
-  panel: "8px"
-  dialog: "10px"
-  sheet: "12px 12px 0 0"
+  badge: 3px
+  chip: 4px
+  code: 5px
+  control: 6px
+  panel: 7px
+  dialog: 10px
+  sheet: 12px 12px 0 0
 spacing:
-  compact: "4px"
-  small: "8px"
-  label-gap: "10px"
-  control-gap: "12px"
-  inset: "16px"
-  inset-wide: "20px"
-  section: "24px"
-  section-wide: "28px"
-  page-block: "32px"
-  page-inline: "36px"
+  small: 8px
+  control-gap: 10px
+  inset: 12px
+  section-inset: 16px
+  inset-wide: 20px
+  page-block: 24px
+  page-inline: 28px
+  document-rail-gap: 52px
 components:
   button-primary:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.surface}"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    padding: "8px 13px"
-  button-primary-hover:
-    backgroundColor: "{colors.accent-dark}"
+    backgroundColor: '{colors.primary-fill}'
+    textColor: '{colors.primary-text}'
+    rounded: '{rounded.control}'
+    padding: 8px 13px
   button-secondary:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    padding: "8px 13px"
-  filter-selected:
-    backgroundColor: "{colors.selected}"
-    textColor: "{colors.accent}"
-    rounded: "{rounded.chip}"
-    padding: "5px 8px"
-  panel:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.panel}"
-  search-field:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.field}"
-    padding: "0 10px"
+    backgroundColor: '{colors.surface}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.control}'
+    padding: 8px 13px
   nav-selected:
-    backgroundColor: "{colors.nav-selected}"
-    textColor: "{colors.surface}"
-    rounded: "{rounded.control}"
-    padding: "10px 12px"
-  evidence-recorded:
-    backgroundColor: "{colors.recorded-bg}"
-    textColor: "{colors.recorded}"
-    rounded: "{rounded.chip}"
-    padding: "2px 6px"
-  evidence-derived:
-    backgroundColor: "{colors.derived-bg}"
-    textColor: "{colors.derived}"
-    rounded: "{rounded.chip}"
-    padding: "2px 6px"
+    backgroundColor: '{colors.nav-selected}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.control}'
+    padding: 8px 10px
+  search-field:
+    backgroundColor: '{colors.bg}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.control}'
+    padding: 0 10px
+  work-session:
+    textColor: '{colors.ink}'
+    typography: '{typography.row-title}'
+    padding: 12px
+  queue-selected:
+    backgroundColor: '{colors.selected}'
+    textColor: '{colors.ink}'
+    padding: 18px 15px
+  recorded-basis:
+    backgroundColor: '{colors.selected}'
+    textColor: '{colors.recorded}'
+    rounded: '{rounded.chip}'
+    padding: 2px 6px
+  derived-basis:
+    backgroundColor: '{colors.derived-bg}'
+    textColor: '{colors.derived}'
+    rounded: '{rounded.chip}'
+    padding: 2px 6px
   captured-diff:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.diff-code}"
-    typography: "{typography.diff-code}"
-    rounded: "{rounded.project}"
-  diff-mode-selected:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.accent}"
-    rounded: "{rounded.badge}"
-    padding: "4px 9px"
+    backgroundColor: '{colors.bg}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.panel}'
+    typography: '{typography.source-code}'
 ---
 
 # Design System: Traceframe
 
 ## Overview
 
-**Creative North Star: "Municipal wayfinding"**
+**Creative North Star: "The session workbench"**
 
-Traceframe uses a stable ink navigation edge, a cool-white working field, compact Geist labels, and ruled registers to orient a developer before they inspect evidence. The committed direction is candidate 7, seed `2f68dc64`, recorded in the root layout. Cobalt marks selection and action; it does not certify an outcome.
+Traceframe starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained violet selection support that hierarchy; a palette change alone does not define the workflow.
 
-The atmosphere is orderly, practical, and quietly precise. Desktop review pairs an activity register with a source inspector. Narrow screens preserve that relationship through a native evidence dialog. Explicit labels distinguish recorded observations, derived links, source-reported results, and capture uncertainty.
+This records the shipped founder-approved direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and dark, light, and mobile screenshots, not a new visual proposal.
 
 **Key Characteristics:**
-- Ink navigation and a porcelain workspace.
-- Ruled, aligned registers with compact outline icons.
-- Cobalt selection; semantic source-state labels.
-- Paired activity and evidence, with provenance disclosed on demand.
-
-This is a scan of the implemented synthetic workspace, replacing the superseded muted-green identity. Sources are `app/globals.css`, `app/layout.tsx`, `app/dashboard.tsx`, and the workspace-home, evidence-inspector, and session-views components. The captured-changes extension adds bounded comparison of retained baseline/checkpoint versions. Live agent ingestion and a graph surface remain unavailable.
+- Sessions first; global destinations stay stable.
+- Readable requests and recorded work precede raw source detail.
+- Neutral dark/light surfaces, local Geist, restrained violet emphasis.
+- Explicit source, uncertainty, capture state, and unavailable-data language.
 
 ## Colors
 
-The palette combines cool neutrals with a clear cobalt route through the workspace. Frontmatter is normative; names below explain application rather than introducing a second palette.
+Frontmatter preserves the shipped `light-dark(light, dark)` values. Dark is the default; the root `data-theme` attribute sets `color-scheme` so the theme control changes actual paint. Theme is persisted locally. Keep paired values together rather than treating one theme as the token source.
 
 ### Primary
-- **Wayfinding Cobalt** (`accent`, `accent-dark`): primary actions, active session tabs, selected filters, links, and keyboard focus.
-- **Selection Wash** (`selected`): selected activity rows and quiet selected controls.
+- **Restrained Violet** (`accent`, `accent-dark`): links, active session tabs, focus, and source actions. Primary filled buttons have distinct `primary-fill`, `primary-border`, and `primary-hover` values with white text; the pale dark-theme link accent is not their fill.
+- **Selection Wash** (`selected`): selected evidence and queue items, plus recorded-basis backgrounds. Primary navigation selection is neutral (`nav-selected`), with a neutral hover (`nav-hover`).
 
 ### Secondary
-- **Recorded Blue** (`recorded`, `recorded-bg`): the recorded-observation basis badge.
-- **Derived Violet** (`derived`, `derived-bg`): derived calculation and explicit-ID relationship badges; related evidence uses pale violet borders and an ID-to-ID route.
+- **Recorded / Derived** (`recorded`, `derived`, `derived-bg`): explicit provenance badges. Derived links and snapshot comparisons retain their basis wording.
 
 ### Tertiary
-- **Capture Amber** (`warning`, `warning-bg`): recorded gaps, missing end events, and incomplete usage notices.
-- **Reported Failure Rose** (`negative`, `negative-bg`): source-reported failed results and load errors, accompanied by explicit text.
-- **Reported Result Green** (`result`, `result-bg`): compact exit-code/result labels. This is a semantic state, not the identity accent.
+- **Capture Amber** (`warning`, `warning-bg`): gaps, uncertainty, inferred-basis notices, and missing end events.
+- **Reported Failure** (`negative`, `negative-bg`): source-reported failure and error notices.
+- **Recorded End** (`capture-end`): a source-reported session boundary, accompanied by text. It is not a task-success color.
+- **Diff states** (`diff-add-bg`, `diff-delete-bg`, `diff-add-number`, `diff-add-gutter`, `diff-delete-gutter`): subtle added/deleted code rows and stronger numbered gutters. Deletion numbers use `negative`; signs and before/after numbers preserve meaning without color.
 
 ### Neutral
-- **Ink Rail** (`sidebar`): persistent workspace navigation; selected primary routes use `nav-selected`, hover uses `nav-hover`, and current recent sessions use `nav-session-selected`.
-- **Cool Paper / White Surface** (`bg`, `surface`): workspace field and bordered working panels.
-- **Reading Ink / Supporting Slate** (`ink`, `muted`, `subtle`): content, explanatory labels, and quieter metadata.
-- **Rules** (`line`, `line-soft`): panel outlines, major divisions, and row separators.
-- **Code Ink** (`code-bg`, `code-text`): tool input/output payloads; failed output uses `failed-code-bg` and `failed-code-text`.
+- **Workspace / Surface / Sidebar** (`bg`, `surface`, `sidebar`): charcoal planes in dark mode and white/off-white in light mode.
+- **Reading / Supporting text** (`ink`, `muted`, `subtle`): content, explanations, and metadata.
+- **Rules** (`line`, `line-soft`): shell divisions, document sections, grouped tables, and row separators.
 
-Captured diffs add green and rose row washes (`diff-add-bg`, `diff-delete-bg`) with stronger line-number gutters (`diff-add-gutter`, `diff-delete-gutter`). Addition numbers use `diff-add`; deletion numbers use `diff-delete-number`. Unchanged numbers use `muted` on `diff-gutter`; code uses `diff-code`, and empty split-layout sides use `diff-absent`. Unified rows retain explicit plus/minus signs and before/after line numbers.
-
-**The Evidence State Rule.** Pair every semantic color with wording, an icon, a number, or a source-state label. A successful exit code never becomes a feature-correctness verdict.
+**The Evidence State Rule.** Pair state colors with wording, icons, signs, or numbers. An end event, command exit code, or explicit-ID relationship does not establish feature correctness or authorship.
 
 ## Typography
 
-**Body and heading font:** Geist Variable, bundled through `@fontsource-variable/geist`, with Segoe UI and sans-serif fallbacks. No remote font request is required.
+Geist Variable is bundled locally through `@fontsource-variable/geist`, with Segoe UI and sans-serif fallbacks. Code, paths, IDs, and timestamps use the frontmatter monospace stack. No external font fetch is required.
 
-**Code and identity font:** SFMono-Regular, Consolas, Liberation Mono, monospace.
+The hierarchy is compact but readable: page headings use `headline`, session titles use `session-title`, document section headings use `section-title`, and developer requests use the larger, relaxed `request` role. Request text preserves line breaks within (72ch); explanatory document text uses (13px / 1.8), usually within (75ch). Sequence titles and queue titles use (13px, weight 500). Property labels are (11px); values are (12px). Counts use tabular numerals where implemented.
 
-### Hierarchy
-- **Headline:** the page heading role; session titles reduce to (23px) on narrow screens. Overview headings reduce to (25px) below the paired layout breakpoint.
-- **Title:** usage and coverage introductions. Panel headings use (14px, weight 550); the inspector has its own smaller title role.
-- **Body:** the inherited reading foundation. Supporting panel prose is usually (11–12px), with longer cautions at (1.8) line-height.
-- **Row title:** session, gap-queue, and activity titles; final stylesheet overrides establish this role, reducing to (12px) on phones. Activity previews use (12px), reducing to (11px) on phones; tool previews remain monospace (10px).
-- **Label / Metadata:** compact controls and source details. Basis badges, fixture tags, and small timestamps use (9–10px). Labels are sentence case.
-- **Payload:** wrapped monospace blocks. IDs and timestamps also use monospace; counts and usage totals use tabular numerals. The cache-share figure is a local emphasis (44px, weight 500, line-height 1.1), not a general display-heading style.
+Activity titles use (14px, weight 500), previews (13px), and tool previews/source payloads (12px monospace). Diff code is (12px); line numbers are (11px). Keep these current values rather than the former tiny diff scale. Below (800px), session titles reduce to (21px), request text to (14px), and activity titles/previews to (13px/12px). The mobile work-list title wraps above its (11px) capture-state label.
 
-Captured code uses the `diff-code` role, reducing to (10px) at the phone breakpoint. Line numbers remain monospace (10px) on desktop and mobile. Table headings use Geist (9px / 1.6); path-list names use monospace (10px, weight 450, line-height 1.7), increasing to (11px) below (800px).
-
-**The Source Readability Rule.** Keep ordinary labels in Geist and captured commands, IDs, paths, and payloads in monospace. Keep provenance subordinate to the captured content without removing it.
+**The Reading Order Rule.** Use ordinary reading text for requests and human-readable gaps. Keep IDs and raw normalized records in source inspection or secondary properties.
 
 ## Layout
 
-Desktop uses a fixed left sidebar (224px), a white toolbar (minimum 66px), and a workspace offset by the sidebar width. Main content is centered within a maximum (1660px) and padded (32px 36px 20px). The overview pairs a flexible session register with a review queue (300px), separated by (24px); at widths of at least (1600px), the queue becomes (340px).
+The shell has a fixed sidebar (228px), toolbar (minimum 52px), and main workspace capped at (1640px), padded (24px 28px). The review maximum becomes (1600px) on wide screens. Stable navigation is Sessions, Needs review, and Project overview; the recent-session duplicate list is no longer the shell model.
 
-The review grid pairs activity and a sticky inspector in a (1.3fr / 1fr) relationship, with a minimum inspector width (340px), gap (22px), and sticky top (20px). Session facts and underlined tabs precede this pair. Register rows align title, capture state, observation count, and directional arrow. Rows become stacked entries on phones; the arrow remains a route cue.
+Sessions uses one view toolbar, a grouped flat table, and rules rather than cards. Desktop columns allocate title/state/observations/gaps/date (44/20/12/7/17 percent); session buttons have minimum height (48px). Search, capture-state filter, and Display grouping/order controls belong to this list.
 
-Responsive thresholds are exact implemented media queries:
+Review is a full reading document with a property rail (236px), gap (52px), and rail sticky top (20px). Opening exact evidence replaces that rail with a source inspector (380px), gap (24px), while preserving Review. Activity is a full-width ledger until evidence opens, when its inspector is (360–420px).
 
-- At (1279px) and below: sidebar (200px), main inline padding (26px), overview queue (270px), and tighter grids.
-- At (1099px) and below: overview and activity collapse to one column; the desktop inspector disappears and evidence opens in a native modal dialog. The gap queue can use two columns.
-- At (799px) and below: navigation becomes a compact rail (68px), with icons and short labels; recent sessions and project/help blocks hide. Usage becomes one column. Main inline padding is (20px).
-- At (559px) and below: navigation becomes a sticky horizontal top bar (58px), the workspace offset clears, main inline padding is (16px), and a native session select appears. Register columns become stacked entries, coverage becomes one column, and the gap queue returns to a single column.
+Needs review deliberately uses a split queue: list (270–340px), flexible detail, minimum height (560px). Changes keeps its dedicated path list and large scrollable code panel; usage and coverage retain their session-scoped layouts. Project overview is secondary, not the default entrance.
 
-Spacing uses compact (4–12px) control relationships and generous (16–36px) panel/page spacing. The source also uses local (18px, 22px, 26px, 30px) adjustments; it is not a strict universal 4px grid.
+Responsive behavior follows the final cascade:
 
-Captured changes pairs a sticky path register (244px, top 20px) with a flexible code panel and gap (20px). At (1099px) and below the register is (210px), gap (16px); at (799px) and below both regions stack, the register stops sticking, and its list is capped at (240px) high. Before/after selectors stack at (559px). Code scrolls within its keyboard-focusable region, capped at (65vh), then (60vh) below (800px); side-by-side tables retain a minimum width (620px). Mobile file selection focuses and scrolls to the code-panel heading.
+- At (1099px) and below, the property rail becomes (210px) with gap (26px), and exact source inspection uses a native dialog. Activity's inspected layout becomes one column. Work-list observation counts hide; queue list width becomes (280px).
+- At (899px) and below, the queue switches to separate list/detail states with **Back to recorded gaps**. Selection never becomes a cramped side-by-side mobile pane.
+- At (799px) and below, the sidebar becomes horizontal navigation (56px); workspace offset clears, toolbar is (48px), and page padding is (20px 16px). Review properties hide, but capture status remains beside the session heading. List date/state columns hide; state moves beneath each title, and the gaps column remains visible. Search takes a full toolbar row.
+- At (559px) and below, before/after capture selectors stack and the source dialog becomes a full-width bottom sheet. At (359px) and below, secondary navigation text can collapse while icons retain accessible labels.
 
 ## Elevation & Depth
 
-Working surfaces are flat at rest: white panels, cool workspace background, fine rules, and restrained tonal selection establish hierarchy. Shadows are reserved for temporary overlays and the selected diff-layout segment, not registers or dashboard metrics.
+Flat planes, fine rules, text hierarchy, and restrained selected fills carry most depth. Registers and review sections have no resting card shadow. Source inspection and temporary disclosures provide the exceptions: Display options use `0 8px 24px #00000024`; the source dialog retains `0 24px 70px #13224633`, with backdrop `#14203a66`. The inherited help disclosure uses `0 10px 30px #19294d1a`. Diff-layout selection now uses a flat neutral fill with no shadow.
 
-### Shadow Vocabulary
-- **Help disclosure:** `0 10px 30px #19294d1a` under the positioned synthetic-workspace explanation.
-- **Selected diff-layout segment:** `0 1px 3px #20345e14`, a small inset-control distinction on the diff toolbar.
-- **Evidence dialog:** `0 24px 70px #13224633` with backdrop `#14203a66`, separating a focused source inspection from its context.
-
-Buttons and interactive rows change background and border over (160ms ease-out). There is no ornamental entrance animation. Reduced-motion preferences remove transitions and animations and restore automatic scrolling.
+Buttons and rows use (160ms ease-out) background/border transitions where defined. With motion permitted, Review arrives through a small clipping reveal (180ms ease-out); reduced-motion disables animations and transitions. Do not add decorative motion to captured evidence.
 
 ## Shapes
 
-Panels use gently squared corners (`panel`); controls are tighter (`control`), fields and icon boxes tighter again (`field`), and chips use `chip` or `badge`. Borders are usually (1px), with straight ruled internal divisions. Small source-state dots are circular; they accompany labels rather than replacing them. The branded mark and authored outline icons use precise lightweight geometry.
+Controls use gently squared (6px) corners, code/disclosures (5px), and bounded working panels (7px). The main Review document is an open ruled reading surface, not a rounded card. Small provenance badges use (4px) corners. The desktop source dialog uses (10px), while the phone sheet uses (12px) top corners. Circular source-state dots accompany literal text.
 
-The evidence dialog is rounded (`dialog`), capped at (560px) wide with (14px) outer margins and (88dvh) height. On phones it becomes a full-width bottom sheet (`sheet`) with a maximum height (91dvh). Payloads wrap long text and scroll vertically, capped at (420px).
+Payloads wrap safely and scroll inside bounded regions; diff code preserves whitespace and scrolls horizontally. The code plane must not widen the document. Outline icons identify routes and record types without replacing labels.
 
 ## Components
 
-### Buttons
+### Navigation and theme
 
-Compact and explicit. Primary and secondary buttons share minimum height (36px), a (1px) border, and the frontmatter control shape/padding. Primary hover deepens the cobalt; secondary hover uses a pale neutral fill and stronger border. Subtle buttons remove the visible border, use muted text, and have minimum height (32px). Icon buttons are (32px) squares; text actions underline on hover. Disabled buttons use opacity (0.5) and the default cursor. Keyboard focus uses a (2px) cobalt outline offset (3px); the ink sidebar uses a lighter outline.
+Neutral current-route fill and `aria-current` distinguish stable destinations; session tabs use an accent underline and `aria-selected`. Keyboard arrows move among tabs. The header includes theme and refresh controls; theme changes the root attribute, not only the control label. Local project/source context remains separate from collector connection status.
 
-### Chips
+### Buttons and fields
 
-Filter buttons are compact outlined shapes, with a pale cobalt selected fill and `aria-pressed` state. Unselected hover is a quiet neutral fill. Gap counts add amber badges. Recorded and derived basis chips are visually distinct and always contain explicit source wording. Fixture tags and capture-state labels retain their literal meanings; “End recorded” does not mean complete capture.
+Compact buttons have minimum height (32px), (13px) labels, and (6px) corners. Primary actions use the paired primary-fill palette; subtle/source actions use text emphasis. Disabled controls use opacity (0.5) and default cursor. Global keyboard focus is a (2px) accent outline offset (3px); enclosed rows use an inward offset where defined.
 
-### Cards / Containers
+Search uses a leading outline icon, neutral background/rule, and a single enclosing focus treatment; the inner input suppresses a duplicate ring. Native selects preserve source terminology. Display is a disclosure with grouping and ordering controls, not a filter synonym. Search text never enters URLs. List filters persist while navigating in memory; reload resets them.
 
-Session registers, activity, review queue, usage, coverage, and the inspector use white surfaces, fine rules, and the panel radius without resting shadows. They are working regions, not floating promotional cards. Headers and content use roughly (16–24px) insets; usage/coverage uses (28px 30px) on desktop, reducing responsively.
+### Session work list
 
-### Inputs / Fields
+Grouped headings distinguish **No end recorded** and **End recorded**, each with a dot, label, and count. Rows open full Review. Hover/focus tint the row and expose its route arrow. Available observation/gap counts and UTC source dates remain supporting properties; unavailable counts show an em dash with retry text rather than zero. Loading, metadata-unavailable, no-retained-session, and no-match states explain recovery. On mobile, each title retains its explicit end-state text even when desktop property columns hide.
 
-Search combines a leading outline icon with a border, field radius, and minimum height (36px). Its focus-within border becomes cobalt with a pale (2px) outline; the inner input suppresses a duplicate outline. A clear action appears when text exists. Sort and capture-state fields are native selects. Search labels remain accessible even when placeholder text is visible.
+### Session document and properties
 
-### Navigation
+Review presents Developer request, Repository changes, Recorded work, and Unresolved evidence. Requests are captured prose, not generated summaries. Missing requests, absent captures, unknown dirty state, unpaired results, and bounded pagination remain explicit. Tools are paired only through an unambiguous explicit-ID relationship; unmatched results remain separate. Source actions expose the exact retained observation. Capture count alone does not establish a code change.
 
-The ink rail contains the brand, local project, primary routes, recent sessions, and local-evidence guidance. Primary routes use filled cobalt selection (`aria-current`); recent-session selection uses a quieter ink tone. Session tabs use a cobalt (2px) underline and `aria-selected`, with arrow-key movement. Responsive rail and top-navigation behavior follows Layout; it does not become a separate visual language.
+The property rail holds source, capture state, repository, UTC date, ID, observation count, code policy, and reported usage. Unknown values stay unknown. Failed session metadata replaces the document with a clear unavailable state and retry/navigation actions. Exact inspection stays beside Review; below (1100px), native modal focus, Escape dismissal, and restoration preserve the same source selection across breakpoint changes.
 
-### Activity and evidence inspection
+### Needs review queue
 
-Activity rows have an icon box, title and preview, source timestamp, receipt sequence, and route arrow. Hover is a quiet surface change; selection is the cobalt wash. Source-reported failures and capture gaps change the symbol state and retain explicit labels. Keyboard arrows move through observations; on desktop selection updates the paired inspector.
+Each item shows a human-readable captured gap, session context, and uncertainty. Selection has a quiet violet wash; hover uses the neutral soft surface. Desktop preserves the queue beside detail; mobile uses list/detail with a return action. Detail leads with the recorded fact and limitation, then supporting source/provenance; raw JSON is disclosed on demand. Counts and paging describe loaded evidence. Partial failures remain incomplete with retry controls. There is no persisted resolve, snooze, or all-clear state.
 
-The inspector starts with a recorded-observation badge, title, ID, time, and evidence-link action. Captured text comes before related evidence and collapsible provenance/raw data. Related request/result evidence uses a violet explicit-ID join, supporting observation IDs, a rule disclosure, and uncertainty text. Empty, loading, copy-success, copy-failure, and unavailable-content states use explanatory text; skeletons remain static.
+### Activity, Changes, Usage, and Coverage
 
-Below the paired-inspector threshold, the same content opens with native `showModal()`. A sticky header contains the title and close action; Escape dismisses and the originating activity row regains focus. The modal locks background scrolling. Following related evidence changes the inspected source rather than replaying it.
+Activity retains search over the retained session, explicit filter states, source/receipt ordering, keyboard traversal, pagination, and optional exact inspection. Recorded and derived badges always include wording. Source views retain copy feedback, unavailable-content labels, relationships, source provenance, and normalized-record disclosures.
 
-### Usage and coverage
+Changes retains before/after capture selectors, dirty/missing-baseline context, searchable status-labeled paths, unified/split controls, source links, explicit signs/line numbers, newline markers, and bounded paging. Unknown sides and inferred renames retain their basis/limitations. Selected code uses an inert, keyboard-scrollable region; no restore or replay action exists.
 
-Usage aligns categories and explanations with right-aligned reported counts, a labeled composition bar, and a separate derived cache-share explanation. The formula and source observations remain available. Unknown values render as an em dash or “Unknown,” accompanied by missing-data text. Coverage is an explicit list of what capture establishes and what remains unavailable. No fabricated cost, productivity score, live-integration state, diff, or graph should be inferred from these components.
-
-### Captured changes
-
-A derived snapshot-comparison badge leads the surface. Native Before/After selectors show baseline/checkpoint time in UTC, prevent choosing the same capture on both sides, and provide older-capture pagination. A context notice preserves missing or dirty baseline state and the authorship limitation.
-
-The path register reuses search, fine row rules, cobalt selection, `aria-pressed`, and up/down keyboard navigation. Each row includes a literal change status alongside its compact letter. Filters cover changed plus unknown, all captured paths, and unavailable comparisons; no matches offers filter recovery. Selected-file inspection remains possible outside the current list filter.
-
-The code panel uses the existing project radius (7px) and flat white surface. Its heading shows path, change basis, and known line totals. Unified/Side by side are pressed-state segment buttons; Before/After observation actions open retained source evidence. Sticky table headers identify both sides; unified mode adds signs and line numbers, while split mode leaves unavailable row cells visibly blank. Newline-only differences retain a textual end-of-file marker. Wide code stays horizontally scrollable rather than wrapping or widening the page.
-
-Keep distinct loading, no-captures, no-matching-paths, unchanged, missing-side, bounded-diff, and retryable-error states. Unavailable comparisons show explicit before/after content states and retained text when available. Amber uncertainty notices and dashed inferred-basis badges accompany inferred renames; they do not assert factual authorship. Pagination reports loaded files/lines, and disclosures expose comparison rules, supporting observations, capture limitations, and omitted counts. Displayed code remains inert text; inspection never restores files or runs a command. See `../../docs/captured-changes.md` for comparison semantics and bounds.
+Usage retains category counts, labeled composition, formula, and supporting observations; unknown counts are never zero-filled. Coverage explains the evidence limits. Neither view creates a correctness verdict, productivity score, file cost allocation, or live-agent claim.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** use cobalt for routes, actions, and selection, and explicit semantic labels for evidence states.
-- **Do** keep activity and source inspection adjacent on desktop and use the native evidence dialog on narrower screens.
-- **Do** preserve fine register rules, aligned counts, compact Geist labels, and monospace source material.
-- **Do** show unknowns and capture limitations where the reader interprets the evidence.
-- **Do** preserve keyboard focus, native controls, responsive reflow, and reduced-motion behavior.
+- **Do** select the layout for the task: work list, reading document, triage split, or code inspection.
+- **Do** preserve readable captured requests, source actions, explicit uncertainty, and unknown values.
+- **Do** implement both actual root themes with the paired token values.
+- **Do** preserve mobile capture status, keyboard focus, source selection, and recovery from unavailable metadata.
+- **Do** keep local Geist, neutral rules, compact controls, and restrained violet emphasis.
 
 ### Don't:
-- **Don't** restore the superseded olive-green identity or make semantic result green the primary accent.
-- **Don't** use color alone to distinguish recorded, derived, failed, or incomplete evidence.
-- **Don't** turn command success, an end event, or an explicit ID link into a correctness claim.
-- **Don't** present synthetic examples as live ingestion, referenced paths as captured diffs, or relationship routes as a graph feature.
-- **Don't** add resting shadows or ornamental animation to the working registers.
+- **Don't** restore the municipal dashboard, cobalt selection system, or default overview as current authority.
+- **Don't** make the normalized event ledger the only way to understand a session.
+- **Don't** infer causality from proximity, authorship from a diff, or correctness from reported success.
+- **Don't** turn a recorded gap queue into a defect score or an invented resolved workflow.
+- **Don't** treat synthetic examples, local snapshots, or collector connectivity as live Claude integration.

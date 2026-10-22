@@ -37,3 +37,12 @@ test("comparison links retain only scoped capture and file identifiers", () => {
   assert.equal(malformed.after, "");
   assert.equal(malformed.file, "");
 });
+
+test("work lists are the default while direct legacy activity and new review links remain valid", () => {
+  assert.equal(readLocation(new URL("http://localhost/")).view, "Sessions");
+  assert.equal(readLocation(new URL("http://localhost/?session=session-cache")).view, "Timeline");
+  for (const view of ["Session review", "Review queue"] as const) {
+    const state = { ...initialLocation, view, event: "demo-14" };
+    assert.deepEqual(readLocation(new URL(reviewUrl(state), "http://localhost")), state);
+  }
+});

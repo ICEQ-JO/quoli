@@ -237,6 +237,24 @@ export class Store {
       };
     });
   }
+  sessionCounts(project: string): Record<string, { kindCounts: Record<string, number> }> {
+    const rows = this.db
+      .prepare(`WITH recent AS (
+      SELECT session_id,min(sequence) AS first FROM events WHERE project_id=?
+      GROUP BY session_id ORDER BY first DESC LIMIT 50
+    ) SELECT e.session_id,json_extract(e.body,'$.payload.kind') AS kind,count(*) AS count
+      FROM events e JOIN recent r ON e.session_id=r.session_id
+      WHERE e.project_id=? GROUP BY e.session_id,kind`)
+      .all(project, project);
+    const counts = new Map<string, { kindCounts: Record<string, number> }>();
+    for (const row of rows) {
+      const id = String(row.session_id),
+        item = counts.get(id) ?? { kindCounts: {} };
+      item.kindCounts[String(row.kind)] = Number(row.count);
+      counts.set(id, item);
+    }
+    return Object.fromEntries(counts);
+  }
   private projectBytes(projectId: string): number {
     return Number(
       this.db

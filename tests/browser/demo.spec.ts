@@ -5,54 +5,74 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { demoEvents } from "../../fixtures/demo";
 
-test("workspace overview, searchable library and review queue retain navigation", async ({
+test("session work list preserves filters and opens a focused review; the gap queue retains context", async ({
   page,
 }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Workspace overview" })).toBeVisible();
-  await expect(page.locator(".register-row")).toHaveCount(3);
-  await expect(page.locator(".workspace-ledger")).toContainText("33");
-  await expect(page.locator(".queue-heading")).toContainText("4");
-  await page.getByRole("button", { name: "Explore a session" }).click();
-  await expect(page.locator(".event-row")).toHaveCount(8);
-  await page.getByRole("button", { name: "All sessions", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
+  await expect(page.locator(".work-session")).toHaveCount(3);
+  await expect(page.getByRole("button", { name: /Needs review 4/ })).toBeVisible();
   await page.getByRole("textbox", { name: "Search sessions" }).fill("slow");
-  await expect(page.locator(".register-row")).toHaveCount(1);
+  await expect(page.locator(".work-session")).toHaveCount(1);
   expect(page.url()).not.toContain("slow");
+  await page
+    .getByRole("button", { name: "Investigate a slow repository scan", exact: true })
+    .click();
+  await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
+  await expect(page.locator(".session-document")).toContainText(
+    "Find why the repository scan takes too long.",
+  );
+  await expect(page.locator(".session-document")).toContainText(
+    "No repository snapshots are retained",
+  );
+  await page.getByRole("button", { name: "All sessions", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Search sessions" })).toHaveValue("slow");
   await page.getByRole("textbox", { name: "Search sessions" }).fill("no-match");
   await expect(page.getByRole("heading", { name: "No sessions match" })).toBeVisible();
   await page.getByRole("button", { name: "Clear session filters" }).click();
+  await page.getByText("Display", { exact: true }).click();
+  await page.getByRole("combobox", { name: "Group sessions" }).selectOption("none");
+  await page.getByRole("combobox", { name: "Order sessions" }).selectOption("name");
+  await page.getByText("Display", { exact: true }).click();
+  await expect(page.locator(".session-group")).toHaveCount(1);
+  await expect(page.locator(".work-session").first()).toContainText("Content capture disabled");
   await page.getByRole("combobox", { name: "Session capture state" }).selectOption("open");
-  await expect(page.locator(".register-row")).toHaveCount(1);
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
+  await expect(page.locator(".work-session")).toHaveCount(1);
   await page
     .getByRole("navigation", { name: "Workspace", exact: true })
-    .getByRole("button", { name: "Overview", exact: true })
+    .getByRole("button", { name: "Needs review", exact: true })
     .click();
-  await page
-    .locator(".queue-item")
-    .filter({ hasText: "Investigate a slow repository scan" })
-    .click();
-  await expect(page.locator(".event-row")).toHaveCount(2);
-  await expect(
-    page.getByRole("button", { name: "Gaps", exact: false, pressed: true }),
-  ).toBeVisible();
+  await expect(page.locator(".inbox-item")).toHaveCount(4);
+  await expect(page.getByRole("heading", { name: "What's recorded" })).toBeVisible();
+  await page.locator(".inbox-item").filter({ hasText: "Content capture disabled" }).click();
+  const queueUrl = page.url();
+  await page.getByRole("button", { name: "Open session", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
+  await expect(page.locator(".session-document")).toContainText("[Content disabled]");
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Workspace overview" })).toBeVisible();
+  await expect(page).toHaveURL(queueUrl);
+  await expect(page.locator(".inbox-item[aria-pressed=true]")).toContainText(
+    "Content capture disabled",
+  );
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Back to recorded gaps" }).click();
+  await expect(page.locator(".inbox-item")).toHaveCount(4);
+  await expect(page.locator(".inbox-item").first()).toBeVisible();
+  await page.locator(".inbox-item").first().click();
+  await expect(page.getByRole("heading", { name: "What's recorded" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page
     .getByRole("navigation", { name: "Workspace", exact: true })
     .getByRole("button", { name: /Sessions/ })
     .click();
-  await page.locator(".register-row").first().click();
-  await expect(page.locator(".event-row")).toHaveCount(8);
+  await expect(page.locator(".work-mobile-status").first()).toBeVisible();
+  await expect(page.locator(".work-mobile-status").first()).toHaveText("No end recorded");
 });
 
-test("workspace summary errors remain unknown and can be retried", async ({ page }) => {
-  await page.route("**/api/data?resource=summary**", (route) =>
+test("work-list summary errors retain sessions and unknown counts; retry recovers", async ({
+  page,
+}) => {
+  await page.route("**/api/data?resource=session-counts**", (route) =>
     route.fulfill({
       status: 503,
       contentType: "application/json",
@@ -60,11 +80,12 @@ test("workspace summary errors remain unknown and can be retried", async ({ page
     }),
   );
   await page.goto("/");
-  await expect(page.getByText("Capture gap summaries couldn’t load.")).toBeVisible();
-  await expect(page.locator(".queue-heading > span")).toHaveText("—");
-  await page.unroute("**/api/data?resource=summary**");
-  await page.getByRole("button", { name: "Retry summaries" }).click();
-  await expect(page.locator(".queue-heading > span")).toHaveText("4");
+  await expect(page.getByText("Some gap counts are unavailable.")).toBeVisible();
+  await expect(page.locator(".work-session")).toHaveCount(3);
+  await expect(page.getByRole("button", { name: /Needs review —/ })).toBeVisible();
+  await page.unroute("**/api/data?resource=session-counts**");
+  await page.getByRole("button", { name: "Retry counts" }).click();
+  await expect(page.getByRole("button", { name: /Needs review 4/ })).toBeVisible();
 });
 
 test("review activity, search the entire session and retain evidence links through reload", async ({
@@ -83,6 +104,7 @@ test("review activity, search the entire session and retain evidence links throu
   ).toBeVisible();
   await expect(page.getByText("Collector connected")).toBeVisible();
   await expect(page.locator(".event-row")).toHaveCount(8);
+  await page.locator(".event-row").filter({ hasText: "Developer prompt" }).first().click();
   await page.getByRole("button", { name: "Copy evidence link" }).click();
   await expect(page).toHaveURL(/event=demo-14/);
   await expect(
@@ -112,7 +134,7 @@ test("review activity, search the entire session and retain evidence links throu
   await page.getByRole("button", { name: "Clear filters" }).click();
   await page.getByRole("button", { name: /Review gaps/ }).click();
   await expect(page.locator(".event-row")).toHaveCount(1);
-  await expect(page.locator(".event-row")).toContainText("missing result");
+  await expect(page.locator(".event-row")).toContainText("Missing result");
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   await expect(page.locator(".usage-table tr").filter({ hasText: "Cache read" })).toContainText(
     "30,500",
@@ -125,12 +147,24 @@ test("review activity, search the entire session and retain evidence links throu
   );
   await page.getByRole("tab", { name: "Coverage", exact: true }).click();
   await expect(page.getByText("Feature correctness unknown")).toBeVisible();
-  await page.getByRole("button", { name: /Investigate a slow repository scan/ }).click();
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("button", { name: /Sessions/ })
+    .click();
+  await page
+    .getByRole("button", { name: "Investigate a slow repository scan", exact: true })
+    .click();
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   await expect(page.locator(".usage-table tr").filter({ hasText: "Output tokens" })).toContainText(
     "—",
   );
-  await page.getByRole("button", { name: /Content capture disabled/ }).click();
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("button", { name: /Sessions/ })
+    .click();
+  await page.getByRole("button", { name: "Content capture disabled", exact: true }).click();
+  await page.getByRole("tab", { name: /Activity/ }).click();
+  await page.locator(".event-row").filter({ hasText: "Developer prompt" }).click();
   await expect(page.locator(".desktop-inspector .payload")).toContainText("[Content disabled]");
   expect(errors).toEqual([]);
   expect(outbound).toEqual([]);
@@ -181,6 +215,7 @@ test("mobile evidence opens with protected focus and Escape returns to the selec
   await expect(
     page.getByRole("heading", { level: 1, name: "Investigate a slow repository scan" }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: /Activity/ }).click();
   await page.locator(".event-row").nth(1).click();
   await page.reload();
   await expect(page.getByRole("dialog", { name: "Evidence details" })).toBeVisible();
@@ -239,10 +274,11 @@ test("captured HTML and instructions stay inert and never trigger external reque
     if (!["127.0.0.1", "localhost"].includes(new URL(r.url()).hostname)) outbound.push(r.url());
   });
   await page.goto("/");
-  await page
-    .getByRole("navigation", { name: "Sessions", exact: true })
-    .getByRole("button", { name: /Inspect untrusted source text/ })
-    .click();
+  await page.getByRole("button", { name: "Inspect untrusted source text", exact: true }).click();
+  await expect(page.locator(".request-entry p")).toHaveText(unsafe);
+  expect(await page.locator(".session-document img").count()).toBe(0);
+  await page.getByRole("tab", { name: /Activity/ }).click();
+  await page.locator(".event-row").filter({ hasText: "Developer prompt" }).click();
   await expect(page.locator(".desktop-inspector .payload")).toHaveText(unsafe);
   expect(await page.evaluate(() => "__traceframeInjected" in window)).toBe(false);
   expect(await page.locator(".payload img").count()).toBe(0);
@@ -304,11 +340,12 @@ test("explicitly registered local snapshots appear without synthetic claims or e
     cli("snapshot", project ?? "");
     await page.goto("/");
     await page.getByRole("combobox", { name: "Project", exact: true }).selectOption(project ?? "");
-    await expect(page.locator(".workspace-badge")).toHaveText("Local workspace");
-    await expect(page.locator(".register-row")).toHaveCount(1);
-    await page.getByRole("button", { name: "Open a review", exact: true }).click();
+    await expect(page.locator(".index-heading")).toContainText("Local repository");
+    await expect(page.locator(".work-session")).toHaveCount(1);
+    await page.getByRole("button", { name: "Repository review", exact: true }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Repository review" })).toBeVisible();
     await expect(page.locator(".demo-label")).toHaveText("Local repository");
+    await page.getByRole("tab", { name: /Activity/ }).click();
     await expect(page.locator(".event-row")).toHaveCount(2);
     await expect(page.locator(".event-row").first()).toContainText("Repository baseline captured");
     await page.getByRole("tab", { name: "Coverage", exact: true }).click();
@@ -466,4 +503,127 @@ test("fresh local connections retain the requested loopback origin and review se
       await context.close();
     }
   }
+});
+
+test("activity opens details on demand and theme choice survives reload", async ({ page }) => {
+  await page.goto("/?session=session-interrupted&view=activity");
+  await expect(page.locator(".event-row")).toHaveCount(6);
+  await expect(page.locator(".desktop-inspector")).not.toBeVisible();
+  await page.getByRole("button", { name: /Developer prompt/ }).click();
+  await expect(page.locator(".desktop-inspector")).toBeVisible();
+  await page.getByRole("button", { name: "Close evidence inspector" }).click();
+  await expect(page.locator(".desktop-inspector")).not.toBeVisible();
+  expect(new URL(page.url()).searchParams.has("event")).toBe(false);
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Switch to dark theme" })).toBeVisible();
+  await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(23, 23, 25)");
+});
+
+test("session review keeps source inspection in context, supports breakpoint changes and opens code", async ({
+  page,
+}) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Handle an empty cache response", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "Review", exact: true })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.locator(".session-properties")).toContainText("30,500");
+  const source = page.getByRole("button", { name: "Recorded source", exact: true });
+  await source.click();
+  await expect(page).toHaveURL(/view=session.*event=demo-14/);
+  await expect(page.locator(".session-evidence .payload")).toContainText("The usage panel crashes");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".session-evidence")).not.toBeVisible();
+  await expect(source).toBeFocused();
+  await page.getByRole("button", { name: "Load more work", exact: true }).click();
+  await expect(page.locator(".sequence-pagination")).toContainText("11 of 11");
+  await expect(page.locator(".work-sequence")).toContainText("pnpm typecheck");
+  await source.click();
+  await page.getByRole("button", { name: "Copy evidence link", exact: true }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Local evidence link copied." }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/view=session/);
+  await page.reload();
+  await expect(page.locator(".session-evidence .payload")).toContainText("The usage panel crashes");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole("dialog", { name: "Evidence details" })).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await expect(page.getByRole("dialog", { name: "Evidence details" })).not.toBeVisible();
+  await expect(page.locator(".session-evidence .payload")).toBeVisible();
+  await page.getByRole("button", { name: "Close evidence inspector" }).click();
+  await page.getByRole("button", { name: "Open changes", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Unified code diff" })).toContainText("?? null");
+  await page.goBack();
+  await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
+});
+
+test("review queue links retain the queue and mobile navigation remains reachable", async ({
+  page,
+}) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/?view=review");
+  await expect(page.locator(".inbox-item")).toHaveCount(4);
+  await expect(page.getByRole("heading", { name: "What's recorded" })).toBeVisible();
+  await expect(page.locator(".inbox-detail .payload")).toHaveCount(0);
+  await page.getByRole("button", { name: "Copy evidence link", exact: true }).click();
+  await expect(page).toHaveURL(/view=review.*event=/);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "What's recorded" })).toBeVisible();
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.getByRole("button", { name: "Back to recorded gaps" }).click();
+  await expect(page.locator(".inbox-item").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("button", { name: "Project overview", exact: true })
+    .click();
+  await expect(page.getByRole("heading", { name: "Workspace overview" })).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("button", { name: /Sessions/ })
+    .click();
+  for (const name of [
+    "Handle an empty cache response",
+    "Content capture disabled",
+    "Investigate a slow repository scan",
+  ]) {
+    await expect(page.getByRole("button", { name: new RegExp(`^${name}`) })).toBeVisible();
+  }
+});
+
+test("unknown or unavailable session metadata has an explicit recovery instead of an endless loader", async ({
+  page,
+}) => {
+  await page.goto("/?session=missing-session&view=session");
+  await expect(
+    page.getByRole("heading", { name: "Session review unavailable", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Capture state unavailable", { exact: true })).toBeVisible();
+  await expect(page.getByText("Loading session review…", { exact: true })).not.toBeVisible();
+  await page.getByRole("button", { name: "Choose another session", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
+  await page.route("**/api/data?resource=sessions&**", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Metadata unavailable." }),
+    }),
+  );
+  await page.goto("/?session=session-cache&view=session");
+  await expect(
+    page.getByRole("heading", { name: "Session review unavailable", exact: true }),
+  ).toBeVisible();
+  await page.unroute("**/api/data?resource=sessions&**");
+  await page.getByRole("button", { name: "Retry review", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
 });

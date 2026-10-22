@@ -4,7 +4,7 @@ A local evidence workbench for AI-assisted development. Repository: `ICEQ-JO/quo
 
 > Show me what my coding agent did, what changed, and what remains unverified.
 
-The first usable preview is available: **a synthetic session explorer** with a persistent timeline, tool results, evidence links, reported token/cache usage and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md). The dashboard now compares captured before/after versions with source links and explicit unavailable sides. Live Claude Code collection and the change map are still upcoming.
+The local preview is available: **a session review workspace** with a persistent timeline, tool results, evidence links, reported token/cache usage and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md). The dashboard opens on a grouped session work list, with a focused review page, a recorded-gap inbox, and captured before/after inspection. See the [workspace guide](docs/design/session-workspace.md). Live Claude Code collection and the change map are still upcoming.
 
 ## Run the demo
 

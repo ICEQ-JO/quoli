@@ -42,7 +42,7 @@ See [local repository capture](repository-capture.md). `pnpm repository register
 
 `apps/web/app/dashboard.tsx` owns local navigation and session review state. `review.ts` serializes only validated project/session/view/event/capture/file IDs; the local-cookie connection route preserves this state and drops arbitrary return destinations. `components/workspace-home.tsx` owns overview/library presentation and bounded per-session summary reads. Workspace counts derive from the returned retained-session list (currently capped at 50 by storage); they are not universal collection metrics. Summary failures keep gap counts unknown. Project/session metadata loads independently from the selected session summary so one failed summary does not erase the session list.
 
-The root view is Overview; explicit legacy session URLs remain review views. Session-content search stays in a bounded POST body, while session-title search stays in local component state. Geist Variable is bundled from the pinned Fontsource package and served locally: runtime typography makes no third-party font requests. [PRODUCT.md](../apps/web/PRODUCT.md) records product truth; [DESIGN.md](../apps/web/DESIGN.md) records the built visual system.
+The root view is Sessions. Opening a work-list row uses `view=session` for the full review document; `view=review` opens the capture-gap inbox. Explicit legacy session URLs still open Activity. Session-content search stays in a bounded POST body, while session-title search stays in local component state. Geist Variable is bundled from the pinned Fontsource package and served locally: runtime typography makes no third-party font requests. [PRODUCT.md](../apps/web/PRODUCT.md) records product truth; [DESIGN.md](../apps/web/DESIGN.md) records the built visual system.
 
 ## HTTP contract, version 1
 
@@ -79,3 +79,7 @@ The test suite covers strict contracts, omitted/nested tool content, fake-secret
 ## Captured changes
 
 See [captured file review](captured-changes.md) for projection semantics, bounds and API. `components/changes-view.tsx` owns pair selection and bounded list/detail reads; `packages/analysis/src/diff.ts` is a pure deterministic projection with no filesystem access. Snapshot metadata supports `order=latest` receipt pagination. Captured diffs are recomputable views of immutable evidence, not a second source of truth.
+
+## Workspace projections
+
+`GET /v1/projects/:project/session-counts` returns only grouped event-kind counts for the same 50-session register bound. This authenticated, project-scoped read replaces per-session summary fan-out in work lists. It returns no captured text, source bodies or repository roots. The browser uses `resource=session-counts` through the protected data proxy. Session reading still requests its scoped prompt/tool/gap pages and capture metadata independently. UI startup reads URL state before mounting evidence views, avoiding requests or flashes for a fallback project.

@@ -1,590 +1,193 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-22T10:50:49.575281+00:00",
+  "generatedAt": "2026-10-22T11:52:11.891929+00:00",
   "title": "Design System: Traceframe",
   "extensions": {
     "colorMeta": {
       "bg": {
-        "role": "neutral",
         "displayName": "Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0041 271.37)",
-          "oklch(26% 0.0041 271.37)",
-          "oklch(38% 0.0041 271.37)",
-          "oklch(49% 0.0041 271.37)",
-          "oklch(61% 0.0041 271.37)",
-          "oklch(72% 0.0041 271.37)",
-          "oklch(84% 0.0041 271.37)",
-          "oklch(95% 0.0041 271.37)"
-        ]
+        "role": "neutral"
       },
       "surface": {
-        "role": "neutral",
         "displayName": "Surface",
-        "tonalRamp": [
-          "oklch(15% 0.0000 89.88)",
-          "oklch(26% 0.0000 89.88)",
-          "oklch(38% 0.0000 89.88)",
-          "oklch(49% 0.0000 89.88)",
-          "oklch(61% 0.0000 89.88)",
-          "oklch(72% 0.0000 89.88)",
-          "oklch(84% 0.0000 89.88)",
-          "oklch(95% 0.0000 89.88)"
-        ]
+        "role": "neutral"
       },
       "sidebar": {
-        "role": "neutral",
         "displayName": "Sidebar",
-        "tonalRamp": [
-          "oklch(15% 0.0363 267.38)",
-          "oklch(26% 0.0363 267.38)",
-          "oklch(38% 0.0363 267.38)",
-          "oklch(49% 0.0363 267.38)",
-          "oklch(61% 0.0363 267.38)",
-          "oklch(72% 0.0363 267.38)",
-          "oklch(84% 0.0363 267.38)",
-          "oklch(95% 0.0363 267.38)"
-        ]
+        "role": "neutral"
       },
       "ink": {
-        "role": "neutral",
         "displayName": "Ink",
-        "tonalRamp": [
-          "oklch(15% 0.0441 268.83)",
-          "oklch(26% 0.0441 268.83)",
-          "oklch(38% 0.0441 268.83)",
-          "oklch(49% 0.0441 268.83)",
-          "oklch(61% 0.0441 268.83)",
-          "oklch(72% 0.0441 268.83)",
-          "oklch(84% 0.0441 268.83)",
-          "oklch(95% 0.0441 268.83)"
-        ]
+        "role": "neutral"
       },
       "muted": {
-        "role": "neutral",
         "displayName": "Muted",
-        "tonalRamp": [
-          "oklch(15% 0.0357 263.34)",
-          "oklch(26% 0.0357 263.34)",
-          "oklch(38% 0.0357 263.34)",
-          "oklch(49% 0.0357 263.34)",
-          "oklch(61% 0.0357 263.34)",
-          "oklch(72% 0.0357 263.34)",
-          "oklch(84% 0.0357 263.34)",
-          "oklch(95% 0.0357 263.34)"
-        ]
+        "role": "neutral"
       },
       "subtle": {
-        "role": "neutral",
         "displayName": "Subtle",
-        "tonalRamp": [
-          "oklch(15% 0.0319 263.30)",
-          "oklch(26% 0.0319 263.30)",
-          "oklch(38% 0.0319 263.30)",
-          "oklch(49% 0.0319 263.30)",
-          "oklch(61% 0.0319 263.30)",
-          "oklch(72% 0.0319 263.30)",
-          "oklch(84% 0.0319 263.30)",
-          "oklch(95% 0.0319 263.30)"
-        ]
+        "role": "neutral"
       },
       "line": {
-        "role": "neutral",
         "displayName": "Line",
-        "tonalRamp": [
-          "oklch(15% 0.0117 264.51)",
-          "oklch(26% 0.0117 264.51)",
-          "oklch(38% 0.0117 264.51)",
-          "oklch(49% 0.0117 264.51)",
-          "oklch(61% 0.0117 264.51)",
-          "oklch(72% 0.0117 264.51)",
-          "oklch(84% 0.0117 264.51)",
-          "oklch(95% 0.0117 264.51)"
-        ]
+        "role": "neutral"
       },
       "line-soft": {
-        "role": "neutral",
         "displayName": "Line Soft",
-        "tonalRamp": [
-          "oklch(15% 0.0070 268.55)",
-          "oklch(26% 0.0070 268.55)",
-          "oklch(38% 0.0070 268.55)",
-          "oklch(49% 0.0070 268.55)",
-          "oklch(61% 0.0070 268.55)",
-          "oklch(72% 0.0070 268.55)",
-          "oklch(84% 0.0070 268.55)",
-          "oklch(95% 0.0070 268.55)"
-        ]
+        "role": "neutral"
       },
       "accent": {
-        "role": "primary",
         "displayName": "Accent",
-        "tonalRamp": [
-          "oklch(15% 0.2012 267.22)",
-          "oklch(26% 0.2012 267.22)",
-          "oklch(38% 0.2012 267.22)",
-          "oklch(49% 0.2012 267.22)",
-          "oklch(61% 0.2012 267.22)",
-          "oklch(72% 0.2012 267.22)",
-          "oklch(84% 0.2012 267.22)",
-          "oklch(95% 0.2012 267.22)"
-        ]
+        "role": "primary"
       },
       "accent-dark": {
-        "role": "primary",
         "displayName": "Accent Dark",
-        "tonalRamp": [
-          "oklch(15% 0.1889 266.45)",
-          "oklch(26% 0.1889 266.45)",
-          "oklch(38% 0.1889 266.45)",
-          "oklch(49% 0.1889 266.45)",
-          "oklch(61% 0.1889 266.45)",
-          "oklch(72% 0.1889 266.45)",
-          "oklch(84% 0.1889 266.45)",
-          "oklch(95% 0.1889 266.45)"
-        ]
+        "role": "primary"
       },
       "selected": {
-        "role": "primary",
         "displayName": "Selected",
-        "tonalRamp": [
-          "oklch(15% 0.0179 272.31)",
-          "oklch(26% 0.0179 272.31)",
-          "oklch(38% 0.0179 272.31)",
-          "oklch(49% 0.0179 272.31)",
-          "oklch(61% 0.0179 272.31)",
-          "oklch(72% 0.0179 272.31)",
-          "oklch(84% 0.0179 272.31)",
-          "oklch(95% 0.0179 272.31)"
-        ]
+        "role": "primary"
       },
       "warning": {
-        "role": "tertiary",
         "displayName": "Warning",
-        "tonalRamp": [
-          "oklch(15% 0.1081 72.82)",
-          "oklch(26% 0.1081 72.82)",
-          "oklch(38% 0.1081 72.82)",
-          "oklch(49% 0.1081 72.82)",
-          "oklch(61% 0.1081 72.82)",
-          "oklch(72% 0.1081 72.82)",
-          "oklch(84% 0.1081 72.82)",
-          "oklch(95% 0.1081 72.82)"
-        ]
+        "role": "tertiary"
       },
       "warning-bg": {
-        "role": "tertiary",
         "displayName": "Warning Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0211 85.94)",
-          "oklch(26% 0.0211 85.94)",
-          "oklch(38% 0.0211 85.94)",
-          "oklch(49% 0.0211 85.94)",
-          "oklch(61% 0.0211 85.94)",
-          "oklch(72% 0.0211 85.94)",
-          "oklch(84% 0.0211 85.94)",
-          "oklch(95% 0.0211 85.94)"
-        ]
+        "role": "tertiary"
       },
       "negative": {
-        "role": "tertiary",
         "displayName": "Negative",
-        "tonalRamp": [
-          "oklch(15% 0.1505 16.39)",
-          "oklch(26% 0.1505 16.39)",
-          "oklch(38% 0.1505 16.39)",
-          "oklch(49% 0.1505 16.39)",
-          "oklch(61% 0.1505 16.39)",
-          "oklch(72% 0.1505 16.39)",
-          "oklch(84% 0.1505 16.39)",
-          "oklch(95% 0.1505 16.39)"
-        ]
+        "role": "tertiary"
       },
       "negative-bg": {
-        "role": "tertiary",
         "displayName": "Negative Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0164 8.16)",
-          "oklch(26% 0.0164 8.16)",
-          "oklch(38% 0.0164 8.16)",
-          "oklch(49% 0.0164 8.16)",
-          "oklch(61% 0.0164 8.16)",
-          "oklch(72% 0.0164 8.16)",
-          "oklch(84% 0.0164 8.16)",
-          "oklch(95% 0.0164 8.16)"
-        ]
+        "role": "tertiary"
+      },
+      "primary-fill": {
+        "displayName": "Primary Fill",
+        "role": "primary"
+      },
+      "primary-border": {
+        "displayName": "Primary Border",
+        "role": "primary"
+      },
+      "primary-hover": {
+        "displayName": "Primary Hover",
+        "role": "primary"
+      },
+      "primary-text": {
+        "displayName": "Primary Text",
+        "role": "primary"
       },
       "nav-selected": {
-        "role": "primary",
         "displayName": "Nav Selected",
-        "tonalRamp": [
-          "oklch(15% 0.1813 268.08)",
-          "oklch(26% 0.1813 268.08)",
-          "oklch(38% 0.1813 268.08)",
-          "oklch(49% 0.1813 268.08)",
-          "oklch(61% 0.1813 268.08)",
-          "oklch(72% 0.1813 268.08)",
-          "oklch(84% 0.1813 268.08)",
-          "oklch(95% 0.1813 268.08)"
-        ]
+        "role": "neutral"
       },
       "nav-hover": {
-        "role": "neutral",
         "displayName": "Nav Hover",
-        "tonalRamp": [
-          "oklch(15% 0.0458 266.41)",
-          "oklch(26% 0.0458 266.41)",
-          "oklch(38% 0.0458 266.41)",
-          "oklch(49% 0.0458 266.41)",
-          "oklch(61% 0.0458 266.41)",
-          "oklch(72% 0.0458 266.41)",
-          "oklch(84% 0.0458 266.41)",
-          "oklch(95% 0.0458 266.41)"
-        ]
-      },
-      "nav-session-selected": {
-        "role": "neutral",
-        "displayName": "Nav Session Selected",
-        "tonalRamp": [
-          "oklch(15% 0.0437 265.91)",
-          "oklch(26% 0.0437 265.91)",
-          "oklch(38% 0.0437 265.91)",
-          "oklch(49% 0.0437 265.91)",
-          "oklch(61% 0.0437 265.91)",
-          "oklch(72% 0.0437 265.91)",
-          "oklch(84% 0.0437 265.91)",
-          "oklch(95% 0.0437 265.91)"
-        ]
+        "role": "neutral"
       },
       "recorded": {
-        "role": "secondary",
         "displayName": "Recorded",
-        "tonalRamp": [
-          "oklch(15% 0.1056 264.82)",
-          "oklch(26% 0.1056 264.82)",
-          "oklch(38% 0.1056 264.82)",
-          "oklch(49% 0.1056 264.82)",
-          "oklch(61% 0.1056 264.82)",
-          "oklch(72% 0.1056 264.82)",
-          "oklch(84% 0.1056 264.82)",
-          "oklch(95% 0.1056 264.82)"
-        ]
-      },
-      "recorded-bg": {
-        "role": "secondary",
-        "displayName": "Recorded Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0153 269.99)",
-          "oklch(26% 0.0153 269.99)",
-          "oklch(38% 0.0153 269.99)",
-          "oklch(49% 0.0153 269.99)",
-          "oklch(61% 0.0153 269.99)",
-          "oklch(72% 0.0153 269.99)",
-          "oklch(84% 0.0153 269.99)",
-          "oklch(95% 0.0153 269.99)"
-        ]
+        "role": "secondary"
       },
       "derived": {
-        "role": "secondary",
         "displayName": "Derived",
-        "tonalRamp": [
-          "oklch(15% 0.1231 297.74)",
-          "oklch(26% 0.1231 297.74)",
-          "oklch(38% 0.1231 297.74)",
-          "oklch(49% 0.1231 297.74)",
-          "oklch(61% 0.1231 297.74)",
-          "oklch(72% 0.1231 297.74)",
-          "oklch(84% 0.1231 297.74)",
-          "oklch(95% 0.1231 297.74)"
-        ]
+        "role": "secondary"
       },
       "derived-bg": {
-        "role": "secondary",
         "displayName": "Derived Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0180 303.42)",
-          "oklch(26% 0.0180 303.42)",
-          "oklch(38% 0.0180 303.42)",
-          "oklch(49% 0.0180 303.42)",
-          "oklch(61% 0.0180 303.42)",
-          "oklch(72% 0.0180 303.42)",
-          "oklch(84% 0.0180 303.42)",
-          "oklch(95% 0.0180 303.42)"
-        ]
+        "role": "secondary"
       },
-      "result": {
-        "role": "tertiary",
-        "displayName": "Result",
-        "tonalRamp": [
-          "oklch(15% 0.0548 168.48)",
-          "oklch(26% 0.0548 168.48)",
-          "oklch(38% 0.0548 168.48)",
-          "oklch(49% 0.0548 168.48)",
-          "oklch(61% 0.0548 168.48)",
-          "oklch(72% 0.0548 168.48)",
-          "oklch(84% 0.0548 168.48)",
-          "oklch(95% 0.0548 168.48)"
-        ]
-      },
-      "result-bg": {
-        "role": "tertiary",
-        "displayName": "Result Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0069 174.38)",
-          "oklch(26% 0.0069 174.38)",
-          "oklch(38% 0.0069 174.38)",
-          "oklch(49% 0.0069 174.38)",
-          "oklch(61% 0.0069 174.38)",
-          "oklch(72% 0.0069 174.38)",
-          "oklch(84% 0.0069 174.38)",
-          "oklch(95% 0.0069 174.38)"
-        ]
-      },
-      "code-bg": {
-        "role": "neutral",
-        "displayName": "Code Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0430 265.10)",
-          "oklch(26% 0.0430 265.10)",
-          "oklch(38% 0.0430 265.10)",
-          "oklch(49% 0.0430 265.10)",
-          "oklch(61% 0.0430 265.10)",
-          "oklch(72% 0.0430 265.10)",
-          "oklch(84% 0.0430 265.10)",
-          "oklch(95% 0.0430 265.10)"
-        ]
-      },
-      "code-text": {
-        "role": "neutral",
-        "displayName": "Code Text",
-        "tonalRamp": [
-          "oklch(15% 0.0320 266.16)",
-          "oklch(26% 0.0320 266.16)",
-          "oklch(38% 0.0320 266.16)",
-          "oklch(49% 0.0320 266.16)",
-          "oklch(61% 0.0320 266.16)",
-          "oklch(72% 0.0320 266.16)",
-          "oklch(84% 0.0320 266.16)",
-          "oklch(95% 0.0320 266.16)"
-        ]
-      },
-      "failed-code-bg": {
-        "role": "neutral",
-        "displayName": "Failed Code Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0304 333.50)",
-          "oklch(26% 0.0304 333.50)",
-          "oklch(38% 0.0304 333.50)",
-          "oklch(49% 0.0304 333.50)",
-          "oklch(61% 0.0304 333.50)",
-          "oklch(72% 0.0304 333.50)",
-          "oklch(84% 0.0304 333.50)",
-          "oklch(95% 0.0304 333.50)"
-        ]
-      },
-      "failed-code-text": {
-        "role": "neutral",
-        "displayName": "Failed Code Text",
-        "tonalRamp": [
-          "oklch(15% 0.0627 3.41)",
-          "oklch(26% 0.0627 3.41)",
-          "oklch(38% 0.0627 3.41)",
-          "oklch(49% 0.0627 3.41)",
-          "oklch(61% 0.0627 3.41)",
-          "oklch(72% 0.0627 3.41)",
-          "oklch(84% 0.0627 3.41)",
-          "oklch(95% 0.0627 3.41)"
-        ]
-      },
-      "diff-code": {
-        "role": "neutral",
-        "displayName": "Diff Code",
-        "tonalRamp": [
-          "oklch(15% 0.0546 262.57)",
-          "oklch(26% 0.0546 262.57)",
-          "oklch(38% 0.0546 262.57)",
-          "oklch(49% 0.0546 262.57)",
-          "oklch(61% 0.0546 262.57)",
-          "oklch(72% 0.0546 262.57)",
-          "oklch(84% 0.0546 262.57)",
-          "oklch(95% 0.0546 262.57)"
-        ]
-      },
-      "diff-gutter": {
-        "role": "neutral",
-        "displayName": "Diff Gutter",
-        "tonalRamp": [
-          "oklch(15% 0.0054 274.97)",
-          "oklch(26% 0.0054 274.97)",
-          "oklch(38% 0.0054 274.97)",
-          "oklch(49% 0.0054 274.97)",
-          "oklch(61% 0.0054 274.97)",
-          "oklch(72% 0.0054 274.97)",
-          "oklch(84% 0.0054 274.97)",
-          "oklch(95% 0.0054 274.97)"
-        ]
-      },
-      "diff-add": {
-        "role": "tertiary",
-        "displayName": "Diff Add",
-        "tonalRamp": [
-          "oklch(15% 0.0850 160.92)",
-          "oklch(26% 0.0850 160.92)",
-          "oklch(38% 0.0850 160.92)",
-          "oklch(49% 0.0850 160.92)",
-          "oklch(61% 0.0850 160.92)",
-          "oklch(72% 0.0850 160.92)",
-          "oklch(84% 0.0850 160.92)",
-          "oklch(95% 0.0850 160.92)"
-        ]
+      "capture-end": {
+        "displayName": "Capture End",
+        "role": "tertiary"
       },
       "diff-add-bg": {
-        "role": "tertiary",
         "displayName": "Diff Add Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0132 159.92)",
-          "oklch(26% 0.0132 159.92)",
-          "oklch(38% 0.0132 159.92)",
-          "oklch(49% 0.0132 159.92)",
-          "oklch(61% 0.0132 159.92)",
-          "oklch(72% 0.0132 159.92)",
-          "oklch(84% 0.0132 159.92)",
-          "oklch(95% 0.0132 159.92)"
-        ]
-      },
-      "diff-add-gutter": {
-        "role": "tertiary",
-        "displayName": "Diff Add Gutter",
-        "tonalRamp": [
-          "oklch(15% 0.0182 161.11)",
-          "oklch(26% 0.0182 161.11)",
-          "oklch(38% 0.0182 161.11)",
-          "oklch(49% 0.0182 161.11)",
-          "oklch(61% 0.0182 161.11)",
-          "oklch(72% 0.0182 161.11)",
-          "oklch(84% 0.0182 161.11)",
-          "oklch(95% 0.0182 161.11)"
-        ]
+        "role": "tertiary"
       },
       "diff-delete-bg": {
-        "role": "tertiary",
         "displayName": "Diff Delete Bg",
-        "tonalRamp": [
-          "oklch(15% 0.0153 7.48)",
-          "oklch(26% 0.0153 7.48)",
-          "oklch(38% 0.0153 7.48)",
-          "oklch(49% 0.0153 7.48)",
-          "oklch(61% 0.0153 7.48)",
-          "oklch(72% 0.0153 7.48)",
-          "oklch(84% 0.0153 7.48)",
-          "oklch(95% 0.0153 7.48)"
-        ]
+        "role": "tertiary"
+      },
+      "diff-add-number": {
+        "displayName": "Diff Add Number",
+        "role": "tertiary"
+      },
+      "diff-add-gutter": {
+        "displayName": "Diff Add Gutter",
+        "role": "tertiary"
       },
       "diff-delete-gutter": {
-        "role": "tertiary",
         "displayName": "Diff Delete Gutter",
-        "tonalRamp": [
-          "oklch(15% 0.0260 2.77)",
-          "oklch(26% 0.0260 2.77)",
-          "oklch(38% 0.0260 2.77)",
-          "oklch(49% 0.0260 2.77)",
-          "oklch(61% 0.0260 2.77)",
-          "oklch(72% 0.0260 2.77)",
-          "oklch(84% 0.0260 2.77)",
-          "oklch(95% 0.0260 2.77)"
-        ]
-      },
-      "diff-delete-number": {
-        "role": "tertiary",
-        "displayName": "Diff Delete Number",
-        "tonalRamp": [
-          "oklch(15% 0.1077 8.41)",
-          "oklch(26% 0.1077 8.41)",
-          "oklch(38% 0.1077 8.41)",
-          "oklch(49% 0.1077 8.41)",
-          "oklch(61% 0.1077 8.41)",
-          "oklch(72% 0.1077 8.41)",
-          "oklch(84% 0.1077 8.41)",
-          "oklch(95% 0.1077 8.41)"
-        ]
-      },
-      "diff-absent": {
-        "role": "neutral",
-        "displayName": "Diff Absent",
-        "tonalRamp": [
-          "oklch(15% 0.0057 264.53)",
-          "oklch(26% 0.0057 264.53)",
-          "oklch(38% 0.0057 264.53)",
-          "oklch(49% 0.0057 264.53)",
-          "oklch(61% 0.0057 264.53)",
-          "oklch(72% 0.0057 264.53)",
-          "oklch(84% 0.0057 264.53)",
-          "oklch(95% 0.0057 264.53)"
-        ]
+        "role": "tertiary"
       }
     },
     "typographyMeta": {
-      "headline": {
-        "displayName": "Workspace heading",
-        "purpose": "Page orientation; responsive sizes are documented in Layout."
+      "request": {
+        "displayName": "Captured developer request",
+        "purpose": "Readable retained prose; 15px desktop, 14px mobile."
       },
-      "payload": {
-        "displayName": "Captured source",
-        "purpose": "Wrapped monospace evidence, never an executable action."
-      },
-      "diff-code": {
-        "displayName": "Captured diff code",
-        "purpose": "Preserved whitespace; 11px desktop and 10px on phones."
-      },
-      "diff-line-number": {
-        "displayName": "Diff line number",
-        "purpose": "Monospace 10px on desktop and mobile; semantic gutters retain contrast."
+      "source-code": {
+        "displayName": "Retained source code",
+        "purpose": "12px monospace; code remains inert."
       }
     },
     "shadows": [
       {
+        "name": "display-options",
+        "value": "0 8px 24px #00000024",
+        "purpose": "Temporary work-list grouping/order disclosure."
+      },
+      {
+        "name": "source-dialog",
+        "value": "0 24px 70px #13224633",
+        "purpose": "Native modal exact-source inspection."
+      },
+      {
         "name": "help-disclosure",
         "value": "0 10px 30px #19294d1a",
-        "purpose": "Temporary synthetic-workspace help."
-      },
-      {
-        "name": "evidence-dialog",
-        "value": "0 24px 70px #13224633",
-        "purpose": "Native modal evidence inspection."
-      },
-      {
-        "name": "diff-mode-selected",
-        "value": "0 1px 3px #20345e14",
-        "purpose": "Selected Unified/Side by side segment."
+        "purpose": "Inherited temporary help disclosure."
       }
     ],
     "motion": [
       {
         "name": "state-change",
         "value": "background-color 160ms ease-out, border-color 160ms ease-out",
-        "purpose": "Buttons and interactive rows; reduced-motion removes transitions."
+        "purpose": "Defined button and row state transitions; removed for reduced motion."
+      },
+      {
+        "name": "review-arrive",
+        "value": "180ms ease-out; clip-path: inset(0 0 2% 0) to inset(0)",
+        "purpose": "Review entry only when reduced motion is not requested."
       }
     ],
     "breakpoints": [
       {
-        "name": "wide-workspace",
+        "name": "wide-review",
         "value": "min-width: 1600px"
       },
       {
-        "name": "compact-desktop",
-        "value": "max-width: 1279px"
-      },
-      {
-        "name": "dialog-inspector",
+        "name": "native-source-dialog",
         "value": "max-width: 1099px"
       },
       {
-        "name": "compact-rail",
+        "name": "queue-list-detail",
+        "value": "max-width: 899px"
+      },
+      {
+        "name": "mobile-navigation",
         "value": "max-width: 799px"
       },
       {
-        "name": "top-navigation",
+        "name": "capture-selectors-sheet",
         "value": "max-width: 559px"
+      },
+      {
+        "name": "compact-navigation-labels",
+        "value": "max-width: 359px"
       }
     ]
   },
@@ -593,109 +196,109 @@
       "name": "Primary action",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Compact cobalt route to a concrete next step.",
-      "html": "<button class=\"ds-primary\">Explore a session \u2192</button>",
-      "css": ".ds-primary{font:500 12px/1.55 var(--sans);min-height:36px;padding:8px 13px;border-radius:6px;cursor:pointer;transition:background-color 160ms ease-out,border-color 160ms ease-out;background:var(--accent);color:var(--surface);border:1px solid var(--accent)}.ds-primary:hover{background:var(--accent-dark);border-color:var(--accent-dark)}.ds-primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}"
+      "description": "A concrete action using the filled violet palette.",
+      "html": "<button class=\"ds-primary\">Review gaps</button>",
+      "css": ".ds-primary{font:500 13px/1.55 var(--sans);min-height:32px;padding:8px 13px;border-radius:6px;cursor:pointer;transition:background-color 160ms ease-out,border-color 160ms ease-out;background:light-dark(#6653c2,#7360ce);border:1px solid light-dark(#6653c2,#8c79e2);color:#fff}.ds-primary:hover{background:light-dark(#5745b0,#6752bd)}.ds-primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}"
     },
     {
       "name": "Secondary action",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Bordered control for recovery and pagination.",
-      "html": "<button class=\"ds-secondary\">Load more \u2193</button>",
-      "css": ".ds-secondary{font:500 12px/1.55 var(--sans);min-height:36px;padding:8px 13px;border-radius:6px;cursor:pointer;transition:background-color 160ms ease-out,border-color 160ms ease-out;background:var(--surface);color:var(--ink);border:1px solid #d8deea}.ds-secondary:hover{background:#f1f4fb;border-color:#b5c0d9}.ds-secondary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.ds-secondary:disabled{opacity:.5;cursor:default}"
+      "description": "Bounded navigation or recovery action.",
+      "html": "<button class=\"ds-secondary\">Retry counts</button>",
+      "css": ".ds-secondary{font:500 13px/1.55 var(--sans);min-height:32px;padding:8px 13px;border-radius:6px;cursor:pointer;transition:background-color 160ms ease-out,border-color 160ms ease-out;background:var(--surface);border:1px solid var(--line);color:var(--ink)}.ds-secondary:hover{background:var(--line-soft)}.ds-secondary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.ds-secondary:disabled{opacity:.5;cursor:default}"
     },
     {
       "name": "Session search",
       "kind": "input",
       "refersTo": "search-field",
-      "description": "A compact search field with a single enclosing focus treatment.",
-      "html": "<label class=\"ds-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/></svg><input aria-label=\"Search this session\" placeholder=\"Search this session\u2026\"></label>",
-      "css": ".ds-search{display:flex;align-items:center;gap:8px;padding:0 10px;min-height:36px;border:1px solid #dce1eb;border-radius:5px;background:var(--surface);color:#738099}.ds-search:focus-within{border-color:var(--accent);outline:2px solid #dce4ff}.ds-search input{font:12px/1.55 var(--sans);min-width:0;width:100%;padding:8px 0;border:0;background:transparent;color:var(--ink)}.ds-search input:focus-visible{outline:0}.ds-search input::placeholder{color:#717e96}"
+      "description": "Search remains within its current view.",
+      "html": "<label class=\"ds-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/></svg><input aria-label=\"Search sessions\" placeholder=\"Search sessions\u2026\"></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;background:var(--bg);color:var(--muted);border:1px solid var(--line);border-radius:6px}.ds-search:focus-within{border-color:var(--accent);outline:2px solid light-dark(#fafafa,#1c1c1f)}.ds-search input{min-width:0;width:100%;font:13px/1.55 var(--sans);min-height:34px;padding:8px 0;border:0;background:transparent;color:var(--ink)}.ds-search input:focus-visible{outline:0}.ds-search input::placeholder{color:var(--muted)}"
     },
     {
-      "name": "Primary navigation",
+      "name": "Stable navigation",
       "kind": "nav",
       "refersTo": "nav-selected",
-      "description": "The cobalt current route sits on the ink navigation field.",
-      "html": "<nav class=\"ds-nav\" aria-label=\"Workspace\"><button>Overview</button><button aria-current=\"page\">Sessions</button></nav>",
-      "css": ".ds-nav{background:var(--sidebar);padding:14px;display:grid;gap:4px}.ds-nav button{font:400 13px/1.55 var(--sans);text-align:left;padding:10px 12px;min-height:42px;border:0;border-radius:6px;background:transparent;color:#bdc7da;cursor:pointer}.ds-nav button:hover{background:#242e46;color:#fff}.ds-nav button[aria-current]{background:#324ec0;color:#fff}.ds-nav button:focus-visible{outline:2px solid #b7c7ff;outline-offset:3px}"
+      "description": "Neutral destination selection; sessions are home.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Workspace\"><button aria-current=\"page\">Sessions</button><button>Needs review</button><button>Project overview</button></nav>",
+      "css": ".ds-nav{display:grid;gap:4px;background:var(--sidebar);padding:12px}.ds-nav button{font:14px/1.55 var(--sans);min-height:36px;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}.ds-nav button:hover{background:light-dark(#ebebef,#202023);color:var(--ink)}.ds-nav button[aria-current]{background:light-dark(#e9e8ed,#29292e);color:var(--ink)}.ds-nav button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
     },
     {
-      "name": "Observation filter",
-      "kind": "chip",
-      "refersTo": "filter-selected",
-      "description": "Selection uses an explicit pressed state as well as the cobalt wash.",
-      "html": "<button class=\"ds-filter\" aria-pressed=\"true\">All activity</button>",
-      "css": ".ds-filter{font:550 10px/1.55 var(--sans);padding:5px 8px;min-height:28px;border:1px solid #dae2ff;border-radius:4px;color:var(--accent);background:var(--selected);cursor:pointer}.ds-filter:hover{background:#f4f6fc}.ds-filter:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
-    },
-    {
-      "name": "Ruled register",
-      "kind": "card",
-      "refersTo": "panel",
-      "description": "Flat white working region with aligned ruled rows.",
-      "html": "<section class=\"ds-register\"><h2>Recent sessions</h2><button>Handle an empty cache response <span>End recorded \u2192</span></button></section>",
-      "css": ".ds-register{font:13px/1.55 var(--sans);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;overflow:hidden}.ds-register h2{font-size:14px;font-weight:550;margin:0;padding:17px 20px}.ds-register button{display:flex;justify-content:space-between;gap:20px;text-align:left;width:100%;min-height:106px;padding:18px 20px;border:0;border-top:1px solid var(--line-soft);background:transparent;color:inherit;font:550 13px/1.55 var(--sans);cursor:pointer}.ds-register button span{font-size:10px;font-weight:400;color:var(--muted)}.ds-register button:hover{background:#f6f8ff}.ds-register button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}"
+      "name": "Work-list row",
+      "kind": "custom",
+      "refersTo": "work-session",
+      "description": "Title leads; mobile retains literal capture status.",
+      "html": "<button class=\"ds-session\"><span>Investigate a slow repository scan<small>No end recorded</small></span><span>2 gaps \u2192</span></button>",
+      "css": ".ds-session{display:flex;gap:12px;justify-content:space-between;align-items:center;width:100%;min-height:48px;text-align:left;padding:12px;background:var(--bg);border:0;border-bottom:1px solid var(--line-soft);color:var(--ink);font:450 13px/1.55 var(--sans);cursor:pointer}.ds-session:hover{background:var(--line-soft)}.ds-session small{display:block;font:11px/1.55 var(--sans);color:var(--warning);margin-top:5px}.ds-session>span:last-child{font-size:12px;color:var(--muted)}.ds-session:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
     },
     {
       "name": "Evidence basis",
+      "kind": "chip",
+      "refersTo": "recorded-basis",
+      "description": "Text makes source basis explicit.",
+      "html": "<div class=\"ds-basis\"><span>Recorded observation</span><span class=\"ds-derived\">Derived \u00b7 explicit ID match</span></div>",
+      "css": ".ds-basis{display:flex;flex-wrap:wrap;gap:8px}.ds-basis span{font:11px/1.55 var(--sans);padding:2px 6px;border:1px solid var(--line);border-radius:4px;background:var(--selected);color:light-dark(#57547d,#c2baf2)}.ds-basis .ds-derived{background:light-dark(#f3eff9,#2a2533);color:light-dark(#67529d,#c9b5ed)}"
+    },
+    {
+      "name": "Review request",
+      "kind": "card",
+      "refersTo": "work-session",
+      "description": "Open ruled reading surface; exact source remains an action away.",
+      "html": "<section class=\"ds-request\"><h2>Developer request</h2><p>Keep missing usage values unknown and add a regression test.</p><button>Recorded source \u2192</button></section>",
+      "css": ".ds-request{background:var(--bg);color:var(--ink);padding:0 0 28px;border-bottom:1px solid var(--line);font-family:var(--sans)}.ds-request h2{font-size:15px;font-weight:550;letter-spacing:-.2px;margin:0 0 16px}.ds-request p{font-size:15px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;max-width:72ch;margin:18px 0 8px}.ds-request button{font:11px/1.55 var(--sans);padding:6px 0;border:0;background:transparent;color:var(--muted);cursor:pointer}.ds-request button:hover{color:var(--accent)}.ds-request button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
+    },
+    {
+      "name": "Recorded-gap queue item",
       "kind": "custom",
-      "refersTo": "evidence-recorded",
-      "description": "Recorded and derived states stay textually explicit.",
-      "html": "<div class=\"ds-bases\"><span>Recorded observation</span><span class=\"ds-derived\">Derived \u00b7 explicit ID match</span></div>",
-      "css": ".ds-bases{display:flex;flex-wrap:wrap;gap:8px}.ds-bases span{font:400 9px/1.55 var(--sans);padding:2px 6px;border:1px solid #dce4f8;border-radius:4px;background:#f0f4ff;color:#4965a4}.ds-bases .ds-derived{border-color:#e2d8f6;background:#f7f2ff;color:#7257a6}"
+      "refersTo": "queue-selected",
+      "description": "Human-readable fact, session context, and uncertainty.",
+      "html": "<button class=\"ds-gap\" aria-pressed=\"true\"><strong>Missing result</strong><small>Investigate a slow repository scan</small><span>A requested tool has no recorded result.</span></button>",
+      "css": ".ds-gap{display:block;width:100%;padding:18px 15px;text-align:left;border:0;border-bottom:1px solid var(--line);background:var(--surface);color:var(--ink);font:13px/1.55 var(--sans);cursor:pointer}.ds-gap[aria-pressed=\"true\"]{background:var(--selected)}.ds-gap:hover{background:var(--line-soft)}.ds-gap strong{display:block;font-size:13px;font-weight:500}.ds-gap small{display:block;font-size:12px;color:var(--muted);margin:6px 0;line-height:1.5}.ds-gap span{display:block;font-size:12px;color:var(--muted);line-height:1.6}.ds-gap:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
     },
     {
       "name": "Captured code diff",
       "kind": "custom",
       "refersTo": "captured-diff",
-      "description": "Inert before/after code with explicit signs, line numbers, and semantic gutters.",
+      "description": "Inert retained code with explicit signs and line numbers.",
       "html": "<section class=\"ds-diff\" tabindex=\"0\" aria-label=\"Unified code diff\"><table><thead><tr><th>Before</th><th>After</th><th>Change</th><th>Captured code</th></tr></thead><tbody><tr class=\"ds-delete\"><td>2</td><td></td><td>\u2212</td><td><code>return count.toString();</code></td></tr><tr class=\"ds-add\"><td></td><td>2</td><td>+</td><td><code>return count ?? null;</code></td></tr></tbody></table></section>",
-      "css": ".ds-diff{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:7px;background:var(--surface)}.ds-diff:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}.ds-diff table{border-collapse:collapse;min-width:100%;font:11px/1.85 var(--mono)}.ds-diff th{position:sticky;top:0;background:#f3f5fa;padding:7px 9px;text-align:left;font:450 9px/1.6 var(--sans);color:var(--muted)}.ds-diff td{padding:1px 9px;white-space:pre;color:#3b4b69}.ds-diff td:nth-child(-n+2){font-size:10px;text-align:right;min-width:38px;color:var(--muted);background:#f9fafe;border-right:1px solid #e9edf6}.ds-diff code{font:inherit}.ds-diff .ds-add{background:#eff9f3}.ds-diff .ds-delete{background:#fff1f3}.ds-diff .ds-add td:nth-child(-n+2){color:#307354;background:#e5f3eb}.ds-diff .ds-delete td:nth-child(-n+2){color:#924354;background:#fbe4e9}.ds-diff .ds-add td:nth-child(3){color:#307354}.ds-diff .ds-delete td:nth-child(3){color:var(--negative)}@media(max-width:559px){.ds-diff table{font-size:10px}.ds-diff td:nth-child(-n+2){min-width:30px;padding-inline:6px}}"
-    },
-    {
-      "name": "Diff layout control",
-      "kind": "button",
-      "refersTo": "diff-mode-selected",
-      "description": "Explicit pressed state for unified and side-by-side inspection.",
-      "html": "<fieldset class=\"ds-diff-mode\"><legend>Code diff layout</legend><button aria-pressed=\"true\">Unified</button><button aria-pressed=\"false\">Side by side</button></fieldset>",
-      "css": ".ds-diff-mode{display:flex;gap:2px;margin:0;padding:2px;background:#fafbfe;border:1px solid #dce2ee;border-radius:5px}.ds-diff-mode legend{font:10px var(--sans);color:var(--muted)}.ds-diff-mode button{font:10px/1.55 var(--sans);min-height:26px;padding:4px 9px;border:0;border-radius:3px;background:transparent;color:var(--muted);cursor:pointer}.ds-diff-mode button:hover{background:#edf1fa}.ds-diff-mode button[aria-pressed=\"true\"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px #20345e14}.ds-diff-mode button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
+      "css": ".ds-diff{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:7px;background:var(--bg)}.ds-diff:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}.ds-diff table{border-collapse:collapse;min-width:100%;font:12px/1.85 var(--mono)}.ds-diff th{position:sticky;top:0;background:var(--surface);padding:7px 9px;text-align:left;font:450 11px/1.6 var(--sans);color:var(--muted)}.ds-diff td{padding:1px 9px;white-space:pre;color:var(--ink)}.ds-diff td:nth-child(-n+2){font-size:11px;text-align:right;min-width:38px;color:var(--muted);background:var(--surface)}.ds-diff code{font:inherit}.ds-diff .ds-add{background:light-dark(#eff7f2,#202e26)}.ds-diff .ds-delete{background:light-dark(#fff2f2,#332326)}.ds-diff .ds-add td:nth-child(-n+2){color:light-dark(#386b50,#9acdaf);background:light-dark(#e4f0e9,#25372c)}.ds-diff .ds-delete td:nth-child(-n+2){color:var(--negative);background:light-dark(#f9e6e8,#40282c)}"
     }
   ],
   "narrative": {
-    "northStar": "Municipal wayfinding",
-    "overview": "Traceframe uses a stable ink navigation edge, a cool-white working field, compact Geist labels, and ruled registers to orient a developer before they inspect evidence. The committed direction is candidate 7, seed `2f68dc64`, recorded in the root layout. Cobalt marks selection and action; it does not certify an outcome.\n\nThe atmosphere is orderly, practical, and quietly precise. Desktop review pairs an activity register with a source inspector. Narrow screens preserve that relationship through a native evidence dialog. Explicit labels distinguish recorded observations, derived links, source-reported results, and capture uncertainty.",
+    "northStar": "The session workbench",
+    "overview": "Traceframe starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained violet selection support that hierarchy; a palette change alone does not define the workflow.\n\nThis records the shipped founder-approved direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and dark, light, and mobile screenshots, not a new visual proposal.",
     "keyCharacteristics": [
-      "Ink navigation and a porcelain workspace.",
-      "Ruled, aligned registers with compact outline icons.",
-      "Cobalt selection; semantic source-state labels.",
-      "Paired activity and evidence, with provenance disclosed on demand."
+      "Sessions first; global destinations stay stable.",
+      "Readable requests and recorded work precede raw source detail.",
+      "Neutral dark/light surfaces, local Geist, restrained violet emphasis.",
+      "Explicit source, uncertainty, capture state, and unavailable-data language."
     ],
     "rules": [
       {
         "name": "The Evidence State Rule",
-        "body": "Pair every semantic color with wording, an icon, a number, or a source-state label. A successful exit code never becomes a feature-correctness verdict.",
+        "body": "Pair state colors with wording, icons, signs, or numbers. An end event, command exit code, or explicit-ID relationship does not establish feature correctness or authorship.",
         "section": "colors"
       },
       {
-        "name": "The Source Readability Rule",
-        "body": "Keep ordinary labels in Geist and captured commands, IDs, paths, and payloads in monospace. Keep provenance subordinate to the captured content without removing it.",
+        "name": "The Reading Order Rule",
+        "body": "Use ordinary reading text for requests and human-readable gaps. Keep IDs and raw normalized records in source inspection or secondary properties.",
         "section": "typography"
       }
     ],
     "dos": [
-      "**Do** use cobalt for routes, actions, and selection, and explicit semantic labels for evidence states.",
-      "**Do** keep activity and source inspection adjacent on desktop and use the native evidence dialog on narrower screens.",
-      "**Do** preserve fine register rules, aligned counts, compact Geist labels, and monospace source material.",
-      "**Do** show unknowns and capture limitations where the reader interprets the evidence.",
-      "**Do** preserve keyboard focus, native controls, responsive reflow, and reduced-motion behavior."
+      "**Do** select the layout for the task: work list, reading document, triage split, or code inspection.",
+      "**Do** preserve readable captured requests, source actions, explicit uncertainty, and unknown values.",
+      "**Do** implement both actual root themes with the paired token values.",
+      "**Do** preserve mobile capture status, keyboard focus, source selection, and recovery from unavailable metadata.",
+      "**Do** keep local Geist, neutral rules, compact controls, and restrained violet emphasis."
     ],
     "donts": [
-      "**Don't** restore the superseded olive-green identity or make semantic result green the primary accent.",
-      "**Don't** use color alone to distinguish recorded, derived, failed, or incomplete evidence.",
-      "**Don't** turn command success, an end event, or an explicit ID link into a correctness claim.",
-      "**Don't** present synthetic examples as live ingestion, referenced paths as captured diffs, or relationship routes as a graph feature.",
-      "**Don't** add resting shadows or ornamental animation to the working registers."
+      "**Don't** restore the municipal dashboard, cobalt selection system, or default overview as current authority.",
+      "**Don't** make the normalized event ledger the only way to understand a session.",
+      "**Don't** infer causality from proximity, authorship from a diff, or correctness from reported success.",
+      "**Don't** turn a recorded gap queue into a defect score or an invented resolved workflow.",
+      "**Don't** treat synthetic examples, local snapshots, or collector connectivity as live Claude integration."
     ]
   }
 }

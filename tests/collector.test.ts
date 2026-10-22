@@ -43,6 +43,18 @@ test("collector enforces auth, origins, atomic bounded input, replay and rotatio
       403,
     );
     assert.equal((await fetch(`${url}/v1/demo`, { method: "POST", headers })).status, 200);
+    const countsUrl = `${url}/v1/projects/demo-quoli/session-counts`;
+    assert.equal((await fetch(countsUrl)).status, 401);
+    const counts = await fetch(countsUrl, { headers });
+    assert.equal(counts.status, 200);
+    const projected = await counts.json();
+    assert.equal(projected["session-cache"].kindCounts.gap, 1);
+    assert.equal(projected["session-cache"].kindCounts.repository_snapshot, 2);
+    assert.equal(JSON.stringify(projected).includes("The usage panel"), false);
+    assert.equal(
+      (await fetch(`${url}/v1/projects/unknown/session-counts`, { headers })).status,
+      404,
+    );
     const repeated = await fetch(`${url}/v1/demo`, { method: "POST", headers });
     assert.equal((await repeated.json()).duplicates, 33);
     assert.equal(
