@@ -33,7 +33,7 @@ Every core issue inherits the [architecture](../architecture.md), [MVP scope](..
 
 ## Implementation checkpoint
 
-The first testable feature is the [synthetic local preview](../local-demo.md): it covers the scaffold and timeline, with foundational schema/privacy/storage/ingestion work and an early reported-usage view. GitHub issue checklists and the implementation PR record the exact completed criteria and remaining scope. Planned features must not be inferred to exist merely because they appear in this index.
+The MVP is implemented: the [synthetic local preview](../local-demo.md), the recorded [verification evidence](../verification-evidence.md), the bounded [change map](../change-map.md), the local [capture controls](../lifecycle-controls.md), the [Claude Code runtime report](../claude-code-runtime-report.md) for the tested version, the passive [hook bridge](../hook-bridge.md), the narrow [reported usage receiver](../telemetry-receiver.md), the [source reconciliation](../source-reconciliation.md), the [live linking guide](../live-linking.md), the [local setup guide](../local-setup.md) and the [pilot checklist](../pilot-release.md). GitHub issue checklists and the implementation PRs record the exact completed criteria. A feature must not be inferred to exist merely because it appears in this index.
 
 ## Dependency rationale
 
