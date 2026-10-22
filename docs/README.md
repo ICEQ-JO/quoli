@@ -1,6 +1,6 @@
 # Traceframe planning pack
 
-Planning date: 2026-10-22. Status: a runnable local preview includes synthetic sessions, explicit repository snapshots, captured file review, recorded verification evidence and a bounded change map; live collection remains planned.
+Planning date: 2026-10-22. Status: the local MVP is implemented and validated: synthetic sessions, explicit repository snapshots, captured file review, recorded verification evidence, a bounded change map, cross-source reconciliation, local capture controls with retention and deletion, a passive hook bridge, a narrow reported-usage receiver and a guided reversible setup. The live collection was verified against Claude Code 2.1.306; the pilot walkthrough on a fresh machine remains the owner's check.
 
 Traceframe answers: **“Show me what my coding agent did, what changed, and what remains unverified.”**
 
@@ -27,6 +27,8 @@ See the [source reconciliation](source-reconciliation.md) for how the two live s
 See the [live linking guide](live-linking.md) for reading a live session together with the captured repository versions.
 
 See the [local setup guide](local-setup.md) for connecting and removing the integration.
+
+See the [pilot release checklist](pilot-release.md) for the validated local MVP, its guarantees and its limits.
 
 The current [session workspace reference](design/session-workspace.md) records work-list, session-document, queue and source-inspection behavior. The [UI research](design/product-ui-research.md) explains the structural direction. The earlier [session-review design reference](design/session-review.md) is historical. The [dashboard redesign review](design/redesign-review.md) includes screenshots, validation and the independent finish verdict. [Product context](../apps/web/PRODUCT.md) and the [visual system](../apps/web/DESIGN.md) guide future dashboard work.
 

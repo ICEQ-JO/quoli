@@ -1,6 +1,6 @@
 # 019: Validate the full local pilot against evidence and privacy guarantees
 
-Status: published as [GitHub #20](https://github.com/ICEQ-JO/quoli/issues/20); this file is the local reference. Milestone: M5.
+Status: published as [GitHub #20](https://github.com/ICEQ-JO/quoli/issues/20); this file is the local reference. Milestone: M5. Implemented on `feat/pilot-release`; see the [pilot checklist](../pilot-release.md).
 
 ## User value
 
@@ -20,11 +20,11 @@ No GitHub publication, deployment, analytics upload, billing or success claims d
 
 ## Acceptance criteria
 
-- [ ] Clean setup demonstrates prompt/tool/usage/file/diff/map/evidence/uncertainty flows and deletion with no paid API in fixture mode.
-- [ ] Supported live mode passes documented-version checks; missing evidence remains visible and no correctness/complete-capture claims appear.
-- [ ] Hostile captured HTML/instructions/paths, CSRF/Host abuse, credential rotation, redaction and deletion races pass targeted checks.
-- [ ] A deterministic bounded 10,000-event fixture paginates without loading all records; map caps hold and baseline timing/memory results are recorded.
-- [ ] Document the pilot review script and unresolved limitations; no external release happens automatically.
+- [x] Clean setup demonstrates prompt/tool/usage/file/diff/map/evidence/uncertainty flows and deletion with no paid API in fixture mode.
+- [x] Supported live mode passes documented-version checks; missing evidence remains visible and no correctness/complete-capture claims appear.
+- [x] Hostile captured HTML/instructions/paths, CSRF/Host abuse, credential rotation, redaction and deletion races pass targeted checks.
+- [x] A deterministic bounded 10,000-event fixture paginates without loading all records; map caps hold and baseline timing/memory results are recorded.
+- [x] Document the pilot review script and unresolved limitations; no external release happens automatically.
 
 ## Test plan
 

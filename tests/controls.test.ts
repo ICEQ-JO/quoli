@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
 import { demoEvents, demoPolicy } from "../fixtures/demo";
 import { demoSnapshots } from "../fixtures/repository";
@@ -145,6 +146,34 @@ test("deletion blocks stale producers, is idempotent and clears the local log", 
     instance.close();
     const wal = `${path}-wal`;
     if (existsSync(wal)) assert.equal(readFileSync(wal).toString().includes(canary), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a deletion race leaves no partial evidence and restores the append-only history", () => {
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-race-"));
+  const path = join(dir, "evidence.sqlite");
+  try {
+    const instance = new Store(path);
+    instance.registerProject("demo-quoli", "quoli", true, demoPolicy);
+    instance.append(demoEvents());
+    // A producer retry that was already on its way when the deletion happened.
+    const retry = demoEvents();
+    const purged = instance.purgeProject("demo-quoli");
+    assert.ok(purged.removed.events > 0);
+    assert.throws(() => instance.append(retry), /deleted/);
+    // Another project keeps its history, and the append-only protection is back.
+    instance.registerProject("other-project", "other", false, demoPolicy);
+    const other = demoEvents().map((event) => ({ ...event, projectId: "other-project" }));
+    instance.append(other);
+    instance.close();
+    const db = new DatabaseSync(path);
+    assert.throws(() => db.exec("UPDATE events SET body='{}'"), /append-only/);
+    db.close();
+    const reopened = new Store(path);
+    assert.equal(reopened.allEvents("demo-quoli", "session-cache").length, 0);
+    reopened.close();
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
