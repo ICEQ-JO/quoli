@@ -1,6 +1,8 @@
 import type { StoredEvent } from "@traceframe/schema";
 import { kindLabels, number } from "@traceframe/ui";
 export type View =
+  | "Session review"
+  | "Review queue"
   | "Overview"
   | "Sessions"
   | "Timeline"
@@ -19,13 +21,15 @@ export type ReviewLocation = {
 export const initialLocation: ReviewLocation = {
   project: "demo-quoli",
   session: "session-cache",
-  view: "Overview",
+  view: "Sessions",
   event: "",
   before: "",
   after: "",
   file: "",
 };
 const viewKeys: Record<View, string> = {
+  "Session review": "session",
+  "Review queue": "review",
   "File changes": "changes",
   Overview: "overview",
   Sessions: "sessions",
@@ -41,7 +45,7 @@ export function readLocation(url: URL): ReviewLocation {
     (url.searchParams.get("session") &&
     /^[a-zA-Z0-9_-]{1,100}$/.test(url.searchParams.get("session") ?? "")
       ? "Timeline"
-      : "Overview");
+      : "Sessions");
   return {
     project: id(url.searchParams.get("project"), initialLocation.project),
     session: id(url.searchParams.get("session"), initialLocation.session),
@@ -72,7 +76,14 @@ export function eventTitle(e: StoredEvent): string {
   if (p.kind === "tool_call") return p.toolName === "Bash" ? "Run command" : `${p.toolName} file`;
   if (p.kind === "tool_result")
     return `${p.toolName} · ${p.status === "success" ? "success reported" : p.status === "failure" ? "failure reported" : p.status}`;
-  if (p.kind === "gap") return p.reason.replaceAll("_", " ");
+  if (p.kind === "gap")
+    return p.reason === "missing_result"
+      ? "Missing result"
+      : p.reason === "missing_end"
+        ? "Missing session end"
+        : p.reason === "capture_disabled"
+          ? "Content capture disabled"
+          : "Capture gap";
   return kindLabels[p.kind] ?? p.kind;
 }
 export function preview(e: StoredEvent): string {

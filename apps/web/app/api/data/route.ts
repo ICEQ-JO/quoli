@@ -13,9 +13,16 @@ export async function GET(request: NextRequest) {
     const q = request.nextUrl.searchParams;
     const resource = q.get("resource") ?? "projects";
     if (
-      !["projects", "sessions", "events", "summary", "health", "evidence", "snapshots"].includes(
-        resource,
-      )
+      ![
+        "projects",
+        "sessions",
+        "session-counts",
+        "events",
+        "summary",
+        "health",
+        "evidence",
+        "snapshots",
+      ].includes(resource)
     )
       return NextResponse.json({ error: "Unknown view" }, { status: 400 });
     const project = q.get("project") ?? "",
@@ -33,6 +40,7 @@ export async function GET(request: NextRequest) {
         : resource === "projects"
           ? "/v1/projects"
           : `/v1/projects/${project}/sessions`;
+    if (resource === "session-counts") path = `/v1/projects/${project}/session-counts`;
     if (resource === "summary") path += `/${session}/summary`;
     if (resource === "events" || resource === "snapshots") {
       const cursor = q.get("cursor") ?? "0";

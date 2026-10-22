@@ -103,6 +103,16 @@ export function startCollector(
         send(200, store.append(parsed.data.events));
         return;
       }
+      const countsMatch = /^\/v1\/projects\/([^/]+)\/session-counts$/.exec(url.pathname);
+      if (req.method === "GET" && countsMatch) {
+        const project = safeId.parse(countsMatch[1]);
+        if (!store.project(project)) {
+          send(404, { error: "Unknown project" });
+          return;
+        }
+        send(200, store.sessionCounts(project));
+        return;
+      }
       const changesMatch = /^\/v1\/projects\/([^/]+)\/sessions\/([^/]+)\/changes$/.exec(
         url.pathname,
       );

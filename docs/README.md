@@ -10,7 +10,7 @@ To run and test the preview, start with [the local demo guide](local-demo.md) an
 
 See [captured file review](captured-changes.md) for comparison behavior and limits.
 
-The current [session-review design reference](design/session-review.md) records UX behavior and its rationale. The [dashboard redesign review](design/redesign-review.md) includes screenshots, validation and the independent finish verdict. [Product context](../apps/web/PRODUCT.md) and the [visual system](../apps/web/DESIGN.md) guide future dashboard work.
+The current [session workspace reference](design/session-workspace.md) records work-list, session-document, queue and source-inspection behavior. The [UI research](design/product-ui-research.md) explains the structural direction. The earlier [session-review design reference](design/session-review.md) is historical. The [dashboard redesign review](design/redesign-review.md) includes screenshots, validation and the independent finish verdict. [Product context](../apps/web/PRODUCT.md) and the [visual system](../apps/web/DESIGN.md) guide future dashboard work.
 
 For product direction, start with the [repository assessment and implementation plan](implementation-plan.md), then review the [architecture](architecture.md), [Claude Code capability matrix](claude-code-capabilities.md), [ordered issue backlog](issues/README.md), and [founder decisions](founder-decisions.md).
 

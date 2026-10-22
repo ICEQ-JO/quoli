@@ -13,6 +13,9 @@ import { clock, number } from "@traceframe/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChangesView } from "./components/changes-view";
 import { EvidenceInspector } from "./components/evidence-inspector";
+import { ReviewQueue } from "./components/review-queue";
+import { SessionBrief } from "./components/session-brief";
+import { type SessionFilters, SessionIndex } from "./components/session-index";
 import { CoveragePanel, UsagePanel } from "./components/session-views";
 import { Icon } from "./components/ui-icon";
 import { WorkspaceHome } from "./components/workspace-home";
@@ -33,7 +36,13 @@ type Summary = {
   relationships: Relationship[];
   kindCounts: Record<string, number>;
 };
-const views: View[] = ["Timeline", "File changes", "Reported usage", "Capture coverage"];
+const views: View[] = [
+  "Session review",
+  "Timeline",
+  "File changes",
+  "Reported usage",
+  "Capture coverage",
+];
 const filters: { key: EventQuery["kind"]; label: string }[] = [
   { key: "all", label: "All activity" },
   { key: "commands", label: "Commands" },
@@ -70,6 +79,13 @@ async function readPage(
   return data;
 }
 export default function Dashboard() {
+  const [workspaceFilters, setWorkspaceFilters] = useState<SessionFilters>({
+    search: "",
+    state: "all",
+    group: "capture",
+    order: "recent",
+  });
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [location, setLocation] = useState<ReviewLocation>(initialLocation),
     [ready, setReady] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]),
@@ -93,12 +109,21 @@ export default function Dashboard() {
     [copyErrorId, setCopyErrorId] = useState("");
   const pageEpoch = useRef(0),
     dialog = useRef<HTMLDialogElement>(null),
+    evidenceTrigger = useRef<HTMLElement | null>(null),
+    dismissRef = useRef<() => void>(() => {}),
     searchInput = useRef<HTMLInputElement>(null),
     rowRefs = useRef(new Map<string, HTMLButtonElement>()),
     copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { project, session, view, event: eventId } = location;
-  const isWorkspace = view === "Overview" || view === "Sessions";
+  const isWorkspace = view === "Overview" || view === "Sessions" || view === "Review queue";
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("traceframe-theme");
+      if (saved === "light" || saved === "dark") {
+        setTheme(saved);
+        document.documentElement.dataset.theme = saved;
+      }
+    } catch {}
     setLocation(readLocation(new URL(window.location.href)));
     setReady(true);
     const pop = () => {
@@ -115,14 +140,21 @@ export default function Dashboard() {
   useEffect(() => {
     const media = window.matchMedia("(max-width: 1099px)");
     const changed = () => {
-      if (!media.matches) dialog.current?.close();
+      if (ready && media.matches && eventId && (view === "Timeline" || view === "Session review")) {
+        if (!dialog.current?.open) dialog.current?.showModal();
+      } else dialog.current?.close();
     };
+    changed();
     media.addEventListener("change", changed);
     return () => media.removeEventListener("change", changed);
-  }, []);
+  }, [ready, eventId, view]);
   useEffect(() => {
     if (!ready) return;
-    if (eventId && view === "Timeline" && window.matchMedia("(max-width: 1099px)").matches) {
+    if (
+      eventId &&
+      (view === "Timeline" || view === "Session review") &&
+      window.matchMedia("(max-width: 1099px)").matches
+    ) {
       if (!dialog.current?.open) dialog.current?.showModal();
     } else {
       dialog.current?.close();
@@ -151,13 +183,6 @@ export default function Dashboard() {
         setProjects(p);
         setSessions(s);
         setOnline(true);
-        if (!isWorkspace && s.some((item) => item.id === session)) {
-          read<Summary>({ resource: "summary", project, session }, abort.signal)
-            .then(setSummary)
-            .catch((e) => {
-              if (!abort.signal.aborted) setError(e.message);
-            });
-        }
       })
       .catch((e) => {
         if (!abort.signal.aborted) {
@@ -170,13 +195,27 @@ export default function Dashboard() {
         if (!abort.signal.aborted) setMetadataLoading(false);
       });
     return () => abort.abort();
+  }, [ready, project, refresh]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refresh explicitly reloads the session projection.
+  useEffect(() => {
+    if (!ready || isWorkspace) return;
+    const abort = new AbortController();
+    setSummary(null);
+    read<Summary>({ resource: "summary", project, session }, abort.signal)
+      .then((data) => {
+        if (!abort.signal.aborted) setSummary(data);
+      })
+      .catch((e) => {
+        if (!abort.signal.aborted) setError(e.message);
+      });
+    return () => abort.abort();
   }, [ready, project, session, refresh, isWorkspace]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: refresh is the explicit user-requested reload trigger.
   useEffect(() => {
     if (!ready) return;
     const abort = new AbortController();
     const epoch = ++pageEpoch.current;
-    if (isWorkspace) {
+    if (isWorkspace || view !== "Timeline") {
       setLoading(false);
       setError("");
       return () => abort.abort();
@@ -202,18 +241,12 @@ export default function Dashboard() {
         if (epoch === pageEpoch.current) setLoading(false);
       });
     return () => abort.abort();
-  }, [ready, project, session, debouncedSearch, kind, order, refresh, isWorkspace]);
+  }, [ready, project, session, debouncedSearch, kind, order, refresh, isWorkspace, view]);
   useEffect(() => {
     if (!ready) return;
     const abort = new AbortController();
     if (!eventId) {
-      setSelected(
-        page.events.find(
-          (e) => e.projectId === project && e.sessionId === session && e.payload.kind === "prompt",
-        ) ??
-          page.events.find((e) => e.projectId === project && e.sessionId === session) ??
-          null,
-      );
+      setSelected(null);
       setInspecting(false);
       return;
     }
@@ -243,22 +276,54 @@ export default function Dashboard() {
       const next = { ...location, event: "" };
       window.history.replaceState(null, "", reviewUrl(next));
       setLocation(next);
+      requestAnimationFrame(() => {
+        if (evidenceTrigger.current?.isConnected) evidenceTrigger.current.focus();
+        else if (rowRefs.current.get(eventId)?.isConnected) rowRefs.current.get(eventId)?.focus();
+        else document.getElementById("session-content")?.focus();
+      });
     }
   }
+  dismissRef.current = dismissEvidence;
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      if (
+        event.key === "Escape" &&
+        eventId &&
+        (view === "Timeline" || view === "Session review") &&
+        !dialog.current?.open &&
+        !(
+          event.target instanceof Element &&
+          event.target.closest("input,textarea,select,[contenteditable=true]")
+        )
+      ) {
+        event.preventDefault();
+        dismissRef.current();
+      }
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, [eventId, view]);
   function openEvidence(id: string) {
-    navigate({ ...location, view: "Timeline", event: id });
-    if (window.matchMedia("(max-width: 1099px)").matches && !dialog.current?.open)
+    if (!eventId || (view !== "Timeline" && view !== "Session review"))
+      evidenceTrigger.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const target = view === "Session review" || view === "Review queue" ? view : "Timeline";
+    navigate({ ...location, view: target, event: id });
+    if (
+      target !== "Review queue" &&
+      window.matchMedia("(max-width: 1099px)").matches &&
+      !dialog.current?.open
+    )
       dialog.current?.showModal();
   }
   function chooseSession(id: string) {
     pageEpoch.current++;
-    setRefresh((value) => value + 1);
     setSearch("");
     setDebouncedSearch("");
     setKind("all");
     setSelected(null);
     setPage({ events: [], nextCursor: null, total: 0 });
-    setSummary(null);
+    if (id !== session) setSummary(null);
     dialog.current?.close();
     navigate({
       ...location,
@@ -267,7 +332,7 @@ export default function Dashboard() {
       before: "",
       after: "",
       file: "",
-      view: "Timeline",
+      view: "Session review",
     });
   }
   async function more() {
@@ -297,7 +362,11 @@ export default function Dashboard() {
   }
   async function copyLink() {
     if (!selected) return;
-    const next = { ...location, event: selected.id, view: "Timeline" as View };
+    const next = {
+      ...location,
+      event: selected.id,
+      view: (view === "Review queue" || view === "Session review" ? view : "Timeline") as View,
+    };
     window.history.replaceState(null, "", reviewUrl(next));
     setLocation(next);
     try {
@@ -327,9 +396,9 @@ export default function Dashboard() {
     ) ?? [];
   const inspector = (
     <EvidenceInspector
-      event={selected}
+      event={selected?.id === eventId ? selected : null}
       links={links}
-      loading={inspecting}
+      loading={inspecting || Boolean(eventId && selected?.id !== eventId && !error)}
       copied={Boolean(selected && copiedId === selected.id)}
       copyError={Boolean(selected && copyErrorId === selected.id)}
       onCopy={() => void copyLink()}
@@ -338,8 +407,16 @@ export default function Dashboard() {
   );
   const count = current?.count ?? 0;
   const tabs = (target: View) => navigate({ ...location, view: target });
+  // Read local navigation before mounting evidence views. This prevents requests
+  // for the fallback project/view and avoids briefly showing the wrong workspace.
+  if (!ready)
+    return (
+      <main className="workspace-starting" role="status">
+        Opening local workspace…
+      </main>
+    );
   return (
-    <div className="review-app">
+    <div className="review-app" data-theme={theme}>
       <a className="skip-link" href="#session-content">
         Skip to session
       </a>
@@ -358,7 +435,17 @@ export default function Dashboard() {
               <select
                 aria-label="Project"
                 value={project}
-                onChange={(e) => navigate({ ...initialLocation, project: e.target.value })}
+                onChange={(e) => {
+                  setSessions([]);
+                  setSummary(null);
+                  setWorkspaceFilters({
+                    search: "",
+                    state: "all",
+                    group: "capture",
+                    order: "recent",
+                  });
+                  navigate({ ...initialLocation, project: e.target.value });
+                }}
               >
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -374,50 +461,36 @@ export default function Dashboard() {
         <nav className="primary-nav" aria-label="Workspace">
           <button
             type="button"
-            aria-current={view === "Overview" ? "page" : undefined}
-            onClick={() => navigate({ ...location, view: "Overview", event: "" })}
-          >
-            <Icon name="overview" />
-            Overview
-          </button>
-          <button
-            type="button"
-            aria-current={view !== "Overview" ? "page" : undefined}
+            aria-current={view !== "Overview" && view !== "Review queue" ? "page" : undefined}
             onClick={() => navigate({ ...location, view: "Sessions", event: "" })}
           >
             <Icon name="sessions" />
             Sessions<span>{sessions.length}</span>
           </button>
-        </nav>
-        <div className="sidebar-heading">
-          <h2>Recent sessions</h2>
-        </div>
-        <nav aria-label="Sessions" className="session-nav">
-          {sessions.map((s) => (
-            <button
-              type="button"
-              key={s.id}
-              aria-current={!isWorkspace && s.id === session ? "page" : undefined}
-              onClick={() => chooseSession(s.id)}
-            >
-              <span className={`session-marker ${s.ended ? "" : "warning"}`}>
-                <Icon name="session" size={16} />
-              </span>
-              <span className="session-nav-copy">
-                <strong>{s.title}</strong>
-                <small>{s.count} observations</small>
-              </span>
-            </button>
-          ))}
-          {!sessions.length && <p className="sidebar-placeholder">No sessions retained.</p>}
+          <button
+            type="button"
+            aria-current={view === "Review queue" ? "page" : undefined}
+            onClick={() => navigate({ ...location, view: "Review queue", event: "" })}
+          >
+            <Icon name="alert" />
+            Needs review
+          </button>
+          <button
+            type="button"
+            aria-current={view === "Overview" ? "page" : undefined}
+            onClick={() => navigate({ ...location, view: "Overview", event: "" })}
+          >
+            <Icon name="overview" />
+            Project overview
+          </button>
         </nav>
         <div className="sidebar-help">
           <Icon name="info" />
           <div>
-            <strong>{synthetic ? "Explore the preview" : "Local repository"}</strong>
+            <strong>{synthetic ? "Demo data" : "Repository capture"}</strong>
             <p>
               {synthetic
-                ? "Three authored sessions to explore. No live agent connected."
+                ? "Synthetic sessions. No live agent connected."
                 : "Repository observations stay local. No live agent connected."}
             </p>
           </div>
@@ -438,10 +511,27 @@ export default function Dashboard() {
                 ? "Overview"
                 : view === "Sessions"
                   ? "Sessions"
-                  : "Session review"}
+                  : view === "Review queue"
+                    ? "Needs review"
+                    : (current?.title ?? "Session review")}
             </strong>
           </div>
           <div className="toolbar-right">
+            <button
+              type="button"
+              className="theme-toggle"
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+              onClick={() => {
+                const next = theme === "dark" ? "light" : "dark";
+                setTheme(next);
+                document.documentElement.dataset.theme = next;
+                try {
+                  localStorage.setItem("traceframe-theme", next);
+                } catch {}
+              }}
+            >
+              <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
+            </button>
             <span className={`collector-state ${online ? "online" : ""}`}>
               <i />
               {online ? "Collector connected" : "Connecting…"}
@@ -476,22 +566,60 @@ export default function Dashboard() {
                   </button>
                 </div>
               )}
-              <WorkspaceHome
-                view={view}
-                sessions={sessions}
-                project={project}
-                projectName={projectName}
-                synthetic={synthetic}
-                refresh={refresh}
-                loading={metadataLoading}
-                unavailable={metadataFailed}
-                onSession={chooseSession}
-                onLibrary={() => navigate({ ...location, view: "Sessions", event: "" })}
-                onGaps={(id) => {
-                  chooseSession(id);
-                  setKind("gap");
-                }}
-              />
+              {view === "Sessions" && (
+                <SessionIndex
+                  key={project}
+                  project={project}
+                  projectName={projectName}
+                  sessions={sessions}
+                  synthetic={synthetic}
+                  refresh={refresh}
+                  loading={metadataLoading}
+                  unavailable={metadataFailed}
+                  filters={workspaceFilters}
+                  onFilters={setWorkspaceFilters}
+                  onSession={chooseSession}
+                  onQueue={() => navigate({ ...location, view: "Review queue", event: "" })}
+                />
+              )}
+              {view === "Review queue" && (
+                <ReviewQueue
+                  key={project}
+                  project={project}
+                  sessions={sessions}
+                  refresh={refresh}
+                  metadataLoading={metadataLoading}
+                  metadataFailed={metadataFailed}
+                  eventId={eventId}
+                  inspector={inspector}
+                  onSelect={(session, event, replace = false) => {
+                    const next = { ...location, session, event, view: "Review queue" as View };
+                    if (replace) {
+                      window.history.replaceState(null, "", reviewUrl(next));
+                      setLocation(next);
+                    } else navigate(next);
+                  }}
+                  onSession={chooseSession}
+                />
+              )}
+              {view === "Overview" && (
+                <WorkspaceHome
+                  view="Overview"
+                  sessions={sessions}
+                  project={project}
+                  projectName={projectName}
+                  synthetic={synthetic}
+                  refresh={refresh}
+                  loading={metadataLoading}
+                  unavailable={metadataFailed}
+                  onSession={chooseSession}
+                  onLibrary={() => navigate({ ...location, view: "Sessions", event: "" })}
+                  onGaps={(id) => {
+                    chooseSession(id);
+                    setKind("gap");
+                  }}
+                />
+              )}
             </>
           ) : (
             <>
@@ -520,15 +648,28 @@ export default function Dashboard() {
               <div className="session-header">
                 <div className="session-heading">
                   <h1>
-                    {current?.title ?? (loading ? "Loading session…" : "Session unavailable")}
+                    {current?.title ??
+                      (metadataLoading ? "Loading session…" : "Session unavailable")}
                   </h1>
                   <div className="session-status-row">
                     <span className="demo-label">
-                      {synthetic ? "Synthetic session" : "Local repository"}
+                      {currentProject
+                        ? synthetic
+                          ? "Synthetic session"
+                          : "Local repository"
+                        : metadataLoading
+                          ? "Loading source…"
+                          : "Source unavailable"}
                     </span>
-                    <span className={`session-state ${current?.ended ? "" : "warning"}`}>
+                    <span className={`session-state ${current && !current.ended ? "warning" : ""}`}>
                       <i />
-                      {current?.ended ? "End recorded" : "Incomplete capture"}
+                      {current
+                        ? current.ended
+                          ? "End recorded"
+                          : "No end recorded"
+                        : metadataLoading
+                          ? "Loading capture state…"
+                          : "Capture state unavailable"}
                     </span>
                   </div>
                 </div>
@@ -542,14 +683,15 @@ export default function Dashboard() {
                   Review gaps<span>{gaps}</span>
                 </button>
               </div>
-              <div className="session-facts">
+              <div className={`session-facts ${view === "Session review" ? "brief-facts" : ""}`}>
                 <span>
                   <Icon name="activity" size={15} />
                   <strong>{number(count)}</strong> observations
                 </span>
                 <span>
                   <Icon name="terminal" size={15} />
-                  <strong>{number(summary?.kindCounts.tool_call ?? null)}</strong> tool requests
+                  <strong>{number(summary?.kindCounts.tool_call ?? null)}</strong>{" "}
+                  {summary?.kindCounts.tool_call === 1 ? "tool request" : "tool requests"}
                 </span>
                 <span className="fact-id">
                   <code>{session}</code>
@@ -612,13 +754,15 @@ export default function Dashboard() {
                       }
                     }}
                   >
-                    {v === "Timeline"
-                      ? "Activity"
-                      : v === "File changes"
-                        ? "Changes"
-                        : v === "Reported usage"
-                          ? "Usage"
-                          : "Coverage"}
+                    {v === "Session review"
+                      ? "Review"
+                      : v === "Timeline"
+                        ? "Activity"
+                        : v === "File changes"
+                          ? "Changes"
+                          : v === "Reported usage"
+                            ? "Usage"
+                            : "Coverage"}
                     {v === "Timeline" && <span>{count}</span>}
                   </button>
                 ))}
@@ -629,8 +773,26 @@ export default function Dashboard() {
                 id={`review-panel-${views.indexOf(view)}`}
                 aria-labelledby={`review-tab-${views.indexOf(view)}`}
               >
+                {view === "Session review" && (
+                  <SessionBrief
+                    key={`${project}:${session}`}
+                    project={currentProject}
+                    session={current}
+                    summary={summary}
+                    refresh={refresh}
+                    onEvidence={openEvidence}
+                    onView={tabs}
+                    onGaps={showGaps}
+                    inspector={eventId ? inspector : null}
+                    onDismiss={dismissEvidence}
+                    metadataLoading={metadataLoading}
+                    metadataFailed={metadataFailed}
+                    onRetry={() => setRefresh((n) => n + 1)}
+                    onSessions={() => navigate({ ...location, view: "Sessions", event: "" })}
+                  />
+                )}
                 {view === "Timeline" && (
-                  <div className="activity-layout">
+                  <div className={`activity-layout ${eventId ? "inspecting-evidence" : ""}`}>
                     <section className="activity-panel" aria-label="Session activity">
                       <div className="activity-controls">
                         <div className="search-field">
@@ -820,10 +982,22 @@ export default function Dashboard() {
                         )}
                       </div>
                     </section>
-                    <aside className="desktop-inspector" aria-label="Evidence inspector">
+                    <aside
+                      hidden={!eventId}
+                      className="desktop-inspector"
+                      aria-label="Evidence inspector"
+                    >
                       <div className="inspector-label">
                         <Icon name="file" size={16} />
                         Evidence inspector
+                        <button
+                          type="button"
+                          className="icon-button"
+                          aria-label="Close evidence inspector"
+                          onClick={dismissEvidence}
+                        >
+                          <Icon name="close" size={16} />
+                        </button>
                       </div>
                       {inspector}
                     </aside>

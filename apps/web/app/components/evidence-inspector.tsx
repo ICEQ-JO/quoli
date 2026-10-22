@@ -1,6 +1,6 @@
 import type { Relationship, StoredEvent } from "@traceframe/schema";
 import { clock, number } from "@traceframe/ui";
-import { eventTitle, eventTone } from "../review";
+import { eventTitle, eventTone, preview } from "../review";
 import { Icon } from "./ui-icon";
 
 type Props = {
@@ -71,37 +71,58 @@ export function EvidenceInspector({
             ? "Copy unavailable. Use the link in your address bar."
             : ""}
       </div>
-      <section className="payload-section">
-        <div className="section-heading">
-          <h4>
-            {p.kind === "prompt"
-              ? "Developer prompt"
-              : p.kind === "tool_call"
-                ? "Requested input"
-                : p.kind === "tool_result"
-                  ? "Reported output"
-                  : "Captured payload"}
-          </h4>
-          <span className="content-state">{"content" in p ? p.content.state : "metadata"}</span>
-        </div>
-        <pre
-          className={`payload ${p.kind === "tool_call" || p.kind === "tool_result" ? "code-payload" : ""} ${p.kind === "tool_result" && p.status === "failure" ? "failed-output" : ""}`}
-        >
-          <code>
-            {"content" in p
-              ? (p.content.text ?? `[Content ${p.content.state}]`)
-              : JSON.stringify(p, null, 2)}
-          </code>
-        </pre>
-        {"content" in p && (
-          <p className="payload-footnote">
-            {p.content.originalBytes === null
-              ? "Original size unavailable"
-              : `${number(p.content.originalBytes)} original bytes`}{" "}
-            · capture policy v{event.policyVersion}
+      {p.kind === "gap" ? (
+        <section className="gap-explanation">
+          <h4>What's recorded</h4>
+          <p>{preview(event)}</p>
+          <h4>What remains unknown</h4>
+          <p>
+            {p.reason === "missing_result"
+              ? "The retained history does not establish the command or tool outcome. A missing result is not proof that the action failed or never happened."
+              : p.reason === "missing_end"
+                ? "The source did not record a session end. The feature may still have been completed; this record cannot establish that."
+                : p.reason === "capture_disabled"
+                  ? "Content was not captured under the active policy. The omitted prompt, tool output or code cannot be reconstructed from this record."
+                  : "The retained history contains a collection gap. Its scope and the missing actions cannot be reconstructed from this observation alone."}
           </p>
-        )}
-      </section>
+          <p className="supporting-text">
+            Open the session to examine surrounding records. Exact source metadata is available
+            below.
+          </p>
+        </section>
+      ) : (
+        <section className="payload-section">
+          <div className="section-heading">
+            <h4>
+              {p.kind === "prompt"
+                ? "Developer prompt"
+                : p.kind === "tool_call"
+                  ? "Requested input"
+                  : p.kind === "tool_result"
+                    ? "Reported output"
+                    : "Captured payload"}
+            </h4>
+            <span className="content-state">{"content" in p ? p.content.state : "metadata"}</span>
+          </div>
+          <pre
+            className={`payload ${p.kind === "tool_call" || p.kind === "tool_result" ? "code-payload" : ""} ${p.kind === "tool_result" && p.status === "failure" ? "failed-output" : ""}`}
+          >
+            <code>
+              {"content" in p
+                ? (p.content.text ?? `[Content ${p.content.state}]`)
+                : JSON.stringify(p, null, 2)}
+            </code>
+          </pre>
+          {"content" in p && (
+            <p className="payload-footnote">
+              {p.content.originalBytes === null
+                ? "Original size unavailable"
+                : `${number(p.content.originalBytes)} original bytes`}{" "}
+              · capture policy v{event.policyVersion}
+            </p>
+          )}
+        </section>
+      )}
       <section className="linked-section">
         <div className="section-heading">
           <h4>Related evidence</h4>
