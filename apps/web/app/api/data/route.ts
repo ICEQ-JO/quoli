@@ -1,3 +1,4 @@
+import { browserQuerySchema } from "@traceframe/schema";
 import { type NextRequest, NextResponse } from "next/server";
 import { collector, validHost, validSession, validSite } from "../../local";
 export async function GET(request: NextRequest) {
@@ -50,6 +51,54 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { error: "Collector unavailable. Start pnpm demo, then retry." },
       { status: 503 },
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  if (!validHost(request.headers.get("host")) || !validSite(request.headers.get("sec-fetch-site")))
+    return NextResponse.json({ error: "Local origin required" }, { status: 403 });
+  try {
+    if (!validSession(request.cookies.get("traceframe-local")?.value))
+      return NextResponse.json({ error: "Session expired. Reload to reconnect." }, { status: 401 });
+    if (!request.headers.get("content-type")?.startsWith("application/json"))
+      return NextResponse.json({ error: "Use application/json" }, { status: 415 });
+    const reader = request.body?.getReader();
+    if (!reader) return NextResponse.json({ error: "Query body required" }, { status: 400 });
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > 4096) {
+        await reader.cancel();
+        return NextResponse.json({ error: "Query too large" }, { status: 413 });
+      }
+      chunks.push(value);
+    }
+    const input = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    const parsed = browserQuerySchema.safeParse(input);
+    if (!parsed.success)
+      return NextResponse.json({ error: "Invalid session query" }, { status: 400 });
+    const { project, session, query } = parsed.data;
+    const response = await collector(`/v1/projects/${project}/sessions/${session}/events/query`, {
+      method: "POST",
+      body: JSON.stringify(query),
+    });
+    return NextResponse.json(await response.json(), {
+      status: response.status,
+      headers: { "Cache-Control": "no-store" },
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof SyntaxError
+            ? "Invalid query JSON"
+            : "Collector unavailable. Retry to reconnect.",
+      },
+      { status: error instanceof SyntaxError ? 400 : 503 },
     );
   }
 }

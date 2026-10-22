@@ -245,3 +245,49 @@ test("storage capacity rejects a whole batch without deleting retained evidence"
   assert.equal(store.events("demo-quoli", events[0].sessionId).total, 1);
   store.close();
 });
+
+test("session queries search all observations, keep source-order cursors stable and scope projects", () => {
+  const store = new Store(":memory:");
+  store.registerProject("demo-quoli", "quoli", true, demoPolicy);
+  store.append(demoEvents());
+  const query = { search: "", kind: "all" as const, order: "source" as const, cursor: 0 };
+  const first = store.events("demo-quoli", "session-cache", 0, 8, query);
+  assert.ok(first.nextCursor);
+  const second = store.events("demo-quoli", "session-cache", first.nextCursor, 8, query);
+  assert.ok(second.nextCursor);
+  const third = store.events("demo-quoli", "session-cache", second.nextCursor, 8, query);
+  const all = [...first.events, ...second.events, ...third.events];
+  assert.equal(all.length, 17);
+  assert.equal(new Set(all.map((e) => e.id)).size, 17);
+  assert.deepEqual(
+    all.map((e) => e.sourceTime),
+    [...all.map((e) => e.sourceTime)].sort(),
+  );
+  const matches = store.events("demo-quoli", "session-cache", 0, 8, {
+    ...query,
+    search: "pnpm typecheck",
+    order: "receipt",
+  });
+  assert.equal(matches.total, 1);
+  assert.equal(matches.events[0].toolId, "tool-typecheck");
+  const files = store.events("demo-quoli", "session-cache", 0, 8, { ...query, kind: "files" });
+  assert.equal(files.total, 6);
+  const commands = store.events("demo-quoli", "session-cache", 0, 8, {
+    ...query,
+    kind: "commands",
+  });
+  assert.equal(commands.total, 5);
+  assert.equal(
+    store.events("demo-quoli", "session-cache", 0, 8, { ...query, kind: "gap" }).total,
+    1,
+  );
+  assert.equal(
+    store.events("other-project", "session-cache", 0, 8, { ...query, search: "pnpm" }).total,
+    0,
+  );
+  assert.equal(
+    store.events("demo-quoli", "session-cache", 0, 8, { ...query, search: "' OR 1=1 --" }).total,
+    0,
+  );
+  store.close();
+});

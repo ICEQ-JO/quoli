@@ -4,7 +4,7 @@
 
 The first usable increment runs a Next.js browser dashboard and one authenticated local collector. A SQLite event store persists three authored synthetic sessions. There is no live adapter, filesystem watcher, command runner, repository registration UI, cloud account, remote model, billing or outbound session upload.
 
-The dashboard supports session selection, cursor-paginated timeline browsing, loaded-event text search and type filters, receipt/source ordering, an evidence inspector, explicit tool-ID relationships, reported token/cache metrics and capture limitations. The source locator and normalized record are inspectable. Source-reported success does not prove feature correctness; referenced file paths are not captured diffs.
+The dashboard supports session selection, cursor-paginated timeline browsing, session-wide text search and type filters, receipt/source ordering, refreshable local evidence links, an evidence inspector, explicit tool-ID relationships, reported token/cache metrics and capture limitations. The source locator and normalized record are inspectable. Source-reported success does not prove feature correctness; referenced file paths are not captured diffs.
 
 ## Start and stop
 
@@ -21,11 +21,19 @@ Use the displayed loopback URL. `pnpm smoke` checks an already-running default i
 ## Five-minute review
 
 - Inspect the initial prompt in **Handle an empty cache response**. Select a tool request and follow **Open matching tool result**. The link is derived using `same-session-tool-id/v1`, not inferred from neighboring timestamps.
-- Load the rest of the timeline. The fixture deliberately delivers one result late. Toggle source/receipt order to see the distinction. Search only covers loaded observations, as the input label states.
+- Load the rest of the timeline. The fixture deliberately delivers one result late. Toggle source/receipt order to see the distinction. Search covers the entire retained session, including observations that have not been loaded into the list. Commands, Files, Prompts, Gaps and Usage filters also apply to the complete retained session.
 - Inspect both reported test outcomes. The missing typecheck result remains a capture gap even though the source records an end to the session.
-- Inspect **Reported usage**: non-cache input 3,100; output 1,560; cache read 30,500; cache write 2,400. The 84.7% cache-read token share uses a visible formula and is not a request hit rate. Open a usage observation to see its request identity.
+- Inspect **Usage**: non-cache input 3,100; output 1,560; cache read 30,500; cache write 2,400. The 84.7% cache-read token share uses a visible formula and is not a request hit rate. Open a usage observation to see its request identity.
 - Inspect **Investigate a slow repository scan** for partial usage and a missing end; inspect **Content capture disabled** for retained metadata with omitted text.
-- Open **Capture coverage** for explicit limitations. No screen claims complete capture, hidden reasoning or exclusive authorship.
+- Open **Coverage** for explicit limitations. No screen claims complete capture, hidden reasoning or exclusive authorship.
+
+## Navigation and small screens
+
+**Review gaps** opens the explicit gap filter. Search this session finds retained matches beyond the first page; Load more paginates matching results. Changing search or filter resets the explicit evidence selection. The **Activity order** select orders all matches by receipt sequence or source timestamp, with stable pagination.
+
+The evidence inspector puts captured content first and tucks source metadata into disclosures. **Copy evidence link** copies a local URL containing only IDs/view state. It does not upload evidence, and works only on the same running local workspace. When clipboard access is blocked, the address bar is the fallback.
+
+On mobile, choose a session with the **Session** select. Select an activity to open **Evidence details**; the close button or Escape dismisses it and restores focus. Direct evidence links open this detail view automatically. Desktop tabs support Left/Right arrows and activity rows support Up/Down navigation.
 
 ## Storage and credentials
 
@@ -53,4 +61,4 @@ To test with a fresh store without deleting anything, set `TRACEFRAME_DATA_DIR` 
 
 ## Current limitations
 
-Only synthetic sessions are supported. Usage is a deterministic view of retained request observations, not an invoice or proof of complete collection. Ambiguous/conflicting usage returns null; there is no pricing engine. No code snapshot, before/after diff or graph is available yet. Session selection is local UI state and resets on reload. All dates and agent activities in the demo are authored examples. Desktop and a 390-pixel mobile viewport were checked on this Linux environment; other operating systems are not certified.
+Only synthetic sessions are supported. Usage is a deterministic view of retained request observations, not an invoice or proof of complete collection. Ambiguous/conflicting usage returns null; there is no pricing engine. No code snapshot, before/after diff or graph is available yet. Session, view and selected evidence are encoded as IDs in a local URL and restored on reload. Search text is excluded from that URL. All dates and agent activities in the demo are authored examples. Desktop and a 390-pixel mobile viewport were checked on this Linux environment; other operating systems are not certified.

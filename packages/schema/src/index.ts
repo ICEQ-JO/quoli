@@ -165,3 +165,20 @@ export type UsageView = {
   rule: string;
 };
 export type EventPage = { events: StoredEvent[]; nextCursor: number | null; total: number };
+
+export const eventQuerySchema = z
+  .object({
+    search: z.string().max(200).default(""),
+    kind: z.enum(["all", "tools", "commands", "files", "prompt", "gap", "usage"]).default("all"),
+    order: z.enum(["receipt", "source"]).default("receipt"),
+    cursor: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).default(0),
+  })
+  .strict();
+export type EventQuery = z.infer<typeof eventQuerySchema>;
+export const browserQuerySchema = z
+  .object({
+    project: safeId,
+    session: safeId,
+    query: eventQuerySchema,
+  })
+  .strict();

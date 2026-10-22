@@ -23,9 +23,10 @@ The demo imports 29 entirely synthetic observations across three sessions. Re-ru
 
 1. Open **Handle an empty cache response**, select a tool request, then follow its derived link to the matching result.
 2. **Load more** to inspect the reported test failure, later success and missing typecheck result. Compare receipt order with source time.
-3. Open **Reported usage** to inspect the four token categories and the formula behind the cache-read token share.
+3. Open **Usage** to inspect the four token categories and the formula behind the cache-read token share.
 4. Switch to **Investigate a slow repository scan**: missing usage remains unknown and the session is incomplete.
-5. Switch to **Content capture disabled**, then open **Capture coverage** to review what the preview cannot establish.
+5. Switch to **Content capture disabled**, then open **Coverage** to review what the preview cannot establish.
+6. Use **Review gaps**, search the entire session, or copy an evidence link from the inspector. Session, view and evidence selection survive reload.
 
 Read the [demo and troubleshooting guide](docs/local-demo.md), [development/API reference](docs/development.md), [product plan](docs/README.md), [architecture](docs/architecture.md), [GitHub backlog](docs/issues/README.md), and [working agreements](AGENTS.md).
 
