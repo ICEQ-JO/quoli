@@ -627,3 +627,30 @@ test("unknown or unavailable session metadata has an explicit recovery instead o
   await page.getByRole("button", { name: "Retry review", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
 });
+
+test("verification evidence separates recorded failures, passes and missing results", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Handle an empty cache response", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Verification evidence", exact: true }),
+  ).toBeVisible();
+  const checks = page.locator(".check-row");
+  await expect(checks).toHaveCount(3);
+  await expect(checks.nth(0)).toContainText("Recorded failure");
+  await expect(checks.nth(0)).toContainText("Exit 1");
+  await expect(checks.nth(0)).toContainText("Failed 1");
+  await expect(checks.nth(0)).toContainText("referenced after");
+  await expect(checks.nth(1)).toContainText("Recorded pass");
+  await expect(checks.nth(1)).toContainText("Passed 5");
+  await expect(checks.nth(2)).toContainText("Result missing");
+  await expect(checks.nth(2)).toContainText("Exit —");
+  await expect(page.locator(".session-document")).toContainText(
+    "does not establish that the feature works",
+  );
+  await checks.nth(0).getByRole("button", { name: "Recorded result" }).click();
+  await expect(page.locator(".session-evidence .payload")).toContainText(
+    "Tests: 1 failed, 4 passed",
+  );
+});

@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./privacy": "./src/privacy.ts",
     "./repository": "./src/repository.ts",
-    "./changes": "./src/changes.ts"
+    "./changes": "./src/changes.ts",
+    "./checks": "./src/checks.ts"
   },
   "dependencies": {
     "zod": "4.6.7"
