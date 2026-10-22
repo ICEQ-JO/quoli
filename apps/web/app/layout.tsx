@@ -18,6 +18,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Founder-pinned familiar SaaS workbench. FINISH: unreviewed and undocumented is unfinished;
           this build ends with the finish review, the verdict, and DESIGN.md
         </span>
+        <span hidden aria-hidden="true" data-design-contract="quoli-evidence-desk">
+          THESIS: Demonstrate an evidence review before describing the machinery. OWN-WORLD:
+          Charcoal and white paired surfaces, fern interaction, local Geist, crisp rules and inert
+          code. STORY: Inspect changes, recorded checks and unknowns; then start a local sample.
+          FIRST VIEWPORT: Direct offer and setup action above a broad interactive evidence desk.
+          FORM: Product demonstration, autonomously chosen under the owner’s redesign brief. FINISH:
+          unreviewed and undocumented is unfinished; this build ends with the finish review, the
+          verdict, and DESIGN.md
+        </span>
         {children}
       </body>
     </html>

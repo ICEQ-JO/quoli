@@ -1,5 +1,5 @@
 ---
-name: Traceframe
+name: Quoli
 description: A session-first local evidence workspace with readable review documents and source-linked triage.
 colors:
   bg: 'light-dark(#ffffff, #171719)'
@@ -149,15 +149,17 @@ components:
     typography: '{typography.source-code}'
 ---
 
-# Design System: Traceframe
+# Design System: Quoli
 
 ## Overview
 
 **Creative North Star: "The session workbench"**
 
-Traceframe starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained violet selection support that hierarchy; a palette change alone does not define the workflow.
+Quoli starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained violet selection support that hierarchy; a palette change alone does not define the workflow.
 
-This records the shipped founder-approved direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and dark, light, and mobile screenshots, not a new visual proposal.
+The landing now follows a precise evidence desk with a broad synthetic review example and fern-green interaction. Its current implementation is scoped separately below. A full workspace redesign remains pending in the [whole-product experience rebuild](../../docs/work/product-experience.md).
+
+The workspace sections record the shipped founder-approved direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and dark, light, and mobile screenshots, not a new visual proposal.
 
 **Key Characteristics:**
 - Sessions first; global destinations stay stable.
@@ -166,6 +168,12 @@ This records the shipped founder-approved direction in `../../docs/design/sessio
 - Explicit source, uncertainty, capture state, and unavailable-data language.
 
 ## Colors
+
+### Landing-specific tokens
+
+The `/landing` surface uses scoped `--q-*` properties from `app/components/landing/landing.css`; it does not replace the workspace palette below. Dark is the default and light is an explicit override. These pairs are dark / light: `bg` #141717 / #f9faf8, `surface` #1b1f1e / #ffffff, `raised` #222725 / #eef2ed, `ink` #f0f3f1 / #202a24, `muted` #a8b2ac / #59655d, `line` #343e38 / #d6ded6, `accent` #b9d5b5 / #355b3c, `button` #c6e1c1 / #2f5138, `button-ink` #172b1c / #ffffff, `add` #243b2d / #e6f1e6, `remove` #382b2c / #f8eaea, `negative` #e3adaf / #95434d and `warning` #dec49b / #805b24. Fern green identifies actions and selected evidence; literal labels and diff signs carry meaning alongside color. CSS is the source of truth for these scoped tokens; frontmatter above describes the incumbent workspace.
+
+### Workspace palette
 
 Frontmatter preserves the shipped `light-dark(light, dark)` values. Dark is the default; the root `data-theme` attribute sets `color-scheme` so the theme control changes actual paint. Theme is persisted locally. Keep paired values together rather than treating one theme as the token source.
 
@@ -191,6 +199,12 @@ Frontmatter preserves the shipped `light-dark(light, dark)` values. Dark is the 
 
 ## Typography
 
+### Landing type
+
+The landing uses locally bundled Geist Variable with sans-serif fallback, body 15px/1.6. Display type is `clamp(42px, 4.4vw, 64px)`, weight 520, line-height 1.09, tracking −0.038em; section headings are `clamp(30px, 3vw, 42px)`, weight 500, line-height 1.2 and tracking −0.03em. Hero supporting text is 16px/1.75, capability reading text 14px/1.85, and example metadata 10–12px. Code uses SFMono-Regular, Consolas, Liberation Mono and monospace at 12px/1.9. At 1100px the hero title is 60px; at 760px it becomes `clamp(35px, 7.8vw, 54px)` and supporting text 15px.
+
+### Workspace type
+
 Geist Variable is bundled locally through `@fontsource-variable/geist`, with Segoe UI and sans-serif fallbacks. Code, paths, IDs, and timestamps use the frontmatter monospace stack. No external font fetch is required.
 
 The hierarchy is compact but readable: page headings use `headline`, session titles use `session-title`, document section headings use `section-title`, and developer requests use the larger, relaxed `request` role. Request text preserves line breaks within (72ch); explanatory document text uses (13px / 1.8), usually within (75ch). Sequence titles and queue titles use (13px, weight 500). Property labels are (11px); values are (12px). Counts use tabular numerals where implemented.
@@ -200,6 +214,12 @@ Activity titles use (14px, weight 500), previews (13px), and tool previews/sourc
 **The Reading Order Rule.** Use ordinary reading text for requests and human-readable gaps. Keep IDs and raw normalized records in source inspection or secondary properties.
 
 ## Layout
+
+### Landing layout
+
+The precise evidence desk places the review example near the offer. Content caps at 1180px with 48px side margins; the sticky header caps at 1360px with 32px margins and a 76px minimum height. Hero copy uses two columns, the example a 31% context rail, capabilities three ruled columns, and privacy/setup two columns. At 1100px, content margins become 32px and hero copy stacks. At 760px, margins become 20px, the header becomes 64px, anchor navigation hides, and the example/capabilities/privacy/setup stack. Theme and workspace access remain visible. Context properties use three columns; code scrolls within its panel. At 360px margins reduce to 14px. Anchor targets have 94px scroll clearance. See [the landing reference](../../docs/design/landing-page.md) for screenshots and full surface behavior.
+
+### Workspace layout
 
 The shell has a fixed sidebar (228px), toolbar (minimum 52px), and main workspace capped at (1640px), padded (24px 28px). The review maximum becomes (1600px) on wide screens. Stable navigation is Sessions, Needs review, and Project overview; the recent-session duplicate list is no longer the shell model.
 
@@ -218,6 +238,9 @@ Responsive behavior follows the final cascade:
 
 ## Elevation & Depth
 
+Landing depth uses rules and neutral tonal planes. Its 9px example panel has `0 24px 60px #00000018`; code has 5px corners and buttons 6px. The privacy symbol is circular. The example's 500ms clipping/8px reveal runs only under `prefers-reduced-motion: no-preference`; primary button backgrounds transition over 160ms ease-out.
+
+
 Flat planes, fine rules, text hierarchy, and restrained selected fills carry most depth. Registers and review sections have no resting card shadow. Source inspection and temporary disclosures provide the exceptions: Display options use `0 8px 24px #00000024`; the source dialog retains `0 24px 70px #13224633`, with backdrop `#14203a66`. The inherited help disclosure uses `0 10px 30px #19294d1a`. Diff-layout selection now uses a flat neutral fill with no shadow.
 
 Buttons and rows use (160ms ease-out) background/border transitions where defined. With motion permitted, Review arrives through a small clipping reveal (180ms ease-out); reduced-motion disables animations and transitions. Do not add decorative motion to captured evidence.
@@ -229,6 +252,11 @@ Controls use gently squared (6px) corners, code/disclosures (5px), and bounded w
 Payloads wrap safely and scroll inside bounded regions; diff code preserves whitespace and scrolls horizontally. The code plane must not widen the document. Outline icons identify routes and record types without replacing labels.
 
 ## Components
+
+### Landing interactions and boundaries
+
+The header links to anchors and `/`; the example opens a specific local sample. Three evidence tabs share a labeled panel with roving tab stops, Arrow Left/Right, Home/End and a keyboard-reachable panel. A skip link and 2px accent focus ring with 5px offset support keyboard navigation. Theme updates document and landing attributes and persists the shared historical `traceframe-theme` local key; unavailable storage is tolerated. Copy writes the two demo commands, shows **Copied** or manual-copy guidance, and resets after four seconds. No displayed command is executed. Keep the synthetic label, source context, reported-check limitations, unknown full-suite coverage, capture bounds and separate code/untracked consent. The full workspace redesign is pending; the following patterns describe its current implementation.
+
 
 ### Navigation and theme
 
