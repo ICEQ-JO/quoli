@@ -11,6 +11,7 @@ import type {
 } from "@traceframe/schema";
 import { clock, number } from "@traceframe/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ChangesView } from "./components/changes-view";
 import { EvidenceInspector } from "./components/evidence-inspector";
 import { CoveragePanel, UsagePanel } from "./components/session-views";
 import { Icon } from "./components/ui-icon";
@@ -32,7 +33,7 @@ type Summary = {
   relationships: Relationship[];
   kindCounts: Record<string, number>;
 };
-const views: View[] = ["Timeline", "Reported usage", "Capture coverage"];
+const views: View[] = ["Timeline", "File changes", "Reported usage", "Capture coverage"];
 const filters: { key: EventQuery["kind"]; label: string }[] = [
   { key: "all", label: "All activity" },
   { key: "commands", label: "Commands" },
@@ -259,7 +260,15 @@ export default function Dashboard() {
     setPage({ events: [], nextCursor: null, total: 0 });
     setSummary(null);
     dialog.current?.close();
-    navigate({ ...location, session: id, event: "", view: "Timeline" });
+    navigate({
+      ...location,
+      session: id,
+      event: "",
+      before: "",
+      after: "",
+      file: "",
+      view: "Timeline",
+    });
   }
   async function more() {
     if (page.nextCursor === null || loadingMore) return;
@@ -603,7 +612,13 @@ export default function Dashboard() {
                       }
                     }}
                   >
-                    {v === "Timeline" ? "Activity" : v === "Reported usage" ? "Usage" : "Coverage"}
+                    {v === "Timeline"
+                      ? "Activity"
+                      : v === "File changes"
+                        ? "Changes"
+                        : v === "Reported usage"
+                          ? "Usage"
+                          : "Coverage"}
                     {v === "Timeline" && <span>{count}</span>}
                   </button>
                 ))}
@@ -813,6 +828,31 @@ export default function Dashboard() {
                       {inspector}
                     </aside>
                   </div>
+                )}
+                {view === "File changes" && (
+                  <ChangesView
+                    project={project}
+                    session={session}
+                    refresh={refresh}
+                    selection={{
+                      before: location.before,
+                      after: location.after,
+                      file: location.file,
+                    }}
+                    onSelection={(next, replace = false) => {
+                      const target = {
+                        ...location,
+                        ...next,
+                        event: "",
+                        view: "File changes" as View,
+                      };
+                      if (replace) {
+                        window.history.replaceState(null, "", reviewUrl(target));
+                        setLocation(target);
+                      } else navigate(target);
+                    }}
+                    onEvidence={openEvidence}
+                  />
                 )}
                 {view === "Reported usage" &&
                   (summary ? (

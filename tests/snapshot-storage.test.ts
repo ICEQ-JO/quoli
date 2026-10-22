@@ -101,6 +101,12 @@ test("snapshot summary paging exposes provenance and counts without code or regi
   const next = store.snapshotSummaries("repo", "review", first.nextCursor, 1);
   assert.equal(next.snapshots[0].id, "snap_after");
   assert.equal(next.nextCursor, null);
+  const latest = store.snapshotSummaries("repo", "review", 0, 1, true);
+  assert.equal(latest.snapshots[0].id, "snap_after");
+  assert.ok(latest.nextCursor);
+  const older = store.snapshotSummaries("repo", "review", latest.nextCursor, 1, true);
+  assert.equal(older.snapshots[0].id, "snap_before");
+  assert.equal(older.nextCursor, null);
   assert.equal(store.snapshotSummaries("repo", "missing").total, 0);
   assert.throws(() => store.snapshotSummaries("repo", "review", -1));
   store.close();

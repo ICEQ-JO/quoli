@@ -39,6 +39,12 @@ export async function GET(request: NextRequest) {
       if (!/^\d{1,10}$/.test(cursor))
         return NextResponse.json({ error: "Invalid cursor" }, { status: 400 });
       path += `/${session}/${resource}?cursor=${cursor}`;
+      if (resource === "snapshots") {
+        const order = q.get("order") ?? "receipt";
+        if (order !== "receipt" && order !== "latest")
+          return NextResponse.json({ error: "Invalid capture order" }, { status: 400 });
+        path += `&order=${order}`;
+      }
     }
     if (resource === "evidence") {
       const id = q.get("event") ?? "";

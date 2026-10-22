@@ -30,6 +30,15 @@ colors:
   code-text: "#d5dff5"
   failed-code-bg: "#342531"
   failed-code-text: "#f2bdc9"
+  diff-code: "#3b4b69"
+  diff-gutter: "#f9fafe"
+  diff-add: "#307354"
+  diff-add-bg: "#eff9f3"
+  diff-add-gutter: "#e5f3eb"
+  diff-delete-bg: "#fff1f3"
+  diff-delete-gutter: "#fbe4e9"
+  diff-delete-number: "#924354"
+  diff-absent: "#f4f6fa"
 typography:
   headline:
     fontFamily: '"Geist Variable", "Segoe UI", sans-serif'
@@ -74,6 +83,16 @@ typography:
     fontSize: "11px"
     fontWeight: 400
     lineHeight: 1.9
+  diff-code:
+    fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace'
+    fontSize: "11px"
+    fontWeight: 400
+    lineHeight: 1.85
+  diff-line-number:
+    fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace'
+    fontSize: "10px"
+    fontWeight: 400
+    lineHeight: 1.85
 rounded:
   badge: "3px"
   chip: "4px"
@@ -138,6 +157,16 @@ components:
     textColor: "{colors.derived}"
     rounded: "{rounded.chip}"
     padding: "2px 6px"
+  captured-diff:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.diff-code}"
+    typography: "{typography.diff-code}"
+    rounded: "{rounded.project}"
+  diff-mode-selected:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.accent}"
+    rounded: "{rounded.badge}"
+    padding: "4px 9px"
 ---
 
 # Design System: Traceframe
@@ -156,7 +185,7 @@ The atmosphere is orderly, practical, and quietly precise. Desktop review pairs 
 - Cobalt selection; semantic source-state labels.
 - Paired activity and evidence, with provenance disclosed on demand.
 
-This is a scan of the implemented synthetic workspace, replacing the superseded muted-green identity. Sources are `app/globals.css`, `app/layout.tsx`, `app/dashboard.tsx`, and the workspace-home, evidence-inspector, and session-views components. No live ingestion, captured diffs, or graph surface is represented.
+This is a scan of the implemented synthetic workspace, replacing the superseded muted-green identity. Sources are `app/globals.css`, `app/layout.tsx`, `app/dashboard.tsx`, and the workspace-home, evidence-inspector, and session-views components. The captured-changes extension adds bounded comparison of retained baseline/checkpoint versions. Live agent ingestion and a graph surface remain unavailable.
 
 ## Colors
 
@@ -182,6 +211,8 @@ The palette combines cool neutrals with a clear cobalt route through the workspa
 - **Rules** (`line`, `line-soft`): panel outlines, major divisions, and row separators.
 - **Code Ink** (`code-bg`, `code-text`): tool input/output payloads; failed output uses `failed-code-bg` and `failed-code-text`.
 
+Captured diffs add green and rose row washes (`diff-add-bg`, `diff-delete-bg`) with stronger line-number gutters (`diff-add-gutter`, `diff-delete-gutter`). Addition numbers use `diff-add`; deletion numbers use `diff-delete-number`. Unchanged numbers use `muted` on `diff-gutter`; code uses `diff-code`, and empty split-layout sides use `diff-absent`. Unified rows retain explicit plus/minus signs and before/after line numbers.
+
 **The Evidence State Rule.** Pair every semantic color with wording, an icon, a number, or a source-state label. A successful exit code never becomes a feature-correctness verdict.
 
 ## Typography
@@ -197,6 +228,8 @@ The palette combines cool neutrals with a clear cobalt route through the workspa
 - **Row title:** session, gap-queue, and activity titles; final stylesheet overrides establish this role, reducing to (12px) on phones. Activity previews use (12px), reducing to (11px) on phones; tool previews remain monospace (10px).
 - **Label / Metadata:** compact controls and source details. Basis badges, fixture tags, and small timestamps use (9–10px). Labels are sentence case.
 - **Payload:** wrapped monospace blocks. IDs and timestamps also use monospace; counts and usage totals use tabular numerals. The cache-share figure is a local emphasis (44px, weight 500, line-height 1.1), not a general display-heading style.
+
+Captured code uses the `diff-code` role, reducing to (10px) at the phone breakpoint. Line numbers remain monospace (10px) on desktop and mobile. Table headings use Geist (9px / 1.6); path-list names use monospace (10px, weight 450, line-height 1.7), increasing to (11px) below (800px).
 
 **The Source Readability Rule.** Keep ordinary labels in Geist and captured commands, IDs, paths, and payloads in monospace. Keep provenance subordinate to the captured content without removing it.
 
@@ -215,12 +248,15 @@ Responsive thresholds are exact implemented media queries:
 
 Spacing uses compact (4–12px) control relationships and generous (16–36px) panel/page spacing. The source also uses local (18px, 22px, 26px, 30px) adjustments; it is not a strict universal 4px grid.
 
+Captured changes pairs a sticky path register (244px, top 20px) with a flexible code panel and gap (20px). At (1099px) and below the register is (210px), gap (16px); at (799px) and below both regions stack, the register stops sticking, and its list is capped at (240px) high. Before/after selectors stack at (559px). Code scrolls within its keyboard-focusable region, capped at (65vh), then (60vh) below (800px); side-by-side tables retain a minimum width (620px). Mobile file selection focuses and scrolls to the code-panel heading.
+
 ## Elevation & Depth
 
-Working surfaces are flat at rest: white panels, cool workspace background, fine rules, and restrained tonal selection establish hierarchy. Shadows are reserved for temporary overlays, not registers or dashboard metrics.
+Working surfaces are flat at rest: white panels, cool workspace background, fine rules, and restrained tonal selection establish hierarchy. Shadows are reserved for temporary overlays and the selected diff-layout segment, not registers or dashboard metrics.
 
 ### Shadow Vocabulary
 - **Help disclosure:** `0 10px 30px #19294d1a` under the positioned synthetic-workspace explanation.
+- **Selected diff-layout segment:** `0 1px 3px #20345e14`, a small inset-control distinction on the diff toolbar.
 - **Evidence dialog:** `0 24px 70px #13224633` with backdrop `#14203a66`, separating a focused source inspection from its context.
 
 Buttons and interactive rows change background and border over (160ms ease-out). There is no ornamental entrance animation. Reduced-motion preferences remove transitions and animations and restore automatic scrolling.
@@ -264,6 +300,16 @@ Below the paired-inspector threshold, the same content opens with native `showMo
 ### Usage and coverage
 
 Usage aligns categories and explanations with right-aligned reported counts, a labeled composition bar, and a separate derived cache-share explanation. The formula and source observations remain available. Unknown values render as an em dash or “Unknown,” accompanied by missing-data text. Coverage is an explicit list of what capture establishes and what remains unavailable. No fabricated cost, productivity score, live-integration state, diff, or graph should be inferred from these components.
+
+### Captured changes
+
+A derived snapshot-comparison badge leads the surface. Native Before/After selectors show baseline/checkpoint time in UTC, prevent choosing the same capture on both sides, and provide older-capture pagination. A context notice preserves missing or dirty baseline state and the authorship limitation.
+
+The path register reuses search, fine row rules, cobalt selection, `aria-pressed`, and up/down keyboard navigation. Each row includes a literal change status alongside its compact letter. Filters cover changed plus unknown, all captured paths, and unavailable comparisons; no matches offers filter recovery. Selected-file inspection remains possible outside the current list filter.
+
+The code panel uses the existing project radius (7px) and flat white surface. Its heading shows path, change basis, and known line totals. Unified/Side by side are pressed-state segment buttons; Before/After observation actions open retained source evidence. Sticky table headers identify both sides; unified mode adds signs and line numbers, while split mode leaves unavailable row cells visibly blank. Newline-only differences retain a textual end-of-file marker. Wide code stays horizontally scrollable rather than wrapping or widening the page.
+
+Keep distinct loading, no-captures, no-matching-paths, unchanged, missing-side, bounded-diff, and retryable-error states. Unavailable comparisons show explicit before/after content states and retained text when available. Amber uncertainty notices and dashed inferred-basis badges accompany inferred renames; they do not assert factual authorship. Pagination reports loaded files/lines, and disclosures expose comparison rules, supporting observations, capture limitations, and omitted counts. Displayed code remains inert text; inspection never restores files or runs a command. See `../../docs/captured-changes.md` for comparison semantics and bounds.
 
 ## Do's and Don'ts
 

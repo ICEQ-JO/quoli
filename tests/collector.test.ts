@@ -44,7 +44,7 @@ test("collector enforces auth, origins, atomic bounded input, replay and rotatio
     );
     assert.equal((await fetch(`${url}/v1/demo`, { method: "POST", headers })).status, 200);
     const repeated = await fetch(`${url}/v1/demo`, { method: "POST", headers });
-    assert.equal((await repeated.json()).duplicates, 29);
+    assert.equal((await repeated.json()).duplicates, 33);
     assert.equal(
       (
         await fetch(`${url}/v1/ingest`, {
@@ -124,6 +124,29 @@ test("collector enforces auth, origins, atomic bounded input, replay and rotatio
         })
       ).status,
       403,
+    );
+    const changesUrl = `${url}/v1/projects/demo-quoli/sessions/session-cache/changes`;
+    const comparison = { beforeId: "snap_demo_cache_before", afterId: "snap_demo_cache_after" };
+    assert.equal(
+      (await fetch(changesUrl, { method: "POST", body: JSON.stringify(comparison) })).status,
+      401,
+    );
+    const changes = await fetch(changesUrl, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(comparison),
+    });
+    assert.equal(changes.status, 200);
+    assert.equal((await changes.json()).files.length, 2);
+    assert.equal(
+      (
+        await fetch(changesUrl, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: " ".repeat(1048577),
+        })
+      ).status,
+      413,
     );
     rotateCredential();
     assert.equal((await fetch(`${url}/health`, { headers })).status, 401);

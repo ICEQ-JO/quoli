@@ -372,7 +372,13 @@ export class Store {
       .all(projectId, sessionId)
       .map((row) => JSON.parse(String(row.body)) as StoredSnapshot);
   }
-  snapshotSummaries(projectId: string, sessionId: string, cursor = 0, limit = 50): SnapshotPage {
+  snapshotSummaries(
+    projectId: string,
+    sessionId: string,
+    cursor = 0,
+    limit = 50,
+    latest = false,
+  ): SnapshotPage {
     if (
       !Number.isSafeInteger(cursor) ||
       cursor < 0 ||
@@ -388,8 +394,8 @@ export class Store {
       json_extract(body,'$.reason') AS reason, json_extract(body,'$.state') AS state,
       json_extract(body,'$.dirty') AS dirty, json_extract(body,'$.omitted') AS omitted,
       json_array_length(body,'$.files') AS file_count, json_array_length(body,'$.warnings') AS warning_count
-      FROM snapshots WHERE project_id=? AND session_id=? AND rowid>? ORDER BY rowid LIMIT ?`)
-      .all(projectId, sessionId, cursor, limit + 1);
+      FROM snapshots WHERE project_id=? AND session_id=? AND ${latest ? "(?=0 OR rowid<?)" : "rowid>?"} ORDER BY rowid ${latest ? "DESC" : "ASC"} LIMIT ?`)
+      .all(projectId, sessionId, ...(latest ? [cursor, cursor] : [cursor]), limit + 1);
     const total = Number(
       this.db
         .prepare("SELECT count(*) AS total FROM snapshots WHERE project_id=? AND session_id=?")

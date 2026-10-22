@@ -2,7 +2,7 @@
 
 ## Implemented preview
 
-The current synthetic preview implements `apps/web`, `apps/collector`, and the schema/storage/analysis/repository/ui packages. Run it with `pnpm demo`; see the [development reference](development.md) for exact routes, limits and behavior. It has an explicit local repository registration/capture CLI and persisted snapshot observations. Live adapters, the dashboard diff inspector and graph remain separate increments.
+The current synthetic preview implements `apps/web`, `apps/collector`, and the schema/storage/analysis/repository/ui packages. Run it with `pnpm demo`; see the [development reference](development.md) for exact routes, limits and behavior. It has an explicit local repository registration/capture CLI and persisted snapshot observations. The dashboard compares immutable snapshot pairs through a pure bounded projection. Live adapters and graph remain separate increments.
 
 The initial storage binding is Node 24's built-in SQLite API. Sanitized small artifacts are stored as transactional SQLite values initially; separate blob files and source-file cursors are deferred until adapters/snapshots need them. This avoids introducing a filesystem recovery boundary in the first demo. Dev, production and tests use separate Next output directories. The web port is 3140 because 3000 was occupied in the development environment.
 

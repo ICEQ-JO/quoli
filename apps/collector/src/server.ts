@@ -5,6 +5,8 @@ import { batchSchema, eventQuerySchema, MAX_BODY, safeId } from "@traceframe/sch
 import { Store } from "@traceframe/storage";
 import { credential, initializeCredential, runtime } from "@traceframe/storage/runtime";
 import { demoEvents, demoPolicy } from "../../../fixtures/demo";
+import { demoSnapshots } from "../../../fixtures/repository";
+import { readChanges } from "./changes";
 
 export function startCollector(
   port = runtime().collectorPort,
@@ -75,7 +77,14 @@ export function startCollector(
           return;
         }
         store.registerProject("demo-quoli", "quoli", true, demoPolicy);
-        send(200, store.append(demoEvents()));
+        const result = store.append(demoEvents());
+        for (const { sessionId, reason, snapshot } of demoSnapshots()) {
+          const existing = store.snapshot("demo-quoli", snapshot.id);
+          store.appendSnapshot("demo-quoli", sessionId, snapshot, reason);
+          if (existing) result.duplicates++;
+          else result.accepted++;
+        }
+        send(200, result);
         return;
       }
       if (req.method === "POST" && url.pathname === "/v1/ingest") {
@@ -92,6 +101,29 @@ export function startCollector(
           return;
         }
         send(200, store.append(parsed.data.events));
+        return;
+      }
+      const changesMatch = /^\/v1\/projects\/([^/]+)\/sessions\/([^/]+)\/changes$/.exec(
+        url.pathname,
+      );
+      if (req.method === "POST" && changesMatch) {
+        const project = safeId.parse(changesMatch[1]),
+          session = safeId.parse(changesMatch[2]);
+        if (
+          !store.project(project) ||
+          !store.sessions(project).some((item) => item.id === session)
+        ) {
+          send(404, { error: "Unknown project or session" });
+          return;
+        }
+        if (req.headers["content-type"] !== "application/json") {
+          send(415, { error: "Use application/json" });
+          return;
+        }
+        const text = await body(req, res);
+        if (text === null) return;
+        const result = readChanges(store, project, session, JSON.parse(text));
+        send(result.status, result.data);
         return;
       }
       const queryMatch = /^\/v1\/projects\/([^/]+)\/sessions\/([^/]+)\/events\/query$/.exec(
@@ -139,7 +171,12 @@ export function startCollector(
             send(400, { error: "Invalid snapshot cursor" });
             return;
           }
-          send(200, store.snapshotSummaries(project, session, cursor));
+          const order = url.searchParams.get("order") ?? "receipt";
+          if (order !== "receipt" && order !== "latest") {
+            send(400, { error: "Invalid capture order" });
+            return;
+          }
+          send(200, store.snapshotSummaries(project, session, cursor, 50, order === "latest"));
           return;
         }
         if (match[3] === "summary") {

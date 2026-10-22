@@ -16,7 +16,7 @@ export default async function Page({
   if (!authorized) {
     const params = await searchParams;
     const query = new URLSearchParams();
-    for (const key of ["project", "session", "view", "event"]) {
+    for (const key of ["project", "session", "view", "event", "before", "after", "file"]) {
       const value = params[key];
       if (typeof value === "string") query.set(key, value);
     }
