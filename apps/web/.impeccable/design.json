@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-22T00:17:04.940218+00:00",
+  "generatedAt": "2026-10-22T10:50:49.575281+00:00",
   "title": "Design System: Traceframe",
   "extensions": {
     "colorMeta": {
@@ -395,6 +395,132 @@
           "oklch(84% 0.0627 3.41)",
           "oklch(95% 0.0627 3.41)"
         ]
+      },
+      "diff-code": {
+        "role": "neutral",
+        "displayName": "Diff Code",
+        "tonalRamp": [
+          "oklch(15% 0.0546 262.57)",
+          "oklch(26% 0.0546 262.57)",
+          "oklch(38% 0.0546 262.57)",
+          "oklch(49% 0.0546 262.57)",
+          "oklch(61% 0.0546 262.57)",
+          "oklch(72% 0.0546 262.57)",
+          "oklch(84% 0.0546 262.57)",
+          "oklch(95% 0.0546 262.57)"
+        ]
+      },
+      "diff-gutter": {
+        "role": "neutral",
+        "displayName": "Diff Gutter",
+        "tonalRamp": [
+          "oklch(15% 0.0054 274.97)",
+          "oklch(26% 0.0054 274.97)",
+          "oklch(38% 0.0054 274.97)",
+          "oklch(49% 0.0054 274.97)",
+          "oklch(61% 0.0054 274.97)",
+          "oklch(72% 0.0054 274.97)",
+          "oklch(84% 0.0054 274.97)",
+          "oklch(95% 0.0054 274.97)"
+        ]
+      },
+      "diff-add": {
+        "role": "tertiary",
+        "displayName": "Diff Add",
+        "tonalRamp": [
+          "oklch(15% 0.0850 160.92)",
+          "oklch(26% 0.0850 160.92)",
+          "oklch(38% 0.0850 160.92)",
+          "oklch(49% 0.0850 160.92)",
+          "oklch(61% 0.0850 160.92)",
+          "oklch(72% 0.0850 160.92)",
+          "oklch(84% 0.0850 160.92)",
+          "oklch(95% 0.0850 160.92)"
+        ]
+      },
+      "diff-add-bg": {
+        "role": "tertiary",
+        "displayName": "Diff Add Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0132 159.92)",
+          "oklch(26% 0.0132 159.92)",
+          "oklch(38% 0.0132 159.92)",
+          "oklch(49% 0.0132 159.92)",
+          "oklch(61% 0.0132 159.92)",
+          "oklch(72% 0.0132 159.92)",
+          "oklch(84% 0.0132 159.92)",
+          "oklch(95% 0.0132 159.92)"
+        ]
+      },
+      "diff-add-gutter": {
+        "role": "tertiary",
+        "displayName": "Diff Add Gutter",
+        "tonalRamp": [
+          "oklch(15% 0.0182 161.11)",
+          "oklch(26% 0.0182 161.11)",
+          "oklch(38% 0.0182 161.11)",
+          "oklch(49% 0.0182 161.11)",
+          "oklch(61% 0.0182 161.11)",
+          "oklch(72% 0.0182 161.11)",
+          "oklch(84% 0.0182 161.11)",
+          "oklch(95% 0.0182 161.11)"
+        ]
+      },
+      "diff-delete-bg": {
+        "role": "tertiary",
+        "displayName": "Diff Delete Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0153 7.48)",
+          "oklch(26% 0.0153 7.48)",
+          "oklch(38% 0.0153 7.48)",
+          "oklch(49% 0.0153 7.48)",
+          "oklch(61% 0.0153 7.48)",
+          "oklch(72% 0.0153 7.48)",
+          "oklch(84% 0.0153 7.48)",
+          "oklch(95% 0.0153 7.48)"
+        ]
+      },
+      "diff-delete-gutter": {
+        "role": "tertiary",
+        "displayName": "Diff Delete Gutter",
+        "tonalRamp": [
+          "oklch(15% 0.0260 2.77)",
+          "oklch(26% 0.0260 2.77)",
+          "oklch(38% 0.0260 2.77)",
+          "oklch(49% 0.0260 2.77)",
+          "oklch(61% 0.0260 2.77)",
+          "oklch(72% 0.0260 2.77)",
+          "oklch(84% 0.0260 2.77)",
+          "oklch(95% 0.0260 2.77)"
+        ]
+      },
+      "diff-delete-number": {
+        "role": "tertiary",
+        "displayName": "Diff Delete Number",
+        "tonalRamp": [
+          "oklch(15% 0.1077 8.41)",
+          "oklch(26% 0.1077 8.41)",
+          "oklch(38% 0.1077 8.41)",
+          "oklch(49% 0.1077 8.41)",
+          "oklch(61% 0.1077 8.41)",
+          "oklch(72% 0.1077 8.41)",
+          "oklch(84% 0.1077 8.41)",
+          "oklch(95% 0.1077 8.41)"
+        ]
+      },
+      "diff-absent": {
+        "role": "neutral",
+        "displayName": "Diff Absent",
+        "tonalRamp": [
+          "oklch(15% 0.0057 264.53)",
+          "oklch(26% 0.0057 264.53)",
+          "oklch(38% 0.0057 264.53)",
+          "oklch(49% 0.0057 264.53)",
+          "oklch(61% 0.0057 264.53)",
+          "oklch(72% 0.0057 264.53)",
+          "oklch(84% 0.0057 264.53)",
+          "oklch(95% 0.0057 264.53)"
+        ]
       }
     },
     "typographyMeta": {
@@ -405,6 +531,14 @@
       "payload": {
         "displayName": "Captured source",
         "purpose": "Wrapped monospace evidence, never an executable action."
+      },
+      "diff-code": {
+        "displayName": "Captured diff code",
+        "purpose": "Preserved whitespace; 11px desktop and 10px on phones."
+      },
+      "diff-line-number": {
+        "displayName": "Diff line number",
+        "purpose": "Monospace 10px on desktop and mobile; semantic gutters retain contrast."
       }
     },
     "shadows": [
@@ -417,6 +551,11 @@
         "name": "evidence-dialog",
         "value": "0 24px 70px #13224633",
         "purpose": "Native modal evidence inspection."
+      },
+      {
+        "name": "diff-mode-selected",
+        "value": "0 1px 3px #20345e14",
+        "purpose": "Selected Unified/Side by side segment."
       }
     ],
     "motion": [
@@ -505,6 +644,22 @@
       "description": "Recorded and derived states stay textually explicit.",
       "html": "<div class=\"ds-bases\"><span>Recorded observation</span><span class=\"ds-derived\">Derived \u00b7 explicit ID match</span></div>",
       "css": ".ds-bases{display:flex;flex-wrap:wrap;gap:8px}.ds-bases span{font:400 9px/1.55 var(--sans);padding:2px 6px;border:1px solid #dce4f8;border-radius:4px;background:#f0f4ff;color:#4965a4}.ds-bases .ds-derived{border-color:#e2d8f6;background:#f7f2ff;color:#7257a6}"
+    },
+    {
+      "name": "Captured code diff",
+      "kind": "custom",
+      "refersTo": "captured-diff",
+      "description": "Inert before/after code with explicit signs, line numbers, and semantic gutters.",
+      "html": "<section class=\"ds-diff\" tabindex=\"0\" aria-label=\"Unified code diff\"><table><thead><tr><th>Before</th><th>After</th><th>Change</th><th>Captured code</th></tr></thead><tbody><tr class=\"ds-delete\"><td>2</td><td></td><td>\u2212</td><td><code>return count.toString();</code></td></tr><tr class=\"ds-add\"><td></td><td>2</td><td>+</td><td><code>return count ?? null;</code></td></tr></tbody></table></section>",
+      "css": ".ds-diff{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:7px;background:var(--surface)}.ds-diff:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}.ds-diff table{border-collapse:collapse;min-width:100%;font:11px/1.85 var(--mono)}.ds-diff th{position:sticky;top:0;background:#f3f5fa;padding:7px 9px;text-align:left;font:450 9px/1.6 var(--sans);color:var(--muted)}.ds-diff td{padding:1px 9px;white-space:pre;color:#3b4b69}.ds-diff td:nth-child(-n+2){font-size:10px;text-align:right;min-width:38px;color:var(--muted);background:#f9fafe;border-right:1px solid #e9edf6}.ds-diff code{font:inherit}.ds-diff .ds-add{background:#eff9f3}.ds-diff .ds-delete{background:#fff1f3}.ds-diff .ds-add td:nth-child(-n+2){color:#307354;background:#e5f3eb}.ds-diff .ds-delete td:nth-child(-n+2){color:#924354;background:#fbe4e9}.ds-diff .ds-add td:nth-child(3){color:#307354}.ds-diff .ds-delete td:nth-child(3){color:var(--negative)}@media(max-width:559px){.ds-diff table{font-size:10px}.ds-diff td:nth-child(-n+2){min-width:30px;padding-inline:6px}}"
+    },
+    {
+      "name": "Diff layout control",
+      "kind": "button",
+      "refersTo": "diff-mode-selected",
+      "description": "Explicit pressed state for unified and side-by-side inspection.",
+      "html": "<fieldset class=\"ds-diff-mode\"><legend>Code diff layout</legend><button aria-pressed=\"true\">Unified</button><button aria-pressed=\"false\">Side by side</button></fieldset>",
+      "css": ".ds-diff-mode{display:flex;gap:2px;margin:0;padding:2px;background:#fafbfe;border:1px solid #dce2ee;border-radius:5px}.ds-diff-mode legend{font:10px var(--sans);color:var(--muted)}.ds-diff-mode button{font:10px/1.55 var(--sans);min-height:26px;padding:4px 9px;border:0;border-radius:3px;background:transparent;color:var(--muted);cursor:pointer}.ds-diff-mode button:hover{background:#edf1fa}.ds-diff-mode button[aria-pressed=\"true\"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px #20345e14}.ds-diff-mode button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
     }
   ],
   "narrative": {

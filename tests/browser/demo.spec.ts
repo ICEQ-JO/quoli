@@ -11,7 +11,7 @@ test("workspace overview, searchable library and review queue retain navigation"
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Workspace overview" })).toBeVisible();
   await expect(page.locator(".register-row")).toHaveCount(3);
-  await expect(page.locator(".workspace-ledger")).toContainText("29");
+  await expect(page.locator(".workspace-ledger")).toContainText("33");
   await expect(page.locator(".queue-heading")).toContainText("4");
   await page.getByRole("button", { name: "Explore a session" }).click();
   await expect(page.locator(".event-row")).toHaveCount(8);
@@ -101,7 +101,7 @@ test("review activity, search the entire session and retain evidence links throu
   await page.getByRole("button", { name: /Load more/ }).click();
   await expect(page.locator(".event-row")).toHaveCount(16);
   await page.getByRole("button", { name: /Load more/ }).click();
-  await expect(page.locator(".event-row")).toHaveCount(17);
+  await expect(page.locator(".event-row")).toHaveCount(19);
   await page.getByRole("textbox", { name: "Search entire session" }).fill("pnpm typecheck");
   await expect(page.locator(".event-row")).toHaveCount(1);
   await expect(page.locator(".event-row")).toContainText("pnpm typecheck");
@@ -191,7 +191,7 @@ test("mobile evidence opens with protected focus and Escape returns to the selec
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole("tab", { name: "Activity", exact: false }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("tab", { name: "Usage", exact: true })).toBeFocused();
+  await expect(page.getByRole("tab", { name: "Changes", exact: true })).toBeFocused();
 });
 
 test("captured HTML and instructions stay inert and never trigger external requests", async ({
@@ -297,7 +297,10 @@ test("explicitly registered local snapshots appear without synthetic claims or e
     ).match(/repo_[a-f0-9]{32}/)?.[0];
     expect(project).toBeTruthy();
     cli("snapshot", project ?? "");
-    writeFileSync(join(root, "example.ts"), "export const value = 2;\n");
+    writeFileSync(
+      join(root, "example.ts"),
+      'export const value = 2;\n// <img src="https://example.invalid/captured-code" onerror="window.__capturedCodeExecuted = true">\n',
+    );
     cli("snapshot", project ?? "");
     await page.goto("/");
     await page.getByRole("combobox", { name: "Project", exact: true }).selectOption(project ?? "");
@@ -325,7 +328,110 @@ test("explicitly registered local snapshots appear without synthetic claims or e
       "aria-selected",
       "true",
     );
+    await page.getByRole("tab", { name: "Changes", exact: true }).click();
+    await expect(page.locator(".diff-scroll")).toContainText("value = 1");
+    await expect(page.locator(".diff-scroll")).toContainText("value = 2");
+    await expect(page.locator(".diff-scroll")).toContainText("<img src=");
+    expect(await page.locator(".diff-scroll img").count()).toBe(0);
+    expect(await page.evaluate(() => "__capturedCodeExecuted" in window)).toBe(false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("captured changes retain pair and file selection, support split review and source inspection", async ({
+  page,
+}) => {
+  await page.goto("/?session=session-cache&view=changes");
+  await expect(page.getByRole("region", { name: "Unified code diff" })).toContainText(
+    "toLocaleString()",
+  );
+  await expect(page.getByRole("region", { name: "Unified code diff" })).toContainText("?? null");
+  await expect(page.locator(".changed-file")).toHaveCount(2);
+  await expect(page.locator(".comparison-context")).toContainText("already dirty");
+  await page.getByRole("button", { name: "Side by side", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Side-by-side code diff" })).toBeVisible();
+  await page.getByRole("button", { name: "src/usage/usage.test.ts modified", exact: true }).click();
+  await expect(page).toHaveURL(/file=/);
+  const selectedUrl = page.url();
+  await page.reload();
+  await expect(
+    page
+      .getByRole("region", { name: "Captured code inspection" })
+      .getByRole("heading", { level: 3 }),
+  ).toHaveText("src/usage/usage.test.ts");
+  await page.getByRole("button", { name: "After observation", exact: true }).click();
+  await expect(page.locator(".desktop-inspector")).toContainText("Repository checkpoint captured");
+  await page.goBack();
+  await expect(page).toHaveURL(selectedUrl);
+  await page.getByRole("combobox", { name: "File change filter" }).selectOption("all");
+  await expect(page.locator(".changed-file")).toHaveCount(3);
+  await page.getByRole("textbox", { name: "Search captured paths" }).fill("README.md");
+  await expect(page.locator(".changed-file")).toHaveCount(1);
+  expect(page.url()).not.toContain("README");
+  await page.getByRole("button", { name: "README.md unchanged", exact: true }).click();
+  await expect(page.locator(".diff-counts")).toContainText("+0");
+  await expect(page.locator(".diff-counts")).toContainText("−0");
+  await expect(page.locator(".diff-scroll")).toContainText("Local changes already existed");
+  await page.context().clearCookies();
+  await page.reload();
+  await expect(
+    page
+      .getByRole("region", { name: "Captured code inspection" })
+      .getByRole("heading", { level: 3 }),
+  ).toHaveText("README.md");
+  await expect(page.getByRole("combobox", { name: "Before capture" })).toHaveValue(
+    "snap_demo_cache_before",
+  );
+});
+
+test("missing and disabled captures remain explicit; mobile file selection focuses code", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/?session=session-metadata&view=changes");
+  await expect(page.getByText("A complete diff is unavailable")).toBeVisible();
+  await expect(page.locator(".captured-sides")).toContainText("Before content unavailable");
+  await expect(page.locator(".captured-sides")).toContainText("After content unavailable");
+  await page.goto("/?session=session-interrupted&view=changes");
+  await expect(page.locator(".capture-empty")).toContainText("capture");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?session=session-cache&view=changes");
+  await page.getByRole("button", { name: "src/usage/usage.test.ts modified", exact: true }).click();
+  const heading = page
+    .getByRole("region", { name: "Captured code inspection" })
+    .getByRole("heading", { level: 3 });
+  await expect(heading).toHaveText("src/usage/usage.test.ts");
+  await expect(heading).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 320, height: 720 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // Browser proxy has separate local-origin, credential, body and scoping boundaries.
+  const query = {
+    project: "demo-quoli",
+    session: "session-cache",
+    query: { beforeId: "snap_demo_cache_before", afterId: "snap_demo_cache_after" },
+  };
+  expect((await request.post("/api/changes", { data: query })).status()).toBe(401);
+  expect(
+    (
+      await page.request.post("/api/changes", {
+        headers: { "sec-fetch-site": "cross-site" },
+        data: query,
+      })
+    ).status(),
+  ).toBe(403);
+  expect(
+    (
+      await page.request.post("/api/changes", { data: { ...query, session: "session-metadata" } })
+    ).status(),
+  ).toBe(404);
+  expect(
+    (
+      await page.request.post("/api/changes", {
+        headers: { "Content-Type": "application/json" },
+        data: " ".repeat(4097),
+      })
+    ).status(),
+  ).toBe(413);
 });

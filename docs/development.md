@@ -40,7 +40,7 @@ See [local repository capture](repository-capture.md). `pnpm repository register
 
 ## Dashboard structure
 
-`apps/web/app/dashboard.tsx` owns local navigation and session review state. `review.ts` serializes only validated project/session/view/event IDs; the local-cookie connection route preserves this state and drops arbitrary return destinations. `components/workspace-home.tsx` owns overview/library presentation and bounded per-session summary reads. Workspace counts derive from the returned retained-session list (currently capped at 50 by storage); they are not universal collection metrics. Summary failures keep gap counts unknown. Project/session metadata loads independently from the selected session summary so one failed summary does not erase the session list.
+`apps/web/app/dashboard.tsx` owns local navigation and session review state. `review.ts` serializes only validated project/session/view/event/capture/file IDs; the local-cookie connection route preserves this state and drops arbitrary return destinations. `components/workspace-home.tsx` owns overview/library presentation and bounded per-session summary reads. Workspace counts derive from the returned retained-session list (currently capped at 50 by storage); they are not universal collection metrics. Summary failures keep gap counts unknown. Project/session metadata loads independently from the selected session summary so one failed summary does not erase the session list.
 
 The root view is Overview; explicit legacy session URLs remain review views. Session-content search stays in a bounded POST body, while session-title search stays in local component state. Geist Variable is bundled from the pinned Fontsource package and served locally: runtime typography makes no third-party font requests. [PRODUCT.md](../apps/web/PRODUCT.md) records product truth; [DESIGN.md](../apps/web/DESIGN.md) records the built visual system.
 
@@ -75,3 +75,7 @@ SQLite adds a durable receipt sequence and timestamp. Unique `(project, source, 
 ## Validation at this increment
 
 The test suite covers strict contracts, omitted/nested tool content, fake-secret canaries, UTF-8 truncation, excluded/missing tool context, reported-zero/unknown usage behavior, same-ID joins, rollback, restart persistence, duplicate/conflicting delivery, project isolation, append-only guards, private file modes, HTTP auth/origin/size checks, rotation, lifecycle cleanup, browser pagination/evidence links, mobile width and inert hostile HTML. A browser network assertion rejects non-loopback requests. These checks do not certify live capture, general secret removal or feature behavior in observed repositories.
+
+## Captured changes
+
+See [captured file review](captured-changes.md) for projection semantics, bounds and API. `components/changes-view.tsx` owns pair selection and bounded list/detail reads; `packages/analysis/src/diff.ts` is a pure deterministic projection with no filesystem access. Snapshot metadata supports `order=latest` receipt pagination. Captured diffs are recomputable views of immutable evidence, not a second source of truth.

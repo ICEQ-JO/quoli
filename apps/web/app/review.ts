@@ -1,14 +1,32 @@
 import type { StoredEvent } from "@traceframe/schema";
 import { kindLabels, number } from "@traceframe/ui";
-export type View = "Overview" | "Sessions" | "Timeline" | "Reported usage" | "Capture coverage";
-export type ReviewLocation = { project: string; session: string; view: View; event: string };
+export type View =
+  | "Overview"
+  | "Sessions"
+  | "Timeline"
+  | "Reported usage"
+  | "Capture coverage"
+  | "File changes";
+export type ReviewLocation = {
+  project: string;
+  session: string;
+  view: View;
+  event: string;
+  before: string;
+  after: string;
+  file: string;
+};
 export const initialLocation: ReviewLocation = {
   project: "demo-quoli",
   session: "session-cache",
   view: "Overview",
   event: "",
+  before: "",
+  after: "",
+  file: "",
 };
 const viewKeys: Record<View, string> = {
+  "File changes": "changes",
   Overview: "overview",
   Sessions: "sessions",
   Timeline: "activity",
@@ -29,6 +47,9 @@ export function readLocation(url: URL): ReviewLocation {
     session: id(url.searchParams.get("session"), initialLocation.session),
     view,
     event: id(url.searchParams.get("event"), ""),
+    before: id(url.searchParams.get("before"), ""),
+    after: id(url.searchParams.get("after"), ""),
+    file: id(url.searchParams.get("file"), ""),
   };
 }
 export function reviewUrl(location: ReviewLocation): string {
@@ -38,6 +59,8 @@ export function reviewUrl(location: ReviewLocation): string {
     view: viewKeys[location.view],
   });
   if (location.event) params.set("event", location.event);
+  for (const key of ["before", "after", "file"] as const)
+    if (location[key]) params.set(key, location[key]);
   return `/?${params}`;
 }
 export function eventTitle(e: StoredEvent): string {

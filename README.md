@@ -4,7 +4,7 @@ A local evidence workbench for AI-assisted development. Repository: `ICEQ-JO/quo
 
 > Show me what my coding agent did, what changed, and what remains unverified.
 
-The first usable preview is available: **a synthetic session explorer** with a persistent timeline, tool results, evidence links, reported token/cache usage and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md). Live Claude Code collection, the dashboard code diff inspector and the change map are still upcoming.
+The first usable preview is available: **a synthetic session explorer** with a persistent timeline, tool results, evidence links, reported token/cache usage and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md). The dashboard now compares captured before/after versions with source links and explicit unavailable sides. Live Claude Code collection and the change map are still upcoming.
 
 ## Run the demo
 
@@ -17,7 +17,7 @@ pnpm demo
 
 Open **http://127.0.0.1:3140**. Stop both services with **Ctrl+C**. The collector binds to `127.0.0.1:4318`. Neither server is publicly exposed. No API key or Claude account is needed; no agent is connected and no recorded commands are executed.
 
-The demo imports 29 entirely synthetic observations across three sessions. Re-running it preserves your local data and does not duplicate those observations.
+The demo imports 33 entirely synthetic observations across three sessions. Re-running it preserves your local data and does not duplicate those observations.
 
 ## Try these flows
 

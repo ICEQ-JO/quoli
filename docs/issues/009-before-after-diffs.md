@@ -20,10 +20,10 @@ No edit/restore controls, reconstructed missing baseline or whole-program semant
 
 ## Acceptance criteria
 
-- [ ] Display additions/deletions, observed renames and changed text from the selected snapshots with provenance for each side.
-- [ ] Missing baseline, excluded code, redacted lines, binary content and truncated files have explicit placeholders; never claim a complete diff.
-- [ ] Large diffs are paginated/bounded and safe filenames including spaces and Unicode display correctly.
-- [ ] Baseline dirty changes remain distinguishable from changes observed between session snapshots.
+- [x] Display additions/deletions, explicitly inferred rename candidates and changed text from the selected snapshots with provenance for each side.
+- [x] Missing baseline, excluded code, redacted lines, binary content and truncated files have explicit placeholders; never claim a complete diff.
+- [x] Large diffs are paginated/bounded and safe filenames including spaces and Unicode display correctly.
+- [x] Baseline dirty changes remain distinguishable from changes observed between session snapshots.
 
 ## Test plan
 
@@ -36,3 +36,5 @@ Render inert code, keep path access project-scoped and never resolve arbitrary a
 ## Relative size
 
 M
+
+Implementation: `feat/captured-diffs`. See [captured review behavior](../captured-changes.md). Validation: 65 unit/integration checks, nine browser flows, typecheck, lint and production build. Live Claude integration remains outside this issue.

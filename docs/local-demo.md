@@ -4,7 +4,7 @@
 
 The first usable increment runs a Next.js browser dashboard and one authenticated local collector. A SQLite event store persists three authored synthetic sessions. A separate [repository capture CLI](repository-capture.md) supports explicit real-project registration and read-only baselines/checkpoints. There is no live adapter, filesystem watcher, command runner, repository registration UI, cloud account, remote model, billing or outbound session upload.
 
-The dashboard opens on a workspace overview with retained counts, a session register and an actionable recorded-gap queue. The Sessions library supports title search and capture-state filtering. Inside each session, the dashboard supports selection, cursor-paginated timeline browsing, session-wide text search and type filters, receipt/source ordering, refreshable local evidence links, an evidence inspector, explicit tool-ID relationships, reported token/cache metrics and capture limitations. The source locator and normalized record are inspectable. Source-reported success does not prove feature correctness; referenced file paths are not captured diffs.
+The dashboard opens on a workspace overview with retained counts, a session register and an actionable recorded-gap queue. The Sessions library supports title search and capture-state filtering. Inside each session, the dashboard supports selection, cursor-paginated timeline browsing, session-wide text search and type filters, receipt/source ordering, refreshable local evidence links, an evidence inspector, explicit tool-ID relationships, reported token/cache metrics and capture limitations. The source locator and normalized record are inspectable. Source-reported success does not prove feature correctness; referenced tool paths alone do not establish captured changes. The Changes tab separately compares stored snapshot pairs.
 
 ## Start and stop
 
@@ -20,7 +20,7 @@ Use the displayed loopback URL. `pnpm smoke` checks an already-running default i
 
 ## Five-minute review
 
-- Start on **Overview**: the fixtures contain 3 sessions, 29 observations and 4 explicitly recorded capture gaps. Open **Sessions** to search by title or filter for sessions without a recorded end. These counts describe retained evidence, not capture completeness.
+- Start on **Overview**: the fixtures contain 3 sessions, 33 observations and 4 explicitly recorded capture gaps. Open **Sessions** to search by title or filter for sessions without a recorded end. These counts describe retained evidence, not capture completeness.
 - Inspect the initial prompt in **Handle an empty cache response**. Select a tool request and follow **Open matching tool result**. The link is derived using `same-session-tool-id/v1`, not inferred from neighboring timestamps.
 - Load the rest of the timeline. The fixture deliberately delivers one result late. Toggle source/receipt order to see the distinction. Search covers the entire retained session, including observations that have not been loaded into the list. Commands, Files, Prompts, Gaps and Usage filters also apply to the complete retained session.
 - Inspect both reported test outcomes. The missing typecheck result remains a capture gap even though the source records an end to the session.
@@ -62,4 +62,4 @@ To test with a fresh store without deleting anything, set `TRACEFRAME_DATA_DIR` 
 
 ## Current limitations
 
-Only synthetic sessions are supported. Usage is a deterministic view of retained request observations, not an invoice or proof of complete collection. Ambiguous/conflicting usage returns null; there is no pricing engine. No code snapshot, before/after diff or graph is available yet. Session, view and selected evidence are encoded as IDs in a local URL and restored on reload. Search text is excluded from that URL. All dates and agent activities in the demo are authored examples. Desktop and a 390-pixel mobile viewport were checked on this Linux environment; other operating systems are not certified.
+The authored demo is synthetic; explicit read-only repository capture is also supported through the CLI. Usage is a deterministic view of retained request observations, not an invoice or proof of complete collection. Ambiguous/conflicting usage returns null; there is no pricing engine. The Changes tab offers [captured before/after inspection](captured-changes.md); a change map remains upcoming. Session, view and selected evidence are encoded as IDs in a local URL and restored on reload. Search text is excluded from that URL. All dates and agent activities in the demo are authored examples. Desktop and a 390-pixel mobile viewport were checked on this Linux environment; other operating systems are not certified.

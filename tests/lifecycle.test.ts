@@ -79,7 +79,7 @@ test("one-command startup preserves evidence across restart and releases both po
         `http://127.0.0.1:${collectorPort}/v1/projects/demo-quoli/sessions/session-cache/events`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-    assert.equal((await (await request()).json()).total, 17);
+    assert.equal((await (await request()).json()).total, 19);
     const conflict = spawn(process.execPath, ["--import", "tsx", "scripts/dev.ts", "--demo"], {
       env,
       stdio: ["ignore", "pipe", "pipe"],
@@ -93,8 +93,8 @@ test("one-command startup preserves evidence across restart and releases both po
     assert.match(message, /busy/);
     await stop();
     await start();
-    assert.equal((await (await request()).json()).total, 17);
-    assert.match(logs, /29 already present/);
+    assert.equal((await (await request()).json()).total, 19);
+    assert.match(logs, /33 already present/);
   } finally {
     await stop();
     rmSync(dir, { recursive: true, force: true });
