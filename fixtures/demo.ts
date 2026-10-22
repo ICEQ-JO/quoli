@@ -136,8 +136,8 @@ export function demoEvents(): NormalizedEvent[] {
       {
         kind: "tool_call",
         toolName: "Read",
-        content: content("Read src/usage/normalize.ts"),
-        path: "src/usage/normalize.ts",
+        content: content("Read src/usage/cache.ts"),
+        path: "src/usage/cache.ts",
       },
       { toolId: "tool-read", promptId: "prompt-cache" },
     ),
@@ -173,9 +173,9 @@ export function demoEvents(): NormalizedEvent[] {
         kind: "tool_call",
         toolName: "Edit",
         content: content(
-          "src/usage/normalize.ts\n\nexport function cacheRead(usage) {\n  return usage.cache_read_tokens ?? null;\n}\n\n// A missing count is not zero.",
+          "src/usage/cache.ts\n\nexport function cacheRead(usage) {\n  return usage.cache_read_tokens ?? null;\n}\n\n// A missing count is not zero.",
         ),
-        path: "src/usage/normalize.ts",
+        path: "src/usage/cache.ts",
       },
       { toolId: "tool-edit", promptId: "prompt-cache" },
     ),

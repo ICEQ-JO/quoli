@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { Relationship, StoredEvent, UsageView } from "@traceframe/schema";
 
 export * from "./checks";
+export * from "./map";
 
 export function usage(events: StoredEvent[]): UsageView {
   const candidates = events.filter((e) => e.payload.kind === "usage");

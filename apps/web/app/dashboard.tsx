@@ -14,6 +14,7 @@ import { clock, number } from "@traceframe/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChangesView } from "./components/changes-view";
 import { EvidenceInspector } from "./components/evidence-inspector";
+import { MapView } from "./components/map-view";
 import { ReviewQueue } from "./components/review-queue";
 import { SessionBrief } from "./components/session-brief";
 import { type SessionFilters, SessionIndex } from "./components/session-index";
@@ -42,6 +43,7 @@ const views: View[] = [
   "Session review",
   "Timeline",
   "File changes",
+  "Change map",
   "Reported usage",
   "Capture coverage",
 ];
@@ -762,9 +764,11 @@ export default function Dashboard() {
                         ? "Activity"
                         : v === "File changes"
                           ? "Changes"
-                          : v === "Reported usage"
-                            ? "Usage"
-                            : "Coverage"}
+                          : v === "Change map"
+                            ? "Map"
+                            : v === "Reported usage"
+                              ? "Usage"
+                              : "Coverage"}
                     {v === "Timeline" && <span>{count}</span>}
                   </button>
                 ))}
@@ -1029,6 +1033,27 @@ export default function Dashboard() {
                       } else navigate(target);
                     }}
                     onEvidence={openEvidence}
+                  />
+                )}
+                {view === "Change map" && (
+                  <MapView
+                    project={project}
+                    session={session}
+                    before={location.before}
+                    after={location.after}
+                    refresh={refresh}
+                    onEvidence={openEvidence}
+                    onOpenChange={(file, pair) =>
+                      navigate({
+                        ...location,
+                        view: "File changes",
+                        event: "",
+                        file,
+                        before: pair.before,
+                        after: pair.after,
+                      })
+                    }
+                    onOpenChanges={() => navigate({ ...location, view: "File changes", event: "" })}
                   />
                 )}
                 {view === "Reported usage" &&

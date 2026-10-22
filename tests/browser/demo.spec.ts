@@ -654,3 +654,25 @@ test("verification evidence separates recorded failures, passes and missing resu
     "Tests: 1 failed, 4 passed",
   );
 });
+
+test("the change map joins captured files to recorded checks and opens their evidence", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Handle an empty cache response", exact: true }).click();
+  await page.getByRole("tab", { name: "Map", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Change map", exact: true })).toBeVisible();
+  await expect(page.locator(".map-node.file")).toHaveCount(2);
+  await expect(page.locator(".map-node.check")).toHaveCount(3);
+  await expect(page.locator(".map-edge")).toHaveCount(6);
+  await expect(page.locator(".map-view")).toContainText("does not establish authorship");
+  await page
+    .getByRole("button", { name: /src\/usage\/cache.ts/ })
+    .first()
+    .click();
+  await expect(page.getByRole("region", { name: "Unified code diff" })).toBeVisible();
+  await page.getByRole("tab", { name: "Map", exact: true }).click();
+  await page.locator(".map-view > section").getByRole("button").first().click();
+  await expect(page).toHaveURL(/view=activity.*event=/);
+  await expect(page.locator(".desktop-inspector")).toContainText("Supporting observations");
+});
