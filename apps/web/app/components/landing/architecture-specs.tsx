@@ -62,14 +62,12 @@ export function ArchitectureSpecs() {
           <div className="shell-body">
             <div className="shell-line">
               <span className="prompt-sym">$</span>
-              <span className="cmd-text">
-                curl -fsSL https:{"//traceframe.dev/install.sh | sh"}
-              </span>
+              <span className="cmd-text">pnpm connect /path/to/repo --capture-code</span>
             </div>
             <div className="shell-output">
-              ✓ Traceframe collector ready on 127.0.0.1:40009
+              ✓ Quoli collector ready on 127.0.0.1:4318
               <br />✓ Embedded SQLite database initialized (WAL enabled)
-              <br />✓ Web review workbench ready: http:{"//127.0.0.1:3000"}
+              <br />✓ Web review workbench ready: http:{"//127.0.0.1:3140"}
             </div>
             <div className="shell-line">
               <span className="prompt-sym">$</span>

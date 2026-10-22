@@ -10,7 +10,7 @@ export function RealityCheck() {
         <p className="section-subtitle">
           AI coding agents are trained to sound confident. They report clean completion summaries
           even when tests were skipped, silent regressions were introduced, or unauthorized files
-          were rewritten. Traceframe separates conversational claims from immutable facts.
+          were rewritten. Quoli separates conversational claims from immutable facts.
         </p>
       </div>
 
@@ -45,7 +45,7 @@ export function RealityCheck() {
           </ul>
         </div>
 
-        {/* Right: What Traceframe Actually Recorded */}
+        {/* Right: What Quoli Actually Recorded */}
         <div className="contrast-card traceframe-receipt">
           <div className="contrast-header">
             <div className="badge-traceframe">TRACEFRAME RECEIPT</div>

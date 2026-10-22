@@ -3,7 +3,7 @@ import { startCollector } from "./server";
 
 const server = startCollector();
 server.on("listening", () =>
-  console.log(`Traceframe collector ready on 127.0.0.1:${runtime().collectorPort} (local preview)`),
+  console.log(`Quoli collector ready on 127.0.0.1:${runtime().collectorPort} (local preview)`),
 );
 server.on("error", (error: NodeJS.ErrnoException) => {
   console.error(

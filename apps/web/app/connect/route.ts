@@ -3,7 +3,7 @@ import { sessionToken, validHost, validSite } from "../local";
 import { readLocation, reviewUrl } from "../review";
 export function GET(request: NextRequest) {
   if (!validHost(request.headers.get("host")) || !validSite(request.headers.get("sec-fetch-site")))
-    return new NextResponse("Open Traceframe directly on loopback.", { status: 403 });
+    return new NextResponse("Open Quoli directly on loopback.", { status: 403 });
   const response = NextResponse.redirect(
     // Next may normalize request.url to localhost. Preserve the allowlisted Host
     // so IP connections keep their separate browser cookie namespace.

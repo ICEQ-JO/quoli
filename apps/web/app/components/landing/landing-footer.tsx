@@ -33,7 +33,7 @@ export function LandingFooter() {
                 strokeLinecap="round"
               />
             </svg>
-            <span className="brand-name">Traceframe</span>
+            <span className="brand-name">Quoli</span>
           </div>
           <p className="footer-thesis">
             “Show me what my coding agent did, what changed, and what remains unverified.”
@@ -93,9 +93,7 @@ export function LandingFooter() {
       </div>
 
       <div className="footer-bottom">
-        <span className="copy-text">
-          © 2026 Traceframe / quoli. Open Source under Apache 2.0 & MIT.
-        </span>
+        <span className="copy-text">© 2026 Quoli / quoli. Open Source under Apache 2.0 & MIT.</span>
         <span className="node-version">
           Running locally on loopback · Verified with Impeccable & Anatomy
         </span>

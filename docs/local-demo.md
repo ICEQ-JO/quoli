@@ -75,7 +75,7 @@ The authored demo is synthetic; explicit read-only repository capture is also su
 
 Use `http://127.0.0.1:3140` (or your configured web port). Browser cookies are shared across ports on the same hostname; unrelated localhost applications can leave enough cookie data to exceed the server's header limit. The connection flow preserves `127.0.0.1` so it stays in a separate cookie namespace. HTTP 431 alone does not prove which header caused it.
 
-If the IP address also returns 431, try a private browser window. Clearing site data for the affected hostname is optional and may sign you out of other apps on that hostname. Traceframe does not clear unrelated browser data or raise request header limits. A healthy `/api/health` request without browser cookies does not establish that a particular browser profile can load the dashboard.
+If the IP address also returns 431, try a private browser window. Clearing site data for the affected hostname is optional and may sign you out of other apps on that hostname. Quoli does not clear unrelated browser data or raise request header limits. A healthy `/api/health` request without browser cookies does not establish that a particular browser profile can load the dashboard.
 
 ## Session-first workflow
 

@@ -194,7 +194,7 @@ export function WorkbenchExplorer() {
                     <div className="queue-body">
                       Agent reported: <em>“All regression checks pass.”</em>
                       <span className="queue-detail">
-                        Traceframe fact: Command exit code was 0, but assertion count was 0 (no test
+                        Quoli fact: Command exit code was 0, but assertion count was 0 (no test
                         files matched).
                       </span>
                     </div>

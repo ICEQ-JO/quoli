@@ -7,6 +7,7 @@ import { number } from "@traceframe/ui";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { eventTitle, preview, type View } from "../review";
 import { ReconciliationPanel } from "./reconciliation-panel";
+import { RepositoryHistory } from "./repository-history";
 import { Icon } from "./ui-icon";
 import { eventRead, localRead, type ReviewSummary, sourceDate } from "./workspace-data";
 
@@ -156,6 +157,39 @@ export function SessionBrief({
       </div>
     );
   const latest = data.captures.snapshots[0];
+  if (session.kind === "repository")
+    return (
+      <div className={`brief-layout ${inspector ? "inspecting-evidence" : ""}`}>
+        <RepositoryHistory
+          project={project.id}
+          session={session}
+          onView={onView}
+          onEvidence={onEvidence}
+        />
+        {inspector ? (
+          <aside className="desktop-inspector session-evidence" aria-label="Evidence inspector">
+            <button type="button" className="text-button" onClick={onDismiss}>
+              Close evidence inspector
+            </button>
+            {inspector}
+          </aside>
+        ) : (
+          <aside className="session-properties" aria-label="Repository properties">
+            <h2>Repository</h2>
+            <p>{project.name}</p>
+            <p>
+              {project.policy.code
+                ? "Code capture enabled"
+                : "Metadata only: content diffs and unstaged code edits are unavailable."}
+            </p>
+            <p>Observation is independent of agent sessions. Agent authorship is unknown.</p>
+            <button type="button" className="text-button" onClick={() => onView("Settings")}>
+              Capture settings
+            </button>
+          </aside>
+        )}
+      </div>
+    );
   const represented = new Set<string>();
   const toolRows: { call: StoredEvent; result: StoredEvent | null; linked: string | null }[] =
     data.tools.events

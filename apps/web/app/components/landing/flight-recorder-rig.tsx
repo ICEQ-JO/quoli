@@ -411,7 +411,7 @@ export function FlightRecorderRig() {
             viewBox="0 0 860 480"
             className="iso-svg flight-svg"
             role="img"
-            aria-label="Interactive isometric model of the Traceframe Agent Flight Recorder"
+            aria-label="Interactive isometric model of the Quoli Agent Flight Recorder"
             suppressHydrationWarning
           >
             {/* Base Halo Shadow */}

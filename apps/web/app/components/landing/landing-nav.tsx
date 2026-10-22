@@ -13,7 +13,7 @@ export function LandingNav({
     <header className="landing-header">
       <div className="landing-header-inner">
         <div className="brand-group">
-          <a href="/landing" className="brand-mark" aria-label="Traceframe Home">
+          <a href="/landing" className="brand-mark" aria-label="Quoli Home">
             <svg
               aria-hidden="true"
               width="24"
@@ -39,7 +39,7 @@ export function LandingNav({
                 strokeLinecap="round"
               />
             </svg>
-            <span className="brand-name">Traceframe</span>
+            <span className="brand-name">Quoli</span>
           </a>
           <span className="brand-badge">v0.1.0-preview · LOCAL</span>
         </div>

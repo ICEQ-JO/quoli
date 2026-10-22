@@ -9,6 +9,7 @@ import { demoEvents, demoPolicy } from "../../../fixtures/demo";
 import { demoSnapshots } from "../../../fixtures/repository";
 import { readChanges } from "./changes";
 import { readMap } from "./map";
+import { startRepositoryObserver } from "./observer";
 import { otlpUsageEvents, readOtlpBody } from "./otel";
 import { spooledObservations } from "./spool";
 
@@ -24,6 +25,7 @@ export function startCollector(
   store = new Store(runtime().dbFile),
 ) {
   initializeCredential();
+  const observer = startRepositoryObserver(store, runtime().dataDir);
   const health = { rejected: 0, storageErrors: 0 };
   let windowStart = Date.now(),
     requests = 0;
@@ -87,6 +89,16 @@ export function startCollector(
       }
       if (req.method === "GET" && url.pathname === "/v1/projects") {
         send(200, store.projects());
+        return;
+      }
+      const observationMatch = /^\/v1\/projects\/([^/]+)\/observation$/.exec(url.pathname);
+      if (req.method === "GET" && observationMatch) {
+        const project = safeId.parse(observationMatch[1]);
+        if (!store.project(project)) {
+          send(404, { error: "Unknown project" });
+          return;
+        }
+        send(200, store.observation(project));
         return;
       }
       // The demo endpoint registers ONLY our fixed synthetic project and policy.
@@ -283,7 +295,7 @@ export function startCollector(
         return;
       }
       const match =
-        /^\/v1\/projects\/([^/]+)\/sessions(?:\/([^/]+)\/(events|summary|snapshots))?$/.exec(
+        /^\/v1\/projects\/([^/]+)\/sessions(?:\/([^/]+)\/(events|summary|snapshots|repository-history))?$/.exec(
           url.pathname,
         );
       if (req.method === "GET" && match) {
@@ -299,6 +311,10 @@ export function startCollector(
         const session = safeId.parse(match[2]);
         if (!store.sessions(project).some((s) => s.id === session)) {
           send(404, { error: "Unknown session" });
+          return;
+        }
+        if (match[3] === "repository-history") {
+          send(200, store.repositoryHistory(project, session));
           return;
         }
         if (match[3] === "snapshots") {
@@ -324,10 +340,14 @@ export function startCollector(
             verification: verification(events),
             reconciliation: reconcile(events, usageView),
             kindCounts: Object.fromEntries(
-              ["prompt", "tool_call", "tool_result", "gap", "repository_snapshot"].map((kind) => [
-                kind,
-                events.filter((e) => e.payload.kind === kind).length,
-              ]),
+              [
+                "prompt",
+                "tool_call",
+                "tool_result",
+                "gap",
+                "repository_snapshot",
+                "repository_state",
+              ].map((kind) => [kind, events.filter((e) => e.payload.kind === kind).length]),
             ),
           });
           return;
@@ -367,7 +387,9 @@ export function startCollector(
   server.requestTimeout = 5000;
   server.headersTimeout = 5000;
   server.listen(port, "127.0.0.1");
-  server.on("close", () => store.close());
+  server.on("close", () => {
+    void observer.stop().finally(() => store.close());
+  });
   return server;
 }
 async function body(

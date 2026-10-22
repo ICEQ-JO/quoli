@@ -1,5 +1,5 @@
 {
-  "name": "traceframe",
+  "name": "quoli",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.12.0",
@@ -12,6 +12,7 @@
     "seed": "node --import tsx scripts/seed.ts",
     "repository": "node --import tsx scripts/repository.ts",
     "bridge": "node --import tsx apps/bridge/src/index.ts",
+    "connect": "node --import tsx scripts/setup.ts",
     "setup": "node --import tsx scripts/setup.ts",
     "pilot": "node --import tsx scripts/pilot.ts",
     "settings": "node --import tsx scripts/settings.ts",

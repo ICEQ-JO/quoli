@@ -1,10 +1,10 @@
 # Local repository capture
 
-Repository capture is a separate, explicit operation from collecting agent activity. A working-tree snapshot records what was observed at a particular point; it cannot establish who changed a file. An already-dirty working tree is a valid baseline. HEAD is context, not a substitute for that baseline.
+Repository capture is separate from agent activity. Manual capture remains supported below; [automatic history](automatic-history.md) removes the need for manual snapshot commands after connection. A working-tree snapshot records what was observed at a particular point; it cannot establish who changed a file. An already-dirty working tree is a valid baseline. HEAD is context, not a substitute for that baseline.
 
 ## Register and capture
 
-From the Traceframe repository:
+From the Quoli repository:
 
 ```sh
 pnpm repository register /absolute/path/to/repository --name "My project"

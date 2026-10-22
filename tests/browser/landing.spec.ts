@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Traceframe Landing Page", () => {
+test.describe("Quoli Landing Page", () => {
   test("landing page renders hero headline, flight recorder rig, and quickstart snippet", async ({
     page,
   }) => {
@@ -20,7 +20,7 @@ test.describe("Traceframe Landing Page", () => {
 
     // Quickstart snippet
     await expect(page.locator(".terminal-cmd")).toContainText(
-      "curl -fsSL https://traceframe.dev/install.sh | sh",
+      "pnpm connect /path/to/repo --capture-code",
     );
   });
 

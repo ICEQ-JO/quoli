@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
         "health",
         "evidence",
         "snapshots",
+        "observation",
+        "repository-history",
       ].includes(resource)
     )
       return NextResponse.json({ error: "Unknown view" }, { status: 400 });
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
     if (resource !== "projects" && resource !== "health" && !/^[a-zA-Z0-9_-]{1,100}$/.test(project))
       return NextResponse.json({ error: "Invalid project" }, { status: 400 });
     if (
-      ["events", "summary", "evidence", "snapshots"].includes(resource) &&
+      ["events", "summary", "evidence", "snapshots", "repository-history"].includes(resource) &&
       !/^[a-zA-Z0-9_-]{1,100}$/.test(session)
     )
       return NextResponse.json({ error: "Invalid session" }, { status: 400 });
@@ -41,7 +43,9 @@ export async function GET(request: NextRequest) {
           ? "/v1/projects"
           : `/v1/projects/${project}/sessions`;
     if (resource === "session-counts") path = `/v1/projects/${project}/session-counts`;
+    if (resource === "observation") path = `/v1/projects/${project}/observation`;
     if (resource === "summary") path += `/${session}/summary`;
+    if (resource === "repository-history") path += `/${session}/repository-history`;
     if (resource === "events" || resource === "snapshots") {
       const cursor = q.get("cursor") ?? "0";
       if (!/^\d{1,10}$/.test(cursor))

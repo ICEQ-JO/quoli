@@ -8,7 +8,7 @@ export function MechanicalPillars() {
       <div className="section-head">
         <h2 className="section-title">The Three Pillars of Verifiable Agent Execution</h2>
         <p className="section-subtitle">
-          Engineered for developers who reject blind trust. Traceframe is designed around strict
+          Engineered for developers who reject blind trust. Quoli is designed around strict
           architectural guarantees that cannot be bypassed by prompt injection or conversational
           drift.
         </p>
@@ -79,8 +79,8 @@ export function MechanicalPillars() {
           <h3 className="pillar-title">Bounded Diff & AST Engine</h3>
           <p className="pillar-text">
             Captures real Git working-tree baselines and checkpoints. When a file is missing or
-            capture was disabled, Traceframe labels the side explicitly unavailable rather than
-            inventing empty files or false deletions.
+            capture was disabled, Quoli labels the side explicitly unavailable rather than inventing
+            empty files or false deletions.
           </p>
 
           <div className="pillar-spec-list">

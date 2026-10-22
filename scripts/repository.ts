@@ -7,7 +7,7 @@ import { defaultPolicy, safeId } from "../packages/schema/src/index";
 import { Store } from "../packages/storage/src/index";
 import { runtime } from "../packages/storage/src/runtime";
 
-const usage = `Traceframe repository capture
+const usage = `Quoli repository capture
 
 pnpm repository register /path/to/repository --name "Project" [--capture-code] [--include-untracked]
 pnpm repository snapshot PROJECT_ID [--session REVIEW_ID]

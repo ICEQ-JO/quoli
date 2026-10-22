@@ -1,5 +1,7 @@
 # Implementation checkpoint
 
+Current local increment: **Quoli automatic repository history**, on `feat/quoli-automatic-repository-history`. [Connection and limits](automatic-history.md), [local acceptance record](work/automatic-repository-history.md). Repository observation is independent of agent/editor; additional agent activity adapters remain planned.
+
 This is a working checkpoint, not a release certification. The source tree, tests, running application and linked PRs are authoritative. Update this page as each increment is demonstrated.
 
 | Capability | Current evidence | Remaining work |
@@ -19,4 +21,4 @@ This is a working checkpoint, not a release certification. The source tree, test
 
 The founder requested OpenCode agents with a free MiniMax model. The installed model list exposes `opencode/minimax-m3.1-flash-free`; isolated supporting runs supplied the repository reader and bounded diff engine, both reviewed and tested before integration. A subsequent checks-analysis draft is awaiting primary-agent review. Their output is not trusted as finished until reviewed and rerun by the primary agent. No real session evidence or credentials are supplied to those agents.
 
-PRs are stacked and unmerged. The application can run from the latest working branch; publication does not authorize an automatic merge. Existing upstream PRs must be integrated in dependency order when the owner authorizes merging.
+The original 19-PR implementation stack was merged into main at the owner's request. The subsequent reload fix and this automatic-history increment are included in the current local branch. The owner explicitly requested no push or PR for this new increment.

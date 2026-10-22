@@ -3,7 +3,7 @@ import { safeId } from "../packages/schema/src/index";
 import { Store } from "../packages/storage/src/index";
 import { rotateCredential, runtime } from "../packages/storage/src/runtime";
 
-const usage = `Traceframe capture controls
+const usage = `Quoli capture controls
 
 pnpm settings list
 pnpm settings show PROJECT_ID

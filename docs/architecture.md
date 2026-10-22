@@ -1,5 +1,12 @@
 # Local architecture and planned extensions
 
+## Current owner direction: Quoli and agent-independent history
+
+Quoli is the product name (formerly Traceframe). The repository observation layer is independent of agent harnesses: an explicit connection opts a local Git root into safe, bounded sampling while the collector runs. Sanitized working-tree snapshots and observed Git transitions are primary records. Daily repository history is displayed separately from agent sessions; shared file paths or nearby timestamps do not establish authorship. The current [automatic-history increment](automatic-history.md) and [local work record](work/automatic-repository-history.md) supersede earlier manual-only repository-capture scope below.
+
+Detailed agent activity remains a separate adapter boundary. Claude is the only implemented activity adapter; Codex, Pi, OpenCode and others require independently verified contracts, source identities, capabilities and synthetic fixtures before implementation. Repository observation provides useful evidence with all of those tools without claiming their activity has been captured. Internal package/config/storage names remain compatible during the visible Quoli rename.
+
+
 ## Implemented preview
 
 The current synthetic preview implements `apps/web`, `apps/collector`, and the schema/storage/analysis/repository/ui packages. Run it with `pnpm demo`; see the [development reference](development.md) for exact routes, limits and behavior. It has an explicit local repository registration/capture CLI and persisted snapshot observations. The dashboard compares immutable snapshot pairs through a pure bounded projection. Live adapters and graph remain separate increments.

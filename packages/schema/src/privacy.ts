@@ -52,6 +52,7 @@ export function sanitizeEvent(raw: NormalizedEvent, policy: CapturePolicy): Norm
   const event = eventSchema.parse(raw);
   if (event.sourceLocator !== null) event.sourceLocator = redact(event.sourceLocator);
   const p = event.payload;
+  if (p.kind === "repository_state" && p.branch !== null) p.branch = redact(p.branch);
   if ("content" in p) {
     // A tool payload may contain code in any nested position. Until tool-specific
     // classification exists, conservatively require BOTH tool and code consent.

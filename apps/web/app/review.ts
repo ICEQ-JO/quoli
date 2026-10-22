@@ -73,6 +73,8 @@ export function reviewUrl(location: ReviewLocation): string {
 }
 export function eventTitle(e: StoredEvent): string {
   const p = e.payload;
+  if (p.kind === "repository_state")
+    return p.transition === "fast_forward" ? "New commits observed" : "Repository state observed";
   if (p.kind === "repository_snapshot")
     return p.reason === "baseline"
       ? "Repository baseline captured"
@@ -93,6 +95,8 @@ export function eventTitle(e: StoredEvent): string {
 export function preview(e: StoredEvent): string {
   const p = e.payload;
   if ("content" in p) return p.content.text?.split("\n")[0] ?? `Content ${p.content.state}`;
+  if (p.kind === "repository_state")
+    return `${p.branch ?? "Detached or unknown branch"} · ${p.head?.slice(0, 12) ?? "No HEAD"} · ${p.commits.length} newly observed commit IDs`;
   if (p.kind === "repository_snapshot")
     return `${p.reason === "baseline" ? "Baseline" : "Checkpoint"} · ${p.state} working tree${p.dirty ? " · dirty" : ""}`;
   if (p.kind === "usage")
