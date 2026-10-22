@@ -33,6 +33,12 @@ pnpm demo
 
 `pnpm privacy:preview` shows how metadata-only policy filters a synthetic prompt. `pnpm privacy:preview --synthetic-content` displays explicitly enabled fixture content. Never pipe personal sessions into this command.
 
+## Dashboard structure
+
+`apps/web/app/dashboard.tsx` owns local navigation and session review state. `review.ts` serializes only validated project/session/view/event IDs; the local-cookie connection route preserves this state and drops arbitrary return destinations. `components/workspace-home.tsx` owns overview/library presentation and bounded per-session summary reads. Workspace counts derive from the returned retained-session list (currently capped at 50 by storage); they are not universal collection metrics. Summary failures keep gap counts unknown. Project/session metadata loads independently from the selected session summary so one failed summary does not erase the session list.
+
+The root view is Overview; explicit legacy session URLs remain review views. Session-content search stays in a bounded POST body, while session-title search stays in local component state. Geist Variable is bundled from the pinned Fontsource package and served locally: runtime typography makes no third-party font requests. [PRODUCT.md](../apps/web/PRODUCT.md) records product truth; [DESIGN.md](../apps/web/DESIGN.md) records the built visual system.
+
 ## HTTP contract, version 1
 
 Collector base: `http://127.0.0.1:4318`. All collector routes require `Authorization: Bearer <local credential>`, including health. The credential is never a URL parameter. Only local server-to-server requests are accepted; Origin-bearing browser requests are rejected. CORS is not enabled.

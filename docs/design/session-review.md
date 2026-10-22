@@ -1,23 +1,23 @@
 # Session review surface
 
-Mode: Operate. Scope: improve the existing explorer inside its established visual identity. This is not a rebrand or a new product capability claim.
+Mode: Operate. Scope: workspace overview, session library and focused evidence review. This redesign changes information architecture and visual identity while preserving product/evidence boundaries.
 
 ## Review path
 
-1. Choose a session from desktop navigation or the mobile Session select.
+1. Start on Overview, use the capture-gap queue or open the searchable Sessions library. Choose a session from the register, recent navigation, or mobile Session select.
 2. Read its recorded boundary state. Use Review gaps to filter the complete retained session to explicit capture gaps.
 3. Scan Activity. Commands, Files, Prompts, Gaps and Usage are reversible filters. The search covers all retained observations rather than only the current page.
 4. Select an observation. Inspect its escaped source payload before opening optional provenance and normalized metadata. Explicit tool-ID matches link requests and results; the deterministic rule and supporting IDs remain available.
 5. Copy a local evidence link to return to that project, session, view and event. Session/view changes survive reload. Browser Back/Forward restores the URL state.
 6. Read Usage and Coverage for source-reported counts and explicit limitations. Neither view certifies complete capture or feature behavior.
 
-## Layout assessment and resolution
+## Workspace and review layout
 
-The original 10–13px-heavy interface spent the top of the page on an introductory title, notice and four large counters. It reduced the space available to the actual review task. The evidence panel mixed source metadata ahead of the payload, and mobile stacked the inspector below the entire event list. Search only matched already-loaded rows, while reload lost the selected session.
+The founder requested a full redesign after the initial session-first refinement. The current experience replaces the muted green interface with an ink navigation rail, cool-white workspace and cobalt selection. The overview orients the developer before a review: retained counts, a recent-session register, and a queue based solely on explicit gap observations. The separate Sessions library offers title search and capture-boundary filters. No dummy navigation is provided for unavailable diffs, graphs or live integrations.
 
-The revised layout leads with the session title and a review action, keeps counts compact, increases the activity/payload hierarchy, makes provenance progressively available and keeps the inspector beside the list on desktop. Mobile uses a focus-managed native evidence dialog; ordinary browsing and filtering remain inline. It retains the incumbent neutral/green system and icon vocabulary.
+Opening a session leads to its Activity, Usage and Coverage views. Activity pairs a searchable register with the evidence inspector at desktop widths. Tool payloads use a dark code surface; prompt text stays on a light reading surface. The relationship route shows the two supporting observation IDs and its deterministic basis. This is an evidence join, not a causal graph.
 
-The activity list and inspector deliberately have different roles: repeated observations are rows; captured content is a readable detail surface. Coverage is a comparison list rather than repeated decorative cards. Usage uses a table for counts with a labeled input-composition bar and formula explanation.
+Below 1100px the inspector becomes a native dialog. The rail condenses below 800px and becomes top navigation below 560px. The overview columns stack and session rows reflow; tables remain legible without shrinking the entire application. The session picker remains available on phones.
 
 ## States and constraints
 
@@ -32,4 +32,4 @@ The activity list and inspector deliberately have different roles: repeated obse
 
 ## Verification
 
-Query tests exercise matches beyond the first page, file/command/gap filters, project isolation, literal SQL-looking text and stable source-order cursors. Browser checks cover evidence links and reload, session-wide search, empty recovery, usage nulls, keyboard tabs, mobile dialog focus and deep links, query Retry and hostile HTML. Desktop, 390px mobile and an intermediate viewport were inspected in one batched pass, then confirmed after the observed mobile/header defects were corrected. The design detector reported no findings.
+15 unit/integration checks and six browser flows cover retained evidence semantics, overview and library navigation, source links, reload, fresh-cookie deep links, search outside the first page, unknown usage, tab keys, mobile dialog focus, untrusted captured HTML and retry recovery. The summary-failure flow verifies unknown gap counts with a working retry instead of a false zero. Desktop and mobile screenshots were inspected; overflow checks covered 1280, 900, 768, 390 and 320px. Typecheck and production build passed. The mechanical detector returned no findings. Independent finish review is recorded in the redesign review reference.

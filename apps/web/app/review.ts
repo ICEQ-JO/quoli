@@ -1,14 +1,16 @@
 import type { StoredEvent } from "@traceframe/schema";
 import { kindLabels, number } from "@traceframe/ui";
-export type View = "Timeline" | "Reported usage" | "Capture coverage";
+export type View = "Overview" | "Sessions" | "Timeline" | "Reported usage" | "Capture coverage";
 export type ReviewLocation = { project: string; session: string; view: View; event: string };
 export const initialLocation: ReviewLocation = {
   project: "demo-quoli",
   session: "session-cache",
-  view: "Timeline",
+  view: "Overview",
   event: "",
 };
 const viewKeys: Record<View, string> = {
+  Overview: "overview",
+  Sessions: "sessions",
   Timeline: "activity",
   "Reported usage": "usage",
   "Capture coverage": "coverage",
@@ -18,7 +20,10 @@ export function readLocation(url: URL): ReviewLocation {
     value && /^[a-zA-Z0-9_-]{1,100}$/.test(value) ? value : fallback;
   const view =
     (Object.keys(viewKeys) as View[]).find((v) => viewKeys[v] === url.searchParams.get("view")) ??
-    "Timeline";
+    (url.searchParams.get("session") &&
+    /^[a-zA-Z0-9_-]{1,100}$/.test(url.searchParams.get("session") ?? "")
+      ? "Timeline"
+      : "Overview");
   return {
     project: id(url.searchParams.get("project"), initialLocation.project),
     session: id(url.searchParams.get("session"), initialLocation.session),

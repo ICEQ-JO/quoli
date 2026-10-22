@@ -42,3 +42,10 @@ The synthetic dashboard (006) precedes all live adapter work. Repository snapsho
 Discovery in 013 is a runtime compatibility gate; the initial official-documentation review is already in the planning pack. Hooks (014) and OTLP usage (015) are separate demonstrable increments. Reconciliation (016) must pass before integrated live file linking (017). Reversible setup (018) and final validation (019) close the pilot. Experimental parsing (020) is deliberately post-MVP and requires a separate scope decision.
 
 The owner authorized GitHub setup and issue publication after the initial planning pass. Live checks, configuration installation and merges still require the appropriate explicit instruction. Published issues describe future implementation work, not completed capabilities. Repository setup is tracked separately in [GitHub #1](https://github.com/ICEQ-JO/quoli/issues/1).
+
+## Dashboard redesign increments
+
+- [#25 — Workspace overview and searchable session library](https://github.com/ICEQ-JO/quoli/issues/25)
+- [#26 — Session evidence workbench and visual system](https://github.com/ICEQ-JO/quoli/issues/26)
+
+Both are medium-sized increments in the dashboard redesign. See the [design review and captures](../design/redesign-review.md) for delivered behavior and validation. They do not expand the live-ingestion or repository-analysis scope.

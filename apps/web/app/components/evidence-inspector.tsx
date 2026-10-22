@@ -85,7 +85,7 @@ export function EvidenceInspector({
           <span className="content-state">{"content" in p ? p.content.state : "metadata"}</span>
         </div>
         <pre
-          className={`payload ${p.kind === "tool_result" && p.status === "failure" ? "failed-output" : ""}`}
+          className={`payload ${p.kind === "tool_call" || p.kind === "tool_result" ? "code-payload" : ""} ${p.kind === "tool_result" && p.status === "failure" ? "failed-output" : ""}`}
         >
           <code>
             {"content" in p
@@ -111,6 +111,13 @@ export function EvidenceInspector({
           links.map((r) => (
             <div key={r.id} className="evidence-link">
               <span className="basis derived">Derived · explicit ID match</span>
+              <div className="evidence-route">
+                <code>{r.subjectId}</code>
+                <span>
+                  <Icon name="arrow-right" size={15} />
+                </span>
+                <code>{r.objectId}</code>
+              </div>
               <button
                 type="button"
                 onClick={() => onFollow(r.subjectId === event.id ? r.objectId : r.subjectId)}

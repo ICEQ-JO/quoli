@@ -4,7 +4,7 @@
 
 The first usable increment runs a Next.js browser dashboard and one authenticated local collector. A SQLite event store persists three authored synthetic sessions. There is no live adapter, filesystem watcher, command runner, repository registration UI, cloud account, remote model, billing or outbound session upload.
 
-The dashboard supports session selection, cursor-paginated timeline browsing, session-wide text search and type filters, receipt/source ordering, refreshable local evidence links, an evidence inspector, explicit tool-ID relationships, reported token/cache metrics and capture limitations. The source locator and normalized record are inspectable. Source-reported success does not prove feature correctness; referenced file paths are not captured diffs.
+The dashboard opens on a workspace overview with retained counts, a session register and an actionable recorded-gap queue. The Sessions library supports title search and capture-state filtering. Inside each session, the dashboard supports selection, cursor-paginated timeline browsing, session-wide text search and type filters, receipt/source ordering, refreshable local evidence links, an evidence inspector, explicit tool-ID relationships, reported token/cache metrics and capture limitations. The source locator and normalized record are inspectable. Source-reported success does not prove feature correctness; referenced file paths are not captured diffs.
 
 ## Start and stop
 
@@ -20,6 +20,7 @@ Use the displayed loopback URL. `pnpm smoke` checks an already-running default i
 
 ## Five-minute review
 
+- Start on **Overview**: the fixtures contain 3 sessions, 29 observations and 4 explicitly recorded capture gaps. Open **Sessions** to search by title or filter for sessions without a recorded end. These counts describe retained evidence, not capture completeness.
 - Inspect the initial prompt in **Handle an empty cache response**. Select a tool request and follow **Open matching tool result**. The link is derived using `same-session-tool-id/v1`, not inferred from neighboring timestamps.
 - Load the rest of the timeline. The fixture deliberately delivers one result late. Toggle source/receipt order to see the distinction. Search covers the entire retained session, including observations that have not been loaded into the list. Commands, Files, Prompts, Gaps and Usage filters also apply to the complete retained session.
 - Inspect both reported test outcomes. The missing typecheck result remains a capture gap even though the source records an end to the session.
@@ -31,9 +32,9 @@ Use the displayed loopback URL. `pnpm smoke` checks an already-running default i
 
 **Review gaps** opens the explicit gap filter. Search this session finds retained matches beyond the first page; Load more paginates matching results. Changing search or filter resets the explicit evidence selection. The **Activity order** select orders all matches by receipt sequence or source timestamp, with stable pagination.
 
-The evidence inspector puts captured content first and tucks source metadata into disclosures. **Copy evidence link** copies a local URL containing only IDs/view state. It does not upload evidence, and works only on the same running local workspace. When clipboard access is blocked, the address bar is the fallback.
+The evidence inspector puts captured content first and tucks source metadata into disclosures. **Copy evidence link** copies a local URL containing only IDs/view state. It does not upload evidence, and works only on the same running local workspace. A fresh local browser connection preserves validated project/session/view/event IDs through the credential-cookie redirect. When clipboard access is blocked, the address bar is the fallback.
 
-On mobile, choose a session with the **Session** select. Select an activity to open **Evidence details**; the close button or Escape dismisses it and restores focus. Direct evidence links open this detail view automatically. Desktop tabs support Left/Right arrows and activity rows support Up/Down navigation.
+On mobile, use the top **Overview** / **Sessions** navigation. Inside a review, switch sessions with the **Session** select. Select an activity to open **Evidence details**; the close button or Escape dismisses it and restores focus. Direct evidence links open this detail view automatically. Desktop tabs support Left/Right arrows and activity rows support Up/Down navigation.
 
 ## Storage and credentials
 
