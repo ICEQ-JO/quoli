@@ -1,5 +1,6 @@
 "use client";
 import type { Session } from "@traceframe/schema";
+import { ConnectionGuide } from "./connection-guide";
 import { Icon } from "./ui-icon";
 import { sourceDate, useWorkspaceSummaries } from "./workspace-data";
 export type SessionFilters = { search: string; state: string; group: string; order: string };
@@ -58,7 +59,7 @@ export function SessionIndex({
       ? sessions.reduce((n, s) => n + (evidence.summaries[s.id]?.kindCounts.gap ?? 0), 0)
       : null;
   return (
-    <section className="session-index" aria-label="Session work list">
+    <section className="session-index" aria-label="Session work list" aria-busy={loading}>
       <header className="index-heading">
         <div>
           <h1>Sessions</h1>
@@ -71,6 +72,7 @@ export function SessionIndex({
           Needs review <span>{gapTotal ?? "—"}</span>
         </button>
       </header>
+      <ConnectionGuide empty={!loading && !unavailable && sessions.length === 0} />
       <div className="index-toolbar">
         <div className="search-field">
           <Icon name="search" size={16} />
@@ -81,6 +83,16 @@ export function SessionIndex({
             value={filters.search}
             onChange={(e) => change("search", e.target.value)}
           />
+          {filters.search && (
+            <button
+              type="button"
+              className="icon-button"
+              aria-label="Clear session search"
+              onClick={() => change("search", "")}
+            >
+              <Icon name="close" size={14} />
+            </button>
+          )}
         </div>
         <label>
           <span className="sr-only">Capture state</span>
@@ -154,7 +166,7 @@ export function SessionIndex({
           <p>
             {sessions.length
               ? "Try another name or capture state."
-              : "Collect local evidence to begin a review."}
+              : "Connect a repository above to begin. Repository history does not require agent hooks."}
           </p>
           {sessions.length > 0 && (
             <button

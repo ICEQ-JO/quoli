@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-22T11:52:11.891929+00:00",
-  "title": "Design System: Traceframe",
+  "generatedAt": "2026-10-22T18:47:49.396333+00:00",
+  "title": "Design System: Quoli",
   "extensions": {
     "colorMeta": {
       "bg": {
@@ -37,7 +37,7 @@
         "role": "neutral"
       },
       "accent": {
-        "displayName": "Accent",
+        "displayName": "Fern accent",
         "role": "primary"
       },
       "accent-dark": {
@@ -45,7 +45,7 @@
         "role": "primary"
       },
       "selected": {
-        "displayName": "Selected",
+        "displayName": "Fern-neutral selection",
         "role": "primary"
       },
       "warning": {
@@ -188,6 +188,10 @@
       {
         "name": "compact-navigation-labels",
         "value": "max-width: 359px"
+      },
+      {
+        "name": "settings-section-nav",
+        "value": "max-width: 900px"
       }
     ]
   },
@@ -196,9 +200,9 @@
       "name": "Primary action",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "A concrete action using the filled violet palette.",
+      "description": "A concrete action using the filled fern palette.",
       "html": "<button class=\"ds-primary\">Review gaps</button>",
-      "css": ".ds-primary{font:500 13px/1.55 var(--sans);min-height:32px;padding:8px 13px;border-radius:6px;cursor:pointer;transition:background-color 160ms ease-out,border-color 160ms ease-out;background:light-dark(#6653c2,#7360ce);border:1px solid light-dark(#6653c2,#8c79e2);color:#fff}.ds-primary:hover{background:light-dark(#5745b0,#6752bd)}.ds-primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}"
+      "css": ".ds-primary{font:500 13px/1.55 var(--sans);min-height:32px;padding:8px 13px;border-radius:6px;cursor:pointer;transition:background-color 160ms ease-out,border-color 160ms ease-out;background:light-dark(#355b3c,#355b3c);border:1px solid light-dark(#355b3c,#698966);color:#fff}.ds-primary:hover{background:light-dark(#294a30,#2d4e33)}.ds-primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}"
     },
     {
       "name": "Secondary action",
@@ -213,23 +217,23 @@
       "kind": "input",
       "refersTo": "search-field",
       "description": "Search remains within its current view.",
-      "html": "<label class=\"ds-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/></svg><input aria-label=\"Search sessions\" placeholder=\"Search sessions\u2026\"></label>",
+      "html": "<label class=\"ds-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/></svg><input aria-label=\"Search sessions\" placeholder=\"Search sessions…\"></label>",
       "css": ".ds-search{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;background:var(--bg);color:var(--muted);border:1px solid var(--line);border-radius:6px}.ds-search:focus-within{border-color:var(--accent);outline:2px solid light-dark(#fafafa,#1c1c1f)}.ds-search input{min-width:0;width:100%;font:13px/1.55 var(--sans);min-height:34px;padding:8px 0;border:0;background:transparent;color:var(--ink)}.ds-search input:focus-visible{outline:0}.ds-search input::placeholder{color:var(--muted)}"
     },
     {
       "name": "Stable navigation",
       "kind": "nav",
       "refersTo": "nav-selected",
-      "description": "Neutral destination selection; sessions are home.",
-      "html": "<nav class=\"ds-nav\" aria-label=\"Workspace\"><button aria-current=\"page\">Sessions</button><button>Needs review</button><button>Project overview</button></nav>",
-      "css": ".ds-nav{display:grid;gap:4px;background:var(--sidebar);padding:12px}.ds-nav button{font:14px/1.55 var(--sans);min-height:36px;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}.ds-nav button:hover{background:light-dark(#ebebef,#202023);color:var(--ink)}.ds-nav button[aria-current]{background:light-dark(#e9e8ed,#29292e);color:var(--ink)}.ds-nav button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
+      "description": "Fern-neutral destination selection; sessions are home.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Workspace\"><button aria-current=\"page\">Sessions</button><button>Needs review</button><button>Settings</button><button>Project overview</button></nav>",
+      "css": ".ds-nav{display:grid;gap:4px;background:var(--sidebar);padding:12px}.ds-nav button{font:14px/1.55 var(--sans);min-height:36px;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}.ds-nav button:hover{background:light-dark(#e8ede5,#202922);color:var(--ink)}.ds-nav button[aria-current]{background:light-dark(#e1e9dd,#29362b);color:var(--ink)}.ds-nav button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
     },
     {
       "name": "Work-list row",
       "kind": "custom",
       "refersTo": "work-session",
       "description": "Title leads; mobile retains literal capture status.",
-      "html": "<button class=\"ds-session\"><span>Investigate a slow repository scan<small>No end recorded</small></span><span>2 gaps \u2192</span></button>",
+      "html": "<button class=\"ds-session\"><span>Investigate a slow repository scan<small>No end recorded</small></span><span>2 gaps →</span></button>",
       "css": ".ds-session{display:flex;gap:12px;justify-content:space-between;align-items:center;width:100%;min-height:48px;text-align:left;padding:12px;background:var(--bg);border:0;border-bottom:1px solid var(--line-soft);color:var(--ink);font:450 13px/1.55 var(--sans);cursor:pointer}.ds-session:hover{background:var(--line-soft)}.ds-session small{display:block;font:11px/1.55 var(--sans);color:var(--warning);margin-top:5px}.ds-session>span:last-child{font-size:12px;color:var(--muted)}.ds-session:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
     },
     {
@@ -237,15 +241,15 @@
       "kind": "chip",
       "refersTo": "recorded-basis",
       "description": "Text makes source basis explicit.",
-      "html": "<div class=\"ds-basis\"><span>Recorded observation</span><span class=\"ds-derived\">Derived \u00b7 explicit ID match</span></div>",
-      "css": ".ds-basis{display:flex;flex-wrap:wrap;gap:8px}.ds-basis span{font:11px/1.55 var(--sans);padding:2px 6px;border:1px solid var(--line);border-radius:4px;background:var(--selected);color:light-dark(#57547d,#c2baf2)}.ds-basis .ds-derived{background:light-dark(#f3eff9,#2a2533);color:light-dark(#67529d,#c9b5ed)}"
+      "html": "<div class=\"ds-basis\"><span>Recorded observation</span><span class=\"ds-derived\">Derived relationship</span></div>",
+      "css": ".ds-basis{display:flex;flex-wrap:wrap;gap:8px}.ds-basis span{font:11px/1.55 var(--sans);padding:2px 6px;border:1px solid var(--line);border-radius:4px;background:var(--selected);color:light-dark(#355b3c,#b9d5b5)}.ds-basis .ds-derived{background:light-dark(#eaf0f3,#25333a);color:light-dark(#526a77,#afc9d2)}"
     },
     {
       "name": "Review request",
       "kind": "card",
       "refersTo": "work-session",
       "description": "Open ruled reading surface; exact source remains an action away.",
-      "html": "<section class=\"ds-request\"><h2>Developer request</h2><p>Keep missing usage values unknown and add a regression test.</p><button>Recorded source \u2192</button></section>",
+      "html": "<section class=\"ds-request\"><h2>Developer request</h2><p>Keep missing usage values unknown and add a regression test.</p><button>Recorded source →</button></section>",
       "css": ".ds-request{background:var(--bg);color:var(--ink);padding:0 0 28px;border-bottom:1px solid var(--line);font-family:var(--sans)}.ds-request h2{font-size:15px;font-weight:550;letter-spacing:-.2px;margin:0 0 16px}.ds-request p{font-size:15px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;max-width:72ch;margin:18px 0 8px}.ds-request button{font:11px/1.55 var(--sans);padding:6px 0;border:0;background:transparent;color:var(--muted);cursor:pointer}.ds-request button:hover{color:var(--accent)}.ds-request button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}"
     },
     {
@@ -261,17 +265,17 @@
       "kind": "custom",
       "refersTo": "captured-diff",
       "description": "Inert retained code with explicit signs and line numbers.",
-      "html": "<section class=\"ds-diff\" tabindex=\"0\" aria-label=\"Unified code diff\"><table><thead><tr><th>Before</th><th>After</th><th>Change</th><th>Captured code</th></tr></thead><tbody><tr class=\"ds-delete\"><td>2</td><td></td><td>\u2212</td><td><code>return count.toString();</code></td></tr><tr class=\"ds-add\"><td></td><td>2</td><td>+</td><td><code>return count ?? null;</code></td></tr></tbody></table></section>",
+      "html": "<section class=\"ds-diff\" tabindex=\"0\" aria-label=\"Unified code diff\"><table><thead><tr><th>Before</th><th>After</th><th>Change</th><th>Captured code</th></tr></thead><tbody><tr class=\"ds-delete\"><td>2</td><td></td><td>−</td><td><code>return count.toString();</code></td></tr><tr class=\"ds-add\"><td></td><td>2</td><td>+</td><td><code>return count ?? null;</code></td></tr></tbody></table></section>",
       "css": ".ds-diff{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:7px;background:var(--bg)}.ds-diff:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}.ds-diff table{border-collapse:collapse;min-width:100%;font:12px/1.85 var(--mono)}.ds-diff th{position:sticky;top:0;background:var(--surface);padding:7px 9px;text-align:left;font:450 11px/1.6 var(--sans);color:var(--muted)}.ds-diff td{padding:1px 9px;white-space:pre;color:var(--ink)}.ds-diff td:nth-child(-n+2){font-size:11px;text-align:right;min-width:38px;color:var(--muted);background:var(--surface)}.ds-diff code{font:inherit}.ds-diff .ds-add{background:light-dark(#eff7f2,#202e26)}.ds-diff .ds-delete{background:light-dark(#fff2f2,#332326)}.ds-diff .ds-add td:nth-child(-n+2){color:light-dark(#386b50,#9acdaf);background:light-dark(#e4f0e9,#25372c)}.ds-diff .ds-delete td:nth-child(-n+2){color:var(--negative);background:light-dark(#f9e6e8,#40282c)}"
     }
   ],
   "narrative": {
     "northStar": "The session workbench",
-    "overview": "Traceframe starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained violet selection support that hierarchy; a palette change alone does not define the workflow.\n\nThis records the shipped founder-approved direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and dark, light, and mobile screenshots, not a new visual proposal.",
+    "overview": "Quoli starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained fern selection support that hierarchy; a palette change alone does not define the workflow.\n\nLanding and application now share the precise evidence desk direction: neutral planes, fern interaction and explicit source limits. Workspace/discovery, investigation and lifecycle surfaces are implemented under #52–#54; final full-suite QA and independent whole-app review remain pending in the [whole-product experience rebuild](../../docs/work/product-experience.md).\n\nThe workspace sections record the implemented direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and production dark, light and mobile captures. Earlier workspace references remain useful structural context; they do not establish acceptance of this increment.",
     "keyCharacteristics": [
       "Sessions first; global destinations stay stable.",
       "Readable requests and recorded work precede raw source detail.",
-      "Neutral dark/light surfaces, local Geist, restrained violet emphasis.",
+      "Neutral dark/light surfaces, local Geist, restrained fern emphasis.",
       "Explicit source, uncertainty, capture state, and unavailable-data language."
     ],
     "rules": [
@@ -291,7 +295,7 @@
       "**Do** preserve readable captured requests, source actions, explicit uncertainty, and unknown values.",
       "**Do** implement both actual root themes with the paired token values.",
       "**Do** preserve mobile capture status, keyboard focus, source selection, and recovery from unavailable metadata.",
-      "**Do** keep local Geist, neutral rules, compact controls, and restrained violet emphasis."
+      "**Do** keep local Geist, neutral rules, compact controls, and restrained fern emphasis."
     ],
     "donts": [
       "**Don't** restore the municipal dashboard, cobalt selection system, or default overview as current authority.",

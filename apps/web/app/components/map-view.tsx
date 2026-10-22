@@ -22,6 +22,8 @@ async function mapRead(
   nodes: number,
   signal?: AbortSignal,
 ): Promise<ChangeMap> {
+  if (signal?.aborted) throw new DOMException("Superseded map", "AbortError");
+  // Finish bounded POST uploads; ignore superseded responses after navigation.
   const response = await fetch("/api/map", {
     method: "POST",
     cache: "no-store",
@@ -31,9 +33,10 @@ async function mapRead(
       session,
       query: { beforeId, afterId, nodes, edges: nodes * 2 },
     }),
-    signal,
+    signal: AbortSignal.timeout(8000),
   });
   const data = await response.json();
+  if (signal?.aborted) throw new DOMException("Superseded map", "AbortError");
   if (!response.ok) throw new Error(data.error ?? "Change map unavailable.");
   return data;
 }
@@ -55,6 +58,7 @@ export function MapView({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [nodes, setNodes] = useState(100);
+  const [retry, setRetry] = useState(0);
   const [pair, setPair] = useState<{ before: string; after: string } | null>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: refresh reloads the retained map projection.
@@ -76,7 +80,7 @@ export function MapView({
         if (!abort.signal.aborted) setLoading(false);
       });
     return () => abort.abort();
-  }, [project, session, before, after, nodes, refresh]);
+  }, [project, session, before, after, nodes, refresh, retry]);
 
   if (loading)
     return (
@@ -92,6 +96,9 @@ export function MapView({
           <strong>Change map unavailable</strong>
           <p>{error}</p>
         </div>
+        <button className="button" type="button" onClick={() => setRetry((n) => n + 1)}>
+          Retry map
+        </button>
         <button className="text-button" type="button" onClick={onOpenChanges}>
           Open captured changes
           <Icon name="arrow-right" size={14} />

@@ -409,13 +409,18 @@ export function SessionBrief({
         <section className="brief-section">
           <div className="brief-section-heading">
             <h2>Verification evidence</h2>
-            <span>{verification?.checks.length ?? 0} recorded checks</span>
+            <span>{verification ? verification.checks.length : "—"} recorded checks</span>
           </div>
           <p className="section-context">
             Recorded commands, results and parsed counts. A recorded check does not establish that
             the feature works.
           </p>
-          {!verification?.checks.length ? (
+          {!verification ? (
+            <p className="document-muted">
+              Verification evidence is loading or unavailable. Use Refresh to retry the local
+              summary.
+            </p>
+          ) : !verification.checks.length ? (
             <p className="document-muted">
               No command result is recorded for this session. That is not evidence that no testing
               happened.
@@ -463,7 +468,7 @@ export function SessionBrief({
                     onClick={() => onEvidence(check.id)}
                   >
                     <Icon name="link" size={13} />
-                    Recorded result
+                    {check.resultObserved ? "Recorded result" : "Recorded command"}
                   </button>
                 </article>
               ))}
@@ -473,13 +478,16 @@ export function SessionBrief({
         <section className="brief-section">
           <div className="brief-section-heading">
             <h2>Source reconciliation</h2>
-            <span>{reconciliation?.tools.length ?? 0} joined tools</span>
+            <span>{reconciliation ? reconciliation.tools.length : "—"} joined tools</span>
           </div>
           <p className="section-context">
             Hook and telemetry observations are kept separate. They are joined only by explicit
             identifiers.
           </p>
-          <ReconciliationPanel view={reconciliation} />
+          <details className="reconciliation-disclosure">
+            <summary>Inspect joined sources and reported totals</summary>
+            <ReconciliationPanel view={reconciliation} />
+          </details>
         </section>
         <section className="brief-section">
           <div className="brief-section-heading">
