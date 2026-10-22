@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { Dots, Line, Solid, Wire } from "../iso/draw";
 import * as k from "../iso/iso-kit";
-import { Solid, Line, Wire, Dots } from "../iso/draw";
-import { useStillness, asksForStillness } from "../iso/live";
+import { asksForStillness, useStillness } from "../iso/live";
 
 export interface StepInfo {
   id: string;
@@ -27,7 +27,8 @@ export const FLIGHT_STEPS: StepInfo[] = [
     confidence: 0.05,
     hash: "0x8fa1..c92",
     diffSummary: "0 files touched · baseline clean",
-    description: "Session baseline established. Untrusted agent prompt recorded into append-only memory.",
+    description:
+      "Session baseline established. Untrusted agent prompt recorded into append-only memory.",
   },
   {
     id: "step-2",
@@ -38,7 +39,8 @@ export const FLIGHT_STEPS: StepInfo[] = [
     confidence: 0.35,
     hash: "0x3bc4..e71",
     diffSummary: "+28 / -12 lines · AST node modified",
-    description: "Agent modifies file AST. Bounded diff scanner records delta without claiming correctness.",
+    description:
+      "Agent modifies file AST. Bounded diff scanner records delta without claiming correctness.",
   },
   {
     id: "step-3",
@@ -49,7 +51,8 @@ export const FLIGHT_STEPS: StepInfo[] = [
     confidence: 0.78,
     hash: "0x6de2..90f",
     diffSummary: "18 assertions passed · exit 0 confirmed",
-    description: "Test execution captured independently. Exit code and assertion counts recorded as separate facts.",
+    description:
+      "Test execution captured independently. Exit code and assertion counts recorded as separate facts.",
   },
   {
     id: "step-4",
@@ -60,7 +63,8 @@ export const FLIGHT_STEPS: StepInfo[] = [
     confidence: 1.0,
     hash: "0x7f3a..b44",
     diffSummary: "Snapshot linked · audit trail sealed",
-    description: "Session audit completed. Git tree snapshot sealed into local SQLite append-only storage.",
+    description:
+      "Session audit completed. Git tree snapshot sealed into local SQLite append-only storage.",
   },
 ];
 
@@ -147,7 +151,7 @@ export function FlightRecorderRig() {
     const rawCorners = k.corners(BASE_PLAN, 16);
     // Sort by depth for painter's order
     const sorted = [...rawCorners].sort(
-      (a, b) => k.depthOf([a[0], a[1], -14], PROJECTION) - k.depthOf([b[0], b[1], -14], PROJECTION)
+      (a, b) => k.depthOf([a[0], a[1], -14], PROJECTION) - k.depthOf([b[0], b[1], -14], PROJECTION),
     );
     return sorted.map(([cx, cy], i) => ({
       id: `foot-${i}`,
@@ -159,78 +163,204 @@ export function FlightRecorderRig() {
   // Front ruler strip with ticks
   const rulerSlab = React.useMemo(() => k.slabOf(RULER_PLAN, 0, 1, PROJECTION, 3), []);
   const rulerTicks = React.useMemo(() => {
-    return k.topTicks(RULER_PLAN.x + 4, RULER_PLAN.x + RULER_PLAN.w - 4, 4, 5, RULER_PLAN.y + 1, 1, [2, 4], PROJECTION);
+    return k.topTicks(
+      RULER_PLAN.x + 4,
+      RULER_PLAN.x + RULER_PLAN.w - 4,
+      4,
+      5,
+      RULER_PLAN.y + 1,
+      1,
+      [2, 4],
+      PROJECTION,
+    );
   }, []);
 
   // Serial nameplate
   const nameplateSlab = React.useMemo(() => k.slabOf(NAMEPLATE_PLAN, 0, 1.2, PROJECTION, 4), []);
-  const nameplateInner = React.useMemo(() => k.planOutline(k.insetPlan(NAMEPLATE_PLAN, 1.5), 1.2, PROJECTION), []);
-  const nameplateTextPt = React.useMemo(() => k.iso([NAMEPLATE_PLAN.x + 5, NAMEPLATE_PLAN.y + 9, 1.3], PROJECTION), []);
+  const nameplateInner = React.useMemo(
+    () => k.planOutline(k.insetPlan(NAMEPLATE_PLAN, 1.5), 1.2, PROJECTION),
+    [],
+  );
+  const nameplateTextPt = React.useMemo(
+    () => k.iso([NAMEPLATE_PLAN.x + 5, NAMEPLATE_PLAN.y + 9, 1.3], PROJECTION),
+    [],
+  );
 
   // Dial Gauge Housing
-  const dialPillar = React.useMemo(() => k.cylinder(DIAL_CX, DIAL_CY, 4.5, 0, DIAL_Z0, PROJECTION, 16), []);
-  const dialBody = React.useMemo(() => k.cylinder(DIAL_CX, DIAL_CY, DIAL_RADIUS, DIAL_Z0, DIAL_HEIGHT, PROJECTION, 36, 1.2), []);
+  const dialPillar = React.useMemo(
+    () => k.cylinder(DIAL_CX, DIAL_CY, 4.5, 0, DIAL_Z0, PROJECTION, 16),
+    [],
+  );
+  const dialBody = React.useMemo(
+    () => k.cylinder(DIAL_CX, DIAL_CY, DIAL_RADIUS, DIAL_Z0, DIAL_HEIGHT, PROJECTION, 36, 1.2),
+    [],
+  );
   const dialTicks = React.useMemo(() => {
-    return k.radialTicks(DIAL_CX, DIAL_CY, DIAL_RADIUS - 3.5, 24, 6, DIAL_FACE_Z, [1.8, 3.2], PROJECTION, -Math.PI * 0.75, Math.PI * 1.5);
+    return k.radialTicks(
+      DIAL_CX,
+      DIAL_CY,
+      DIAL_RADIUS - 3.5,
+      24,
+      6,
+      DIAL_FACE_Z,
+      [1.8, 3.2],
+      PROJECTION,
+      -Math.PI * 0.75,
+      Math.PI * 1.5,
+    );
   }, []);
-  const dialBezelArc = React.useMemo(() => k.sideArc(DIAL_CX, DIAL_CY, DIAL_RADIUS - 0.8, DIAL_FACE_Z, PROJECTION, 24), []);
+  const dialBezelArc = React.useMemo(
+    () => k.sideArc(DIAL_CX, DIAL_CY, DIAL_RADIUS - 0.8, DIAL_FACE_Z, PROJECTION, 24),
+    [],
+  );
 
   // Needle path
-  const needleCenter = React.useMemo(() => k.iso([DIAL_CX, DIAL_CY, DIAL_FACE_Z + 0.4], PROJECTION), []);
+  const needleCenter = React.useMemo(
+    () => k.iso([DIAL_CX, DIAL_CY, DIAL_FACE_Z + 0.4], PROJECTION),
+    [],
+  );
   const needleTipX = DIAL_CX + Math.cos(needleAngle) * (DIAL_RADIUS - 4);
   const needleTipY = DIAL_CY + Math.sin(needleAngle) * (DIAL_RADIUS - 4);
-  const needleTip = React.useMemo(() => k.iso([needleTipX, needleTipY, DIAL_FACE_Z + 0.4], PROJECTION), [needleTipX, needleTipY]);
+  const needleTip = React.useMemo(
+    () => k.iso([needleTipX, needleTipY, DIAL_FACE_Z + 0.4], PROJECTION),
+    [needleTipX, needleTipY],
+  );
 
   // CRT Housing
-  const crtBody = React.useMemo(() => k.slabOf(CRT_PLAN, CRT_Z0, CRT_HEIGHT, PROJECTION, 6, 1.4), []);
-  const crtBezel = React.useMemo(() => k.planOutline(k.insetPlan(CRT_PLAN, 3), CRT_Z0 + CRT_HEIGHT, PROJECTION), []);
+  const crtBody = React.useMemo(
+    () => k.slabOf(CRT_PLAN, CRT_Z0, CRT_HEIGHT, PROJECTION, 6, 1.4),
+    [],
+  );
+  const crtBezel = React.useMemo(
+    () => k.planOutline(k.insetPlan(CRT_PLAN, 3), CRT_Z0 + CRT_HEIGHT, PROJECTION),
+    [],
+  );
   const crtScreenPlan = React.useMemo(() => k.insetPlan(CRT_PLAN, 6), []);
-  const crtScreenTop = React.useMemo(() => k.onTop(k.ringOf(crtScreenPlan, 4), CRT_Z0 + CRT_HEIGHT - 1, PROJECTION, true), [crtScreenPlan]);
+  const crtScreenTop = React.useMemo(
+    () => k.onTop(k.ringOf(crtScreenPlan, 4), CRT_Z0 + CRT_HEIGHT - 1, PROJECTION, true),
+    [crtScreenPlan],
+  );
 
   // Tape reels (Deck A and B)
-  const spoolASpindle = React.useMemo(() => k.cylinder(SPOOL_A_CX, SPOOL_A_CY, 3.8, 0, 18, PROJECTION, 16), []);
-  const spoolAFlangeBottom = React.useMemo(() => k.cylinder(SPOOL_A_CX, SPOOL_A_CY, 34, 1.5, 1.2, PROJECTION, 32), []);
-  const spoolAFlangeTop = React.useMemo(() => k.cylinder(SPOOL_A_CX, SPOOL_A_CY, 34, 12, 1.2, PROJECTION, 32), []);
-  const spoolAKnurl = React.useMemo(() => k.knurl(SPOOL_A_CX, SPOOL_A_CY, 5.5, 13.2, 17, 12, PROJECTION, 0.4), []);
+  const spoolASpindle = React.useMemo(
+    () => k.cylinder(SPOOL_A_CX, SPOOL_A_CY, 3.8, 0, 18, PROJECTION, 16),
+    [],
+  );
+  const spoolAFlangeBottom = React.useMemo(
+    () => k.cylinder(SPOOL_A_CX, SPOOL_A_CY, 34, 1.5, 1.2, PROJECTION, 32),
+    [],
+  );
+  const spoolAFlangeTop = React.useMemo(
+    () => k.cylinder(SPOOL_A_CX, SPOOL_A_CY, 34, 12, 1.2, PROJECTION, 32),
+    [],
+  );
+  const spoolAKnurl = React.useMemo(
+    () => k.knurl(SPOOL_A_CX, SPOOL_A_CY, 5.5, 13.2, 17, 12, PROJECTION, 0.4),
+    [],
+  );
 
-  const spoolBSpindle = React.useMemo(() => k.cylinder(SPOOL_B_CX, SPOOL_B_CY, 3.8, 0, 18, PROJECTION, 16), []);
-  const spoolBFlangeBottom = React.useMemo(() => k.cylinder(SPOOL_B_CX, SPOOL_B_CY, 34, 1.5, 1.2, PROJECTION, 32), []);
-  const spoolBFlangeTop = React.useMemo(() => k.cylinder(SPOOL_B_CX, SPOOL_B_CY, 34, 12, 1.2, PROJECTION, 32), []);
-  const spoolBKnurl = React.useMemo(() => k.knurl(SPOOL_B_CX, SPOOL_B_CY, 5.5, 13.2, 17, 12, PROJECTION, 0.4), []);
+  const spoolBSpindle = React.useMemo(
+    () => k.cylinder(SPOOL_B_CX, SPOOL_B_CY, 3.8, 0, 18, PROJECTION, 16),
+    [],
+  );
+  const spoolBFlangeBottom = React.useMemo(
+    () => k.cylinder(SPOOL_B_CX, SPOOL_B_CY, 34, 1.5, 1.2, PROJECTION, 32),
+    [],
+  );
+  const spoolBFlangeTop = React.useMemo(
+    () => k.cylinder(SPOOL_B_CX, SPOOL_B_CY, 34, 12, 1.2, PROJECTION, 32),
+    [],
+  );
+  const spoolBKnurl = React.useMemo(
+    () => k.knurl(SPOOL_B_CX, SPOOL_B_CY, 5.5, 13.2, 17, 12, PROJECTION, 0.4),
+    [],
+  );
 
   // Dynamic tape solid cylinders based on progress
-  const tapeCoilA = React.useMemo(() => k.cylinder(SPOOL_A_CX, SPOOL_A_CY, tapeRadiusA, 2.7, 9.3, PROJECTION, 28), [tapeRadiusA]);
-  const tapeCoilB = React.useMemo(() => k.cylinder(SPOOL_B_CX, SPOOL_B_CY, tapeRadiusB, 2.7, 9.3, PROJECTION, 28), [tapeRadiusB]);
+  const tapeCoilA = React.useMemo(
+    () => k.cylinder(SPOOL_A_CX, SPOOL_A_CY, tapeRadiusA, 2.7, 9.3, PROJECTION, 28),
+    [tapeRadiusA],
+  );
+  const tapeCoilB = React.useMemo(
+    () => k.cylinder(SPOOL_B_CX, SPOOL_B_CY, tapeRadiusB, 2.7, 9.3, PROJECTION, 28),
+    [tapeRadiusB],
+  );
 
   // Linear guide rails
-  const rail1 = React.useMemo(() => k.cylinder(RAIL_X_START, RAIL_Y1, 1.6, RAIL_Z, 0, PROJECTION), []);
+  const rail1 = React.useMemo(
+    () => k.cylinder(RAIL_X_START, RAIL_Y1, 1.6, RAIL_Z, 0, PROJECTION),
+    [],
+  );
   const rail1Path = React.useMemo(
-    () => k.pathOf([k.iso([RAIL_X_START, RAIL_Y1, RAIL_Z], PROJECTION), k.iso([RAIL_X_END, RAIL_Y1, RAIL_Z], PROJECTION)]),
-    []
+    () =>
+      k.pathOf([
+        k.iso([RAIL_X_START, RAIL_Y1, RAIL_Z], PROJECTION),
+        k.iso([RAIL_X_END, RAIL_Y1, RAIL_Z], PROJECTION),
+      ]),
+    [],
   );
   const rail2Path = React.useMemo(
-    () => k.pathOf([k.iso([RAIL_X_START, RAIL_Y2, RAIL_Z], PROJECTION), k.iso([RAIL_X_END, RAIL_Y2, RAIL_Z], PROJECTION)]),
-    []
+    () =>
+      k.pathOf([
+        k.iso([RAIL_X_START, RAIL_Y2, RAIL_Z], PROJECTION),
+        k.iso([RAIL_X_END, RAIL_Y2, RAIL_Z], PROJECTION),
+      ]),
+    [],
   );
 
   // Rail End Brackets
-  const endBracketL = React.useMemo(() => k.slabOf({ x: RAIL_X_START - 4, y: RAIL_Y1 - 3, w: 4, d: RAIL_Y2 - RAIL_Y1 + 6, r: 1 }, 0, 9, PROJECTION, 3), []);
-  const endBracketR = React.useMemo(() => k.slabOf({ x: RAIL_X_END, y: RAIL_Y1 - 3, w: 4, d: RAIL_Y2 - RAIL_Y1 + 6, r: 1 }, 0, 9, PROJECTION, 3), []);
+  const endBracketL = React.useMemo(
+    () =>
+      k.slabOf(
+        { x: RAIL_X_START - 4, y: RAIL_Y1 - 3, w: 4, d: RAIL_Y2 - RAIL_Y1 + 6, r: 1 },
+        0,
+        9,
+        PROJECTION,
+        3,
+      ),
+    [],
+  );
+  const endBracketR = React.useMemo(
+    () =>
+      k.slabOf(
+        { x: RAIL_X_END, y: RAIL_Y1 - 3, w: 4, d: RAIL_Y2 - RAIL_Y1 + 6, r: 1 },
+        0,
+        9,
+        PROJECTION,
+        3,
+      ),
+    [],
+  );
 
   // Moving Scanning Carriage Body
   const carriagePlan: k.Plan = React.useMemo(
     () => ({ x: carriageX - 10, y: RAIL_Y1 - 2, w: 20, d: RAIL_Y2 - RAIL_Y1 + 4, r: 2 }),
-    [carriageX]
+    [carriageX],
   );
-  const carriageSolid = React.useMemo(() => k.slabOf(carriagePlan, RAIL_Z - 1.5, 7, PROJECTION, 4, 0.8), [carriagePlan]);
-  const carriageLens = React.useMemo(() => k.cylinder(carriageX, (RAIL_Y1 + RAIL_Y2) / 2, 3.2, RAIL_Z + 5.5, 2.5, PROJECTION, 16), [carriageX]);
-  const carriageLaserSpot = React.useMemo(() => k.iso([carriageX, (RAIL_Y1 + RAIL_Y2) / 2, RAIL_Z + 8], PROJECTION), [carriageX]);
+  const carriageSolid = React.useMemo(
+    () => k.slabOf(carriagePlan, RAIL_Z - 1.5, 7, PROJECTION, 4, 0.8),
+    [carriagePlan],
+  );
+  const carriageLens = React.useMemo(
+    () => k.cylinder(carriageX, (RAIL_Y1 + RAIL_Y2) / 2, 3.2, RAIL_Z + 5.5, 2.5, PROJECTION, 16),
+    [carriageX],
+  );
+  const carriageLaserSpot = React.useMemo(
+    () => k.iso([carriageX, (RAIL_Y1 + RAIL_Y2) / 2, RAIL_Z + 8], PROJECTION),
+    [carriageX],
+  );
 
   // Tape path ribbon (runs from Deck A -> Carriage Head -> Deck B)
   const tapeRibbon = React.useMemo(() => {
-    const ptA = k.iso([SPOOL_A_CX + tapeRadiusA * 0.7, SPOOL_A_CY + tapeRadiusA * 0.7, 7.5], PROJECTION);
+    const ptA = k.iso(
+      [SPOOL_A_CX + tapeRadiusA * 0.7, SPOOL_A_CY + tapeRadiusA * 0.7, 7.5],
+      PROJECTION,
+    );
     const ptHead = k.iso([carriageX, (RAIL_Y1 + RAIL_Y2) / 2, 7.5], PROJECTION);
-    const ptB = k.iso([SPOOL_B_CX - tapeRadiusB * 0.7, SPOOL_B_CY + tapeRadiusB * 0.7, 7.5], PROJECTION);
+    const ptB = k.iso(
+      [SPOOL_B_CX - tapeRadiusB * 0.7, SPOOL_B_CY + tapeRadiusB * 0.7, 7.5],
+      PROJECTION,
+    );
     return k.pathOf([ptA, ptHead, ptB]);
   }, [carriageX, tapeRadiusA, tapeRadiusB]);
 
@@ -253,11 +383,20 @@ export function FlightRecorderRig() {
       {/* Plate Header Info */}
       <div className="flight-plate-meta">
         <div className="meta-left">
-          <span className="meta-tag">FIG 01 // INSTRUMENT TF-01</span>
+          <span className="meta-tag">FIG 01 {"// INSTRUMENT TF-01"}</span>
           <span className="meta-title">AGENT FLIGHT RECORDER & TELEMETRY RIG</span>
         </div>
         <div className="meta-right">
-          <span className="meta-status-pill" data-level={step.confidence >= 0.9 ? "verified" : step.confidence >= 0.3 ? "warning" : "unverified"}>
+          <span
+            className="meta-status-pill"
+            data-level={
+              step.confidence >= 0.9
+                ? "verified"
+                : step.confidence >= 0.3
+                  ? "warning"
+                  : "unverified"
+            }
+          >
             <span className="pill-dot" />
             {step.verification}
           </span>
@@ -268,6 +407,7 @@ export function FlightRecorderRig() {
       <div className="flight-rig-viewport">
         {mounted ? (
           <svg
+            aria-hidden="true"
             viewBox="0 0 860 480"
             className="iso-svg flight-svg"
             role="img"
@@ -290,10 +430,15 @@ export function FlightRecorderRig() {
             <Line d={baseGroove} tone="lo" />
 
             {/* Corner Screws */}
-            {baseScrews.map((screw, idx) => (
-              <g key={idx}>
+            {baseScrews.map((screw) => (
+              <g key={screw.circle}>
                 <Line d={screw.circle} tone="lo" />
-                <circle cx={screw.center[0]} cy={screw.center[1]} r={0.7} className="iso-dot-item" />
+                <circle
+                  cx={screw.center[0]}
+                  cy={screw.center[1]}
+                  r={0.7}
+                  className="iso-dot-item"
+                />
               </g>
             ))}
 
@@ -313,7 +458,7 @@ export function FlightRecorderRig() {
               fill="var(--ink-muted, #73737a)"
               fontFamily="var(--mono)"
             >
-              RIG TF-01 // AUDIT
+              {"RIG TF-01 // AUDIT"}
             </text>
 
             {/* Dial Gauge Pillar & Housing */}
@@ -349,7 +494,13 @@ export function FlightRecorderRig() {
             <Line d={spoolBKnurl} tone="mid" />
 
             {/* Dynamic Tape Path Ribbon */}
-            <path d={tapeRibbon} fill="none" stroke="var(--accent, #a78bfa)" strokeWidth="1.8" strokeDasharray="4 2" />
+            <path
+              d={tapeRibbon}
+              fill="none"
+              stroke="var(--accent, #a78bfa)"
+              strokeWidth="1.8"
+              strokeDasharray="4 2"
+            />
 
             {/* Linear Guide Rails */}
             <Line d={rail1Path} tone="hi" />
@@ -397,6 +548,7 @@ export function FlightRecorderRig() {
             const isCurrent = idx === activeStep;
             return (
               <button
+                type="button"
                 key={s.id}
                 role="tab"
                 aria-selected={isCurrent}

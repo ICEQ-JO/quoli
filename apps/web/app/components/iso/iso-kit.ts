@@ -48,13 +48,22 @@ interface Camera {
 export function cameraOf({ scale, azimuth = AZIMUTH, elevation = ELEVATION }: Projection): Camera {
   const a = azimuth * RADIANS;
   const e = elevation * RADIANS;
-  return { sinA: Math.sin(a), cosA: Math.cos(a), sinE: Math.sin(e), cosE: Math.cos(e), k: scale * UNIT };
+  return {
+    sinA: Math.sin(a),
+    cosA: Math.cos(a),
+    sinE: Math.sin(e),
+    cosE: Math.cos(e),
+    k: scale * UNIT,
+  };
 }
 
 export function iso([x, y, z]: Point3, projection: Projection): Flat {
   const { origin } = projection;
   const { sinA, cosA, sinE, cosE, k } = cameraOf(projection);
-  return [origin[0] + (x * sinA - y * cosA) * k, origin[1] + ((x * cosA + y * sinA) * sinE - z * cosE) * k];
+  return [
+    origin[0] + (x * sinA - y * cosA) * k,
+    origin[1] + ((x * cosA + y * sinA) * sinE - z * cosE) * k,
+  ];
 }
 
 export function towardViewer(projection: Projection): Plane {
@@ -74,7 +83,10 @@ const tenth = (value: number) => {
 
 export function pathOf(points: Flat[], closed = false) {
   if (!points.length) return "";
-  return points.map(([x, y], at) => `${at ? "L" : "M"}${tenth(x)} ${tenth(y)}`).join("") + (closed ? "Z" : "");
+  return (
+    points.map(([x, y], at) => `${at ? "L" : "M"}${tenth(x)} ${tenth(y)}`).join("") +
+    (closed ? "Z" : "")
+  );
 }
 
 export const joinPaths = (paths: string[]) => paths.filter(Boolean).join("");
@@ -119,13 +131,21 @@ function convexHull(points: Flat[]): Flat[] {
   };
   const lower: Flat[] = [];
   for (const point of sorted) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2]!, lower[lower.length - 1]!, point) <= 0) lower.pop();
+    while (
+      lower.length >= 2 &&
+      cross(lower[lower.length - 2]!, lower[lower.length - 1]!, point) <= 0
+    )
+      lower.pop();
     lower.push(point);
   }
   const upper: Flat[] = [];
   for (let index = sorted.length - 1; index >= 0; index--) {
     const point = sorted[index]!;
-    while (upper.length >= 2 && cross(upper[upper.length - 2]!, upper[upper.length - 1]!, point) <= 0) upper.pop();
+    while (
+      upper.length >= 2 &&
+      cross(upper[upper.length - 2]!, upper[upper.length - 1]!, point) <= 0
+    )
+      upper.pop();
     upper.push(point);
   }
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
@@ -135,7 +155,10 @@ function runsOf(flags: boolean[], want: boolean) {
   const count = flags.length;
   const runs: number[][] = [];
   const start = flags.findIndex((flag, index) => flag !== flags[(index + count - 1) % count]);
-  if (start < 0) return flags[0] === want ? [Array.from({ length: count + 1 }, (_, index) => index % count)] : [];
+  if (start < 0)
+    return flags[0] === want
+      ? [Array.from({ length: count + 1 }, (_, index) => index % count)]
+      : [];
   let run: number[] | null = null;
   for (let step = 0; step < count; step++) {
     const index = (start + step) % count;
@@ -156,7 +179,13 @@ export interface ExtrudeOptions {
   bevel?: number;
 }
 
-export function extrude(ring: Plane[], z: number, height: number, projection: Projection, options: ExtrudeOptions = {}): SolidPaths {
+export function extrude(
+  ring: Plane[],
+  z: number,
+  height: number,
+  projection: Projection,
+  options: ExtrudeOptions = {},
+): SolidPaths {
   const convex = options.convex ?? true;
   const count = ring.length;
   const counter = signedArea(ring) > 0;
@@ -181,7 +210,8 @@ export function extrude(ring: Plane[], z: number, height: number, projection: Pr
   }
   if (height > 0) {
     for (let index = 0; index < count; index++) {
-      if (facing[(index + count - 1) % count] !== facing[index]) outline.push(pathOf([top[index]!, bottom[index]!]));
+      if (facing[(index + count - 1) % count] !== facing[index])
+        outline.push(pathOf([top[index]!, bottom[index]!]));
     }
   }
   let fill: string;
@@ -205,7 +235,9 @@ export function extrude(ring: Plane[], z: number, height: number, projection: Pr
       const lit = (nx * lx + ny * ly + 1) / 2;
       const shade = Math.min(SHADES - 1, Math.max(0, Math.floor(lit * SHADES)));
       const next = (index + 1) % count;
-      buckets[shade]!.push(pathOf(oriented([top[index]!, top[next]!, bottom[next]!, bottom[index]!]), true));
+      buckets[shade]!.push(
+        pathOf(oriented([top[index]!, top[next]!, bottom[next]!, bottom[index]!]), true),
+      );
     }
   }
   let bevel: string | undefined;
@@ -221,7 +253,13 @@ export function extrude(ring: Plane[], z: number, height: number, projection: Pr
     });
     const insetTop = inset.map(([x, y]) => iso([x, y, z + height], projection));
     bevel = runsOf(facing, true)
-      .map((run) => pathOf([top[run[0]!]!, ...run.slice(1, -1).map((index) => insetTop[index]!), top[run[run.length - 1]!]!]))
+      .map((run) =>
+        pathOf([
+          top[run[0]!]!,
+          ...run.slice(1, -1).map((index) => insetTop[index]!),
+          top[run[run.length - 1]!]!,
+        ]),
+      )
       .join("");
   }
   return {
@@ -236,7 +274,14 @@ export function extrude(ring: Plane[], z: number, height: number, projection: Pr
 
 export const ringOf = (plan: Plan, steps = 8): Plane[] => roundedPlan(plan, steps);
 
-export function slabOf(plan: Plan, z: number, height: number, projection: Projection, steps = 8, bevel = 0) {
+export function slabOf(
+  plan: Plan,
+  z: number,
+  height: number,
+  projection: Projection,
+  steps = 8,
+  bevel = 0,
+) {
   return extrude(ringOf(plan, steps), z, height, projection, { convex: true, bevel });
 }
 
@@ -247,11 +292,26 @@ export function circleRing(cx: number, cy: number, radius: number, steps = 40): 
   });
 }
 
-export function cylinder(cx: number, cy: number, radius: number, z: number, height: number, projection: Projection, steps = 32, bevel = 0) {
+export function cylinder(
+  cx: number,
+  cy: number,
+  radius: number,
+  z: number,
+  height: number,
+  projection: Projection,
+  steps = 32,
+  bevel = 0,
+) {
   return extrude(circleRing(cx, cy, radius, steps), z, height, projection, { convex: true, bevel });
 }
 
-export const insetPlan = ({ x, y, w, d, r }: Plan, by: number): Plan => ({ x: x + by, y: y + by, w: w - by * 2, d: d - by * 2, r: Math.max(0, r - by) });
+export const insetPlan = ({ x, y, w, d, r }: Plan, by: number): Plan => ({
+  x: x + by,
+  y: y + by,
+  w: w - by * 2,
+  d: d - by * 2,
+  r: Math.max(0, r - by),
+});
 
 export function onTop(points: Plane[], z: number, projection: Projection, closed = false) {
   return pathOf(
@@ -260,23 +320,43 @@ export function onTop(points: Plane[], z: number, projection: Projection, closed
   );
 }
 
-export const planOutline = (plan: Plan, z: number, projection: Projection, steps = 8) => onTop(ringOf(plan, steps), z, projection, true);
+export const planOutline = (plan: Plan, z: number, projection: Projection, steps = 8) =>
+  onTop(ringOf(plan, steps), z, projection, true);
 
-export const lineOnTop = (from: Plane, to: Plane, z: number, projection: Projection) => onTop([from, to], z, projection);
+export const lineOnTop = (from: Plane, to: Plane, z: number, projection: Projection) =>
+  onTop([from, to], z, projection);
 
-export const segment = (from: Point3, to: Point3, projection: Projection) => pathOf([iso(from, projection), iso(to, projection)]);
+export const segment = (from: Point3, to: Point3, projection: Projection) =>
+  pathOf([iso(from, projection), iso(to, projection)]);
 
-export const rise = (at: Plane, from: number, to: number, projection: Projection) => segment([at[0], at[1], from], [at[0], at[1], to], projection);
+export const rise = (at: Plane, from: number, to: number, projection: Projection) =>
+  segment([at[0], at[1], from], [at[0], at[1], to], projection);
 
-export const ring = (cx: number, cy: number, radius: number, z: number, projection: Projection, steps = 40) =>
-  onTop(circleRing(cx, cy, radius, steps), z, projection, true);
+export const ring = (
+  cx: number,
+  cy: number,
+  radius: number,
+  z: number,
+  projection: Projection,
+  steps = 40,
+) => onTop(circleRing(cx, cy, radius, steps), z, projection, true);
 
-export const pointsAt = (points: Point3[], projection: Projection): Flat[] => points.map((point) => iso(point, projection));
+export const pointsAt = (points: Point3[], projection: Projection): Flat[] =>
+  points.map((point) => iso(point, projection));
 
-export function dotGrid(x: number, y: number, columns: number, rows: number, gap: number, z: number, projection: Projection): Flat[] {
+export function dotGrid(
+  x: number,
+  y: number,
+  columns: number,
+  rows: number,
+  gap: number,
+  z: number,
+  projection: Projection,
+): Flat[] {
   const dots: Flat[] = [];
   for (let row = 0; row < rows; row++) {
-    for (let column = 0; column < columns; column++) dots.push(iso([x + column * gap, y + row * gap, z], projection));
+    for (let column = 0; column < columns; column++)
+      dots.push(iso([x + column * gap, y + row * gap, z], projection));
   }
   return dots;
 }
@@ -292,11 +372,21 @@ export function corners({ x, y, w, d }: Plan, inset = 0): Plane[] {
 
 export function boxCorners({ x, y, w, d }: Plan, z0: number, z1: number): Point3[] {
   const out: Point3[] = [];
-  for (const px of [x, x + w]) for (const py of [y, y + d]) for (const z of [z0, z1]) out.push([px, py, z]);
+  for (const px of [x, x + w])
+    for (const py of [y, y + d]) for (const z of [z0, z1]) out.push([px, py, z]);
   return out;
 }
 
-export function knurl(cx: number, cy: number, radius: number, z0: number, z1: number, count: number, projection: Projection, inset = 0.4) {
+export function knurl(
+  cx: number,
+  cy: number,
+  radius: number,
+  z0: number,
+  z1: number,
+  count: number,
+  projection: Projection,
+  inset = 0.4,
+) {
   const [vx, vy] = towardViewer(projection);
   const lines: string[] = [];
   for (let index = 0; index < count; index++) {
@@ -304,12 +394,25 @@ export function knurl(cx: number, cy: number, radius: number, z0: number, z1: nu
     const nx = Math.cos(angle);
     const ny = Math.sin(angle);
     if (nx * vx + ny * vy < 0.15) continue;
-    lines.push(segment([cx + radius * nx, cy + radius * ny, z0 + inset], [cx + radius * nx, cy + radius * ny, z1 - inset], projection));
+    lines.push(
+      segment(
+        [cx + radius * nx, cy + radius * ny, z0 + inset],
+        [cx + radius * nx, cy + radius * ny, z1 - inset],
+        projection,
+      ),
+    );
   }
   return lines.join("");
 }
 
-export function sideArc(cx: number, cy: number, radius: number, z: number, projection: Projection, steps = 24) {
+export function sideArc(
+  cx: number,
+  cy: number,
+  radius: number,
+  z: number,
+  projection: Projection,
+  steps = 24,
+) {
   const [vx, vy] = towardViewer(projection);
   const facing = Math.atan2(vy, vx);
   const points: Flat[] = [];
@@ -331,12 +434,21 @@ export function ringSeam(ring: Plane[], z: number, projection: Projection) {
     const [nx, ny] = counter ? [dy, -dx] : [-dy, dx];
     return nx * vx + ny * vy > 1e-9;
   });
-  return runsOf(facing, true).map((run) => pathOf(run.map((index) => iso([ring[index][0], ring[index][1], z], projection)))).join("");
+  return runsOf(facing, true)
+    .map((run) => pathOf(run.map((index) => iso([ring[index][0], ring[index][1], z], projection))))
+    .join("");
 }
 
-export const sideSeam = (plan: Plan, z: number, projection: Projection, steps = 8) => ringSeam(ringOf(plan, steps), z, projection);
+export const sideSeam = (plan: Plan, z: number, projection: Projection, steps = 8) =>
+  ringSeam(ringOf(plan, steps), z, projection);
 
-export function sideRing(center: Point3, radius: number, axis: "x" | "y", projection: Projection, steps = 20) {
+export function sideRing(
+  center: Point3,
+  radius: number,
+  axis: "x" | "y",
+  projection: Projection,
+  steps = 20,
+) {
   const [px, py, pz] = center;
   const points: Flat[] = [];
   for (let step = 0; step < steps; step++) {
@@ -348,7 +460,16 @@ export function sideRing(center: Point3, radius: number, axis: "x" | "y", projec
   return pathOf(points, true);
 }
 
-export function coil(from: number, to: number, center: Plane, radius: number, turns: number, axis: "x" | "y", projection: Projection, perTurn = 16) {
+export function coil(
+  from: number,
+  to: number,
+  center: Plane,
+  radius: number,
+  turns: number,
+  axis: "x" | "y",
+  projection: Projection,
+  perTurn = 16,
+) {
   const count = Math.max(1, Math.round(turns * perTurn));
   const back: string[] = [];
   const front: string[] = [];
@@ -360,8 +481,10 @@ export function coil(from: number, to: number, center: Plane, radius: number, tu
     const u = radius * Math.cos(angle);
     const v = radius * Math.sin(angle);
     const along = from + (to - from) * share;
-    const point: Point3 = axis === "x" ? [along, center[0] + u, center[1] + v] : [center[0] + u, along, center[1] + v];
-    const normal: Point3 = axis === "x" ? [0, Math.cos(angle), Math.sin(angle)] : [Math.cos(angle), 0, Math.sin(angle)];
+    const point: Point3 =
+      axis === "x" ? [along, center[0] + u, center[1] + v] : [center[0] + u, along, center[1] + v];
+    const normal: Point3 =
+      axis === "x" ? [0, Math.cos(angle), Math.sin(angle)] : [Math.cos(angle), 0, Math.sin(angle)];
     const facing = depthOf(normal, projection) > 0;
     const flat = iso(point, projection);
     if (near === null) near = facing;
@@ -383,7 +506,17 @@ export interface Ticks {
   major: string;
 }
 
-export function topTicks(from: number, to: number, step: number, every: number, edge: number, z: number, lengths: [number, number], projection: Projection, axis: "x" | "y" = "x"): Ticks {
+export function topTicks(
+  from: number,
+  to: number,
+  step: number,
+  every: number,
+  edge: number,
+  z: number,
+  lengths: [number, number],
+  projection: Projection,
+  axis: "x" | "y" = "x",
+): Ticks {
   const minor: string[] = [];
   const major: string[] = [];
   const first = Math.ceil(from / step) * step;
@@ -397,7 +530,17 @@ export function topTicks(from: number, to: number, step: number, every: number, 
   return { minor: minor.join(""), major: major.join("") };
 }
 
-export function sideTicks(from: number, to: number, step: number, every: number, face: number, top: number, lengths: [number, number], projection: Projection, axis: "x" | "y" = "x"): Ticks {
+export function sideTicks(
+  from: number,
+  to: number,
+  step: number,
+  every: number,
+  face: number,
+  top: number,
+  lengths: [number, number],
+  projection: Projection,
+  axis: "x" | "y" = "x",
+): Ticks {
   const minor: string[] = [];
   const major: string[] = [];
   const first = Math.ceil(from / step) * step;
@@ -411,7 +554,18 @@ export function sideTicks(from: number, to: number, step: number, every: number,
   return { minor: minor.join(""), major: major.join("") };
 }
 
-export function radialTicks(cx: number, cy: number, radius: number, count: number, every: number, z: number, lengths: [number, number], projection: Projection, from = 0, span = Math.PI * 2): Ticks {
+export function radialTicks(
+  cx: number,
+  cy: number,
+  radius: number,
+  count: number,
+  every: number,
+  z: number,
+  lengths: [number, number],
+  projection: Projection,
+  from = 0,
+  span = Math.PI * 2,
+): Ticks {
   const minor: string[] = [];
   const major: string[] = [];
   const closed = Math.abs(span - Math.PI * 2) < 1e-9;
@@ -422,12 +576,20 @@ export function radialTicks(cx: number, cy: number, radius: number, count: numbe
     const inner = radius - (big ? lengths[1] : lengths[0]);
     const sx = Math.sin(angle);
     const sy = -Math.cos(angle);
-    (big ? major : minor).push(lineOnTop([cx + sx * inner, cy + sy * inner], [cx + sx * radius, cy + sy * radius], z, projection));
+    (big ? major : minor).push(
+      lineOnTop(
+        [cx + sx * inner, cy + sy * inner],
+        [cx + sx * radius, cy + sy * radius],
+        z,
+        projection,
+      ),
+    );
   }
   return { minor: minor.join(""), major: major.join("") };
 }
 
-export const haloOf = (plan: Plan, z: number, height: number, projection: Projection) => slabOf(plan, z, height, projection).fill;
+export const haloOf = (plan: Plan, z: number, height: number, projection: Projection) =>
+  slabOf(plan, z, height, projection).fill;
 
 export function axisVector(projection: Projection, [dx, dy, dz]: Point3): Flat {
   const origin = iso([0, 0, 0], projection);
@@ -450,7 +612,12 @@ function axesAt(at: Plane, z: number, projection: Projection) {
     const [px, py] = iso(point, projection);
     return [px - origin[0], py - origin[1]];
   };
-  return { origin, x: along([at[0] + 1, at[1], z]), y: along([at[0], at[1] + 1, z]), z: along([at[0], at[1], z + 1]) };
+  return {
+    origin,
+    x: along([at[0] + 1, at[1], z]),
+    y: along([at[0], at[1] + 1, z]),
+    z: along([at[0], at[1], z + 1]),
+  };
 }
 
 const matrixOf = (u: Flat, v: Flat, origin: Flat) =>
@@ -458,7 +625,10 @@ const matrixOf = (u: Flat, v: Flat, origin: Flat) =>
 
 export function holdStill(element: Element, [dx, dy]: Flat) {
   const text = dx || dy ? `translate(${-dx} ${-dy})` : "";
-  element.querySelectorAll("[data-hold]").forEach((node) => (text ? node.setAttribute("transform", text) : node.removeAttribute("transform")));
+  element.querySelectorAll("[data-hold]").forEach((node) => {
+    if (text) node.setAttribute("transform", text);
+    else node.removeAttribute("transform");
+  });
 }
 
 export function topMatrix(at: Plane, z: number, projection: Projection, along: "x" | "y" = "x") {
@@ -484,7 +654,12 @@ export interface FitOptions {
   elevation?: number;
 }
 
-export function fitProjection(points: Point3[], width: number, height: number, { pad = 24, headroom = 0, azimuth = AZIMUTH, elevation = ELEVATION }: FitOptions = {}): Projection {
+export function fitProjection(
+  points: Point3[],
+  width: number,
+  height: number,
+  { pad = 24, headroom = 0, azimuth = AZIMUTH, elevation = ELEVATION }: FitOptions = {},
+): Projection {
   const unit: Projection = { origin: [0, 0], scale: 1, azimuth, elevation };
   const flat = points.map((point) => iso(point, unit));
   const xs = flat.map(([x]) => x);
@@ -493,21 +668,28 @@ export function fitProjection(points: Point3[], width: number, height: number, {
   const right = Math.max(...xs);
   const up = Math.min(...ys);
   const down = Math.max(...ys);
-  const scale = Math.min((width - pad * 2) / (right - left), (height - pad * 2 - headroom) / (down - up));
+  const scale = Math.min(
+    (width - pad * 2) / (right - left),
+    (height - pad * 2 - headroom) / (down - up),
+  );
   return {
-    origin: [width / 2 - ((left + right) / 2) * scale, headroom + (height - headroom) / 2 - ((up + down) / 2) * scale],
+    origin: [
+      width / 2 - ((left + right) / 2) * scale,
+      headroom + (height - headroom) / 2 - ((up + down) / 2) * scale,
+    ],
     scale,
     azimuth,
     elevation,
   };
 }
 
-const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const attrs = (pairs: Record<string, string | number | undefined | false>) =>
   Object.entries(pairs)
     .filter(([, value]) => value !== undefined && value !== false)
-    .map(([key, value]) => ` ${key}="${escape(String(value))}"`)
+    .map(([key, value]) => ` ${key}="${escapeHtml(String(value))}"`)
     .join("");
 
 export interface SolidStyle {
@@ -520,7 +702,18 @@ export interface SolidStyle {
   inner?: string;
 }
 
-export function solidSvg(paths: SolidPaths, { tone = "hi", crease = "faint", halo = false, lit = false, flat = false, className, inner = "" }: SolidStyle = {}) {
+export function solidSvg(
+  paths: SolidPaths,
+  {
+    tone = "hi",
+    crease = "faint",
+    halo = false,
+    lit = false,
+    flat = false,
+    className,
+    inner = "",
+  }: SolidStyle = {},
+) {
   const parts: string[] = [];
   if (halo) parts.push(`<path class="iso-halo" d="${paths.fill}"/>`);
   parts.push(`<path class="iso-fill" d="${paths.fill}"/>`);
@@ -530,8 +723,10 @@ export function solidSvg(paths: SolidPaths, { tone = "hi", crease = "faint", hal
     });
     parts.push(`<path class="iso-top" d="${paths.top}"/>`);
   }
-  if (crease !== "none" && paths.crease) parts.push(`<path class="iso-line iso-crease" data-tone="${crease}" d="${paths.crease}"/>`);
-  if (crease !== "none" && paths.bevel) parts.push(`<path class="iso-line iso-bevel" data-tone="${crease}" d="${paths.bevel}"/>`);
+  if (crease !== "none" && paths.crease)
+    parts.push(`<path class="iso-line iso-crease" data-tone="${crease}" d="${paths.crease}"/>`);
+  if (crease !== "none" && paths.bevel)
+    parts.push(`<path class="iso-line iso-bevel" data-tone="${crease}" d="${paths.bevel}"/>`);
   if (inner) parts.push(inner);
   parts.push(`<path class="iso-line iso-edge" data-tone="${tone}" d="${paths.outline}"/>`);
   return `<g${attrs({ class: className ? `iso-solid ${className}` : "iso-solid", "data-lit": lit ? "" : undefined, "data-seamless": paths.seamless ? "" : undefined })}>${parts.join("")}</g>`;
@@ -546,7 +741,10 @@ export interface LineStyle {
   free?: boolean | "start" | "end";
 }
 
-export function lineSvg(d: string, { tone = "lo", dotted = false, dashed = false, flow = false, className, free }: LineStyle = {}) {
+export function lineSvg(
+  d: string,
+  { tone = "lo", dotted = false, dashed = false, flow = false, className, free }: LineStyle = {},
+) {
   if (!d) return "";
   return `<path${attrs({
     class: className ? `iso-line ${className}` : "iso-line",
@@ -559,9 +757,15 @@ export function lineSvg(d: string, { tone = "lo", dotted = false, dashed = false
   })}/>`;
 }
 
-export function dotsSvg(points: Array<Flat | [number, number, number]>, { size = 0.5, tone = "mid", pulse = false }: { size?: number; tone?: Tone; pulse?: boolean } = {}) {
+export function dotsSvg(
+  points: Array<Flat | [number, number, number]>,
+  { size = 0.5, tone = "mid", pulse = false }: { size?: number; tone?: Tone; pulse?: boolean } = {},
+) {
   const dots = points
-    .map(([x, y, alpha]: number[], index) => `<circle cx="${tenth(x)}" cy="${tenth(y)}" r="${size}"${alpha !== undefined && alpha < 1 ? ` fill-opacity="${Math.max(0, alpha).toFixed(2)}"` : ""}${pulse ? ` data-pulse="" style="--pulse-at:${(index * 137) % 1600}ms"` : ""}/>`)
+    .map(
+      ([x, y, alpha]: number[], index) =>
+        `<circle cx="${tenth(x)}" cy="${tenth(y)}" r="${size}"${alpha !== undefined && alpha < 1 ? ` fill-opacity="${Math.max(0, alpha).toFixed(2)}"` : ""}${pulse ? ` data-pulse="" style="--pulse-at:${(index * 137) % 1600}ms"` : ""}/>`,
+    )
     .join("");
   return `<g class="iso-dots" data-tone="${tone}">${dots}</g>`;
 }
@@ -576,7 +780,11 @@ export function fadedSvg(list: Faded[], style: LineStyle = {}) {
     const level = Math.min(1, Math.round(alpha * 20) / 20);
     groups.set(level, (groups.get(level) ?? "") + d);
   }
-  return [...groups].map(([alpha, d]) => (alpha >= 1 ? lineSvg(d, style) : `<g opacity="${alpha.toFixed(2)}">${lineSvg(d, style)}</g>`)).join("");
+  return [...groups]
+    .map(([alpha, d]) =>
+      alpha >= 1 ? lineSvg(d, style) : `<g opacity="${alpha.toFixed(2)}">${lineSvg(d, style)}</g>`,
+    )
+    .join("");
 }
 
 export interface FadeLineStyle {
@@ -586,24 +794,42 @@ export interface FadeLineStyle {
   stops?: number;
 }
 
-export function fadeLineSvg(points: Flat[], { fade = [0, 0], tone = "lo", className, stops = 6 }: FadeLineStyle = {}) {
+export function fadeLineSvg(
+  points: Flat[],
+  { fade = [0, 0], tone = "lo", className, stops = 6 }: FadeLineStyle = {},
+) {
   if (points.length < 2) return "";
   const ease = (t: number) => t * t * (3 - 2 * t);
   const hashOf = (text: string) => {
     let hash = 2166136261;
-    for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 16777619);
+    for (let index = 0; index < text.length; index++)
+      hash = Math.imul(hash ^ text.charCodeAt(index), 16777619);
     return (hash >>> 0).toString(36);
   };
   const lengths = [0];
-  for (let index = 1; index < points.length; index++) lengths.push(lengths[index - 1] + Math.hypot(points[index][0] - points[index - 1][0], points[index][1] - points[index - 1][1]));
+  for (let index = 1; index < points.length; index++)
+    lengths.push(
+      lengths[index - 1] +
+        Math.hypot(
+          points[index][0] - points[index - 1][0],
+          points[index][1] - points[index - 1][1],
+        ),
+    );
   const at = (length: number): Flat => {
     let index = 1;
     while (index < points.length - 1 && lengths[index] < length) index++;
     const span = lengths[index] - lengths[index - 1] || 1;
     const t = Math.max(0, Math.min(1, (length - lengths[index - 1]) / span));
-    return [points[index - 1][0] + (points[index][0] - points[index - 1][0]) * t, points[index - 1][1] + (points[index][1] - points[index - 1][1]) * t];
+    return [
+      points[index - 1][0] + (points[index][0] - points[index - 1][0]) * t,
+      points[index - 1][1] + (points[index][1] - points[index - 1][1]) * t,
+    ];
   };
-  const pieceOf = (from: number, to: number): Flat[] => [at(from), ...points.filter((_, index) => lengths[index] > from + 1e-6 && lengths[index] < to - 1e-6), at(to)];
+  const pieceOf = (from: number, to: number): Flat[] => [
+    at(from),
+    ...points.filter((_, index) => lengths[index] > from + 1e-6 && lengths[index] < to - 1e-6),
+    at(to),
+  ];
   const total = lengths[lengths.length - 1];
   if (total < 1e-6) return "";
   let [start, end] = Array.isArray(fade) ? fade : [fade, fade];
@@ -628,7 +854,8 @@ export function fadeLineSvg(points: Flat[], { fade = [0, 0], tone = "lo", classN
   };
   const parts: string[] = [];
   if (start > 0.05) parts.push(ramp(pieceOf(0, start), true));
-  if (total - end - start > 0.05) parts.push(lineSvg(pathOf(pieceOf(start, total - end)), { tone, className }));
+  if (total - end - start > 0.05)
+    parts.push(lineSvg(pathOf(pieceOf(start, total - end)), { tone, className }));
   if (end > 0.05) parts.push(ramp(pieceOf(total - end, total), false));
   return `<g class="iso-fade">${parts.join("")}</g>`;
 }
@@ -643,17 +870,41 @@ export interface WireStyle {
   size?: number;
 }
 
-export function wireSvg(from: Flat, to: Flat, { via = [], tone = "lo", dotted = false, dashed = false, flow = false, ends = "both", size = 1.2 }: WireStyle = {}) {
+export function wireSvg(
+  from: Flat,
+  to: Flat,
+  {
+    via = [],
+    tone = "lo",
+    dotted = false,
+    dashed = false,
+    flow = false,
+    ends = "both",
+    size = 1.2,
+  }: WireStyle = {},
+) {
   const d = pathOf([from, ...via, to]);
-  const end = ([x, y]: Flat) => `<circle class="iso-wire-end" cx="${tenth(x)}" cy="${tenth(y)}" r="${size}"/>`;
+  const end = ([x, y]: Flat) =>
+    `<circle class="iso-wire-end" cx="${tenth(x)}" cy="${tenth(y)}" r="${size}"/>`;
   return `<g class="iso-wire" data-tone="${tone}">${lineSvg(d, { tone, dotted, dashed, flow })}${ends === "both" || ends === "from" ? end(from) : ""}${ends === "both" || ends === "to" ? end(to) : ""}</g>`;
 }
 
-export function faceTextSvg(transform: string, text: string, { size = 3, tone = "mid", anchor = "start" }: { size?: number; tone?: Tone; anchor?: "start" | "middle" | "end" } = {}) {
-  return `<text class="iso-face-text" data-tone="${tone}" transform="${transform}" font-size="${size}" text-anchor="${anchor}">${escape(text)}</text>`;
+export function faceTextSvg(
+  transform: string,
+  text: string,
+  {
+    size = 3,
+    tone = "mid",
+    anchor = "start",
+  }: { size?: number; tone?: Tone; anchor?: "start" | "middle" | "end" } = {},
+) {
+  return `<text class="iso-face-text" data-tone="${tone}" transform="${transform}" font-size="${size}" text-anchor="${anchor}">${escapeHtml(text)}</text>`;
 }
 
-export function groupSvg(children: string | string[], extra: Record<string, string | number | undefined | false> = {}) {
+export function groupSvg(
+  children: string | string[],
+  extra: Record<string, string | number | undefined | false> = {},
+) {
   return `<g${attrs(extra)}>${Array.isArray(children) ? children.join("") : children}</g>`;
 }
 
@@ -668,7 +919,14 @@ export interface FigureOptions {
   className?: string;
 }
 
-export function figureSvg({ width, height, label, body, standalone = false, className }: FigureOptions) {
+export function figureSvg({
+  width,
+  height,
+  label,
+  body,
+  standalone = false,
+  className,
+}: FigureOptions) {
   const style = standalone ? `<style>${ISO_CSS}</style>` : "";
   return `<svg${attrs({
     xmlns: "http://www.w3.org/2000/svg",
@@ -680,7 +938,17 @@ export function figureSvg({ width, height, label, body, standalone = false, clas
   })}>${style}${Array.isArray(body) ? body.join("") : body}</svg>`;
 }
 
-export type KeyMark = "raised" | "flat" | "lit" | "edge" | "dim" | "dotted" | "dashed" | "red" | "green" | "blue";
+export type KeyMark =
+  | "raised"
+  | "flat"
+  | "lit"
+  | "edge"
+  | "dim"
+  | "dotted"
+  | "dashed"
+  | "red"
+  | "green"
+  | "blue";
 
 export interface LegendKey {
   mark: KeyMark;
@@ -689,8 +957,10 @@ export interface LegendKey {
 
 function swatchSvg(mark: KeyMark) {
   if (mark === "raised" || mark === "flat" || mark === "lit") {
-    const body = mark === "flat" ? "M2 6.5 8 3.5 14 6.5 8 9.5Z" : "M2 4.5 8 1.5 14 4.5 14 6 8 9 2 6Z";
-    const crease = mark === "flat" ? "" : `<path class="iso-swatch-crease" d="M2 4.5 8 7.5 14 4.5"/>`;
+    const body =
+      mark === "flat" ? "M2 6.5 8 3.5 14 6.5 8 9.5Z" : "M2 4.5 8 1.5 14 4.5 14 6 8 9 2 6Z";
+    const crease =
+      mark === "flat" ? "" : `<path class="iso-swatch-crease" d="M2 4.5 8 7.5 14 4.5"/>`;
     return `<svg class="iso-swatch" data-mark="${mark}" viewBox="0 0 16 10" aria-hidden="true"><path d="${body}"/>${crease}</svg>`;
   }
   return `<svg class="iso-swatch" data-mark="${mark}" viewBox="0 0 16 10" aria-hidden="true"><path d="M1.5 5h13"/></svg>`;
@@ -706,11 +976,20 @@ export interface PlateOptions {
   body: string;
 }
 
-export function plateHtml({ fig, title, hint, readout = "", keys = [], caption, body }: PlateOptions) {
-  const corner = (name: string, text: string, extra = "") => `<span class="iso-plate-corner" data-corner="${name}"${extra}>${escape(text)}</span>`;
+export function plateHtml({
+  fig,
+  title,
+  hint,
+  readout = "",
+  keys = [],
+  caption,
+  body,
+}: PlateOptions) {
+  const corner = (name: string, text: string, extra = "") =>
+    `<span class="iso-plate-corner" data-corner="${name}"${extra}>${escapeHtml(text)}</span>`;
   const legend =
     keys.length || caption
-      ? `<figcaption class="iso-legend">${keys.length ? `<span class="iso-keys">${keys.map((key) => `<span class="iso-key">${swatchSvg(key.mark)}${escape(key.label)}</span>`).join("")}</span>` : ""}${caption ? `<span class="iso-caption">${escape(caption)}</span>` : ""}</figcaption>`
+      ? `<figcaption class="iso-legend">${keys.length ? `<span class="iso-keys">${keys.map((key) => `<span class="iso-key">${swatchSvg(key.mark)}${escapeHtml(key.label)}</span>`).join("")}</span>` : ""}${caption ? `<span class="iso-caption">${escapeHtml(caption)}</span>` : ""}</figcaption>`
       : "";
   return `<figure class="iso-figure"><div class="iso-plate"><div class="iso-plate-corners" aria-hidden="true">${corner("fig", fig)}${title ? corner("title", title) : ""}${hint ? corner("hint", hint) : ""}${corner("readout", readout, " data-readout")}</div>${body}</div>${legend}</figure>`;
 }
@@ -724,7 +1003,7 @@ export interface PageOptions {
 }
 
 export function pageHtml({ title, theme = "dark", body, script = "", width = 650 }: PageOptions) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(title)}</title><style>${ISO_CSS}${PAGE_CSS.replace("__WIDTH__", String(width))}</style></head><body class="iso" data-theme="${theme}"><main class="iso-page">${body}</main>${script ? `<script type="module">${script.replace(/<\/(script)/gi, "<\\/$1")}</script>` : ""}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><style>${ISO_CSS}${PAGE_CSS.replace("__WIDTH__", String(width))}</style></head><body class="iso" data-theme="${theme}"><main class="iso-page">${body}</main>${script ? `<script type="module">${script.replace(/<\/(script)/gi, "<\\/$1")}</script>` : ""}</body></html>`;
 }
 
 const PAGE_CSS = `

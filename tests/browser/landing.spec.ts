@@ -10,7 +10,7 @@ test.describe("Traceframe Landing Page", () => {
     await expect(
       page.getByRole("heading", {
         name: "Stop guessing what your coding agent touched. See the receipts.",
-      })
+      }),
     ).toBeVisible();
 
     // Flight recorder hero plate
@@ -19,7 +19,9 @@ test.describe("Traceframe Landing Page", () => {
     await expect(page.locator(".iso-svg.flight-svg")).toBeVisible();
 
     // Quickstart snippet
-    await expect(page.locator(".terminal-cmd")).toContainText("curl -fsSL https://traceframe.dev/install.sh | sh");
+    await expect(page.locator(".terminal-cmd")).toContainText(
+      "curl -fsSL https://traceframe.dev/install.sh | sh",
+    );
   });
 
   test("interactive flight recorder steps through agent audit stages and updates telemetry", async ({
@@ -64,16 +66,24 @@ test.describe("Traceframe Landing Page", () => {
     await page.goto("/landing");
 
     // Default tab is Session Review
-    await expect(page.getByRole("heading", { name: "The Developer Request & Execution Receipt" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "The Developer Request & Execution Receipt" }),
+    ).toBeVisible();
 
     // Click Bounded Diffs tab
     await page.getByRole("tab", { name: /Bounded Diffs/i }).click();
-    await expect(page.getByRole("heading", { name: "Explicit Before/After Code Snapshots" })).toBeVisible();
-    await expect(page.locator(".diff-path")).toContainText("packages/storage/src/migrations/004_indexes.sql");
+    await expect(
+      page.getByRole("heading", { name: "Explicit Before/After Code Snapshots" }),
+    ).toBeVisible();
+    await expect(page.locator(".diff-path")).toContainText(
+      "packages/storage/src/migrations/004_indexes.sql",
+    );
 
     // Click Needs Review tab
     await page.getByRole("tab", { name: /Needs Review/i }).click();
-    await expect(page.getByRole("heading", { name: "Capture Gaps & Unverified Claims" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Capture Gaps & Unverified Claims" }),
+    ).toBeVisible();
     await expect(page.locator(".queue-badge.alert")).toBeVisible();
   });
 
@@ -84,11 +94,11 @@ test.describe("Traceframe Landing Page", () => {
     await expect(
       page.getByRole("heading", {
         name: "Stop guessing what your coding agent touched. See the receipts.",
-      })
+      }),
     ).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth
+      () => document.documentElement.scrollWidth > window.innerWidth,
     );
     expect(hasHorizontalOverflow).toBe(false);
   });

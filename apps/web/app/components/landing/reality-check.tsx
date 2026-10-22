@@ -8,8 +8,9 @@ export function RealityCheck() {
       <div className="section-head">
         <h2 className="section-title">The Illusion of Success vs The Ground Truth</h2>
         <p className="section-subtitle">
-          AI coding agents are trained to sound confident. They report clean completion summaries even when tests were skipped,
-          silent regressions were introduced, or unauthorized files were rewritten. Traceframe separates conversational claims from immutable facts.
+          AI coding agents are trained to sound confident. They report clean completion summaries
+          even when tests were skipped, silent regressions were introduced, or unauthorized files
+          were rewritten. Traceframe separates conversational claims from immutable facts.
         </p>
       </div>
 
@@ -28,8 +29,9 @@ export function RealityCheck() {
               <span className="bubble-time">14:22:08</span>
             </div>
             <p className="bubble-text">
-              “I’ve refactored your authentication token validation, tightened the expiration rules, and updated the session tests. 
-              All tests passed cleanly with 0 errors! You’re all set to merge.”
+              “I’ve refactored your authentication token validation, tightened the expiration rules,
+              and updated the session tests. All tests passed cleanly with 0 errors! You’re all set
+              to merge.”
             </p>
             <div className="fake-status-pill">
               <span className="green-check">✓</span> 4 files modified · 100% tests passed
@@ -61,7 +63,9 @@ export function RealityCheck() {
                 <span className="tag-warning">MUTATION</span>
                 <code>src/auth/jwt.ts</code>
               </div>
-              <p className="receipt-desc">AST modified: 2 functions rewritten, 1 export signature altered.</p>
+              <p className="receipt-desc">
+                AST modified: 2 functions rewritten, 1 export signature altered.
+              </p>
             </div>
 
             <div className="receipt-item">
@@ -70,7 +74,8 @@ export function RealityCheck() {
                 <code>tests/auth.test.ts</code>
               </div>
               <p className="receipt-desc">
-                Command <code>pnpm test</code> exited 0, but only ran <strong>1 of 14</strong> test suites due to an accidental test filter.
+                Command <code>pnpm test</code> exited 0, but only ran <strong>1 of 14</strong> test
+                suites due to an accidental test filter.
               </p>
             </div>
 
@@ -79,7 +84,9 @@ export function RealityCheck() {
                 <span className="tag-alert">CAPTURE GAP</span>
                 <code>.env.local</code>
               </div>
-              <p className="receipt-desc">Untracked file read attempt detected. Redacted by local privacy policy.</p>
+              <p className="receipt-desc">
+                Untracked file read attempt detected. Redacted by local privacy policy.
+              </p>
             </div>
 
             <div className="receipt-footer">

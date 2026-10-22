@@ -62,3 +62,7 @@ Visitors can scrub through or auto-play 4 distinct execution states:
   - `docs/design/screenshots/landing-desktop-light.png`
   - `docs/design/screenshots/landing-hero-rig.png`
   - `docs/design/screenshots/landing-mobile-dark.png`
+
+## Integration validation (2026-10-22)
+
+Reviewed with the complete MVP stack before merging. Repository formatting, stable SVG keys, decorative SVG accessibility and explicit button types were corrected in this PR. The combined tree passed typecheck, 108 unit/integration tests, 14 pilot checks and 23 browser flows. Lint exits successfully with warnings remaining in the illustration code. Browser tests passed while the development server logged router-initialization and aborted-request errors; those logs are not evidence of a clean browser console.

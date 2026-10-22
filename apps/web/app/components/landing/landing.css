@@ -177,8 +177,13 @@
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Main Container */
@@ -446,8 +451,15 @@
 }
 
 @keyframes laser-pulse {
-  0%, 100% { opacity: 0.6; r: 1.6; }
-  50% { opacity: 1; r: 2.2; }
+  0%,
+  100% {
+    opacity: 0.6;
+    r: 1.6;
+  }
+  50% {
+    opacity: 1;
+    r: 2.2;
+  }
 }
 
 .crt-hud-badge {
@@ -1038,9 +1050,15 @@
   border-radius: 50%;
 }
 
-.chrome-dot.red { background: #ff5f56; }
-.chrome-dot.yellow { background: #ffbd2e; }
-.chrome-dot.green { background: #27c93f; }
+.chrome-dot.red {
+  background: #ff5f56;
+}
+.chrome-dot.yellow {
+  background: #ffbd2e;
+}
+.chrome-dot.green {
+  background: #27c93f;
+}
 
 .chrome-url {
   color: #8b949e;
@@ -1391,9 +1409,15 @@
   border-radius: 50%;
 }
 
-.shell-bar .dot.r { background: #ff5f56; }
-.shell-bar .dot.y { background: #ffbd2e; }
-.shell-bar .dot.g { background: #27c93f; }
+.shell-bar .dot.r {
+  background: #ff5f56;
+}
+.shell-bar .dot.y {
+  background: #ffbd2e;
+}
+.shell-bar .dot.g {
+  background: #27c93f;
+}
 
 .shell-title {
   font-size: 11px;

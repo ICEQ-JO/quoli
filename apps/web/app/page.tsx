@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import Dashboard from "./dashboard";
 import { LandingPage } from "./components/landing/landing-page";
+import Dashboard from "./dashboard";
 import { validSession } from "./local";
 import { readLocation, reviewUrl } from "./review";
 

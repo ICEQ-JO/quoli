@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { LandingNav } from "./landing-nav";
-import { FlightRecorderRig } from "./flight-recorder-rig";
-import { RealityCheck } from "./reality-check";
-import { MechanicalPillars } from "./mechanical-pillars";
-import { WorkbenchExplorer } from "./workbench-explorer";
 import { ArchitectureSpecs } from "./architecture-specs";
+import { FlightRecorderRig } from "./flight-recorder-rig";
 import { LandingFooter } from "./landing-footer";
+import { LandingNav } from "./landing-nav";
+import { MechanicalPillars } from "./mechanical-pillars";
+import { RealityCheck } from "./reality-check";
+import { WorkbenchExplorer } from "./workbench-explorer";
 import "./landing.css";
 
 export function LandingPage() {
@@ -48,15 +48,17 @@ export function LandingPage() {
             </h1>
 
             <p className="hero-subtext">
-              Traceframe is the local-first audit engine for AI developers. It records every tool dispatch,
-              captures bounded AST diffs against real git baselines, and separates verified truth from conversational claims—with
-              zero cloud telemetry.
+              Traceframe is the local-first audit engine for AI developers. It records every tool
+              dispatch, captures bounded AST diffs against real git baselines, and separates
+              verified truth from conversational claims—with zero cloud telemetry.
             </p>
 
             <div className="hero-actions">
               <div className="terminal-quick-copy">
                 <span className="terminal-prefix">$</span>
-                <code className="terminal-cmd">curl -fsSL https://traceframe.dev/install.sh | sh</code>
+                <code className="terminal-cmd">
+                  curl -fsSL https://traceframe.dev/install.sh | sh
+                </code>
                 <button
                   type="button"
                   className="copy-btn"
