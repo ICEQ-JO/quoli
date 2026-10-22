@@ -5,6 +5,34 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { demoEvents } from "../../fixtures/demo";
 
+test("workspace stays mounted while idle and navigating between sessions", async ({ page }) => {
+  const reloads: string[] = [];
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await expect(page.locator(".work-session")).toHaveCount(3);
+  // Start after the intentional local-cookie connection redirects have completed.
+  page.on("request", (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame())
+      reloads.push(request.url());
+  });
+  await page.getByRole("textbox", { name: "Search sessions" }).fill("cache");
+  // A quiet interval is intentional: the reported HMR loop reset the document
+  // repeatedly even without a click or source edit.
+  await page.waitForTimeout(5000);
+  await expect(page.getByRole("textbox", { name: "Search sessions" })).toHaveValue("cache");
+  await page.getByRole("button", { name: "Handle an empty cache response", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: /^Activity/ }).click();
+  await expect(page.locator(".event-row").first()).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "All sessions", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Search sessions" })).toHaveValue("cache");
+  expect(reloads).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 test("session work list preserves filters and opens a focused review; the gap queue retains context", async ({
   page,
 }) => {

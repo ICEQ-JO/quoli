@@ -78,6 +78,8 @@ try {
     "apps/web/node_modules/next/dist/bin/next",
     "dev",
     "apps/web",
+    // Avoid the reproduced Turbopack HMR hash-mismatch reload loop.
+    "--webpack",
     "--hostname",
     "127.0.0.1",
     "--port",
