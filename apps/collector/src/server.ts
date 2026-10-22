@@ -7,6 +7,7 @@ import { credential, initializeCredential, runtime } from "@traceframe/storage/r
 import { demoEvents, demoPolicy } from "../../../fixtures/demo";
 import { demoSnapshots } from "../../../fixtures/repository";
 import { readChanges } from "./changes";
+import { readMap } from "./map";
 
 export function startCollector(
   port = runtime().collectorPort,
@@ -28,7 +29,8 @@ export function startCollector(
       windowStart = Date.now();
       requests = 0;
     }
-    if (++requests > 300) {
+    // A runaway local client is stopped, but the dashboard and its browser suite need headroom.
+    if (++requests > 600) {
       send(429, { error: "Local request limit; retry in a minute" });
       return;
     }
@@ -133,6 +135,27 @@ export function startCollector(
         const text = await body(req, res);
         if (text === null) return;
         const result = readChanges(store, project, session, JSON.parse(text));
+        send(result.status, result.data);
+        return;
+      }
+      const mapMatch = /^\/v1\/projects\/([^/]+)\/sessions\/([^/]+)\/map$/.exec(url.pathname);
+      if (req.method === "POST" && mapMatch) {
+        const project = safeId.parse(mapMatch[1]),
+          session = safeId.parse(mapMatch[2]);
+        if (
+          !store.project(project) ||
+          !store.sessions(project).some((item) => item.id === session)
+        ) {
+          send(404, { error: "Unknown project or session" });
+          return;
+        }
+        if (req.headers["content-type"] !== "application/json") {
+          send(415, { error: "Use application/json" });
+          return;
+        }
+        const text = await body(req, res);
+        if (text === null) return;
+        const result = readMap(store, project, session, JSON.parse(text));
         send(result.status, result.data);
         return;
       }

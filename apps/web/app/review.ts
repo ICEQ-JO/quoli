@@ -8,7 +8,8 @@ export type View =
   | "Timeline"
   | "Reported usage"
   | "Capture coverage"
-  | "File changes";
+  | "File changes"
+  | "Change map";
 export type ReviewLocation = {
   project: string;
   session: string;
@@ -31,6 +32,7 @@ const viewKeys: Record<View, string> = {
   "Session review": "session",
   "Review queue": "review",
   "File changes": "changes",
+  "Change map": "map",
   Overview: "overview",
   Sessions: "sessions",
   Timeline: "activity",

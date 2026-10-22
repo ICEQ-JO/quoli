@@ -21,6 +21,10 @@ export const PARSER_RULE = "fixture-test-counts/v1";
 export const FILE_BEFORE_RULE = "prior-file-reference/v1";
 export const FILE_AFTER_RULE = "post-check-file-reference/v1";
 export const WINDOW_RULE = "snapshot-window/v1";
+export const FILE_BEFORE_UNCERTAINTY =
+  "The path was referenced before the recorded check. Reference order does not establish that the check covered the file, or who changed it.";
+export const FILE_AFTER_UNCERTAINTY =
+  "The path was referenced after the recorded check, so the recorded outcome may not cover it.";
 
 const MAX_OUTPUT = 65_536;
 const MAX_FILES = 50;
@@ -238,7 +242,7 @@ export function verification(events: StoredEvent[]): VerificationView {
               file.eventId,
               id,
               [file.eventId, ...evidenceIds],
-              "The path was referenced before the recorded check. Reference order does not establish that the check covered the file, or who changed it.",
+              FILE_BEFORE_UNCERTAINTY,
             ),
           );
         else
@@ -248,7 +252,7 @@ export function verification(events: StoredEvent[]): VerificationView {
               id,
               file.eventId,
               [file.eventId, ...evidenceIds],
-              "The path was referenced after the recorded check, so the recorded outcome may not cover it.",
+              FILE_AFTER_UNCERTAINTY,
             ),
           );
       }

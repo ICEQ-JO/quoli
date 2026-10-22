@@ -7,7 +7,7 @@ The founder's approved direction is a familiar work-list/detail workflow informe
 - **Sessions** is home. Search titles, filter recorded end state, group by capture state or show one list, and order by source date or name. The list includes available observation/gap counts and source dates. An end event is not a feature-correctness verdict.
 - A row opens **Review**, a reading surface with captured developer requests, available repository captures, a derived tool reading view, recorded verification evidence, unresolved evidence and a property rail for source, policy and usage. Missing prompts and absent captures remain explicit.
 - **Needs review** is a queue of concrete recorded capture gaps across the loaded project. Selecting one preserves the queue while showing a human-readable captured fact, its uncertainty and supporting source. Raw JSON is disclosed on demand. It is not a failure/productivity score or a persisted reviewed/resolved workflow.
-- **Activity**, **Changes**, **Usage** and **Coverage** remain scoped session views. Source IDs and capture/file selections retain direct local links. Project overview remains a secondary destination.
+- **Activity**, **Changes**, **Map**, **Usage** and **Coverage** remain scoped session views. Source IDs and capture/file selections retain direct local links. Project overview remains a secondary destination.
 
 ## Navigation and inspection
 

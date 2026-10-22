@@ -1,6 +1,6 @@
 # 011: Explore a bounded map that opens diffs and check evidence
 
-Status: published as [GitHub #12](https://github.com/ICEQ-JO/quoli/issues/12); this file is the local reference. Milestone: M2.
+Status: published as [GitHub #12](https://github.com/ICEQ-JO/quoli/issues/12); this file is the local reference. Milestone: M2. Implemented on `feat/change-map`; see [change map](../change-map.md).
 
 ## User value
 
@@ -20,10 +20,10 @@ No custom diagram language, repository-wide call graph, symbol-level dependency 
 
 ## Acceptance criteria
 
-- [ ] Default view caps are 100 nodes/200 edges; omitted counts and bounded expansion are explicit.
-- [ ] Every edge opens its basis, rule and evidence; inferred edges if present are distinct and excluded from factual totals.
-- [ ] Selecting a file opens the captured diff; selecting a check opens its result and uncertainty.
-- [ ] Deterministic ordering, stable IDs and an equivalent keyboard/list workflow work for unsupported code languages.
+- [x] Default view caps are 100 nodes/200 edges; omitted counts and bounded expansion are explicit.
+- [x] Every edge opens its basis, rule and evidence; inferred edges if present are distinct and excluded from factual totals.
+- [x] Selecting a file opens the captured diff; selecting a check opens its result and uncertainty.
+- [x] Deterministic ordering, stable IDs and an equivalent keyboard/list workflow work for unsupported code languages.
 
 ## Test plan
 
