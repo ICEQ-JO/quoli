@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { demoEvents } from "../../fixtures/demo";
@@ -263,4 +265,67 @@ test("query errors recover with Retry without changing stored observations", asy
   await page.getByRole("button", { name: "Retry", exact: true }).click();
   await expect(page.locator(".event-row")).toHaveCount(8);
   await expect(page.locator(".error-notice")).not.toBeVisible();
+});
+
+test("explicitly registered local snapshots appear without synthetic claims or exposed roots", async ({
+  page,
+}) => {
+  const root = mkdtempSync(join(tmpdir(), "traceframe-browser-repo-"));
+  const dataDir = process.env.TRACEFRAME_E2E_DATA_DIR;
+  expect(dataDir).toBeTruthy();
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root, stdio: "pipe" });
+  const cli = (...args: string[]) =>
+    execFileSync(process.execPath, ["--import", "tsx", "scripts/repository.ts", ...args], {
+      cwd: process.cwd(),
+      env: { ...process.env, TRACEFRAME_DATA_DIR: dataDir },
+      encoding: "utf8",
+      timeout: 30000,
+    });
+  try {
+    git("init", "--quiet");
+    git("config", "user.name", "ICEQ-JO");
+    git("config", "user.email", "151853839+ICEQ-JO@users.noreply.github.com");
+    writeFileSync(join(root, "example.ts"), "export const value = 1;\n");
+    git("add", "example.ts");
+    git("commit", "--quiet", "-m", "Synthetic browser fixture");
+    const project = cli(
+      "register",
+      root,
+      "--name",
+      "Local repository example",
+      "--capture-code",
+    ).match(/repo_[a-f0-9]{32}/)?.[0];
+    expect(project).toBeTruthy();
+    cli("snapshot", project ?? "");
+    writeFileSync(join(root, "example.ts"), "export const value = 2;\n");
+    cli("snapshot", project ?? "");
+    await page.goto("/");
+    await page.getByRole("combobox", { name: "Project", exact: true }).selectOption(project ?? "");
+    await expect(page.locator(".workspace-badge")).toHaveText("Local workspace");
+    await expect(page.locator(".register-row")).toHaveCount(1);
+    await page.getByRole("button", { name: "Open a review", exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Repository review" })).toBeVisible();
+    await expect(page.locator(".demo-label")).toHaveText("Local repository");
+    await expect(page.locator(".event-row")).toHaveCount(2);
+    await expect(page.locator(".event-row").first()).toContainText("Repository baseline captured");
+    await page.getByRole("tab", { name: "Coverage", exact: true }).click();
+    await expect(page.getByText("2 snapshots captured")).toBeVisible();
+    await expect(page.getByText("Code capture enabled", { exact: true })).toBeVisible();
+    const response = await page.request.get(
+      `/api/data?resource=snapshots&project=${project}&session=manual-review`,
+    );
+    expect(response.status()).toBe(200);
+    const summaries = await response.json();
+    expect(summaries.total).toBe(2);
+    expect(summaries.snapshots[0].files).toBeUndefined();
+    expect(JSON.stringify(summaries)).not.toContain(root);
+    expect(JSON.stringify(summaries)).not.toContain("export const");
+    await page.reload();
+    await expect(page.getByRole("tab", { name: "Coverage", exact: true })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

@@ -2,7 +2,7 @@
 
 ## What is implemented
 
-The first usable increment runs a Next.js browser dashboard and one authenticated local collector. A SQLite event store persists three authored synthetic sessions. There is no live adapter, filesystem watcher, command runner, repository registration UI, cloud account, remote model, billing or outbound session upload.
+The first usable increment runs a Next.js browser dashboard and one authenticated local collector. A SQLite event store persists three authored synthetic sessions. A separate [repository capture CLI](repository-capture.md) supports explicit real-project registration and read-only baselines/checkpoints. There is no live adapter, filesystem watcher, command runner, repository registration UI, cloud account, remote model, billing or outbound session upload.
 
 The dashboard opens on a workspace overview with retained counts, a session register and an actionable recorded-gap queue. The Sessions library supports title search and capture-state filtering. Inside each session, the dashboard supports selection, cursor-paginated timeline browsing, session-wide text search and type filters, receipt/source ordering, refreshable local evidence links, an evidence inspector, explicit tool-ID relationships, reported token/cache metrics and capture limitations. The source locator and normalized record are inspectable. Source-reported success does not prove feature correctness; referenced file paths are not captured diffs.
 

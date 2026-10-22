@@ -4,7 +4,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./privacy": "./src/privacy.ts"
+    "./privacy": "./src/privacy.ts",
+    "./repository": "./src/repository.ts"
   },
   "dependencies": {
     "zod": "4.6.7"

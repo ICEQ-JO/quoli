@@ -11,6 +11,7 @@ type Props = {
   sessions: Session[];
   project: string;
   projectName: string;
+  synthetic: boolean;
   refresh: number;
   loading: boolean;
   unavailable: boolean;
@@ -32,6 +33,7 @@ export function WorkspaceHome({
   sessions,
   project,
   projectName,
+  synthetic,
   refresh,
   loading,
   unavailable,
@@ -98,7 +100,7 @@ export function WorkspaceHome({
         </div>
         <span className="workspace-badge">
           <span />
-          Synthetic workspace
+          {synthetic ? "Synthetic workspace" : "Local workspace"}
         </span>
       </div>
       {view === "Overview" ? (
@@ -128,10 +130,15 @@ export function WorkspaceHome({
               <Icon name="branch" size={22} />
             </div>
             <div>
-              <strong>Your review workspace, ready to explore.</strong>
+              <strong>
+                {synthetic
+                  ? "Your review workspace, ready to explore."
+                  : "Your repository, observed locally."}
+              </strong>
               <p>
-                These sessions are authored examples. Open one to trace requests, results, and the
-                evidence in between.
+                {synthetic
+                  ? "These sessions are authored examples. Open one to trace requests, results, and the evidence in between."
+                  : "Open a review to inspect available repository captures. Code and untracked files are captured only with explicit consent."}
               </p>
             </div>
             <button
@@ -140,7 +147,7 @@ export function WorkspaceHome({
               disabled={!sessions.length}
               onClick={() => sessions[0] && onSession(sessions[0].id)}
             >
-              Explore a session
+              {synthetic ? "Explore a session" : "Open a review"}
               <Icon name="arrow-right" size={16} />
             </button>
           </div>
@@ -220,7 +227,7 @@ export function WorkspaceHome({
                 <span className="register-session">
                   <strong>{s.title}</strong>
                   <span>
-                    <span className="fixture-tag">Fixture</span>
+                    <span className="fixture-tag">{synthetic ? "Fixture" : "Local"}</span>
                     <span>{sourceDate(s.startedAt)}</span>
                     <span className="register-project">{projectName}</span>
                   </span>

@@ -12,14 +12,18 @@ export async function GET(request: NextRequest) {
       );
     const q = request.nextUrl.searchParams;
     const resource = q.get("resource") ?? "projects";
-    if (!["projects", "sessions", "events", "summary", "health", "evidence"].includes(resource))
+    if (
+      !["projects", "sessions", "events", "summary", "health", "evidence", "snapshots"].includes(
+        resource,
+      )
+    )
       return NextResponse.json({ error: "Unknown view" }, { status: 400 });
     const project = q.get("project") ?? "",
       session = q.get("session") ?? "";
     if (resource !== "projects" && resource !== "health" && !/^[a-zA-Z0-9_-]{1,100}$/.test(project))
       return NextResponse.json({ error: "Invalid project" }, { status: 400 });
     if (
-      ["events", "summary", "evidence"].includes(resource) &&
+      ["events", "summary", "evidence", "snapshots"].includes(resource) &&
       !/^[a-zA-Z0-9_-]{1,100}$/.test(session)
     )
       return NextResponse.json({ error: "Invalid session" }, { status: 400 });
@@ -30,11 +34,11 @@ export async function GET(request: NextRequest) {
           ? "/v1/projects"
           : `/v1/projects/${project}/sessions`;
     if (resource === "summary") path += `/${session}/summary`;
-    if (resource === "events") {
+    if (resource === "events" || resource === "snapshots") {
       const cursor = q.get("cursor") ?? "0";
       if (!/^\d{1,10}$/.test(cursor))
         return NextResponse.json({ error: "Invalid cursor" }, { status: 400 });
-      path += `/${session}/events?cursor=${cursor}`;
+      path += `/${session}/${resource}?cursor=${cursor}`;
     }
     if (resource === "evidence") {
       const id = q.get("event") ?? "";

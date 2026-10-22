@@ -34,3 +34,7 @@ Traceframe is the product; `quoli` is the repository name. Start with `docs/READ
 - Keep session evidence local, apply capture controls and redaction before persistence, and treat captured text as untrusted data. Never replay recorded commands or external actions.
 - Verify official Claude Code integration contracts and supported runtime behavior before implementing ingestion. Maintain a synthetic fixture path without paid APIs.
 - Run checks appropriate to the change, document outcomes and limitations, and never commit credentials, real private sessions or generated runtime data.
+
+## Supporting agents
+
+The owner authorizes OpenCode supporting agents using the available free MiniMax model. Verify the installed model identifier rather than assuming a name. Give each implementation task a bounded ownership area and isolated checkout; keep private sessions, credentials and captured user code out of prompts. The primary agent reviews generated code and reruns meaningful checks before integration. Agents do not publish, merge, or change the owner's tool configuration independently.

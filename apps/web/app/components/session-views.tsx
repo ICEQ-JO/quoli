@@ -1,4 +1,4 @@
-import type { Session, UsageView } from "@traceframe/schema";
+import type { Project, Session, UsageView } from "@traceframe/schema";
 import { number } from "@traceframe/ui";
 import { Icon } from "./ui-icon";
 export function UsagePanel({
@@ -123,7 +123,15 @@ export function UsagePanel({
     </section>
   );
 }
-export function CoveragePanel({ session }: { session: Session | undefined }) {
+export function CoveragePanel({
+  session,
+  project,
+  snapshotCount = 0,
+}: {
+  session: Session | undefined;
+  project?: Project;
+  snapshotCount?: number;
+}) {
   const rows = [
     [
       "Session boundaries",
@@ -137,18 +145,24 @@ export function CoveragePanel({ session }: { session: Session | undefined }) {
     ],
     [
       "File changes",
-      "Snapshots not available yet",
+      snapshotCount ? `${snapshotCount} snapshots captured` : "No snapshots captured",
       "Referenced paths are not captured diffs or evidence of exclusive authorship.",
     ],
     [
       "Agent integration",
-      "Synthetic sources only",
+      project?.synthetic ? "Synthetic sources only" : "No live agent connected",
       "No real agent is connected. Live Claude Code capture remains upcoming.",
     ],
     [
       "Content policy",
-      "Synthetic content enabled",
-      "This fixed demo project retains authored fixtures. Real-project registration is not exposed.",
+      project?.synthetic
+        ? "Synthetic content enabled"
+        : project?.policy.code
+          ? "Code capture enabled"
+          : "Code capture disabled",
+      project?.synthetic
+        ? "This fixed demo project retains authored fixtures."
+        : "Repository registration controls code and untracked capture. Prompt and tool-output capture remain disabled for manual reviews.",
     ],
     [
       "Privacy",

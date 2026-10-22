@@ -4,6 +4,8 @@ Planning date: 2026-10-22. Status: a runnable synthetic local preview is impleme
 
 Traceframe answers: **“Show me what my coding agent did, what changed, and what remains unverified.”**
 
+See the [implementation checkpoint](implementation-progress.md) for delivered, in-progress and planned capabilities.
+
 To run and test the preview, start with [the local demo guide](local-demo.md) and [development/API reference](development.md).
 
 The current [session-review design reference](design/session-review.md) records UX behavior and its rationale. The [dashboard redesign review](design/redesign-review.md) includes screenshots, validation and the independent finish verdict. [Product context](../apps/web/PRODUCT.md) and the [visual system](../apps/web/DESIGN.md) guide future dashboard work.

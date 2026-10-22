@@ -73,6 +73,12 @@ importers:
         specifier: workspace:*
         version: link:../schema
 
+  packages/repository:
+    dependencies:
+      '@traceframe/schema':
+        specifier: workspace:*
+        version: link:../schema
+
   packages/schema:
     dependencies:
       zod:

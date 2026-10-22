@@ -43,6 +43,15 @@ export const defaultPolicy: CapturePolicy = {
 const toolName = z.enum(["Read", "Write", "Edit", "Bash", "Other"]);
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullable();
 export const payloadSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("repository_snapshot"),
+      snapshotId: safeId,
+      reason: z.enum(["baseline", "checkpoint"]),
+      state: z.enum(["observed", "racy"]),
+      dirty: z.boolean().nullable(),
+    })
+    .strict(),
   z.object({ kind: z.literal("session_start"), content: contentSchema }).strict(),
   z
     .object({ kind: z.literal("session_end"), reason: z.enum(["completed", "interrupted"]) })
@@ -96,7 +105,7 @@ export const eventSchema = z
     deliveryId: safeId,
     projectId: safeId,
     sessionId: safeId,
-    source: z.enum(["synthetic", "claude_hook", "claude_otel"]),
+    source: z.enum(["synthetic", "claude_hook", "claude_otel", "repository"]),
     adapterVersion: z.literal("0.1.0"),
     sourceLocator: z.string().max(200).nullable(),
     producerId: safeId,

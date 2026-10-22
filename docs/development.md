@@ -7,6 +7,7 @@
 - `packages/schema`: Zod contracts and conservative pre-persistence content policy.
 - `packages/storage`: Node 24 built-in `node:sqlite`, explicit SQL migration, transactional append and cursor reads.
 - `packages/analysis`: deterministic usage and tool-ID evidence rules.
+- `packages/repository`: bounded read-only Linux working-tree capture; explicit registration/capture via `pnpm repository`, with sanitized snapshots and atomic history markers.
 - `packages/ui`: shared display labels and number/time formatting.
 - `fixtures/demo.ts`: authored, versioned synthetic evidence; `fixtures/manifest.json` specifies expected usage and omissions.
 
@@ -32,6 +33,10 @@ pnpm demo
 `pnpm test` uses Node's test runner, disposable stores and a lifecycle startup/restart test. Browser tests use separate ports, a temporary synthetic store, a separate Next output directory and graceful cleanup. No Claude account is used. `pnpm build` creates `.next-build`, separate from `.next` development output. `pnpm format` formats source/config files; Markdown is maintained deliberately rather than rewritten automatically. CSS selector-specificity linting is disabled for the component stylesheet because the rule compares unrelated component selectors; other recommended checks remain enabled.
 
 `pnpm privacy:preview` shows how metadata-only policy filters a synthetic prompt. `pnpm privacy:preview --synthetic-content` displays explicitly enabled fixture content. Never pipe personal sessions into this command.
+
+## Repository capture
+
+See [local repository capture](repository-capture.md). `pnpm repository register PATH` defaults to metadata-only; code and untracked content each require an explicit flag. Snapshot observations commit with their event markers and persist dirty state as null when unavailable. `GET /v1/projects/:project/sessions/:session/snapshots?cursor=N` returns paginated metadata (50 records/page) with source event IDs and file/omission counts; it never returns registered roots or file bodies. This read route has the same authentication and project/session scoping as other evidence APIs. Browser access uses `resource=snapshots` through the protected local proxy.
 
 ## Dashboard structure
 
