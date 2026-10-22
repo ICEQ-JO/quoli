@@ -102,6 +102,18 @@ Every node and edge carries:
 
 **Truth boundary:** this is a constrained evidence scene format, not a general-purpose diagramming DSL. Mermaid or another external format may be an export, not the source of truth. No diagram may imply authorship, test coverage or correctness without evidence.
 
+### Pillar 7 — Architecture and policy guardrail (deferred)
+
+This pillar records a later direction proposed by the owner's friend. It is **not part of the initial paid pilot** and must not displace the evidence and understanding work above. Revisit it only after the earlier product has paying validation and a narrow buyer.
+
+**Customer outcome:** a team can gate agent-created changes on architecture and policy integrity before merge, with evidence explaining the decision.
+
+**Required capabilities:** a GitHub/GitLab app; a versioned architecture model of modules, dependencies, ownership boundaries, database schema and approved patterns; team rules-as-code; diff, dependency, schema, duplication and blast-radius analysis; agent provenance from Quoli; a pass/warn/block report with evidence and a machine-readable fix request; a technical-debt ledger with owner, reason, expiry and follow-up.
+
+**Truth boundary:** this is a **policy gate**, not a safety certification. Deterministic rules and recorded evidence make the decision; a model may explain or suggest, never gate. A PR with no agent provenance is still reviewable, but it must not be labeled agent-created. False positives are a product defect, not an acceptable cost.
+
+**Commercial boundary:** the buyer is a team, not an individual developer. This direction implies a hosted GitHub/GitLab control plane, webhooks, repository analysis and a much larger security and compliance surface. A self-hosted option may be required for privacy-sensitive customers.
+
 ## Commercial-readiness gates
 
 A good local tool is not automatically a good paid product. These gates are part of the vision, not an afterthought.
@@ -135,6 +147,7 @@ This is a sequencing proposal, not a delivery commitment.
 2. **Paid pilot:** GitHub read-only, Claude Code + OpenCode, subagent tree, declared decisions, cost dashboard, plugin/skill inventory, Story diagram, syntax-aware diff for a small language set, export, billing and signed updates.
 3. **Broaden:** GitLab/Bitbucket, Codex/Pi, more languages, shared read-only reviews, macOS maturity.
 4. **Team/enterprise:** hosted sync, roles, SSO, audit, retention policy and compliance work — only if customers require them.
+5. **Deferred guardrail:** the architecture and policy guardrail (Pillar 7). Do not start it until the evidence product has paying validation and the owner chooses a team buyer and cloud/self-hosted shape.
 
 ## Open decisions
 
@@ -149,6 +162,7 @@ These are not settled by this document. The owner decides them explicitly.
 | Launch platforms | Linux-only pilot vs Linux + macOS | Paying-developer expectations |
 | Pricing model | Subscription vs one-time license vs open-core | Distribution and support economics |
 | Diagram source of truth | Native scene schema vs external format | Provenance, export and rendering quality |
+| Guardrail timing and shape | Defer until paid evidence validation vs build as the primary team product | Focus, buyer, cloud/compliance burden and competitive risk |
 
 ## What this vision is not
 
@@ -156,3 +170,4 @@ These are not settled by this document. The owner decides them explicitly.
 - It is not a general LLM observability/APM platform, a code host, an autonomous agent, a correctness scorer or a hidden-reasoning extractor.
 - It is not permission to upload session evidence, prompts or code to a Quoli service.
 - It is not permission to call an estimate a bill, a derived grouping a fact, or a successful command a verified feature.
+- It is not a commitment to ship the deferred architecture guardrail in the initial paid product.
