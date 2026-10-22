@@ -62,6 +62,17 @@ function attributes(record: LogRecord): Record<string, string | number | boolean
   return result;
 }
 
+const TOOL_NAMES: Record<string, "Read" | "Write" | "Edit" | "Bash" | "Other"> = {
+  Read: "Read",
+  Write: "Write",
+  Edit: "Edit",
+  Bash: "Bash",
+};
+
+function toolNameOf(name: string): "Read" | "Write" | "Edit" | "Bash" | "Other" {
+  return TOOL_NAMES[name] ?? "Other";
+}
+
 function count(value: unknown): number | null {
   if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) return value;
   if (typeof value === "string" && /^\d+$/.test(value)) return Number(value);
@@ -94,8 +105,46 @@ export function otlpUsageEvents(body: OtlpBody, projectId: string): NormalizedEv
     for (const scope of resourceLog.scopeLogs ?? []) {
       for (const record of scope.logRecords ?? []) {
         const attrs = attributes(record);
-        if (attrs["event.name"] !== "api_request") continue;
+        const eventName = attrs["event.name"];
         const sessionId = attrs["session.id"];
+        if (eventName === "tool_result") {
+          const toolId = typeof attrs.tool_use_id === "string" ? attrs.tool_use_id : null;
+          if (typeof sessionId !== "string" || !toolId) continue;
+          const success = attrs.success === "true" || attrs.success === true;
+          const identity = [toolId, record.timeUnixNano, attrs["event.sequence"]];
+          events.push({
+            schemaVersion: 1,
+            id: id("otel", [sessionId, identity]),
+            deliveryId: id("deliver", [sessionId, identity]),
+            projectId,
+            sessionId,
+            source: "claude_otel",
+            adapterVersion: "0.1.0",
+            sourceLocator: `claude_otel:tool_result:${resource["service.version"] ?? "unknown"}`,
+            producerId: OTLP_RECEIVER_PRODUCER,
+            promptId: typeof attrs["prompt.id"] === "string" ? attrs["prompt.id"] : null,
+            toolId,
+            requestId: null,
+            sourceTime: timestamp(record.timeUnixNano ?? record.observedTimeUnixNano),
+            sourceSequence: count(attrs["event.sequence"]),
+            policyVersion: 1,
+            payload: {
+              kind: "tool_result",
+              toolName: typeof attrs.tool_name === "string" ? toolNameOf(attrs.tool_name) : "Other",
+              // Telemetry carries no tool content unless the content gates are enabled.
+              content: {
+                text: null,
+                state: "unavailable",
+                originalBytes: null,
+                categories: ["tool", "code"],
+              },
+              exitCode: null,
+              status: success ? "success" : "failure",
+            },
+          });
+          continue;
+        }
+        if (eventName !== "api_request") continue;
         if (typeof sessionId !== "string") continue;
         // A record without a request identity is kept with null counts, so the
         // usage view reports the gap instead of quietly losing it.

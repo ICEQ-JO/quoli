@@ -1,6 +1,6 @@
 # 016: Reconcile overlapping sources without counting activity twice
 
-Status: published as [GitHub #17](https://github.com/ICEQ-JO/quoli/issues/17); this file is the local reference. Milestone: M4.
+Status: published as [GitHub #17](https://github.com/ICEQ-JO/quoli/issues/17); this file is the local reference. Milestone: M4. Implemented on `feat/reconciliation`; see [source reconciliation](../source-reconciliation.md).
 
 ## User value
 
@@ -20,10 +20,10 @@ No text-similarity deduplication, timestamp-only factual joins or destructive hi
 
 ## Acceptance criteria
 
-- [ ] Matching tool/session IDs yield one logical tool with both evidence sources; retry receipts do not hide corroboration.
-- [ ] Request usage totals never add counters/status samples or duplicated request observations.
-- [ ] Missing/conflicting identifiers produce visible ambiguity and combined totals of null when overlap is unresolved.
-- [ ] Late evidence and producer restarts recompute versioned views deterministically; raw accepted history remains unchanged.
+- [x] Matching tool/session IDs yield one logical tool with both evidence sources; retry receipts do not hide corroboration.
+- [x] Request usage totals never add counters/status samples or duplicated request observations.
+- [x] Missing/conflicting identifiers produce visible ambiguity and combined totals of null when overlap is unresolved.
+- [x] Late evidence and producer restarts recompute versioned views deterministically; raw accepted history remains unchanged.
 
 ## Test plan
 

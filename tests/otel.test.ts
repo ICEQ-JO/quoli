@@ -81,7 +81,7 @@ test("reported request usage becomes one usage observation and drops personal at
 
 test("records that are not reported request usage are ignored", () => {
   const samples = claudeOtlpSamples().filter(
-    (sample) => sample.attributes["event.name"] !== "api_request",
+    (sample) => !["api_request", "tool_result"].includes(sample.attributes["event.name"] as string),
   );
   const body = {
     resourceLogs: [
@@ -103,6 +103,43 @@ test("records that are not reported request usage are ignored", () => {
     ],
   };
   assert.deepEqual(otlpUsageEvents(body, projectId), []);
+  // A reported tool result is kept as a separate source observation, without content.
+  const toolSample = claudeOtlpSamples().find(
+    (sample) => sample.attributes["event.name"] === "tool_result",
+  );
+  assert.ok(toolSample);
+  const toolBody = {
+    resourceLogs: [
+      {
+        scopeLogs: [
+          {
+            logRecords: [
+              {
+                timeUnixNano: "1760000000000000000",
+                body: { stringValue: toolSample.body },
+                attributes: Object.entries(toolSample.attributes).map(([key, value]) => ({
+                  key,
+                  value:
+                    typeof value === "number"
+                      ? { intValue: value }
+                      : { stringValue: String(value) },
+                })),
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+  const toolEvents = otlpUsageEvents(toolBody, projectId);
+  assert.equal(toolEvents.length, 1);
+  assert.equal(toolEvents[0].toolId, "toolu_synthetic_aaaaaaaaaaaa");
+  assert.equal(toolEvents[0].payload.kind, "tool_result");
+  if (toolEvents[0].payload.kind === "tool_result") {
+    assert.equal(toolEvents[0].payload.exitCode, null);
+    assert.equal(toolEvents[0].payload.content.text, null);
+    assert.equal(toolEvents[0].payload.content.state, "unavailable");
+  }
   // A record without a request identity is kept with null counts so the gap stays visible.
   const unidentified = otlpUsageEvents(
     otlpBody({

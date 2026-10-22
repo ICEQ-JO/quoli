@@ -9,7 +9,8 @@
     "./changes": "./src/changes.ts",
     "./checks": "./src/checks.ts",
     "./map": "./src/map.ts",
-    "./lifecycle": "./src/lifecycle.ts"
+    "./lifecycle": "./src/lifecycle.ts",
+    "./reconcile": "./src/reconcile.ts"
   },
   "dependencies": {
     "zod": "4.6.7"
