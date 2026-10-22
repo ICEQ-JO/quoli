@@ -1,6 +1,6 @@
 # 014: Collect documented Claude Code hooks through a passive bridge
 
-Status: published as [GitHub #15](https://github.com/ICEQ-JO/quoli/issues/15); this file is the local reference. Milestone: M4.
+Status: published as [GitHub #15](https://github.com/ICEQ-JO/quoli/issues/15); this file is the local reference. Milestone: M4. Implemented on `feat/hook-bridge`; see the [hook bridge](../hook-bridge.md).
 
 ## User value
 
@@ -20,10 +20,10 @@ No general installer, transcript parsing, permissions decisions, model context i
 
 ## Acceptance criteria
 
-- [ ] Verified fixture payloads normalize with provenance; unknown optional fields are ignored safely and unsupported values stay null.
-- [ ] Bridge emits no decisions or context, preserves normal hook behavior, has bounded latency and fails open with visible capture-loss health.
-- [ ] Retry IDs survive collector outages; raw content is redacted before spool and current policy is rechecked on delivery.
-- [ ] Missing start/end, denied or interrupted tool observations, parallel calls and subagent scope limitations are visible.
+- [x] Verified fixture payloads normalize with provenance; unknown optional fields are ignored safely and unsupported values stay null.
+- [x] Bridge emits no decisions or context, preserves normal hook behavior, has bounded latency and fails open with visible capture-loss health.
+- [x] Retry IDs survive collector outages; raw content is redacted before spool and current policy is rechecked on delivery.
+- [x] Missing start/end, denied or interrupted tool observations, parallel calls and subagent scope limitations are visible.
 
 ## Test plan
 

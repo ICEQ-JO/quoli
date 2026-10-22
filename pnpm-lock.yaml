@@ -24,6 +24,15 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
+  apps/bridge:
+    dependencies:
+      '@traceframe/schema':
+        specifier: workspace:*
+        version: link:../../packages/schema
+      '@traceframe/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
+
   apps/collector:
     dependencies:
       '@traceframe/analysis':

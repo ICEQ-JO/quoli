@@ -34,6 +34,8 @@ pnpm demo
 
 `pnpm settings` controls capture policy, pause state, retention and project deletion. See [capture controls](lifecycle-controls.md).
 
+`pnpm bridge install PROJECT_PATH PROJECT_ID` adds the passive Claude Code hook entries to that project's `.claude/settings.json` and `pnpm bridge uninstall PROJECT_PATH` removes only those entries. `pnpm bridge drain` retries observations that are waiting in the local retry spool. See the [hook bridge](hook-bridge.md).
+
 `pnpm privacy:preview` shows how metadata-only policy filters a synthetic prompt. `pnpm privacy:preview --synthetic-content` displays explicitly enabled fixture content. Never pipe personal sessions into this command.
 
 ## Repository capture
@@ -52,7 +54,7 @@ Collector base: `http://127.0.0.1:4318`. All collector routes require `Authoriza
 
 | Method/path | Response / behavior |
 | --- | --- |
-| `GET /health` | Metadata-only readiness, rejection and write-failure counters. |
+| `GET /health` | Metadata-only readiness, rejection and write-failure counters, plus the number of observations waiting in the bridge retry spool. |
 | `POST /v1/demo` | No body. Registers only the fixed synthetic project with its explicit fixture policy, then runs the normal atomic append path. Replays report duplicate counts. |
 | `POST /v1/ingest` | `application/json`, body `{events: NormalizedEvent[]}`. Strict runtime validation, 1 MiB body/100-event batch limits, then project-policy filtering and one SQLite transaction. Unknown projects and non-synthetic sources for the demo project are rejected. |
 | `GET /v1/projects` | Up to 50 registered projects and their capture policies. |

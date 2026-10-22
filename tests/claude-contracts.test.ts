@@ -66,7 +66,7 @@ test("the telemetry fixtures expose the three joinable identifiers and no person
   }
   const request = byEvent.get("api_request");
   assert.ok(request);
-  assert.equal(request.attributes["request_id"], "req_synthetic_0001");
+  assert.equal(request.attributes.request_id, "req_synthetic_0001");
   assert.equal(typeof request.attributes.input_tokens, "number");
   assert.equal(typeof request.attributes.output_tokens, "number");
   // Prompt and answer text stay redacted while the content gates are off.
