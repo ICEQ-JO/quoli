@@ -38,6 +38,10 @@ The evidence inspector puts captured content first and tucks source metadata int
 
 On mobile, use the top **Overview** / **Sessions** navigation. Inside a review, switch sessions with the **Session** select. Select an activity to open **Evidence details**; the close button or Escape dismisses it and restores focus. Direct evidence links open this detail view automatically. Desktop tabs support Left/Right arrows and activity rows support Up/Down navigation.
 
+## Capture controls
+
+**Settings** in the workspace sidebar controls what is captured, whether capture runs, how long evidence is kept and how to delete it. `pnpm settings` offers the same controls for the command line. See [capture controls](lifecycle-controls.md).
+
 ## Storage and credentials
 
 Linux defaults to `$XDG_DATA_HOME/traceframe/demo`, or `~/.local/share/traceframe/demo`. macOS defaults to `~/Library/Application Support/traceframe/demo`. `TRACEFRAME_DATA_DIR` overrides this directory; it must be private and outside the observed repository. The directory is mode 0700, and the database/credential are mode 0600. SQLite WAL/SHM files may exist while running.

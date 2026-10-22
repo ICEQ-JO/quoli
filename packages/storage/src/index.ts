@@ -48,6 +48,9 @@ export class Store {
       this.db.exec(
         readFileSync(new URL("../migrations/002-repository.sql", import.meta.url), "utf8"),
       );
+      this.db.exec(
+        readFileSync(new URL("../migrations/003-lifecycle.sql", import.meta.url), "utf8"),
+      );
     } catch (error) {
       if (this.db.isTransaction) this.db.exec("ROLLBACK");
       this.db.close();
@@ -64,6 +67,220 @@ export class Store {
     this.db
       .prepare("INSERT OR IGNORE INTO projects VALUES(?,?,?,?)")
       .run(id, redact(name).slice(0, 100), Number(synthetic), JSON.stringify(clean));
+    // Explicit registration is an owner action: it clears a previous deletion
+    // and resumes capture for the new registration.
+    this.db
+      .prepare(
+        "INSERT INTO project_lifecycle(project_id,paused,retention_days,purged_at,epoch) VALUES(?,0,NULL,NULL,1) ON CONFLICT(project_id) DO UPDATE SET purged_at=NULL,paused=0,epoch=epoch+1",
+      )
+      .run(id);
+  }
+  /** Lifecycle state for a project, including the deletion tombstone. */
+  lifecycle(projectId: string): {
+    paused: boolean;
+    retentionDays: number | null;
+    purgedAt: string | null;
+    epoch: number;
+  } {
+    const row = this.db
+      .prepare(
+        "SELECT paused,retention_days,purged_at,epoch FROM project_lifecycle WHERE project_id=?",
+      )
+      .get(projectId);
+    if (!row) return { paused: false, retentionDays: null, purgedAt: null, epoch: 1 };
+    return {
+      paused: Boolean(row.paused),
+      retentionDays: row.retention_days === null ? null : Number(row.retention_days),
+      purgedAt: row.purged_at === null ? null : String(row.purged_at),
+      epoch: Number(row.epoch),
+    };
+  }
+  /** Capture controls, retention window and storage usage for one project. */
+  settings(projectId: string): {
+    project: Project;
+    paused: boolean;
+    retentionDays: number | null;
+    purgedAt: string | null;
+    epoch: number;
+    usage: { events: number; snapshots: number; artifacts: number; bytes: number };
+  } {
+    const project = this.project(projectId);
+    if (!project) throw new Error("Project not registered");
+    const lifecycle = this.lifecycle(projectId);
+    return { project, ...lifecycle, usage: this.usage(projectId) };
+  }
+  usage(projectId: string): {
+    events: number;
+    snapshots: number;
+    artifacts: number;
+    bytes: number;
+  } {
+    const row = this.db
+      .prepare(
+        `SELECT
+        (SELECT count(*) FROM events WHERE project_id=?) AS events,
+        (SELECT count(*) FROM snapshots WHERE project_id=?) AS snapshots,
+        (SELECT count(*) FROM artifacts WHERE project_id=?) AS artifacts,
+        (SELECT coalesce(sum(length(CAST(body AS BLOB))),0) FROM events WHERE project_id=?) +
+        (SELECT coalesce(sum(length(CAST(body AS BLOB))),0) FROM snapshots WHERE project_id=?) +
+        (SELECT coalesce(sum(length(CAST(body AS BLOB))),0) FROM artifacts WHERE project_id=?) AS bytes`,
+      )
+      .get(projectId, projectId, projectId, projectId, projectId, projectId);
+    return {
+      events: Number(row?.events ?? 0),
+      snapshots: Number(row?.snapshots ?? 0),
+      artifacts: Number(row?.artifacts ?? 0),
+      bytes: Number(row?.bytes ?? 0),
+    };
+  }
+  /**
+   * Applies a capture policy, pause or retention window. New content is
+   * sanitized under the updated policy before it is persisted.
+   */
+  updateSettings(
+    projectId: string,
+    update: {
+      policy?: Partial<CapturePolicy>;
+      paused?: boolean;
+      retentionDays?: number | null;
+    },
+  ): void {
+    const project = this.project(projectId);
+    if (!project) throw new Error("Project not registered");
+    const policy = update.policy
+      ? policySchema.parse({
+          ...project.policy,
+          ...update.policy,
+          excludedPaths: update.policy.excludedPaths ?? project.policy.excludedPaths,
+        })
+      : project.policy;
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      this.db
+        .prepare("UPDATE projects SET policy=? WHERE id=?")
+        .run(JSON.stringify(policy), projectId);
+      if (update.paused !== undefined)
+        this.db
+          .prepare(
+            "INSERT INTO project_lifecycle(project_id,paused,retention_days,purged_at,epoch) VALUES(?,?,NULL,NULL,1) ON CONFLICT(project_id) DO UPDATE SET paused=excluded.paused",
+          )
+          .run(projectId, Number(update.paused));
+      if (update.retentionDays !== undefined)
+        this.db
+          .prepare(
+            "INSERT INTO project_lifecycle(project_id,paused,retention_days,purged_at,epoch) VALUES(?,0,?,NULL,1) ON CONFLICT(project_id) DO UPDATE SET retention_days=excluded.retention_days",
+          )
+          .run(projectId, update.retentionDays);
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+    if (update.retentionDays !== undefined) this.applyRetention(projectId);
+  }
+  /** Removes data older than the project's retention window. */
+  applyRetention(
+    projectId: string,
+    now = Date.now(),
+  ): {
+    events: number;
+    snapshots: number;
+    artifacts: number;
+    bytes: number;
+  } {
+    const lifecycle = this.lifecycle(projectId);
+    if (lifecycle.retentionDays === null) return this.usage(projectId);
+    const cutoff = new Date(now - lifecycle.retentionDays * 86_400_000).toISOString();
+    const before = this.usage(projectId);
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      this.dropImmutability();
+      this.db
+        .prepare("DELETE FROM snapshots WHERE project_id=? AND json_extract(body,'$.capturedAt')<?")
+        .run(projectId, cutoff);
+      this.db
+        .prepare("DELETE FROM events WHERE project_id=? AND received_at<?")
+        .run(projectId, cutoff);
+      this.restoreImmutability();
+      this.db.exec("COMMIT");
+      const after = this.usage(projectId);
+      return {
+        events: before.events - after.events,
+        snapshots: before.snapshots - after.snapshots,
+        artifacts: 0,
+        bytes: before.bytes - after.bytes,
+      };
+    } catch (error) {
+      try {
+        this.restoreImmutability();
+      } catch {}
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+  /**
+   * Removes every retained record of one project and leaves a tombstone that
+   * blocks stale producers and retries. Idempotent after an interruption.
+   */
+  purgeProject(projectId: string): {
+    removed: { events: number; snapshots: number; artifacts: number; bytes: number };
+    purgedAt: string;
+    epoch: number;
+    checkpointed: boolean;
+  } {
+    const lifecycle = this.lifecycle(projectId);
+    const purgedAt = lifecycle.purgedAt ?? new Date().toISOString();
+    const before = this.usage(projectId);
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      this.dropImmutability();
+      this.db.prepare("DELETE FROM snapshots WHERE project_id=?").run(projectId);
+      this.db.prepare("DELETE FROM artifacts WHERE project_id=?").run(projectId);
+      this.db.prepare("DELETE FROM events WHERE project_id=?").run(projectId);
+      this.db.prepare("DELETE FROM repositories WHERE project_id=?").run(projectId);
+      this.db.prepare("DELETE FROM projects WHERE id=?").run(projectId);
+      this.db
+        .prepare(
+          "INSERT INTO project_lifecycle(project_id,paused,retention_days,purged_at,epoch) VALUES(?,1,NULL,?,?) ON CONFLICT(project_id) DO UPDATE SET purged_at=excluded.purged_at,epoch=project_lifecycle.epoch+1,paused=1",
+        )
+        .run(projectId, purgedAt, lifecycle.epoch + 1);
+      this.restoreImmutability();
+      this.db.exec("COMMIT");
+    } catch (error) {
+      try {
+        this.restoreImmutability();
+      } catch {}
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+    // Truncate the write-ahead log so removed content does not stay in the WAL file.
+    let checkpointed = false;
+    try {
+      this.db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+      checkpointed = true;
+    } catch {}
+    const after = this.usage(projectId);
+    return {
+      removed: {
+        events: before.events - after.events,
+        snapshots: before.snapshots - after.snapshots,
+        artifacts: before.artifacts - after.artifacts,
+        bytes: before.bytes - after.bytes,
+      },
+      purgedAt,
+      epoch: lifecycle.epoch + 1,
+      checkpointed,
+    };
+  }
+  private dropImmutability(): void {
+    this.db.exec(
+      "DROP TRIGGER IF EXISTS immutable_events_update; DROP TRIGGER IF EXISTS immutable_events_delete; DROP TRIGGER IF EXISTS immutable_snapshots_update; DROP TRIGGER IF EXISTS immutable_snapshots_delete;",
+    );
+  }
+  private restoreImmutability(): void {
+    this.db.exec(
+      "CREATE TRIGGER IF NOT EXISTS immutable_events_update BEFORE UPDATE ON events BEGIN SELECT RAISE(ABORT,'append-only events'); END; CREATE TRIGGER IF NOT EXISTS immutable_events_delete BEFORE DELETE ON events BEGIN SELECT RAISE(ABORT,'append-only events'); END; CREATE TRIGGER IF NOT EXISTS immutable_snapshots_update BEFORE UPDATE ON snapshots BEGIN SELECT RAISE(ABORT,'append-only snapshots'); END; CREATE TRIGGER IF NOT EXISTS immutable_snapshots_delete BEFORE DELETE ON snapshots BEGIN SELECT RAISE(ABORT,'append-only snapshots'); END;",
+    );
   }
   projects(): Project[] {
     return this.db
@@ -86,6 +303,10 @@ export class Store {
     if (ownTransaction) this.db.exec("BEGIN IMMEDIATE");
     try {
       for (const raw of events) {
+        const lifecycle = this.lifecycle(raw.projectId);
+        // A deleted project stays deleted for stale producers and retries.
+        if (lifecycle.purgedAt) throw new Error("Project evidence was deleted");
+        if (lifecycle.paused) throw new Error("Capture is paused for this project");
         const project = this.project(raw.projectId);
         if (!project) throw new Error("Project not registered");
         if (project.synthetic && raw.source !== "synthetic")

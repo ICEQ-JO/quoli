@@ -1,6 +1,6 @@
 # 012: Control capture and delete a project completely from Traceframe
 
-Status: published as [GitHub #13](https://github.com/ICEQ-JO/quoli/issues/13); this file is the local reference. Milestone: M3.
+Status: published as [GitHub #13](https://github.com/ICEQ-JO/quoli/issues/13); this file is the local reference. Milestone: M3. Implemented on `feat/lifecycle-controls`; see [capture controls](../lifecycle-controls.md).
 
 ## User value
 
@@ -20,10 +20,10 @@ No promise of secure physical erasure, deletion of Claude-owned originals or aut
 
 ## Acceptance criteria
 
-- [ ] Policy changes apply before new persistence, including already queued sanitized data rechecked under current policy; historical data is retained or explicitly purged as selected.
-- [ ] Retention removes expired data and invalidates dependent evidence without dangling factual claims.
-- [ ] Deletion blocks stale producers and in-flight retries, clears project data and WAL recoverably, and remains idempotent after interruption.
-- [ ] UI states clearly what is removed, what source files/backups remain outside Traceframe and when storage/capture is stopped.
+- [x] Policy changes apply before new persistence, including already queued sanitized data rechecked under current policy; historical data is retained or explicitly purged as selected.
+- [x] Retention removes expired data and invalidates dependent evidence without dangling factual claims.
+- [x] Deletion blocks stale producers and in-flight retries, clears project data and WAL recoverably, and remains idempotent after interruption.
+- [x] UI states clearly what is removed, what source files/backups remain outside Traceframe and when storage/capture is stopped.
 
 ## Test plan
 

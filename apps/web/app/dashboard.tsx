@@ -19,6 +19,7 @@ import { ReviewQueue } from "./components/review-queue";
 import { SessionBrief } from "./components/session-brief";
 import { type SessionFilters, SessionIndex } from "./components/session-index";
 import { CoveragePanel, UsagePanel } from "./components/session-views";
+import { SettingsView } from "./components/settings-view";
 import { Icon } from "./components/ui-icon";
 import { WorkspaceHome } from "./components/workspace-home";
 import {
@@ -119,7 +120,8 @@ export default function Dashboard() {
     rowRefs = useRef(new Map<string, HTMLButtonElement>()),
     copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { project, session, view, event: eventId } = location;
-  const isWorkspace = view === "Overview" || view === "Sessions" || view === "Review queue";
+  const isWorkspace =
+    view === "Overview" || view === "Sessions" || view === "Review queue" || view === "Settings";
   useEffect(() => {
     try {
       const saved = localStorage.getItem("traceframe-theme");
@@ -481,6 +483,15 @@ export default function Dashboard() {
           </button>
           <button
             type="button"
+            className="settings-nav"
+            aria-current={view === "Settings" ? "page" : undefined}
+            onClick={() => navigate({ ...location, view: "Settings", event: "" })}
+          >
+            <Icon name="sliders" />
+            Settings
+          </button>
+          <button
+            type="button"
             aria-current={view === "Overview" ? "page" : undefined}
             onClick={() => navigate({ ...location, view: "Overview", event: "" })}
           >
@@ -517,7 +528,9 @@ export default function Dashboard() {
                   ? "Sessions"
                   : view === "Review queue"
                     ? "Needs review"
-                    : (current?.title ?? "Session review")}
+                    : view === "Settings"
+                      ? "Settings"
+                      : (current?.title ?? "Session review")}
             </strong>
           </div>
           <div className="toolbar-right">
@@ -604,6 +617,15 @@ export default function Dashboard() {
                     } else navigate(next);
                   }}
                   onSession={chooseSession}
+                />
+              )}
+              {view === "Settings" && (
+                <SettingsView
+                  key={project}
+                  project={project}
+                  projectName={projectName}
+                  refresh={refresh}
+                  onSessions={() => navigate({ ...location, view: "Sessions", event: "" })}
                 />
               )}
               {view === "Overview" && (

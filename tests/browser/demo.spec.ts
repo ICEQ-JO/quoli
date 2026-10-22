@@ -676,3 +676,40 @@ test("the change map joins captured files to recorded checks and opens their evi
   await expect(page).toHaveURL(/view=activity.*event=/);
   await expect(page.locator(".desktop-inspector")).toContainText("Supporting observations");
 });
+
+test("project settings control capture and retention and state what deletion removes", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
+    .click();
+  await expect(page.getByRole("heading", { name: "Project settings", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Capture policy", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Pause capture" }).click();
+  await expect(page.getByText("paused", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Resume capture" }).click();
+  await expect(page.getByText("running", { exact: true })).toBeVisible();
+  await page.getByRole("combobox", { name: "Keep evidence for" }).selectOption("30");
+  await expect(
+    page.locator(".settings-section-heading").filter({ hasText: "30 days" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Delete retained evidence" }).click();
+  await expect(page.getByText(/does not touch/)).toBeVisible();
+  await expect(page.getByText(/agent's own transcripts/)).toBeVisible();
+  await page.getByRole("button", { name: "Keep the evidence" }).click();
+  await expect(page.getByRole("button", { name: "Delete retained evidence" })).toBeVisible();
+});
+
+test("deleting a project stops capture and reports what was removed", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Delete retained evidence" }).click();
+  await page.getByRole("button", { name: "Delete this project's evidence" }).click();
+  await expect(page.getByText("Project evidence deleted")).toBeVisible();
+  await expect(page.getByText(/Capture and storage for this project are stopped/)).toBeVisible();
+});
