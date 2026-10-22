@@ -5,7 +5,7 @@ The founder's approved direction is a familiar work-list/detail workflow informe
 ## Main tasks
 
 - **Sessions** is home. Search titles, filter recorded end state, group by capture state or show one list, and order by source date or name. The list includes available observation/gap counts and source dates. An end event is not a feature-correctness verdict.
-- A row opens **Review**, a reading surface with captured developer requests, available repository captures, a derived tool reading view, unresolved evidence and a property rail for source, policy and usage. Missing prompts and absent captures remain explicit.
+- A row opens **Review**, a reading surface with captured developer requests, available repository captures, a derived tool reading view, recorded verification evidence, unresolved evidence and a property rail for source, policy and usage. Missing prompts and absent captures remain explicit.
 - **Needs review** is a queue of concrete recorded capture gaps across the loaded project. Selecting one preserves the queue while showing a human-readable captured fact, its uncertainty and supporting source. Raw JSON is disclosed on demand. It is not a failure/productivity score or a persisted reviewed/resolved workflow.
 - **Activity**, **Changes**, **Usage** and **Coverage** remain scoped session views. Source IDs and capture/file selections retain direct local links. Project overview remains a secondary destination.
 
@@ -24,6 +24,8 @@ The reading view does not generate a narrative, access hidden reasoning or infer
 The register and count query share a 50-session bound. The count query returns grouped event kinds without any captured body. Queue reads are limited to four concurrent session requests, initially eight gaps per session, with per-session paging and a 200-record display cap. Failed count/source reads show incomplete/unknown states and retry controls, never an all-clear verdict. The session document pages prompts/tools eight records at a time and caps those display collections at 200; Activity remains the path to further retained records. Captures remain summary-only until the user opens Changes. No new raw session cache or upload path was introduced.
 
 Unknown dirty/usage values remain unknown. Baseline/checkpoint count alone does not establish a code change; the Changes projection handles that comparison. Captured content renders as inert React text, including the new request reading surface.
+
+The verification section of the review document follows the same reading rules: it shows recorded commands, independent exit-code and count facts, and an explicit uncertainty. See [verification evidence](../verification-evidence.md). It adds no claim that a feature works, that a check covered a file, or that no other verification happened.
 
 ## Appearance and validation
 

@@ -1,15 +1,25 @@
 "use client";
 import type { EventPage, Project, Session, StoredEvent } from "@traceframe/schema";
+import type { CheckState, VerificationView } from "@traceframe/schema/checks";
 import type { SnapshotPage } from "@traceframe/schema/repository";
 import { number } from "@traceframe/ui";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { eventTitle, preview, type View } from "../review";
 import { Icon } from "./ui-icon";
 import { eventRead, localRead, type ReviewSummary, sourceDate } from "./workspace-data";
+
+const checkStateLabel: Record<CheckState, string> = {
+  passed: "Recorded pass",
+  failed: "Recorded failure",
+  unknown_output: "Counts unknown",
+  missing_result: "Result missing",
+};
+
 export function SessionBrief({
   project,
   session,
   summary,
+  verification,
   refresh,
   onEvidence,
   onView,
@@ -24,6 +34,7 @@ export function SessionBrief({
   project: Project | undefined;
   session: Session | undefined;
   summary: ReviewSummary | null;
+  verification: VerificationView | null;
   refresh: number;
   onEvidence: (id: string) => void;
   onView: (view: View) => void;
@@ -356,6 +367,70 @@ export function SessionBrief({
               <span>200-record display limit. Open All activity for the remaining records.</span>
             )}
           </div>
+        </section>
+        <section className="brief-section">
+          <div className="brief-section-heading">
+            <h2>Verification evidence</h2>
+            <span>{verification?.checks.length ?? 0} recorded checks</span>
+          </div>
+          <p className="section-context">
+            Recorded commands, results and parsed counts. A recorded check does not establish that
+            the feature works.
+          </p>
+          {!verification?.checks.length ? (
+            <p className="document-muted">
+              No command result is recorded for this session. That is not evidence that no testing
+              happened.
+            </p>
+          ) : (
+            <div className="check-list">
+              {verification.checks.map((check) => (
+                <article className="check-row" key={check.id}>
+                  <div className="check-head">
+                    <span className="check-command">
+                      {check.command ?? "[Command content disabled]"}
+                    </span>
+                    <span className={`check-state ${check.state}`}>
+                      {checkStateLabel[check.state]}
+                    </span>
+                  </div>
+                  <div className="check-facts">
+                    <span>Result {check.resultObserved ? "recorded" : "missing"}</span>
+                    <span>Exit {check.exitCode ?? "—"}</span>
+                    <span>Passed {check.counts.passed ?? "—"}</span>
+                    <span>Failed {check.counts.failed ?? "—"}</span>
+                  </div>
+                  {check.files.length > 0 && (
+                    <div className="check-files">
+                      {check.files.map((file) => (
+                        <span className="check-file" key={`${file.eventId}-${file.position}`}>
+                          <Icon name="file" size={12} />
+                          {file.path}
+                          <span>
+                            {file.position === "before" ? "referenced before" : "referenced after"}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="check-note">{check.uncertainty}</p>
+                  <details className="check-rule">
+                    <summary>Rule and supporting observations</summary>
+                    <code>{check.rule}</code>
+                    <p>Supporting observations: {check.evidenceIds.join(", ")}</p>
+                  </details>
+                  <button
+                    className="source-action"
+                    type="button"
+                    onClick={() => onEvidence(check.id)}
+                  >
+                    <Icon name="link" size={13} />
+                    Recorded result
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
         <section className="brief-section">
           <div className="brief-section-heading">

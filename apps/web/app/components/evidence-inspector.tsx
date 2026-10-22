@@ -131,7 +131,11 @@ export function EvidenceInspector({
         {links.length ? (
           links.map((r) => (
             <div key={r.id} className="evidence-link">
-              <span className="basis derived">Derived · explicit ID match</span>
+              <span className={`basis ${r.basis}`}>
+                {r.basis === "recorded"
+                  ? "Recorded · explicit ID match"
+                  : "Derived · explicit ID match"}
+              </span>
               <div className="evidence-route">
                 <code>{r.subjectId}</code>
                 <span>

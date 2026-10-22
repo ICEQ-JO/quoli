@@ -9,6 +9,7 @@ import type {
   StoredEvent,
   UsageView,
 } from "@traceframe/schema";
+import type { VerificationView } from "@traceframe/schema/checks";
 import { clock, number } from "@traceframe/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChangesView } from "./components/changes-view";
@@ -34,6 +35,7 @@ import {
 type Summary = {
   usage: UsageView;
   relationships: Relationship[];
+  verification: VerificationView;
   kindCounts: Record<string, number>;
 };
 const views: View[] = [
@@ -779,6 +781,7 @@ export default function Dashboard() {
                     project={currentProject}
                     session={current}
                     summary={summary}
+                    verification={summary?.verification ?? null}
                     refresh={refresh}
                     onEvidence={openEvidence}
                     onView={tabs}

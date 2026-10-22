@@ -4524,6 +4524,94 @@ h1 {
   margin-top: 5px;
   line-height: 1.7;
 }
+.check-list {
+  display: flex;
+  flex-direction: column;
+}
+.check-row {
+  padding: 14px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.check-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.check-command {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.check-state {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.check-state.failed {
+  color: var(--negative);
+  border-color: var(--negative);
+}
+.check-state.passed {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.check-state.missing_result {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+.check-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.check-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+}
+.check-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.check-file > span {
+  color: var(--subtle);
+}
+.check-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-top: 9px;
+  max-width: 72ch;
+}
+.check-rule {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.check-rule summary {
+  cursor: pointer;
+}
+.check-rule code {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.check-rule p {
+  margin-top: 4px;
+}
 .session-properties {
   border-left: 1px solid var(--line);
   padding-left: 24px;

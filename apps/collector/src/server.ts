@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { relationships, usage } from "@traceframe/analysis";
+import { relationships, usage, verification } from "@traceframe/analysis";
 import { batchSchema, eventQuerySchema, MAX_BODY, safeId } from "@traceframe/schema";
 import { Store } from "@traceframe/storage";
 import { credential, initializeCredential, runtime } from "@traceframe/storage/runtime";
@@ -194,6 +194,7 @@ export function startCollector(
           send(200, {
             usage: usage(events),
             relationships: relationships(events),
+            verification: verification(events),
             kindCounts: Object.fromEntries(
               ["prompt", "tool_call", "tool_result", "gap", "repository_snapshot"].map((kind) => [
                 kind,
