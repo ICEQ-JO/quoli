@@ -16,6 +16,12 @@ Following the owner's subsequent instruction, the workspace is connected to [ICE
 
 Documentation can be challenged and revised with rationale. The owner's explicit direction takes precedence over stale recommendations. No product implementation, service installation or live agent configuration is included in this setup.
 
+## Current implementation status
+
+A synthetic local preview now runs with `pnpm demo`. The [local demo guide](local-demo.md) distinguishes implemented behavior from the remaining MVP. Foundations include strict event/evidence contracts, in-memory policy filtering, SQLite append/query support, authenticated loopback ingestion and the fixture dashboard. The preview also includes deterministic reported-usage views from milestone M2.
+
+Integration discovery remains documentation-only; no personal session collection or Claude configuration has been enabled. Dedicated source-file cursors, separate blob storage, full capture/retention controls, repository snapshots/diffs and live-source reconciliation remain later work. Product tests now exist; the planning-pass statement below describes the earlier pass only.
+
 ## Proposed implementation approach
 
 Use the requested pnpm/TypeScript workspace, a Next.js dashboard, one local Node collector, SQLite, and local artifact files. Package directories describe boundaries, not separate deployed services. Exact framework/runtime versions must be chosen and pinned during scaffolding after compatibility checks; no speculative version numbers are embedded here.

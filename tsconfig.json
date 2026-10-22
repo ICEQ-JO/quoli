@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "packages/**/*.ts",
+    "scripts/**/*.ts",
+    "apps/collector/**/*.ts",
+    "tests/**/*.ts",
+    "playwright.config.ts"
+  ]
+}

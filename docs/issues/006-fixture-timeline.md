@@ -20,10 +20,10 @@ No live Claude integration, generated explanations, diagram rendering or claim o
 
 ## Acceptance criteria
 
-- [ ] A documented demo command seeds fixtures and opens a useful dashboard with no Claude account or model call.
-- [ ] Fixture scenarios show prompt, successful/failed command, missing tool result, disabled content, out-of-order arrival and incomplete session.
-- [ ] Each relationship exposes basis and retained source evidence; missing versus disabled versus unsupported are visibly different.
-- [ ] Captured strings are escaped; loading/empty/error states, keyboard navigation and server-held collector credential work.
+- [x] A documented demo command seeds fixtures and opens a useful dashboard with no Claude account or model call.
+- [x] Fixture scenarios show prompt, successful/failed command, missing tool result, disabled content, out-of-order arrival and incomplete session.
+- [x] Each relationship exposes basis and retained source evidence; missing versus disabled versus unsupported are visibly different.
+- [x] Captured strings are escaped; loading/empty/error states, keyboard navigation and server-held collector credential work.
 
 ## Test plan
 
@@ -36,3 +36,7 @@ Synthetic provenance is explicit. Protect read/control routes, local browser aut
 ## Relative size
 
 M
+
+## Implementation checkpoint
+
+Implemented three synthetic sessions, paginated timeline, filters, evidence navigation and protected browser reads. Desktop/mobile and hostile-text browser tests pass.

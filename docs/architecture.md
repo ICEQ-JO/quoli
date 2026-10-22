@@ -1,4 +1,12 @@
-# Proposed local architecture
+# Local architecture and planned extensions
+
+## Implemented preview
+
+The current synthetic preview implements `apps/web`, `apps/collector`, and the schema/storage/analysis/ui packages. Run it with `pnpm demo`; see the [development reference](development.md) for exact routes, limits and behavior. It has no live adapter, repository snapshots, diff inspector or graph yet.
+
+The initial storage binding is Node 24's built-in SQLite API. Sanitized small artifacts are stored as transactional SQLite values initially; separate blob files and source-file cursors are deferred until adapters/snapshots need them. This avoids introducing a filesystem recovery boundary in the first demo. Dev, production and tests use separate Next output directories. The web port is 3140 because 3000 was occupied in the development environment.
+
+The diagram and directory tree below remain the target MVP architecture; not all components exist yet.
 
 ## Process and package boundaries
 
@@ -20,7 +28,7 @@ Two application processes, one collector writer, no broker and no cloud. The col
 
 Use a supported SQLite binding behind `packages/storage`, runtime schemas (proposed: Zod), explicit SQL migrations and parameterized queries. A mature diff renderer and graph viewer may be selected during the relevant issues; neither requires a custom DSL. Use workspace scripts and a small supervisor for local development, with process shutdown and clear port errors. Do not add orchestration infrastructure.
 
-## Proposed tree (not created in this pass)
+## Target MVP tree (partially implemented)
 
 ```text
 apps/

@@ -27,6 +27,10 @@ Every core issue inherits the [architecture](../architecture.md), [MVP scope](..
 | [019](019-pilot-release.md) | Validate the full local pilot against evidence and privacy guarantees | M | 018 | M5 | [#20](https://github.com/ICEQ-JO/quoli/issues/20) |
 | [020](020-experimental-transcripts.md) | Evaluate an opt-in version-gated historical transcript importer | M | 019 | Deferred | Deferred draft |
 
+## Implementation checkpoint
+
+The first testable feature is the [synthetic local preview](../local-demo.md): it covers the scaffold and timeline, with foundational schema/privacy/storage/ingestion work and an early reported-usage view. GitHub issue checklists and the implementation PR record the exact completed criteria and remaining scope. Planned features must not be inferred to exist merely because they appear in this index.
+
 ## Dependency rationale
 
 The synthetic dashboard (006) precedes all live adapter work. Repository snapshots (008) need ingestion/storage but can be built independently of usage UI; the recommended sequence delivers usage first. Evidence linking (010) needs inspected snapshots/diffs and consistent usage contracts. Map generation (011) consumes those established relationships rather than inventing new ones. Lifecycle controls (012) precede runtime discovery (013) and all live data paths.

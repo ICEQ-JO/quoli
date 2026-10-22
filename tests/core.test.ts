@@ -1,0 +1,247 @@
+import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { test } from "node:test";
+import { demoEvents, demoPolicy } from "../fixtures/demo";
+import { relationships, usage } from "../packages/analysis/src/index";
+import {
+  batchSchema,
+  defaultPolicy,
+  eventSchema,
+  relationshipSchema,
+  type StoredEvent,
+} from "../packages/schema/src/index";
+import { sanitizeContent, sanitizeEvent } from "../packages/schema/src/privacy";
+import { Store } from "../packages/storage/src/index";
+
+const stored = (events = demoEvents()): StoredEvent[] =>
+  events.map((e, i) => ({ ...e, sequence: i + 1, receivedAt: "2026-10-22T10:00:00.000Z" }));
+test("versioned contracts reject invented/malformed usage and provenance", () => {
+  assert.equal(batchSchema.parse({ events: demoEvents() }).events.length, 29);
+  assert.throws(() => eventSchema.parse({ ...demoEvents()[0], schemaVersion: 99 }));
+  assert.throws(() => eventSchema.parse({ ...demoEvents()[0], hiddenReasoning: "invented" }));
+  const e = demoEvents().find((e) => e.payload.kind === "usage");
+  assert.throws(() => eventSchema.parse({ ...e, payload: { ...e?.payload, input: -1 } }));
+  assert.throws(() =>
+    relationshipSchema.parse({
+      id: "link",
+      subjectId: "a",
+      objectId: "b",
+      basis: "derived",
+      evidenceIds: [],
+      rule: null,
+      uncertainty: "Unknown",
+    }),
+  );
+});
+test("metadata defaults suppress prompts and code embedded in tool text", () => {
+  const event = demoEvents().find((e) => e.payload.kind === "tool_call");
+  assert.ok(event);
+  const input = {
+    ...event,
+    payload: {
+      kind: "tool_call" as const,
+      toolName: "Read" as const,
+      path: "src/main.ts",
+      content: {
+        text: '{"nested":{"content":"private code"}}',
+        state: "present" as const,
+        originalBytes: null,
+        categories: ["prompt" as const],
+      },
+    },
+  };
+  const clean = sanitizeEvent(input, { ...demoPolicy, code: false });
+  assert.equal(clean.payload.kind, "tool_call");
+  if (clean.payload.kind === "tool_call") {
+    assert.equal(clean.payload.path, null);
+    assert.equal(clean.payload.content.text, null);
+    assert.equal(clean.payload.content.state, "disabled");
+  }
+  assert.equal(JSON.stringify(clean).includes("private code"), false);
+  const prompt = sanitizeEvent(demoEvents()[1], defaultPolicy);
+  assert.ok("content" in prompt.payload);
+  assert.equal(prompt.payload.content.text, null);
+});
+test("redaction runs before UTF-8-safe bounded truncation and excluded paths", () => {
+  const secret = "example-canary-value";
+  const c = sanitizeContent(
+    {
+      text: `token=${secret}\n${"界".repeat(100)}`,
+      state: "present",
+      originalBytes: null,
+      categories: ["tool"],
+    },
+    { ...demoPolicy, maxFieldBytes: 64 },
+  );
+  assert.equal(c.state, "truncated");
+  assert.ok(c.text?.includes("[REDACTED]"));
+  assert.equal(c.text?.includes(secret), false);
+  assert.ok(Buffer.byteLength(c.text ?? "") <= 64);
+  assert.equal(c.text?.includes("�"), false);
+  const e = demoEvents().find((e) => e.payload.kind === "tool_call");
+  assert.ok(e);
+  if (e.payload.kind === "tool_call") e.payload.path = "config/.env.local";
+  const clean = sanitizeEvent(e, demoPolicy);
+  if (clean.payload.kind === "tool_call") assert.equal(clean.payload.content.text, null);
+});
+test("usage is nullable, deduplicated by request, and never mixes counter samples", () => {
+  const main = stored().filter((e) => e.sessionId === "session-cache");
+  const v = usage(main);
+  assert.equal(v.input, 3100);
+  assert.equal(v.output, 1560);
+  assert.equal(v.cacheRead, 30500);
+  assert.equal(v.cacheWrite, 2400);
+  assert.equal(v.requests, 2);
+  assert.equal(v.cacheReadShare, 30500 / 36000);
+  const original = main.find((e) => e.payload.kind === "usage");
+  assert.ok(original);
+  assert.equal(
+    usage([...main, { ...original, id: "corroboration", source: "claude_otel" }]).input,
+    3100,
+  );
+  const conflict = structuredClone(original);
+  if (conflict.payload.kind === "usage") conflict.payload.input = 5;
+  assert.equal(usage([...main, conflict]).input, null);
+  const cumulative = structuredClone(original);
+  if (cumulative.payload.kind === "usage") cumulative.payload.temporality = "cumulative";
+  assert.equal(usage([...main, cumulative]).input, null);
+  assert.equal(usage(stored().filter((e) => e.sessionId === "session-interrupted")).output, null);
+  assert.equal(usage([]).input, null);
+});
+test("tool evidence joins require matching project, session and explicit ID", () => {
+  const rows = stored();
+  const links = relationships(rows);
+  assert.ok(links.length > 0);
+  for (const r of links) relationshipSchema.parse(r);
+  const call = rows.find((e) => e.payload.kind === "tool_call" && e.sessionId === "session-cache");
+  assert.ok(call);
+  const result = rows.find((e) => e.toolId === call.toolId && e.payload.kind === "tool_result");
+  assert.ok(result);
+  assert.equal(relationships([call, { ...result, sessionId: "another-session" }]).length, 0);
+  assert.equal(relationships([call, { ...result, projectId: "another-project" }]).length, 0);
+});
+test("SQLite survives restart, retries are idempotent, and paging is stable", () => {
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-store-"));
+  const path = join(dir, "evidence.sqlite");
+  try {
+    let store = new Store(path);
+    store.registerProject("demo-quoli", "quoli", true, demoPolicy);
+    assert.equal(store.append(demoEvents()).accepted, 29);
+    assert.equal(store.append(demoEvents()).duplicates, 29);
+    store.close();
+    store = new Store(path);
+    const first = store.events("demo-quoli", "session-cache");
+    assert.equal(first.events.length, 8);
+    assert.ok(first.nextCursor);
+    const second = store.events("demo-quoli", "session-cache", first.nextCursor);
+    assert.equal(second.events.length, 8);
+    assert.equal(new Set([...first.events, ...second.events].map((e) => e.id)).size, 16);
+    assert.equal(store.events("wrong-project", "session-cache").total, 0);
+    store.close();
+    assert.equal(statSync(path).mode & 0o777, 0o600);
+    const db = new DatabaseSync(path);
+    assert.throws(() => db.exec("UPDATE events SET body='{}'"));
+    assert.throws(() => db.exec("DELETE FROM events"));
+    db.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+test("failed mixed batch rolls back and reused delivery identity cannot rewrite an event", () => {
+  const store = new Store(":memory:");
+  store.registerProject("demo-quoli", "quoli", true, demoPolicy);
+  const events = demoEvents().slice(0, 2);
+  assert.throws(() => store.append([events[0], { ...events[1], projectId: "unregistered" }]));
+  assert.equal(store.events("demo-quoli", events[0].sessionId).total, 0);
+  store.append([events[0]]);
+  assert.throws(() => store.append([{ ...events[0], sourceTime: null }]));
+  const duplicateText = { ...events[0], id: "new-event", deliveryId: "new-delivery" };
+  assert.equal(store.append([duplicateText]).accepted, 1);
+  store.close();
+});
+test("secrets and disabled code do not reach database, WAL or artifact body", () => {
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-privacy-"));
+  const path = join(dir, "evidence.sqlite");
+  try {
+    const store = new Store(path);
+    store.registerProject("demo-quoli", "quoli", true, { ...demoPolicy, code: false });
+    const event = demoEvents()[1];
+    if ("content" in event.payload) event.payload.content.text = "token=example-secret-canary";
+    store.append([event]);
+    store.artifact("demo-quoli", "code-canary", "sensitive-artifact-canary");
+    for (const file of [path, `${path}-wal`]) {
+      const bytes = readFileSync(file).toString();
+      assert.equal(bytes.includes("example-secret-canary"), false);
+      assert.equal(bytes.includes("sensitive-artifact-canary"), false);
+    }
+    store.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+test("excluded tool paths suppress matching results; unmatched results stay content-free on retry", () => {
+  const store = new Store(":memory:");
+  store.registerProject("demo-quoli", "quoli", true, demoPolicy);
+  const events = demoEvents();
+  const call = events.find((e) => e.toolId === "tool-read" && e.payload.kind === "tool_call");
+  const result = events.find((e) => e.toolId === "tool-read" && e.payload.kind === "tool_result");
+  assert.ok(call && result);
+  if (call.payload.kind === "tool_call") call.payload.path = "config/.env.local";
+  if (result.payload.kind === "tool_result") result.payload.content.text = "excluded-file-canary";
+  store.append([call, result]);
+  assert.equal(
+    JSON.stringify(store.allEvents("demo-quoli", "session-cache")).includes("excluded-file-canary"),
+    false,
+  );
+  const lateCall = { ...call, id: "late-call", deliveryId: "late-call", toolId: "late-tool" };
+  if (lateCall.payload.kind === "tool_call") lateCall.payload.path = "src/allowed.ts";
+  const earlyResult = {
+    ...result,
+    id: "early-result",
+    deliveryId: "early-result",
+    toolId: "late-tool",
+  };
+  store.append([earlyResult]);
+  store.append([lateCall]);
+  assert.equal(store.append([earlyResult]).duplicates, 1);
+  assert.equal(
+    JSON.stringify(store.allEvents("demo-quoli", "session-cache")).includes("excluded-file-canary"),
+    false,
+  );
+  store.close();
+});
+test("failed migrations roll back DDL and release the database lock", () => {
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-migration-"));
+  const path = join(dir, "db.sqlite");
+  try {
+    const incompatible = new DatabaseSync(path);
+    incompatible.exec("CREATE TABLE events(wrong_column TEXT)");
+    incompatible.close();
+    assert.throws(() => new Store(path));
+    const db = new DatabaseSync(path);
+    assert.equal(
+      db.prepare("SELECT name FROM sqlite_master WHERE name='projects'").get(),
+      undefined,
+    );
+    db.exec("DROP TABLE events");
+    db.close();
+    const recovered = new Store(path);
+    recovered.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+test("storage capacity rejects a whole batch without deleting retained evidence", () => {
+  const store = new Store(":memory:", { maxEvents: 1, maxBytes: 1048576 });
+  store.registerProject("demo-quoli", "quoli", true, demoPolicy);
+  const events = demoEvents().slice(0, 2);
+  assert.throws(() => store.append(events), /storage limit/);
+  assert.equal(store.events("demo-quoli", events[0].sessionId).total, 0);
+  store.append([events[0]]);
+  assert.throws(() => store.append([events[1]]), /storage limit/);
+  assert.equal(store.events("demo-quoli", events[0].sessionId).total, 1);
+  store.close();
+});

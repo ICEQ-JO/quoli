@@ -1,0 +1,10 @@
+{
+  "name": "@traceframe/collector",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@traceframe/schema": "workspace:*",
+    "@traceframe/storage": "workspace:*",
+    "@traceframe/analysis": "workspace:*"
+  }
+}

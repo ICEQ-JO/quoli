@@ -20,9 +20,9 @@ None.
 
 ## Acceptance criteria
 
-- [ ] A clean supported environment can install from the lockfile and start both loopback-bound applications with no paid API.
-- [ ] The dashboard shows collector availability; shutdown stops both processes and busy ports produce actionable errors.
-- [ ] Workspace typecheck, lint and a basic health smoke command are documented; runtime data, credentials and local overrides are ignored.
+- [x] A clean supported environment can install from the lockfile and start both loopback-bound applications with no paid API.
+- [x] The dashboard shows collector availability; shutdown stops both processes and busy ports produce actionable errors.
+- [x] Workspace typecheck, lint and a basic health smoke command are documented; runtime data, credentials and local overrides are ignored.
 
 ## Test plan
 
@@ -35,3 +35,7 @@ No telemetry/analytics dependencies or remote runtime assets; health output cont
 ## Relative size
 
 M
+
+## Implementation checkpoint
+
+Implemented in the local preview; lifecycle tests cover startup, occupied ports, shutdown and restart.

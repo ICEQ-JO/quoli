@@ -20,9 +20,9 @@ No adapter parser, storage engine, hidden-reasoning fields or guessed usage valu
 
 ## Acceptance criteria
 
-- [ ] All relationship contracts require recorded/derived/inferred basis and evidence references; deterministic relationships include rule identity/version.
-- [ ] Usage fields are independently nullable and typed with units/scope/temporality; missing differs from recorded zero.
-- [ ] Versioned synthetic examples cover absent IDs, omitted content, truncation, incomplete tools and unknown event versions.
+- [x] All relationship contracts require recorded/derived/inferred basis and evidence references; deterministic relationships include rule identity/version.
+- [x] Usage fields are independently nullable and typed with units/scope/temporality; missing differs from recorded zero.
+- [x] Versioned synthetic examples cover absent IDs, omitted content, truncation, incomplete tools and unknown event versions.
 
 ## Test plan
 
@@ -35,3 +35,7 @@ Treat all string fields and source locators as untrusted; contracts must not req
 ## Relative size
 
 M
+
+## Implementation checkpoint
+
+Implemented strict event/evidence contracts and source locators. Future explicit source-correction payloads remain a later design; current history accepts supplemental observations without mutation.

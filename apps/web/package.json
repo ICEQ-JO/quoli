@@ -1,0 +1,23 @@
+{
+  "name": "@traceframe/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "NEXT_TELEMETRY_DISABLED=1 next dev --hostname 127.0.0.1",
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
+    "start": "NEXT_TELEMETRY_DISABLED=1 next start --hostname 127.0.0.1",
+    "typecheck": "NEXT_TELEMETRY_DISABLED=1 next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "@traceframe/schema": "workspace:*",
+    "@traceframe/ui": "workspace:*",
+    "@traceframe/storage": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
+}

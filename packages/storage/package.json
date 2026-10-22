@@ -1,0 +1,12 @@
+{
+  "name": "@traceframe/storage",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./runtime": "./src/runtime.ts"
+  },
+  "dependencies": {
+    "@traceframe/schema": "workspace:*"
+  }
+}

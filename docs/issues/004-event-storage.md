@@ -36,3 +36,7 @@ Use parameterized SQL, restrictive data-directory permissions and sanitized diag
 ## Relative size
 
 M
+
+## Implementation checkpoint
+
+Core SQLite persistence, receipts, paginated queries, atomic artifact values and rollback/restart tests are implemented. File-ingestion cursors and a separate artifact filesystem/recovery protocol remain deferred until adapter/snapshot work; this issue stays open for scope reconciliation.
