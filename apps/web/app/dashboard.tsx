@@ -10,6 +10,7 @@ import type {
   UsageView,
 } from "@traceframe/schema";
 import type { VerificationView } from "@traceframe/schema/checks";
+import type { ReconciliationView } from "@traceframe/schema/reconcile";
 import { clock, number } from "@traceframe/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChangesView } from "./components/changes-view";
@@ -38,6 +39,7 @@ type Summary = {
   usage: UsageView;
   relationships: Relationship[];
   verification: VerificationView;
+  reconciliation: ReconciliationView;
   kindCounts: Record<string, number>;
 };
 const views: View[] = [
@@ -808,6 +810,7 @@ export default function Dashboard() {
                     session={current}
                     summary={summary}
                     verification={summary?.verification ?? null}
+                    reconciliation={summary?.reconciliation ?? null}
                     refresh={refresh}
                     onEvidence={openEvidence}
                     onView={tabs}

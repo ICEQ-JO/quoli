@@ -4912,6 +4912,51 @@ h1 {
   color: var(--negative);
   border-color: var(--negative);
 }
+.reconciliation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.reconciliation-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.reconciliation-totals span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.reconciliation-totals .warning {
+  color: var(--warning);
+}
+.reconciliation-sources,
+.reconciliation-tools {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.reconciliation-sources li,
+.reconciliation-tools li {
+  border-top: 1px solid var(--line-soft);
+  padding: 9px 0;
+}
+.reconciliation-sources strong,
+.reconciliation-tool strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+}
+.reconciliation-sources span,
+.reconciliation-tool span,
+.reconciliation-note {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
 .session-properties {
   border-left: 1px solid var(--line);
   padding-left: 24px;

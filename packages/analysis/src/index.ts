@@ -3,6 +3,7 @@ import type { Relationship, StoredEvent, UsageView } from "@traceframe/schema";
 
 export * from "./checks";
 export * from "./map";
+export * from "./reconcile";
 
 export function usage(events: StoredEvent[]): UsageView {
   const candidates = events.filter((e) => e.payload.kind === "usage");

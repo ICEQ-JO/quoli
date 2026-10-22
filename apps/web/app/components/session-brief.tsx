@@ -1,10 +1,12 @@
 "use client";
 import type { EventPage, Project, Session, StoredEvent } from "@traceframe/schema";
 import type { CheckState, VerificationView } from "@traceframe/schema/checks";
+import type { ReconciliationView } from "@traceframe/schema/reconcile";
 import type { SnapshotPage } from "@traceframe/schema/repository";
 import { number } from "@traceframe/ui";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { eventTitle, preview, type View } from "../review";
+import { ReconciliationPanel } from "./reconciliation-panel";
 import { Icon } from "./ui-icon";
 import { eventRead, localRead, type ReviewSummary, sourceDate } from "./workspace-data";
 
@@ -20,6 +22,7 @@ export function SessionBrief({
   session,
   summary,
   verification,
+  reconciliation,
   refresh,
   onEvidence,
   onView,
@@ -35,6 +38,7 @@ export function SessionBrief({
   session: Session | undefined;
   summary: ReviewSummary | null;
   verification: VerificationView | null;
+  reconciliation: ReconciliationView | null;
   refresh: number;
   onEvidence: (id: string) => void;
   onView: (view: View) => void;
@@ -431,6 +435,17 @@ export function SessionBrief({
               ))}
             </div>
           )}
+        </section>
+        <section className="brief-section">
+          <div className="brief-section-heading">
+            <h2>Source reconciliation</h2>
+            <span>{reconciliation?.tools.length ?? 0} joined tools</span>
+          </div>
+          <p className="section-context">
+            Hook and telemetry observations are kept separate. They are joined only by explicit
+            identifiers.
+          </p>
+          <ReconciliationPanel view={reconciliation} />
         </section>
         <section className="brief-section">
           <div className="brief-section-heading">

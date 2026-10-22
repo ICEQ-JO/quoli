@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { relationships, usage, verification } from "@traceframe/analysis";
+import { reconcile, relationships, usage, verification } from "@traceframe/analysis";
 import { batchSchema, eventQuerySchema, MAX_BODY, safeId } from "@traceframe/schema";
 import { settingsUpdateSchema } from "@traceframe/schema/lifecycle";
 import { Store } from "@traceframe/storage";
@@ -317,10 +317,12 @@ export function startCollector(
         }
         if (match[3] === "summary") {
           const events = store.allEvents(project, session);
+          const usageView = usage(events);
           send(200, {
-            usage: usage(events),
+            usage: usageView,
             relationships: relationships(events),
             verification: verification(events),
+            reconciliation: reconcile(events, usageView),
             kindCounts: Object.fromEntries(
               ["prompt", "tool_call", "tool_result", "gap", "repository_snapshot"].map((kind) => [
                 kind,
