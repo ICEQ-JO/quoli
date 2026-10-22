@@ -29,6 +29,12 @@ Open http://127.0.0.1:3140 and select the repository's daily history. Existing `
 
 The installed runtime uses Next.js's production standalone server; it has no development HMR channel. Source development via `pnpm dev` remains available. Stop your foreground development instance before starting the managed runtime on the same ports. Quoli reports port conflicts and leaves existing software alone.
 
+## Review changes live
+
+After connecting, select your repository and open its daily repository history. Leave the dashboard open while editing a tracked file: the observer checks about every five seconds and records a checkpoint when the captured state changes. Open **File changes** to compare the baseline and latest checkpoint, then select the edited file to inspect its diff.
+
+Repository checkpoints show observed changes and commit IDs. They do not identify which agent made an edit; detailed agent activity requires a supported, explicitly enabled integration. Changes between observation checks may not be captured.
+
 ## Lifecycle
 
 ```sh

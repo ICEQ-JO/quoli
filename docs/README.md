@@ -4,9 +4,9 @@ Planning date: 2026-10-22. Status: the local MVP is implemented and validated: s
 
 Quoli answers: **“Show me what my coding agent did, what changed, and what remains unverified.”**
 
-The next local increment adds an [installable CLI and managed production runtime](cli.md). See its [local work record](work/cli-background.md); no package or branch has been published.
+The CLI increment adds an [installable CLI and managed production runtime](cli.md). See its [local work record](work/cli-background.md); package distribution remains unpublished. Tracked in [#49](https://github.com/ICEQ-JO/quoli/issues/49).
 
-The current local increment adds [automatic repository history](automatic-history.md), independent of agent/editor, with a repository-only connection command. Detailed activity adapters beyond Claude remain planned. See the [local work record](work/automatic-repository-history.md); this branch is intentionally unpublished.
+The repository-history increment adds [automatic repository history](automatic-history.md), independent of agent/editor, with a repository-only connection command. Detailed activity adapters beyond Claude remain planned. See the [local work record](work/automatic-repository-history.md); tracked in [#48](https://github.com/ICEQ-JO/quoli/issues/48).
 
 See the [implementation checkpoint](implementation-progress.md) for delivered, in-progress and planned capabilities.
 

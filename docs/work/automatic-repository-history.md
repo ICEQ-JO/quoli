@@ -1,6 +1,6 @@
 # Quoli: automatic repository history (local increment)
 
-Owner direction: Quoli is the product name. Keep this work on one local branch; do not push or open a PR. This local work record temporarily replaces publishing a GitHub issue under that direction. Relative size: M.
+Originally developed on one local branch under the owner’s no-push instruction. The owner subsequently authorized publication and merge. Tracked in [#48](https://github.com/ICEQ-JO/quoli/issues/48). Relative size: M.
 
 ## User value and scope
 
@@ -32,7 +32,7 @@ Use only disposable repositories and synthetic evidence. Exercise polling and co
 
 The full browser suite passed 25/25, including connection without hooks, automatic edit/commit capture, desktop/mobile repository history and diff inspection. A final targeted browser run passed after the storage-consent guard was added; desktop/mobile screenshots were visually inspected from ignored test output. The full unit/integration suite passed 117 checks, including observer/privacy/lifecycle/Git-cap tests. Typecheck, production build and smoke checks passed. Lint exits successfully with 42 pre-existing illustration warnings. Browser tests still log pre-existing aborted-request errors despite passing; no claim of a clean console is made.
 
-The running local service uses the normal default private store, so `pnpm connect` can use its normal defaults. No real project was connected on the owner's behalf and no tool configuration was changed. No branch, issue, PR or package was published for this increment.
+The running local service uses the normal default private store, so `pnpm connect` can use its normal defaults. Subsequently connected this Quoli source repository at the owner’s request and verified live capture. No agent tool configuration was changed. Source publication is now authorized; no runtime package has been published.
 
 Next bounded increment: verify supported Codex/Pi/OpenCode integration surfaces, define capability-labelled adapters with sanitized fixtures, then add activity integrations individually. Repository sampling does not substitute for those adapters or establish file authorship. Source-checkout setup is supported; a distributable install-once CLI and managed background lifecycle remain future work.
 

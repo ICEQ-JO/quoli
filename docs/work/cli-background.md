@@ -1,6 +1,6 @@
 # Quoli CLI and background runtime (local increment)
 
-Owner direction: continue on `feat/quoli-automatic-repository-history`; no push, issue publication, PR or package publication. Relative size: M. This local work record follows the earlier local-only exception.
+Originally developed on one local branch under the owner’s no-push instruction. The owner subsequently authorized publication and merge. Tracked in [#49](https://github.com/ICEQ-JO/quoli/issues/49). Relative size: M.
 
 ## User value and scope
 
@@ -35,6 +35,6 @@ Use synthetic evidence and disposable private install/data/bin directories. Buil
 - Typecheck and production standalone build pass. Lint exits successfully with 42 existing illustration warnings. CLI/setup checks were rerun after command-help changes.
 - The archive contains 1,330 files, approximately 13 MiB compressed. The packaging pass rejects credential/database/environment files and symlinks outside the release tree. Generated files are ignored by Git.
 - Generated Linux user unit passed `systemd-analyze --user verify` on this machine. Real login/reboot activation is not certified; login startup was not enabled for the owner.
-- Installed the user-local CLI at `~/.local/bin/quoli`, replaced this session's foreground development server with the authenticated managed production runtime at http://127.0.0.1:3140, and verified status and smoke health. Existing evidence and capture consent remain in the default private store. No real project or agent integration was connected on the owner's behalf. No shell profile was edited.
+- Installed the user-local CLI at `~/.local/bin/quoli`, replaced this session's foreground development server with the authenticated managed production runtime at http://127.0.0.1:3140, and verified status and smoke health. Existing evidence and capture consent remain in the default private store. Subsequently connected this Quoli source repository with explicit code-capture consent and verified a live documentation diff; no agent integration was installed. No shell profile was edited.
 
-Nothing was pushed or published. This does not include a registry release, signed/native executable, automatic OS-wide startup, new Codex/Pi/OpenCode adapters or broader platform certification. The next implementation increment is the second verified agent activity adapter.
+Source publication is now authorized; the runtime package remains unpublished. This does not include a registry release, signed/native executable, automatic OS-wide startup, new Codex/Pi/OpenCode adapters or broader platform certification. The next implementation increment is the second verified agent activity adapter.
