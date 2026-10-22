@@ -21,6 +21,29 @@ export const HOOK_EVENTS = [
 ] as const;
 
 const BRIDGE_MARKER = "apps/bridge/src/index.ts";
+const PACKAGED_BRIDGE = "runtime/quoli-hook-v1.mjs";
+const shellQuote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
+
+function ownsCommand(command: string): boolean {
+  return command.includes(BRIDGE_MARKER) || command.includes(PACKAGED_BRIDGE);
+}
+
+/** Detect this packaged runtime's generated hooks before removing its files. */
+export function usesPackagedRuntime(root: string, releaseRoot: string): boolean {
+  const hooks = readSettings(root).hooks as Record<string, unknown> | undefined;
+  const script = shellQuote(join(releaseRoot, PACKAGED_BRIDGE));
+  return Object.values(hooks ?? {}).some(
+    (groups) =>
+      Array.isArray(groups) &&
+      groups.some(
+        (group: HookGroup) =>
+          Array.isArray(group.hooks) &&
+          group.hooks.some(
+            (hook) => typeof hook.command === "string" && hook.command.includes(script),
+          ),
+      ),
+  );
+}
 
 type Settings = Record<string, unknown>;
 
@@ -30,7 +53,11 @@ function bridgeCommand(projectId: string): string {
   const loader = join(repo, "node_modules/tsx/dist/loader.mjs");
   const script = join(repo, BRIDGE_MARKER);
   const config = runtime();
-  return `TRACEFRAME_DATA_DIR="${config.dataDir}" TRACEFRAME_COLLECTOR_PORT="${config.collectorPort}" node --import "${loader}" "${script}" ${projectId}`;
+  const packaged = process.env.QUOLI_RUNTIME_ROOT;
+  const command = packaged
+    ? `${shellQuote(process.execPath)} ${shellQuote(join(packaged, PACKAGED_BRIDGE))}`
+    : `${shellQuote(process.execPath)} --import ${shellQuote(loader)} ${shellQuote(script)}`;
+  return `TRACEFRAME_DATA_DIR=${shellQuote(config.dataDir)} TRACEFRAME_COLLECTOR_PORT=${shellQuote(String(config.collectorPort))} ${command} ${projectId}`;
 }
 
 function settingsPath(root: string): string {
@@ -64,7 +91,7 @@ function writeSettings(root: string, settings: Settings): void {
 type HookGroup = { matcher?: string; hooks: { type: string; command: string }[] };
 
 function isBridgeGroup(group: HookGroup): boolean {
-  return group.hooks.some((handler) => handler.command.includes(BRIDGE_MARKER));
+  return group.hooks.some((handler) => ownsCommand(handler.command));
 }
 
 /** Counts every hook group in the file that Traceframe does not own. */
@@ -134,7 +161,7 @@ export function hookStatus(root: string): { installed: boolean; projectId: strin
   for (const event of HOOK_EVENTS) {
     const groups = Array.isArray(hooks[event]) ? (hooks[event] as HookGroup[]) : [];
     for (const group of groups) {
-      const handler = group.hooks?.find((entry) => entry.command.includes(BRIDGE_MARKER));
+      const handler = group.hooks?.find((entry) => ownsCommand(entry.command));
       if (handler) {
         const id = handler.command.trim().split(/\s+/).at(-1) ?? "";
         return { installed: true, projectId: id };

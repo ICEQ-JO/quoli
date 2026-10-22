@@ -1,8 +1,12 @@
-# Traceframe planning pack
+# Quoli planning pack
 
 Planning date: 2026-10-22. Status: the local MVP is implemented and validated: synthetic sessions, explicit repository snapshots, captured file review, recorded verification evidence, a bounded change map, cross-source reconciliation, local capture controls with retention and deletion, a passive hook bridge, a narrow reported-usage receiver and a guided reversible setup. The live collection was verified against Claude Code 2.1.306; the pilot walkthrough on a fresh machine remains the owner's check.
 
-Traceframe answers: **“Show me what my coding agent did, what changed, and what remains unverified.”**
+Quoli answers: **“Show me what my coding agent did, what changed, and what remains unverified.”**
+
+The CLI increment adds an [installable CLI and managed production runtime](cli.md). See its [local work record](work/cli-background.md); package distribution remains unpublished. Tracked in [#49](https://github.com/ICEQ-JO/quoli/issues/49).
+
+The repository-history increment adds [automatic repository history](automatic-history.md), independent of agent/editor, with a repository-only connection command. Detailed activity adapters beyond Claude remain planned. See the [local work record](work/automatic-repository-history.md); tracked in [#48](https://github.com/ICEQ-JO/quoli/issues/48).
 
 See the [implementation checkpoint](implementation-progress.md) for delivered, in-progress and planned capabilities.
 
@@ -34,6 +38,6 @@ The current [session workspace reference](design/session-workspace.md) records w
 
 For product direction, start with the [repository assessment and implementation plan](implementation-plan.md), then review the [architecture](architecture.md), [Claude Code capability matrix](claude-code-capabilities.md), [ordered issue backlog](issues/README.md), and [founder decisions](founder-decisions.md).
 
-The MVP is a local application for one developer, with one local Git repository per project and Claude Code as its only live agent integration. This is the first product-validation step toward the proposed SaaS business. Accounts, billing, collaboration, hosting, and cloud synchronization require a separate later product decision; nothing in this plan uploads session evidence.
+The MVP is a local application for one developer, with one local Git repository per project and agent-independent repository observation and Claude Code as its only detailed live activity integration. This is the first product-validation step toward the proposed SaaS business. Accounts, billing, collaboration, hosting, and cloud synchronization require a separate later product decision; nothing in this plan uploads session evidence.
 
 Work is tracked in [ICEQ-JO/quoli on GitHub](https://github.com/ICEQ-JO/quoli/issues). Local IDs 001–020 are plan references, not GitHub issue numbers; the backlog index maps each published issue. The optional transcript experiment remains a local draft. See [AGENTS.md](../AGENTS.md) for medium-sized issues, PRs, commit identity and revisable documentation agreements.

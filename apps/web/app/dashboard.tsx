@@ -183,12 +183,18 @@ export default function Dashboard() {
     setSummary(null);
     setMetadataLoading(true);
     setMetadataFailed(false);
-    Promise.all([
-      read<Project[]>({ resource: "projects" }, abort.signal),
-      read<Session[]>({ resource: "sessions", project }, abort.signal),
-    ])
-      .then(([p, s]) => {
+    read<Project[]>({ resource: "projects" }, abort.signal)
+      .then(async (p) => {
+        if (abort.signal.aborted) return [];
         setProjects(p);
+        if (project === initialLocation.project && !p.some((item) => item.id === project) && p[0]) {
+          navigate({ ...initialLocation, project: p[0].id, session: "" });
+          return [];
+        }
+        return read<Session[]>({ resource: "sessions", project }, abort.signal);
+      })
+      .then((s) => {
+        if (abort.signal.aborted) return;
         setSessions(s);
         setOnline(true);
       })
@@ -203,7 +209,27 @@ export default function Dashboard() {
         if (!abort.signal.aborted) setMetadataLoading(false);
       });
     return () => abort.abort();
-  }, [ready, project, refresh]);
+  }, [ready, project, refresh, navigate]);
+  useEffect(() => {
+    if (!ready || !projects.some((item) => item.id === project && !item.synthetic)) return;
+    const abort = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    async function poll() {
+      try {
+        const next = await read<Session[]>({ resource: "sessions", project }, abort.signal);
+        if (!abort.signal.aborted) setSessions(next);
+      } catch {
+        /* Keep the current register visible during a background refresh failure. */
+      } finally {
+        if (!abort.signal.aborted) timer = setTimeout(poll, 5000);
+      }
+    }
+    timer = setTimeout(poll, 5000);
+    return () => {
+      abort.abort();
+      clearTimeout(timer);
+    };
+  }, [ready, project, projects]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: refresh explicitly reloads the session projection.
   useEffect(() => {
     if (!ready || isWorkspace) return;
@@ -429,11 +455,11 @@ export default function Dashboard() {
         Skip to session
       </a>
       <aside className="app-sidebar">
-        <a className="app-brand" href="/" aria-label="Traceframe home">
+        <a className="app-brand" href="/" aria-label="Quoli home">
           <span>
             <Icon name="brand" size={25} />
           </span>
-          Traceframe<span className="preview-label">Preview</span>
+          Quoli<span className="preview-label">Preview</span>
         </a>
         <div className="workspace-project">
           <Icon name="box" />
@@ -508,7 +534,7 @@ export default function Dashboard() {
             <p>
               {synthetic
                 ? "Synthetic sessions. No live agent connected."
-                : "Repository observations stay local. No live agent connected."}
+                : "Repository observations stay local. Agent activity depends on connected integrations."}
             </p>
           </div>
         </div>
@@ -692,9 +718,11 @@ export default function Dashboard() {
                     <span className={`session-state ${current && !current.ended ? "warning" : ""}`}>
                       <i />
                       {current
-                        ? current.ended
-                          ? "End recorded"
-                          : "No end recorded"
+                        ? current.kind === "repository"
+                          ? "Repository observation"
+                          : current.ended
+                            ? "End recorded"
+                            : "No end recorded"
                         : metadataLoading
                           ? "Loading capture state…"
                           : "Capture state unavailable"}

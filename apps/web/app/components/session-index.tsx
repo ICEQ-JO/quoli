@@ -43,8 +43,12 @@ export function SessionIndex({
   const groups =
     filters.group === "capture"
       ? [
-          { label: "No end recorded", rows: rows.filter((s) => !s.ended) },
-          { label: "End recorded", rows: rows.filter((s) => s.ended) },
+          { label: "Repository history", rows: rows.filter((s) => s.kind === "repository") },
+          {
+            label: "No end recorded",
+            rows: rows.filter((s) => !s.ended && s.kind !== "repository"),
+          },
+          { label: "End recorded", rows: rows.filter((s) => s.ended && s.kind !== "repository") },
         ]
       : [{ label: "All sessions", rows }];
   const change = (key: keyof SessionFilters, value: string) =>
@@ -198,7 +202,11 @@ export function SessionIndex({
                           <span className="work-session-copy">
                             <span>{s.title}</span>
                             <small className={`work-mobile-status ${s.ended ? "" : "warning"}`}>
-                              {s.ended ? "End recorded" : "No end recorded"}
+                              {s.kind === "repository"
+                                ? "Repository observation"
+                                : s.ended
+                                  ? "End recorded"
+                                  : "No end recorded"}
                             </small>
                           </span>
                           <Icon name="arrow" size={13} />
@@ -207,7 +215,11 @@ export function SessionIndex({
                       <td>
                         <span className={`work-capture ${s.ended ? "" : "warning"}`}>
                           <i />
-                          {s.ended ? "End recorded" : "No end recorded"}
+                          {s.kind === "repository"
+                            ? "Repository observation"
+                            : s.ended
+                              ? "End recorded"
+                              : "No end recorded"}
                         </span>
                       </td>
                       <td>{s.count}</td>

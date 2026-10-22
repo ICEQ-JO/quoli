@@ -110,7 +110,7 @@ async function main() {
   await runHook(projectId);
 }
 
-if (process.argv[1]?.endsWith("index.ts")) {
+if (process.argv[1]?.endsWith("index.ts") || process.argv[1]?.endsWith("quoli-hook-v1.mjs")) {
   main().catch(() => {
     // The bridge never fails the agent: no output, no non-zero exit.
     process.exitCode = 0;

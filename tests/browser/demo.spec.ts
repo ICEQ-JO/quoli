@@ -5,6 +5,34 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { demoEvents } from "../../fixtures/demo";
 
+test("workspace stays mounted while idle and navigating between sessions", async ({ page }) => {
+  const reloads: string[] = [];
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await expect(page.locator(".work-session")).toHaveCount(3);
+  // Start after the intentional local-cookie connection redirects have completed.
+  page.on("request", (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame())
+      reloads.push(request.url());
+  });
+  await page.getByRole("textbox", { name: "Search sessions" }).fill("cache");
+  // A quiet interval is intentional: the reported HMR loop reset the document
+  // repeatedly even without a click or source edit.
+  await page.waitForTimeout(5000);
+  await expect(page.getByRole("textbox", { name: "Search sessions" })).toHaveValue("cache");
+  await page.getByRole("button", { name: "Handle an empty cache response", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: /^Activity/ }).click();
+  await expect(page.locator(".event-row").first()).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("heading", { name: "Developer request", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "All sessions", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Search sessions" })).toHaveValue("cache");
+  expect(reloads).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 test("session work list preserves filters and opens a focused review; the gap queue retains context", async ({
   page,
 }) => {
@@ -712,4 +740,84 @@ test("deleting a project stops capture and reports what was removed", async ({ p
   await page.getByRole("button", { name: "Delete this project's evidence" }).click();
   await expect(page.getByText("Project evidence deleted")).toBeVisible();
   await expect(page.getByText(/Capture and storage for this project are stopped/)).toBeVisible();
+});
+
+test("connect once observes repository edits and commits without an agent integration", async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  const parent = mkdtempSync(join(tmpdir(), "quoli-auto-browser-"));
+  const root = join(parent, "repo");
+  const git = (...args: string[]) =>
+    execFileSync("git", args, {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  try {
+    execFileSync("git", ["init", "--quiet", "--initial-branch=main", root]);
+    git("config", "user.name", "ICEQ-JO");
+    git("config", "user.email", "151853839+ICEQ-JO@users.noreply.github.com");
+    writeFileSync(join(root, "example.ts"), "export const value = 1;\n");
+    git("add", ".");
+    git("commit", "--quiet", "-m", "Synthetic browser baseline");
+    const connected = execFileSync(
+      process.execPath,
+      [
+        "--import",
+        "tsx",
+        "scripts/setup.ts",
+        root,
+        "--name",
+        "Automatic fixture",
+        "--capture-code",
+      ],
+      {
+        env: { ...process.env, TRACEFRAME_DATA_DIR: process.env.TRACEFRAME_E2E_DATA_DIR },
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+    const project = connected.match(/repo_[a-f0-9]{32}/)?.[0];
+    expect(project).toBeTruthy();
+    await page.goto(`/?project=${project}&view=sessions`);
+    await expect(page.getByRole("button", { name: /^Repository history/ })).toBeVisible({
+      timeout: 20000,
+    });
+    await page.getByRole("button", { name: /^Repository history/ }).click();
+    await expect(page.getByRole("heading", { name: "Automatic repository history" })).toBeVisible();
+    await expect(page.getByRole("article", { name: "Repository history" })).toContainText(
+      "not an agent session",
+    );
+    writeFileSync(join(root, "example.ts"), "export const value = 2;\n");
+    git("add", ".");
+    git("commit", "--quiet", "-m", "Synthetic observed commit");
+    const head = git("rev-parse", "HEAD");
+    await expect(page.getByRole("article", { name: "Repository history" })).toContainText(head, {
+      timeout: 20000,
+    });
+    await expect(page.getByRole("article", { name: "Repository history" })).toContainText(
+      "Newly reachable commits",
+    );
+    await page.screenshot({
+      path: test.info().outputPath("repository-history-desktop.png"),
+      fullPage: true,
+    });
+    await page.getByRole("button", { name: "Open captured diffs", exact: true }).click();
+    await expect(page.getByRole("region", { name: "Unified code diff" })).toContainText(
+      "value = 2",
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("tab", { name: "Review", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Automatic repository history" })).toBeVisible();
+    await page.screenshot({
+      path: test.info().outputPath("repository-history-mobile.png"),
+      fullPage: true,
+    });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
 });

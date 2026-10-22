@@ -1,72 +1,44 @@
 # Local setup
 
-`pnpm setup` connects a local repository to Traceframe step by step. It never changes your global configuration, never replaces an existing telemetry destination and never hides a conflict.
+Quoli connects a local Git repository once and records automatic repository history while its collector runs. The repository layer works with any coding agent or editor. It does not claim to collect every agent's activity.
 
-## Before anything else: the fixture demo
+An [installable local CLI](cli.md) now supports `quoli connect --capture-code` from inside the target repository and manages the background production runtime. The source-checkout flow below remains available for development.
 
-The demo needs no Claude account and no network access:
+## Run and connect
 
-```sh
-pnpm demo
-```
-
-Open http://127.0.0.1:3140 and walk through the synthetic sessions first. The live connection below is optional and always explicit.
-
-## Connect a repository
+From the source checkout:
 
 ```sh
-pnpm setup /path/to/project --name "Project" --capture-code
+pnpm dev
+# In another terminal:
+pnpm connect /path/to/project --name "Project" --capture-code
 ```
 
-The setup reports the Claude Code and Git versions it found, registers the repository with explicit consent, and writes **only Traceframe's own hook entries** into that project's `.claude/settings.json`. Every other setting, hook group, status line and exporter in the file is preserved, and the number of preserved groups is reported.
+Use the same `TRACEFRAME_DATA_DIR` and collector-port overrides for both commands, if configured. Open http://127.0.0.1:3140 and select the project. No paid API, Claude login or agent configuration is required for repository history. See [automatic history](automatic-history.md) for sampling, Git observations and limits.
 
-Without `--capture-code` the project stays metadata-only, and the dashboard shows no code content.
+Without `--capture-code`, the project is metadata-only: code diffs and unstaged content edits are unavailable. Untracked files require the separate `--include-untracked` flag. Reconnecting preserves the existing policy; change consent in Settings. The connection writes only to Quoli's private local storage by default.
 
-## Report usage (optional)
+`pnpm connect` is the source-checkout entry point. The older setup script remains available as `pnpm run setup`; bare `pnpm setup` may invoke pnpm's own setup command instead.
 
-Add `--telemetry` and the setup prints the variables to add to the environment that starts Claude Code:
+## Optional Claude activity
 
 ```sh
-export CLAUDE_CODE_ENABLE_TELEMETRY=1
-export OTEL_LOGS_EXPORTER=otlp
-export OTEL_METRICS_EXPORTER=none
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://127.0.0.1:4318/v1/logs
-export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer <local credential>"
-export TRACEFRAME_PROJECT_ID=<project id>
+pnpm connect /path/to/project --agent claude --capture-code
 ```
 
-The setup prints the credential for you; it is the local one in your private data directory. It is never written into a project file and never committed.
+This additionally installs only Quoli's own hooks in `.claude/settings.json`, preserving other settings and hooks. Prompt/tool content remains disabled until explicitly enabled in Settings. The adapter was previously verified against Claude Code 2.1.306; see the [runtime report](claude-code-runtime-report.md). Codex, Pi and OpenCode activity integrations are not installed by this command.
 
-If your user settings already contain telemetry variables, the setup **prints them and stops short of changing anything**: two exporters cannot share one destination, and the decision belongs to you.
+Add `--telemetry` with `--agent claude` to print optional usage-export configuration. Existing destinations are reported and never replaced; no global settings are modified. Keep the printed local credential private. The [usage receiver](telemetry-receiver.md) documents the variables and source-level privacy gates. Reported usage requires the collector's project routing configuration as documented there.
 
-## Check, disable, remove
+## Check, pause, remove
 
 ```sh
-pnpm setup /path/to/project --check     # what is installed, and what would conflict
-pnpm setup /path/to/project --disable   # pause capture, keep the hooks and the evidence
-pnpm setup /path/to/project --undo PROJECT_ID   # remove the hook entries and the retained evidence
-pnpm settings rotate-credential         # revoke the local credential everywhere
+pnpm connect /path/to/project --check
+pnpm connect /path/to/project --disable
+pnpm connect /path/to/project --undo PROJECT_ID
+pnpm settings resume PROJECT_ID
 ```
 
-Disabling stops new capture while the retained evidence stays readable. Undoing removes only Traceframe's own hook entries and the retained evidence of that project; your other hooks, your status line, your telemetry settings and your source files are untouched. Rotating the credential invalidates existing browser sessions and any bridge command that still carries the previous value, so re-run `pnpm bridge install` afterwards.
+Check reports registration, observer status and any installed Claude hooks. Disable pauses new capture and keeps retained evidence. Undo verifies that the project matches the registered root, removes its own installed Claude hooks if present, and deletes that project's retained evidence and observer registration. Source files, other hooks and global tool settings remain untouched. Deletion is not secure physical erasure and does not remove backups or agent-owned transcripts.
 
-## Diagnostics
-
-| State | What you see | What to do |
-| --- | --- | --- |
-| Claude Code not found | `Claude Code: not found on PATH` | Install Claude Code, or use the fixture demo. |
-| Git not found | `Git: not found on PATH` | Install Git, or register a directory without version tracking. |
-| Port already in use | The startup check reports the conflict | Stop the other process or set `TRACEFRAME_WEB_PORT` and `TRACEFRAME_COLLECTOR_PORT` for both the collector and the setup. |
-| Collector unreachable | The bridge spools the observations | Start the collector, then run `pnpm bridge drain`. The spool depth is in the collector health endpoint. |
-| Permissions on the data directory | The store cannot be opened | Keep the data directory private (mode 0700) and outside the observed repository. |
-| Two telemetry destinations | The setup prints the existing values | Choose one destination, then re-run the setup with `--telemetry`. |
-| An incompatible Claude Code version | The runtime report lists the tested version | Compare it with the [runtime verification report](claude-code-runtime-report.md); the values that differ stay unavailable rather than being guessed. |
-
-## What the setup never does
-
-It never installs a background service, never signs up for anything, never sends session data anywhere, never executes a recorded command, never writes to Git or to the index, and never modifies `~/.claude/settings.json`.
-
-## Validation
-
-`tests/setup.test.ts` covers the guided setup with a pre-existing hook and permissions, the check command, the reversible removal and the missing-directory diagnostic. The flow was exercised against Claude Code 2.1.306 in a disposable repository.
+Quoli does not install a background service or a published global CLI. Port conflicts are reported instead of killing other software. The private data directory must be outside the observed repository. If capture is unavailable or blocked, inspect the repository-history status and Settings. Linux is the tested capture platform; macOS remains unverified.

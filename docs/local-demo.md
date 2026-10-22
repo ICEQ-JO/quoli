@@ -63,6 +63,7 @@ To test with a fresh store without deleting anything, set `TRACEFRAME_DATA_DIR` 
 | Session expired | Reload the page to establish a new local session. |
 | No project on a fresh `pnpm dev` | Run `pnpm seed`, or restart with `pnpm demo`. |
 | Invalid credential | Stop the demo, preserve the database, move aside only its credential file and restart; prior browser sessions become invalid. |
+| Repeated flashes/reloads or stuck on “Opening local workspace…” | Stop and restart `pnpm demo`. Local startup now uses Webpack; direct `next dev` defaults to Turbopack and can reproduce the observed `HMR hash mismatch` loop. |
 | Browser fixture tests report busy ports | Close an earlier test run; tests use 33140/34318 and an isolated store. |
 | Build artifacts conflict | Dev, production, browser tests and lifecycle tests use separate `.next*` directories. Stop a prior instance using the same directory before restarting. |
 
@@ -74,8 +75,14 @@ The authored demo is synthetic; explicit read-only repository capture is also su
 
 Use `http://127.0.0.1:3140` (or your configured web port). Browser cookies are shared across ports on the same hostname; unrelated localhost applications can leave enough cookie data to exceed the server's header limit. The connection flow preserves `127.0.0.1` so it stays in a separate cookie namespace. HTTP 431 alone does not prove which header caused it.
 
-If the IP address also returns 431, try a private browser window. Clearing site data for the affected hostname is optional and may sign you out of other apps on that hostname. Traceframe does not clear unrelated browser data or raise request header limits. A healthy `/api/health` request without browser cookies does not establish that a particular browser profile can load the dashboard.
+If the IP address also returns 431, try a private browser window. Clearing site data for the affected hostname is optional and may sign you out of other apps on that hostname. Quoli does not clear unrelated browser data or raise request header limits. A healthy `/api/health` request without browser cookies does not establish that a particular browser profile can load the dashboard.
 
 ## Session-first workflow
 
 Open a session, read its Review document, then use Open changes to inspect captured versions. Recorded source opens evidence beside the document on desktop and in a native dialog on smaller screens. Escape/Close returns focus; the review stays selected. All sessions restores the in-memory list filters. Needs review opens a list/detail capture-gap queue; narrow screens provide Back to recorded gaps. The header theme control switches between verified dark and light palettes and saves only the theme preference locally. See [the workspace reference](design/session-workspace.md).
+
+## Development reload regression
+
+Issue [#46](https://github.com/ICEQ-JO/quoli/issues/46) reproduced a Turbopack development-server loop: 115 document navigations in 15 seconds, repeated `HMR hash mismatch` messages and a workspace stuck at its initial loading screen. Restarting recovered that server; the upstream trigger was not isolated. Root `pnpm dev` / `pnpm demo` and the web package's `dev` command now explicitly use Next.js's supported `--webpack` mode to avoid that failing HMR protocol. Production builds retain their existing bundler. No cookies, credentials or session evidence need to be deleted.
+
+The browser regression test waits while a session filter is active, opens a review and Activity, navigates back, and checks that the filter survives without additional document requests or uncaught page errors. This catches the reported symptom; it does not prove the upstream Turbopack issue is fixed.

@@ -15,6 +15,7 @@ import {
 } from "@traceframe/schema";
 import { isExcluded, redact, sanitizeContent, sanitizeEvent } from "@traceframe/schema/privacy";
 import {
+  type ObservationStatus,
   type RepositorySnapshot,
   repositorySnapshotSchema,
   type SnapshotPage,
@@ -50,6 +51,12 @@ export class Store {
       );
       this.db.exec(
         readFileSync(new URL("../migrations/003-lifecycle.sql", import.meta.url), "utf8"),
+      );
+      this.db.exec(
+        readFileSync(
+          new URL("../migrations/004-repository-observation.sql", import.meta.url),
+          "utf8",
+        ),
       );
     } catch (error) {
       if (this.db.isTransaction) this.db.exec("ROLLBACK");
@@ -238,6 +245,7 @@ export class Store {
       this.db.prepare("DELETE FROM artifacts WHERE project_id=?").run(projectId);
       this.db.prepare("DELETE FROM events WHERE project_id=?").run(projectId);
       this.db.prepare("DELETE FROM repositories WHERE project_id=?").run(projectId);
+      this.db.prepare("DELETE FROM repository_observation WHERE project_id=?").run(projectId);
       this.db.prepare("DELETE FROM projects WHERE id=?").run(projectId);
       this.db
         .prepare(
@@ -393,7 +401,7 @@ export class Store {
         conditions.push(`${kind} IN ('tool_call','tool_result') AND ${tool}='Bash'`);
       else if (query.kind === "files")
         conditions.push(
-          `${kind} IN ('tool_call','tool_result') AND ${tool} IN ('Read','Write','Edit')`,
+          `(${kind} IN ('repository_snapshot','repository_state') OR (${kind} IN ('tool_call','tool_result') AND ${tool} IN ('Read','Write','Edit')))`,
         );
       else {
         conditions.push(`${kind}=?`);
@@ -451,17 +459,20 @@ export class Store {
     return rows.map((r) => {
       const events = this.allEvents(project, String(r.session_id));
       const start = events.find((e) => e.payload.kind === "session_start");
+      const repository = events.some((e) => e.producerId === "repository-observer-v1");
       return {
         id: String(r.session_id),
-        title:
-          start?.payload.kind === "session_start"
+        title: repository
+          ? `Repository history · ${String(r.session_id).slice(-10)}`
+          : start?.payload.kind === "session_start"
             ? (start.payload.content.text ?? "Content capture disabled")
             : events.some((e) => e.payload.kind === "repository_snapshot")
               ? "Repository review"
               : "Session start unavailable",
-        startedAt: start?.sourceTime ?? null,
+        startedAt: start?.sourceTime ?? (repository ? (events[0]?.sourceTime ?? null) : null),
         count: Number(r.count),
         ended: events.some((e) => e.payload.kind === "session_end"),
+        ...(repository ? { kind: "repository" as const } : {}),
       };
     });
   }
@@ -533,7 +544,13 @@ export class Store {
     sessionId: string,
     input: RepositorySnapshot,
     reason: "baseline" | "checkpoint",
+    observations: NormalizedEvent[] = [],
+    expectedEpoch?: number,
   ): StoredSnapshot {
+    if (
+      observations.some((event) => event.projectId !== projectId || event.sessionId !== sessionId)
+    )
+      throw new Error("Snapshot observations must share scope");
     const project = this.project(projectId);
     if (!project) throw new Error("Project not registered");
     const snapshot = repositorySnapshotSchema.parse(input);
@@ -571,6 +588,13 @@ export class Store {
     if (Buffer.byteLength(body) > 20 * 1024 * 1024) throw new Error("Snapshot capacity exceeded");
     this.db.exec("BEGIN IMMEDIATE");
     try {
+      // Other local processes can change consent or delete/re-register a
+      // project while a sample is being sanitized. Recheck under the write lock.
+      if (
+        JSON.stringify(this.project(projectId)?.policy) !== JSON.stringify(project.policy) ||
+        (expectedEpoch !== undefined && this.lifecycle(projectId).epoch !== expectedEpoch)
+      )
+        throw new Error("Capture consent changed before persistence");
       const used = this.projectBytes(projectId);
       if (used + Buffer.byteLength(body) > this.limits.maxBytes)
         throw new Error("Project storage limit reached");
@@ -602,6 +626,7 @@ export class Store {
             dirty: clean.dirty,
           },
         },
+        ...observations,
       ]);
       this.db.exec("COMMIT");
       return stored;
@@ -609,6 +634,83 @@ export class Store {
       this.db.exec("ROLLBACK");
       throw error;
     }
+  }
+  enableObservation(projectId: string): void {
+    if (!this.repository(projectId) || this.lifecycle(projectId).purgedAt)
+      throw new Error("Registered repository required");
+    if (!this.observation(projectId).enabled && this.observationProjects().length >= 50)
+      throw new Error("Automatic observation supports up to 50 repositories");
+    this.db
+      .prepare(
+        "INSERT INTO repository_observation(project_id,enabled) VALUES(?,1) ON CONFLICT(project_id) DO UPDATE SET enabled=1,status='waiting'",
+      )
+      .run(projectId);
+  }
+  observation(projectId: string): ObservationStatus {
+    const row = this.db
+      .prepare("SELECT * FROM repository_observation WHERE project_id=?")
+      .get(projectId);
+    return {
+      enabled: Boolean(row?.enabled),
+      status: this.lifecycle(projectId).paused
+        ? "paused"
+        : ((row?.status ?? "waiting") as ObservationStatus["status"]),
+      checkedAt: row?.checked_at == null ? null : String(row.checked_at),
+      capturedAt: row?.captured_at == null ? null : String(row.captured_at),
+    };
+  }
+  observationProjects(): string[] {
+    return this.db
+      .prepare("SELECT project_id FROM repository_observation WHERE enabled=1 ORDER BY project_id")
+      .all()
+      .map((row) => String(row.project_id));
+  }
+  updateObservation(
+    projectId: string,
+    status: ObservationStatus["status"],
+    captured = false,
+  ): void {
+    this.db
+      .prepare(
+        "UPDATE repository_observation SET status=?,checked_at=?,captured_at=CASE WHEN ? THEN ? ELSE captured_at END WHERE project_id=?",
+      )
+      .run(status, new Date().toISOString(), Number(captured), new Date().toISOString(), projectId);
+  }
+  latestObservedSnapshot(projectId: string): StoredSnapshot | null {
+    const row = this.db
+      .prepare(
+        "SELECT s.body FROM snapshots s WHERE s.project_id=? AND EXISTS (SELECT 1 FROM events e WHERE e.project_id=s.project_id AND e.session_id=s.session_id AND json_extract(e.body,'$.producerId')='repository-observer-v1') ORDER BY s.rowid DESC LIMIT 1",
+      )
+      .get(projectId);
+    return row ? (JSON.parse(String(row.body)) as StoredSnapshot) : null;
+  }
+  latestRepositoryState(projectId: string): NormalizedEvent | null {
+    const row = this.db
+      .prepare(
+        "SELECT body FROM events WHERE project_id=? AND json_extract(body,'$.producerId')='repository-observer-v1' AND json_extract(body,'$.payload.kind')='repository_state' ORDER BY sequence DESC LIMIT 1",
+      )
+      .get(projectId);
+    return row ? (JSON.parse(String(row.body)) as NormalizedEvent) : null;
+  }
+  repositoryHistory(projectId: string, sessionId: string) {
+    const total = Number(
+      this.db
+        .prepare(
+          "SELECT count(*) AS total FROM events WHERE project_id=? AND session_id=? AND json_extract(body,'$.payload.kind')='repository_state'",
+        )
+        .get(projectId, sessionId)?.total ?? 0,
+    );
+    const events: StoredEvent[] = this.db
+      .prepare(
+        "SELECT body,sequence,received_at FROM events WHERE project_id=? AND session_id=? AND json_extract(body,'$.payload.kind')='repository_state' ORDER BY sequence DESC LIMIT 50",
+      )
+      .all(projectId, sessionId)
+      .map((row) => ({
+        ...JSON.parse(String(row.body)),
+        sequence: Number(row.sequence),
+        receivedAt: String(row.received_at),
+      }));
+    return { events, total, nextCursor: null };
   }
   snapshots(projectId: string, sessionId: string): StoredSnapshot[] {
     return this.db

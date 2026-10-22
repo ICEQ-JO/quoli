@@ -2,7 +2,7 @@
 
 ## Product and architecture
 
-Traceframe is the product; `quoli` is the repository name. Start with `docs/README.md` for product scope, architecture, evidence requirements and the implementation sequence. Preserve useful existing code and conventions.
+Quoli is the product and repository name (formerly Traceframe). Start with `docs/README.md` for product scope, architecture, evidence requirements and the implementation sequence. Preserve useful existing code and conventions.
 
 ## Work tracking
 

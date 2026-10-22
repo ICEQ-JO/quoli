@@ -1,9 +1,13 @@
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { hookStatus, installHooks, uninstallHooks } from "../apps/bridge/src/install";
+import { createGitRunner } from "../packages/repository/src/git";
+import { captureRepository } from "../packages/repository/src/index";
+import { registeredLocation } from "../packages/repository/src/location";
 import { safeId } from "../packages/schema/src/index";
 import { Store } from "../packages/storage/src/index";
 import { credential, initializeCredential, runtime } from "../packages/storage/src/runtime";
@@ -11,21 +15,24 @@ import { credential, initializeCredential, runtime } from "../packages/storage/s
 /**
  * Guided local setup.
  *
- * The setup only reports and asks: it registers a project, adds Traceframe's
- * own hook entries to the project, and prints the telemetry variables the user
- * has to add themselves. It never rewrites a global setting, never replaces an
+ * Repository-only connection writes private local registration and observation
+ * consent. Explicit Claude mode additionally installs project hooks and can
+ * print optional telemetry variables. It never rewrites a global setting, never replaces an
  * existing telemetry destination and never hides a conflict.
  */
 
-const usage = `Traceframe local setup
+const connectCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli connect" : "pnpm connect";
+const settingsCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli settings" : "pnpm settings";
+const usage = `Quoli repository connection
 
-pnpm setup /path/to/project [--name "Project"] [--capture-code] [--telemetry]
-pnpm setup --check /path/to/project
-pnpm setup --disable /path/to/project
-pnpm setup --undo /path/to/project PROJECT_ID
+${connectCommand} /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude] [--telemetry]
+${connectCommand} --check /path/to/project
+${connectCommand} --disable /path/to/project
+${connectCommand} --undo /path/to/project PROJECT_ID
 
-Setup registers the repository, adds the hook entries to that project only and
-prints what you have to add yourself. Undo removes the hook entries and the
+Connect enables automatic repository observation while Quoli is running.
+It works with any coding agent or editor. --agent claude additionally installs
+the supported Claude Code hooks; other activity adapters are not connected. Undo removes the hook entries and the
 retained evidence of the project. Nothing else in your configuration changes.`;
 
 type TelemetryConflict = { key: string; value: string; source: string };
@@ -79,6 +86,8 @@ async function main() {
       name: { type: "string" },
       "capture-code": { type: "boolean", default: false },
       telemetry: { type: "boolean", default: false },
+      "include-untracked": { type: "boolean", default: false },
+      agent: { type: "string", default: "repository" },
       check: { type: "boolean" },
       undo: { type: "boolean" },
       disable: { type: "boolean" },
@@ -91,28 +100,42 @@ async function main() {
     console.log(usage);
     return;
   }
-  const root = resolve(positionals[0] ?? "");
-  if (!existsSync(root)) throw new Error("The project directory does not exist");
+  if (
+    positionals.length > (values.undo ? 2 : 1) ||
+    [values.check, values.undo, values.disable].filter(Boolean).length > 1 ||
+    !["repository", "claude"].includes(values.agent ?? "") ||
+    (values.telemetry && values.agent !== "claude")
+  )
+    throw new Error("Unsupported connection options");
+  const root = await registeredLocation(positionals[0] ?? ".", runtime().dataDir);
   const store = new Store(runtime().dbFile);
   try {
-    const claude = commandVersion("claude", ["--version"]);
-    const git = commandVersion("git", ["--version"]);
+    const claude =
+      values.agent === "claude"
+        ? commandVersion("claude", ["--version"])
+        : "not connected (repository-only mode)";
+    const gitOutput = await createGitRunner(root).optional(["--version"]);
+    const git = gitOutput?.toString("utf8").trim() ?? null;
     console.log(`Project: ${root}`);
     console.log(`Claude Code: ${claude ?? "not found on PATH"}`);
     console.log(`Git: ${git ?? "not found on PATH"}`);
     if (values.disable) {
       const projectId = findRegisteredProject(store, root);
-      if (!projectId) throw new Error("The project is not registered with Traceframe");
+      if (!projectId) throw new Error("The project is not registered with Quoli");
       store.updateSettings(projectId, { paused: true });
       console.log(`Capture is paused for ${projectId}.`);
       console.log(
-        "The hook entries stay in place and the retained evidence stays readable. Resume it from Settings or with pnpm settings resume.",
+        `The hook entries stay in place and retained evidence stays readable. Resume it from Settings or with ${settingsCommand} resume ${projectId}.`,
       );
       return;
     }
     if (values.undo) {
       const projectId = safeId.parse(positionals[1] ?? "");
-      const removed = uninstallHooks(root);
+      if (findRegisteredProject(store, root) !== projectId)
+        throw new Error("Project root mismatch");
+      const hook = hookStatus(root);
+      if (hook.installed && hook.projectId !== projectId) throw new Error("Hook project mismatch");
+      const removed = hook.installed ? uninstallHooks(root) : { removed: [] };
       const result = store.purgeProject(projectId);
       console.log(
         `Removed ${removed.removed.length} hook events and ${result.removed.events} retained observations for ${projectId}.`,
@@ -133,7 +156,7 @@ async function main() {
       console.log(
         registered
           ? `Repository: registered as ${registered}.`
-          : "Repository: not registered with Traceframe.",
+          : "Repository: not registered with Quoli.",
       );
       const conflicts = existingTelemetry();
       console.log(
@@ -141,10 +164,26 @@ async function main() {
           ? `Telemetry: ${conflicts.length} existing settings would need attention.`
           : "Telemetry: no existing exporter configuration found.",
       );
+      if (registered)
+        console.log(
+          `Automatic repository history: ${store.observation(registered).enabled ? store.observation(registered).status : "not enabled"}.`,
+        );
       return;
     }
-    const projectId = registered ?? `repo_${Math.abs(hash(root)).toString(16).padStart(32, "0")}`;
+    const projectId = registered ?? `repo_${randomUUID().replaceAll("-", "")}`;
     if (!registered) {
+      await captureRepository(
+        root,
+        {
+          version: 1,
+          prompt: false,
+          tool: false,
+          code: false,
+          maxFieldBytes: 65536,
+          excludedPaths: [".env", ".git", "node_modules", "credentials", "secrets"],
+        },
+        { maxFiles: 1, maxFileBytes: 64, maxTotalBytes: 64 },
+      );
       const name = values.name ?? root.split("/").filter(Boolean).at(-1) ?? "Project";
       store.registerLocalRepository(
         projectId,
@@ -158,26 +197,39 @@ async function main() {
           maxFieldBytes: 65536,
           excludedPaths: [".env", ".git", "node_modules", "credentials", "secrets"],
         },
-        false,
+        values["include-untracked"] ?? false,
       );
       console.log(`Registered the project as ${projectId}.`);
     } else {
       console.log(`The project is already registered as ${projectId}.`);
     }
-    const installed = installHooks(root, projectId);
-    console.log(`Hook entries written to ${installed.path}.`);
+    initializeCredential();
+    store.enableObservation(projectId);
+    console.log("Automatic repository history is enabled while Quoli is running.");
     console.log(
-      `Existing hook groups left untouched: ${installed.preservedGroups}. Remove them again with pnpm setup --undo.`,
+      `Open http://127.0.0.1:${runtime().webPort} and select this project. ${process.env.QUOLI_RUNTIME_ROOT ? "Use quoli start if capture is stopped." : "Start pnpm dev if Quoli is not running."}`,
     );
+    console.log("Repository changes are sampled every 5 seconds. Agent authorship is unknown.");
+    if (values.agent === "claude") {
+      const installed = installHooks(root, projectId);
+      console.log(`Hook entries written to ${installed.path}.`);
+      console.log(`Existing hook groups left untouched: ${installed.preservedGroups}.`);
+    } else {
+      console.log(
+        "No agent hooks installed. Claude Code, Codex, Pi, OpenCode and editors can all change this repository; detailed activity is not collected by repository observation.",
+      );
+    }
     console.log(
-      values["capture-code"]
-        ? "Code capture is enabled for this project. Prompt and tool content stay disabled until you enable them in Settings."
-        : "Code capture is disabled for this project. You can enable it later in Settings.",
+      store.project(projectId)?.policy.code
+        ? "Code capture is enabled with best-effort redaction."
+        : "Metadata-only capture: unstaged code edits and content diffs are unavailable. Enable code capture in Settings to observe them.",
     );
+    if (store.lifecycle(projectId).paused)
+      console.log("Capture is paused. Resume explicitly in Settings.");
     const conflicts = existingTelemetry();
     if (conflicts.length) {
       console.log("");
-      console.log("Existing telemetry configuration found; Traceframe does not change it:");
+      console.log("Existing telemetry configuration found; Quoli does not change it:");
       for (const conflict of conflicts)
         console.log(`  ${conflict.key}=${conflict.value} (${conflict.source})`);
       console.log(
@@ -199,7 +251,7 @@ async function main() {
         `  export TRACEFRAME_PROJECT_ID=${projectId}   # the collector needs the project for reported usage`,
       );
       console.log(
-        "Keep the prompt and tool content gates off; Traceframe stores no prompt text from telemetry.",
+        "Keep the prompt and tool content gates off; Quoli stores no prompt text from telemetry.",
       );
     }
   } finally {
@@ -207,15 +259,9 @@ async function main() {
   }
 }
 
-function hash(value: string): number {
-  let result = 0;
-  for (const character of value) result = (result * 31 + character.charCodeAt(0)) | 0;
-  return result;
-}
-
 main().catch(() => {
   console.error(
-    "Setup could not finish. Check the project directory, the local storage permissions and the running collector. Run pnpm setup --help for usage.",
+    `Setup could not finish. Check the project directory, local storage permissions and running collector. Run ${connectCommand} --help for usage.`,
   );
   process.exitCode = 1;
 });

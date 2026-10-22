@@ -24,7 +24,7 @@ export function LandingPage() {
   }, [theme]);
 
   const copyInstall = React.useCallback(() => {
-    navigator.clipboard?.writeText("curl -fsSL https://traceframe.dev/install.sh | sh");
+    navigator.clipboard?.writeText("pnpm connect /path/to/repo --capture-code");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, []);
@@ -40,7 +40,7 @@ export function LandingPage() {
           <div className="hero-content">
             <div className="hero-tag-row">
               <span className="hero-badge">LOCAL-FIRST FLIGHT RECORDER</span>
-              <span className="hero-meta-pill">DESIGNED FOR CLAUDE CODE</span>
+              <span className="hero-meta-pill">REPOSITORY HISTORY · ANY AGENT</span>
             </div>
 
             <h1 className="hero-headline">
@@ -48,33 +48,37 @@ export function LandingPage() {
             </h1>
 
             <p className="hero-subtext">
-              Traceframe is the local-first audit engine for AI developers. It records every tool
-              dispatch, captures bounded AST diffs against real git baselines, and separates
-              verified truth from conversational claims—with zero cloud telemetry.
+              Quoli records local repository changes and captured diffs, regardless of your agent or
+              editor. Optional agent integrations add available session evidence. Missing evidence
+              stays visible.
             </p>
 
             <div className="hero-actions">
               <div className="terminal-quick-copy">
                 <span className="terminal-prefix">$</span>
-                <code className="terminal-cmd">
-                  curl -fsSL https://traceframe.dev/install.sh | sh
-                </code>
+                <code className="terminal-cmd">pnpm connect /path/to/repo --capture-code</code>
                 <button
                   type="button"
                   className="copy-btn"
                   onClick={copyInstall}
-                  aria-label="Copy install script command"
+                  aria-label="Copy repository connection command"
                   title="Copy command"
                 >
                   {copied ? "COPIED" : "COPY"}
                 </button>
               </div>
 
+              <p className="document-muted">
+                From the Quoli source checkout, with pnpm dev running.
+              </p>
               <div className="hero-secondary-links">
                 <a href="/" className="hero-btn-primary">
                   Launch Local Workbench ➔
                 </a>
-                <a href="/?project=proj_local&session=sess_demo_1" className="hero-btn-secondary">
+                <a
+                  href="/?project=demo-quoli&session=session-cache&view=session"
+                  className="hero-btn-secondary"
+                >
                   Inspect Sample Session
                 </a>
               </div>

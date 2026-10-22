@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { contentSchema, safeId } from "./index";
 
+export type ObservationStatus = {
+  enabled: boolean;
+  status: "waiting" | "observing" | "paused" | "unavailable" | "blocked";
+  checkedAt: string | null;
+  capturedAt: string | null;
+};
+
 export const repositoryFileSchema = z
   .object({
     path: z.string().min(1).max(4096),

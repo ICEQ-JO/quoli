@@ -3,7 +3,7 @@ import { startCollector } from "./server";
 
 const server = startCollector();
 server.on("listening", () =>
-  console.log(`Traceframe collector ready on 127.0.0.1:${runtime().collectorPort} (local preview)`),
+  console.log(`Quoli collector ready on 127.0.0.1:${runtime().collectorPort} (local preview)`),
 );
 server.on("error", (error: NodeJS.ErrnoException) => {
   console.error(
@@ -15,6 +15,11 @@ server.on("error", (error: NodeJS.ErrnoException) => {
 });
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.on(signal, () => {
+    server.close();
+    server.closeAllConnections();
+  });
+if (process.env.QUOLI_MANAGED_CHILD === "1")
+  process.on("disconnect", () => {
     server.close();
     server.closeAllConnections();
   });

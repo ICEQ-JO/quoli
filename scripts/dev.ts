@@ -78,13 +78,15 @@ try {
     "apps/web/node_modules/next/dist/bin/next",
     "dev",
     "apps/web",
+    // Avoid the reproduced Turbopack HMR hash-mismatch reload loop.
+    "--webpack",
     "--hostname",
     "127.0.0.1",
     "--port",
     String(config.webPort),
   ]);
   console.log(
-    `\nTraceframe → http://127.0.0.1:${config.webPort}\nSynthetic local demo. Press Ctrl+C to stop both services.\n`,
+    `\nQuoli → http://127.0.0.1:${config.webPort}\n${process.argv.includes("--demo") ? "Synthetic local demo." : "Local repository capture."} Press Ctrl+C to stop both services.\n`,
   );
 } catch (error) {
   console.error(error instanceof Error ? error.message : "Local startup failed.");

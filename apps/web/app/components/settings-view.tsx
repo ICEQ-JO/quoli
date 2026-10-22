@@ -119,8 +119,8 @@ export function SettingsView({ project, projectName, refresh, onSessions }: Prop
             <p>
               {purged.removed.events} observations, {purged.removed.snapshots} repository captures
               and {purged.removed.artifacts} artifacts were removed. Capture and storage for this
-              project are stopped. Source files, agent transcripts and backups outside Traceframe
-              were not touched.
+              project are stopped. Source files, agent transcripts and backups outside Quoli were
+              not touched.
             </p>
           </div>
         </div>
@@ -252,8 +252,7 @@ export function SettingsView({ project, projectName, refresh, onSessions }: Prop
             <p className="document-muted">
               This removes the retained observations, repository captures, artifacts and project
               registration for {projectName}, and stops capture and storage for it. It does not
-              touch your source files, the agent's own transcripts, or any backup outside
-              Traceframe.
+              touch your source files, the agent's own transcripts, or any backup outside Quoli.
             </p>
             <div className="settings-actions">
               <button

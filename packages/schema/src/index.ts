@@ -45,6 +45,23 @@ const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullab
 export const payloadSchema = z.discriminatedUnion("kind", [
   z
     .object({
+      kind: z.literal("repository_state"),
+      head: z
+        .string()
+        .regex(/^[a-f0-9]{40,64}$/)
+        .nullable(),
+      previousHead: z
+        .string()
+        .regex(/^[a-f0-9]{40,64}$/)
+        .nullable(),
+      branch: z.string().max(1024).nullable(),
+      transition: z.enum(["initial", "unchanged", "fast_forward", "diverged", "unavailable"]),
+      commits: z.array(z.string().regex(/^[a-f0-9]{40,64}$/)).max(100),
+      omitted: z.boolean(),
+    })
+    .strict(),
+  z
+    .object({
       kind: z.literal("repository_snapshot"),
       snapshotId: safeId,
       reason: z.enum(["baseline", "checkpoint"]),
@@ -159,6 +176,7 @@ export type Session = {
   startedAt: string | null;
   count: number;
   ended: boolean;
+  kind?: "agent" | "repository";
 };
 export type UsageView = {
   input: number | null;
