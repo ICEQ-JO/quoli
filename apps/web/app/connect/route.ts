@@ -5,7 +5,9 @@ export function GET(request: NextRequest) {
   if (!validHost(request.headers.get("host")) || !validSite(request.headers.get("sec-fetch-site")))
     return new NextResponse("Open Traceframe directly on loopback.", { status: 403 });
   const response = NextResponse.redirect(
-    new URL(reviewUrl(readLocation(new URL(request.url))), request.url),
+    // Next may normalize request.url to localhost. Preserve the allowlisted Host
+    // so IP connections keep their separate browser cookie namespace.
+    new URL(reviewUrl(readLocation(new URL(request.url))), `http://${request.headers.get("host")}`),
   );
   response.cookies.set("traceframe-local", sessionToken(), {
     httpOnly: true,

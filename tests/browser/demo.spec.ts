@@ -435,3 +435,35 @@ test("missing and disabled captures remain explicit; mobile file selection focus
     ).status(),
   ).toBe(413);
 });
+
+test("fresh local connections retain the requested loopback origin and review selection", async ({
+  browser,
+}) => {
+  for (const hostname of ["127.0.0.1", "localhost"]) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+      const origin = `http://${hostname}:33140`;
+      await page.goto(
+        `${origin}/?session=session-cache&view=changes&before=snap_demo_cache_before&after=snap_demo_cache_after`,
+      );
+      await expect(page.getByRole("region", { name: "Unified code diff" })).toContainText(
+        "?? null",
+      );
+      expect(new URL(page.url()).origin).toBe(origin);
+      await expect(page.getByRole("combobox", { name: "Before capture" })).toHaveValue(
+        "snap_demo_cache_before",
+      );
+      await expect(page.getByRole("combobox", { name: "After capture" })).toHaveValue(
+        "snap_demo_cache_after",
+      );
+      const denied = await page.request.get(`${origin}/connect`, {
+        headers: { "sec-fetch-site": "cross-site" },
+        maxRedirects: 0,
+      });
+      expect(denied.status()).toBe(403);
+    } finally {
+      await context.close();
+    }
+  }
+});
