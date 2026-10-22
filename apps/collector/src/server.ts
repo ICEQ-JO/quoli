@@ -9,6 +9,7 @@ import { demoEvents, demoPolicy } from "../../../fixtures/demo";
 import { demoSnapshots } from "../../../fixtures/repository";
 import { readChanges } from "./changes";
 import { readMap } from "./map";
+import { spooledObservations } from "./spool";
 
 export function startCollector(
   port = runtime().collectorPort,
@@ -66,7 +67,14 @@ export function startCollector(
     try {
       const url = new URL(req.url ?? "/", `http://127.0.0.1:${port}`);
       if (req.method === "GET" && url.pathname === "/health") {
-        send(200, { status: "ok", schemaVersion: 1, mode: "local-preview", ...health });
+        send(200, {
+          status: "ok",
+          schemaVersion: 1,
+          mode: "local-preview",
+          // Observations waiting in the bridge retry spool are capture loss.
+          spooled: spooledObservations(),
+          ...health,
+        });
         return;
       }
       if (req.method === "GET" && url.pathname === "/v1/projects") {
