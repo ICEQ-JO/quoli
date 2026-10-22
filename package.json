@@ -12,6 +12,7 @@
     "seed": "node --import tsx scripts/seed.ts",
     "repository": "node --import tsx scripts/repository.ts",
     "bridge": "node --import tsx apps/bridge/src/index.ts",
+    "setup": "node --import tsx scripts/setup.ts",
     "settings": "node --import tsx scripts/settings.ts",
     "privacy:preview": "node --import tsx scripts/privacy-preview.ts",
     "typecheck": "tsc --noEmit && pnpm --filter @traceframe/web typecheck",
