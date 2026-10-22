@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import { safeId } from "../packages/schema/src/index";
 import { Store } from "../packages/storage/src/index";
-import { runtime } from "../packages/storage/src/runtime";
+import { rotateCredential, runtime } from "../packages/storage/src/runtime";
 
 const usage = `Traceframe capture controls
 
@@ -13,6 +13,7 @@ pnpm settings resume PROJECT_ID
 pnpm settings retention PROJECT_ID --days 30   (--days 0 keeps everything)
 pnpm settings usage PROJECT_ID
 pnpm settings purge PROJECT_ID --confirm
+pnpm settings rotate-credential
 
 Policy changes apply to new observations only. Purge removes retained evidence for the
 project and stops capture; source files, agent transcripts and external backups stay.`;
@@ -38,10 +39,28 @@ async function main() {
     return;
   }
   const [command, target] = positionals;
-  const commands = ["list", "show", "policy", "pause", "resume", "retention", "usage", "purge"];
+  const commands = [
+    "list",
+    "show",
+    "policy",
+    "pause",
+    "resume",
+    "retention",
+    "usage",
+    "purge",
+    "rotate-credential",
+  ];
   if (!commands.includes(command) || positionals.length > 2) throw new Error("Invalid operation");
   const store = new Store(runtime().dbFile);
   try {
+    if (command === "rotate-credential") {
+      rotateCredential();
+      console.log("The local credential was rotated.");
+      console.log(
+        "Existing browser sessions and any bridge command that carries the previous credential stop working. Update the hook entry with pnpm bridge install.",
+      );
+      return;
+    }
     if (command === "list") {
       for (const project of store.projects()) {
         const lifecycle = store.lifecycle(project.id);
