@@ -4,6 +4,8 @@ A local evidence workbench for AI-assisted development. Repository: `ICEQ-JO/quo
 
 > Show me what my coding agent did, what changed, and what remains unverified.
 
+**Target direction:** [Quoli's paying-customer product vision](docs/vision.md) — cloud and local repositories, multiple harnesses, observable activity and subagents, token cost, plugin/skill use and evidence-grounded change diagrams. The running application below is the current local MVP, not that full target.
+
 The local MVP is available: **a session review workspace** with a persistent timeline, tool results, evidence links, reported token/cache usage, recorded verification evidence, a bounded change map, cross-source reconciliation and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md), and local capture controls, retention and project deletion through the [settings view](docs/lifecycle-controls.md) and `pnpm settings`. The dashboard opens on a grouped session work list, with a focused review page, a recorded-gap inbox, captured before/after inspection and a map that joins captures to recorded checks. See the [workspace guide](docs/design/session-workspace.md).
 
 Live Claude Code collection is implemented as a passive [hook bridge](docs/hook-bridge.md) and a narrow [reported usage receiver](docs/telemetry-receiver.md), verified against Claude Code 2.1.306 in the [runtime report](docs/claude-code-runtime-report.md). The [setup guide](docs/local-setup.md) connects and removes the integration, and the [pilot checklist](docs/pilot-release.md) records what the local MVP guarantees and what it does not.

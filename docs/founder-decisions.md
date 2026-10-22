@@ -1,5 +1,7 @@
 # Decisions requiring founder input
 
+This page records the earlier MVP-stage proposals. The current target direction and its open decisions are in the [product vision](vision.md); keep the two pages reconciled when a decision is made.
+
 These are proposed defaults so implementation can proceed after approval; they are not decisions already made by the founder.
 
 | Decision | Recommendation | Consequence / when needed |
