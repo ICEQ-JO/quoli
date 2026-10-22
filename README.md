@@ -4,7 +4,9 @@ A local evidence workbench for AI-assisted development. Repository: `ICEQ-JO/quo
 
 > Show me what my coding agent did, what changed, and what remains unverified.
 
-The local preview is available: **a session review workspace** with a persistent timeline, tool results, evidence links, reported token/cache usage, recorded verification evidence, a bounded change map and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md), and local capture controls, retention and project deletion through the [settings view](docs/lifecycle-controls.md) and `pnpm settings`. The dashboard opens on a grouped session work list, with a focused review page, a recorded-gap inbox, captured before/after inspection and a map that joins captures to recorded checks. See the [workspace guide](docs/design/session-workspace.md). Live Claude Code collection is still upcoming and needs an authorized runtime check.
+The local MVP is available: **a session review workspace** with a persistent timeline, tool results, evidence links, reported token/cache usage, recorded verification evidence, a bounded change map, cross-source reconciliation and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md), and local capture controls, retention and project deletion through the [settings view](docs/lifecycle-controls.md) and `pnpm settings`. The dashboard opens on a grouped session work list, with a focused review page, a recorded-gap inbox, captured before/after inspection and a map that joins captures to recorded checks. See the [workspace guide](docs/design/session-workspace.md).
+
+Live Claude Code collection is implemented as a passive [hook bridge](docs/hook-bridge.md) and a narrow [reported usage receiver](docs/telemetry-receiver.md), verified against Claude Code 2.1.306 in the [runtime report](docs/claude-code-runtime-report.md). The [setup guide](docs/local-setup.md) connects and removes the integration, and the [pilot checklist](docs/pilot-release.md) records what the local MVP guarantees and what it does not.
 
 ## Run the demo
 
@@ -17,7 +19,7 @@ pnpm demo
 
 Open **http://127.0.0.1:3140**. Stop both services with **Ctrl+C**. The collector binds to `127.0.0.1:4318`. Neither server is publicly exposed. No API key or Claude account is needed; no agent is connected and no recorded commands are executed.
 
-The demo imports 33 entirely synthetic observations across three sessions. Re-running it preserves your local data and does not duplicate those observations.
+The demo imports 33 entirely synthetic observations across three sessions. Re-running it preserves your local data and does not duplicate those observations. Run `pnpm pilot` for the fixture-only validation of the whole local flow.
 
 ## Try these flows
 
@@ -30,6 +32,6 @@ The demo imports 33 entirely synthetic observations across three sessions. Re-ru
 7. Open **Settings** to change the capture policy, pause capture, set a retention window or delete the project's evidence.
 8. Return to **Overview** for the recorded capture-gap queue, or search/filter the **Sessions** library. Use **Review gaps**, search the entire session, or copy an evidence link from the inspector. Session, view and evidence selection survive reload.
 
-Read the [demo and troubleshooting guide](docs/local-demo.md), [verification evidence](docs/verification-evidence.md), [change map](docs/change-map.md), [development/API reference](docs/development.md), [product plan](docs/README.md), [architecture](docs/architecture.md), [GitHub backlog](docs/issues/README.md), and [working agreements](AGENTS.md).
+Read the [demo and troubleshooting guide](docs/local-demo.md), [verification evidence](docs/verification-evidence.md), [change map](docs/change-map.md), [capture controls](docs/lifecycle-controls.md), [local setup](docs/local-setup.md), [pilot checklist](docs/pilot-release.md), [development/API reference](docs/development.md), [product plan](docs/README.md), [architecture](docs/architecture.md), [GitHub backlog](docs/issues/README.md), and [working agreements](AGENTS.md).
 
 All session evidence stays on your machine. Synthetic content is explicitly enabled for the fixed demo project; new real projects default to metadata-only capture in the shared policy contract. Real-project registration is not exposed yet. Redaction reduces risk and cannot guarantee removal of every secret.
