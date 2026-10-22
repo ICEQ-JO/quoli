@@ -42,6 +42,10 @@ export function reviewUrl(location: ReviewLocation): string {
 }
 export function eventTitle(e: StoredEvent): string {
   const p = e.payload;
+  if (p.kind === "repository_snapshot")
+    return p.reason === "baseline"
+      ? "Repository baseline captured"
+      : "Repository checkpoint captured";
   if (p.kind === "tool_call") return p.toolName === "Bash" ? "Run command" : `${p.toolName} file`;
   if (p.kind === "tool_result")
     return `${p.toolName} · ${p.status === "success" ? "success reported" : p.status === "failure" ? "failure reported" : p.status}`;
@@ -51,6 +55,8 @@ export function eventTitle(e: StoredEvent): string {
 export function preview(e: StoredEvent): string {
   const p = e.payload;
   if ("content" in p) return p.content.text?.split("\n")[0] ?? `Content ${p.content.state}`;
+  if (p.kind === "repository_snapshot")
+    return `${p.reason === "baseline" ? "Baseline" : "Checkpoint"} · ${p.state} working tree${p.dirty ? " · dirty" : ""}`;
   if (p.kind === "usage")
     return `${number(p.input)} input · ${number(p.output)} output · ${number(p.cacheRead)} cache read`;
   if (p.kind === "session_end") return `Source reports ${p.reason}. Results may still be missing.`;

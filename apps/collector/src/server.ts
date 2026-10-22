@@ -61,7 +61,7 @@ export function startCollector(
     try {
       const url = new URL(req.url ?? "/", `http://127.0.0.1:${port}`);
       if (req.method === "GET" && url.pathname === "/health") {
-        send(200, { status: "ok", schemaVersion: 1, mode: "synthetic-demo", ...health });
+        send(200, { status: "ok", schemaVersion: 1, mode: "local-preview", ...health });
         return;
       }
       if (req.method === "GET" && url.pathname === "/v1/projects") {
@@ -114,9 +114,10 @@ export function startCollector(
         send(200, store.events(project, session, query.cursor, 8, query));
         return;
       }
-      const match = /^\/v1\/projects\/([^/]+)\/sessions(?:\/([^/]+)\/(events|summary))?$/.exec(
-        url.pathname,
-      );
+      const match =
+        /^\/v1\/projects\/([^/]+)\/sessions(?:\/([^/]+)\/(events|summary|snapshots))?$/.exec(
+          url.pathname,
+        );
       if (req.method === "GET" && match) {
         const project = safeId.parse(match[1]);
         if (!store.project(project)) {
@@ -132,13 +133,22 @@ export function startCollector(
           send(404, { error: "Unknown session" });
           return;
         }
+        if (match[3] === "snapshots") {
+          const cursor = Number(url.searchParams.get("cursor") ?? 0);
+          if (!Number.isSafeInteger(cursor) || cursor < 0) {
+            send(400, { error: "Invalid snapshot cursor" });
+            return;
+          }
+          send(200, store.snapshotSummaries(project, session, cursor));
+          return;
+        }
         if (match[3] === "summary") {
           const events = store.allEvents(project, session);
           send(200, {
             usage: usage(events),
             relationships: relationships(events),
             kindCounts: Object.fromEntries(
-              ["prompt", "tool_call", "tool_result", "gap"].map((kind) => [
+              ["prompt", "tool_call", "tool_result", "gap", "repository_snapshot"].map((kind) => [
                 kind,
                 events.filter((e) => e.payload.kind === kind).length,
               ]),

@@ -4,7 +4,7 @@ export async function GET() {
   try {
     const response = await collector("/health");
     return NextResponse.json(
-      { status: response.ok ? "ready" : "degraded", mode: "synthetic-demo" },
+      { status: response.ok ? "ready" : "degraded", mode: "local-preview" },
       { status: response.ok ? 200 : 503, headers: { "Cache-Control": "no-store" } },
     );
   } catch {

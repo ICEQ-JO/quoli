@@ -96,6 +96,7 @@ export default function Dashboard() {
     rowRefs = useRef(new Map<string, HTMLButtonElement>()),
     copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { project, session, view, event: eventId } = location;
+  const isWorkspace = view === "Overview" || view === "Sessions";
   useEffect(() => {
     setLocation(readLocation(new URL(window.location.href)));
     setReady(true);
@@ -149,6 +150,13 @@ export default function Dashboard() {
         setProjects(p);
         setSessions(s);
         setOnline(true);
+        if (!isWorkspace && s.some((item) => item.id === session)) {
+          read<Summary>({ resource: "summary", project, session }, abort.signal)
+            .then(setSummary)
+            .catch((e) => {
+              if (!abort.signal.aborted) setError(e.message);
+            });
+        }
       })
       .catch((e) => {
         if (!abort.signal.aborted) {
@@ -160,18 +168,19 @@ export default function Dashboard() {
       .finally(() => {
         if (!abort.signal.aborted) setMetadataLoading(false);
       });
-    read<Summary>({ resource: "summary", project, session }, abort.signal)
-      .then(setSummary)
-      .catch((e) => {
-        if (!abort.signal.aborted) setError(e.message);
-      });
     return () => abort.abort();
-  }, [ready, project, session, refresh]);
+  }, [ready, project, session, refresh, isWorkspace]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: refresh is the explicit user-requested reload trigger.
   useEffect(() => {
     if (!ready) return;
     const abort = new AbortController();
     const epoch = ++pageEpoch.current;
+    if (isWorkspace) {
+      setLoading(false);
+      setError("");
+      return () => abort.abort();
+    }
+    setPage({ events: [], nextCursor: null, total: 0 });
     setLoading(true);
     setLoadingMore(false);
     setError("");
@@ -192,20 +201,24 @@ export default function Dashboard() {
         if (epoch === pageEpoch.current) setLoading(false);
       });
     return () => abort.abort();
-  }, [ready, project, session, debouncedSearch, kind, order, refresh]);
+  }, [ready, project, session, debouncedSearch, kind, order, refresh, isWorkspace]);
   useEffect(() => {
     if (!ready) return;
     const abort = new AbortController();
     if (!eventId) {
       setSelected(
-        page.events.find((e) => e.sessionId === session && e.payload.kind === "prompt") ??
-          page.events.find((e) => e.sessionId === session) ??
+        page.events.find(
+          (e) => e.projectId === project && e.sessionId === session && e.payload.kind === "prompt",
+        ) ??
+          page.events.find((e) => e.projectId === project && e.sessionId === session) ??
           null,
       );
       setInspecting(false);
       return;
     }
-    const known = page.events.find((e) => e.id === eventId && e.sessionId === session);
+    const known = page.events.find(
+      (e) => e.id === eventId && e.projectId === project && e.sessionId === session,
+    );
     if (known) {
       setSelected(known);
       setInspecting(false);
@@ -295,7 +308,9 @@ export default function Dashboard() {
     navigate({ ...location, view: "Timeline", event: "" });
   }
   const current = sessions.find((s) => s.id === session),
-    projectName = projects.find((p) => p.id === project)?.name ?? "quoli";
+    projectName = projects.find((p) => p.id === project)?.name ?? "Local project";
+  const currentProject = projects.find((p) => p.id === project);
+  const synthetic = currentProject?.synthetic ?? true;
   const gaps = summary?.kindCounts.gap ?? 0;
   const links =
     summary?.relationships.filter(
@@ -313,7 +328,6 @@ export default function Dashboard() {
     />
   );
   const count = current?.count ?? 0;
-  const isWorkspace = view === "Overview" || view === "Sessions";
   const tabs = (target: View) => navigate({ ...location, view: target });
   return (
     <div className="review-app">
@@ -391,8 +405,12 @@ export default function Dashboard() {
         <div className="sidebar-help">
           <Icon name="info" />
           <div>
-            <strong>Explore the preview</strong>
-            <p>Three authored sessions to explore. No live agent connected.</p>
+            <strong>{synthetic ? "Explore the preview" : "Local repository"}</strong>
+            <p>
+              {synthetic
+                ? "Three authored sessions to explore. No live agent connected."
+                : "Repository observations stay local. No live agent connected."}
+            </p>
           </div>
         </div>
         <div className="sidebar-footer">
@@ -454,6 +472,7 @@ export default function Dashboard() {
                 sessions={sessions}
                 project={project}
                 projectName={projectName}
+                synthetic={synthetic}
                 refresh={refresh}
                 loading={metadataLoading}
                 unavailable={metadataFailed}
@@ -495,7 +514,9 @@ export default function Dashboard() {
                     {current?.title ?? (loading ? "Loading session…" : "Session unavailable")}
                   </h1>
                   <div className="session-status-row">
-                    <span className="demo-label">Synthetic session</span>
+                    <span className="demo-label">
+                      {synthetic ? "Synthetic session" : "Local repository"}
+                    </span>
                     <span className={`session-state ${current?.ended ? "" : "warning"}`}>
                       <i />
                       {current?.ended ? "End recorded" : "Incomplete capture"}
@@ -527,12 +548,14 @@ export default function Dashboard() {
                 <details className="demo-help">
                   <summary>
                     <Icon name="info" size={15} />
-                    About this demo
+                    {synthetic ? "About this demo" : "About this capture"}
                   </summary>
                   <div>
-                    All sessions are synthetic. No coding agent is connected, and recorded commands
-                    are never executed. File paths are references; repository snapshots and diffs
-                    are not available yet.
+                    {synthetic
+                      ? "These sessions are authored fixtures. No coding agent is connected."
+                      : "These are local repository observations. No coding agent is connected."}{" "}
+                    Recorded commands are never executed. Referenced file paths alone do not prove a
+                    change or its author.
                   </div>
                 </details>
               </div>
@@ -799,7 +822,13 @@ export default function Dashboard() {
                       Loading reported usage…
                     </div>
                   ))}
-                {view === "Capture coverage" && <CoveragePanel session={current} />}
+                {view === "Capture coverage" && (
+                  <CoveragePanel
+                    session={current}
+                    project={currentProject}
+                    snapshotCount={summary?.kindCounts.repository_snapshot ?? 0}
+                  />
+                )}
               </div>
             </>
           )}

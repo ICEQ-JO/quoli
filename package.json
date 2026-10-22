@@ -10,6 +10,7 @@
     "dev": "node --import tsx scripts/dev.ts",
     "demo": "node --import tsx scripts/dev.ts --demo",
     "seed": "node --import tsx scripts/seed.ts",
+    "repository": "node --import tsx scripts/repository.ts",
     "privacy:preview": "node --import tsx scripts/privacy-preview.ts",
     "typecheck": "tsc --noEmit && pnpm --filter @traceframe/web typecheck",
     "lint": "biome check .",

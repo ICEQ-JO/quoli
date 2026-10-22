@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { chmodSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
@@ -12,7 +13,13 @@ import {
   type Session,
   type StoredEvent,
 } from "@traceframe/schema";
-import { redact, sanitizeContent, sanitizeEvent } from "@traceframe/schema/privacy";
+import { isExcluded, redact, sanitizeContent, sanitizeEvent } from "@traceframe/schema/privacy";
+import {
+  type RepositorySnapshot,
+  repositorySnapshotSchema,
+  type SnapshotPage,
+  type StoredSnapshot,
+} from "@traceframe/schema/repository";
 
 export class Store {
   private db: DatabaseSync;
@@ -38,6 +45,9 @@ export class Store {
     this.db.exec("PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=3000;");
     try {
       this.db.exec(readFileSync(new URL("../migrations/001-initial.sql", import.meta.url), "utf8"));
+      this.db.exec(
+        readFileSync(new URL("../migrations/002-repository.sql", import.meta.url), "utf8"),
+      );
     } catch (error) {
       if (this.db.isTransaction) this.db.exec("ROLLBACK");
       this.db.close();
@@ -72,7 +82,8 @@ export class Store {
   append(input: NormalizedEvent[]): { accepted: number; duplicates: number } {
     const events = batchSchema.parse({ events: input }).events;
     let accepted = 0;
-    this.db.exec("BEGIN IMMEDIATE");
+    const ownTransaction = !this.db.isTransaction;
+    if (ownTransaction) this.db.exec("BEGIN IMMEDIATE");
     try {
       for (const raw of events) {
         const project = this.project(raw.projectId);
@@ -116,7 +127,7 @@ export class Store {
           .get(raw.projectId);
         if (
           Number(quota?.count) >= this.limits.maxEvents ||
-          Number(quota?.bytes) + Buffer.byteLength(body) > this.limits.maxBytes
+          this.projectBytes(raw.projectId) + Buffer.byteLength(body) > this.limits.maxBytes
         )
           throw new Error("Project storage limit reached");
         this.db
@@ -135,9 +146,9 @@ export class Store {
           );
         accepted++;
       }
-      this.db.exec("COMMIT");
+      if (ownTransaction) this.db.exec("COMMIT");
     } catch (error) {
-      this.db.exec("ROLLBACK");
+      if (ownTransaction) this.db.exec("ROLLBACK");
       throw error;
     }
     return { accepted, duplicates: events.length - accepted };
@@ -217,12 +228,198 @@ export class Store {
         title:
           start?.payload.kind === "session_start"
             ? (start.payload.content.text ?? "Content capture disabled")
-            : "Session start unavailable",
+            : events.some((e) => e.payload.kind === "repository_snapshot")
+              ? "Repository review"
+              : "Session start unavailable",
         startedAt: start?.sourceTime ?? null,
         count: Number(r.count),
         ended: events.some((e) => e.payload.kind === "session_end"),
       };
     });
+  }
+  private projectBytes(projectId: string): number {
+    return Number(
+      this.db
+        .prepare(`SELECT
+      (SELECT coalesce(sum(length(CAST(body AS BLOB))),0) FROM events WHERE project_id=?) +
+      (SELECT coalesce(sum(length(CAST(body AS BLOB))),0) FROM snapshots WHERE project_id=?) +
+      (SELECT coalesce(sum(length(CAST(body AS BLOB))),0) FROM artifacts WHERE project_id=?) AS bytes`)
+        .get(projectId, projectId, projectId)?.bytes ?? 0,
+    );
+  }
+  registerLocalRepository(
+    id: string,
+    name: string,
+    root: string,
+    policy: CapturePolicy,
+    includeUntracked: boolean,
+  ): void {
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      if (this.project(id)) throw new Error("Project already registered");
+      this.registerProject(id, name, false, policy);
+      this.registerRepository(id, root, includeUntracked);
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+  registerRepository(projectId: string, root: string, includeUntracked: boolean): void {
+    const project = this.project(projectId);
+    if (!project || project.synthetic) throw new Error("Real project required");
+    if (this.db.prepare("SELECT 1 FROM repositories WHERE project_id=?").get(projectId))
+      throw new Error("Repository already registered");
+    this.db
+      .prepare("INSERT INTO repositories(project_id,root,include_untracked) VALUES(?,?,?)")
+      .run(projectId, root, Number(includeUntracked));
+  }
+  repository(projectId: string): { root: string; includeUntracked: boolean } | null {
+    const row = this.db
+      .prepare("SELECT root,include_untracked FROM repositories WHERE project_id=?")
+      .get(projectId);
+    return row
+      ? { root: String(row.root), includeUntracked: Boolean(row.include_untracked) }
+      : null;
+  }
+  appendSnapshot(
+    projectId: string,
+    sessionId: string,
+    input: RepositorySnapshot,
+    reason: "baseline" | "checkpoint",
+  ): StoredSnapshot {
+    const project = this.project(projectId);
+    if (!project) throw new Error("Project not registered");
+    const snapshot = repositorySnapshotSchema.parse(input);
+    const files = snapshot.files.map((file) => {
+      const captured =
+        file.status === "present" || file.status === "racy"
+          ? file.content
+          : { ...file.content, text: null };
+      const content = isExcluded(file.path, project.policy)
+        ? { ...captured, text: null, state: "disabled" as const, categories: ["code" as const] }
+        : sanitizeContent(captured, project.policy, ["code"]);
+      return {
+        ...file,
+        path: redact(file.path),
+        content,
+        fingerprint:
+          content.text === null ? null : createHash("sha256").update(content.text).digest("hex"),
+      };
+    });
+    const clean = repositorySnapshotSchema.parse({
+      ...snapshot,
+      files,
+      warnings: snapshot.warnings.map(redact),
+    });
+    const eventId = `obs_${createHash("sha256").update(`${projectId}:${clean.id}`).digest("hex").slice(0, 40)}`;
+    const stored: StoredSnapshot = { ...clean, projectId, sessionId, reason, eventId };
+    const body = JSON.stringify(stored);
+    const prior = this.db
+      .prepare("SELECT body FROM snapshots WHERE project_id=? AND id=?")
+      .get(projectId, clean.id);
+    if (prior) {
+      if (String(prior.body) !== body) throw new Error("Snapshot identity conflict");
+      return JSON.parse(String(prior.body)) as StoredSnapshot;
+    }
+    if (Buffer.byteLength(body) > 20 * 1024 * 1024) throw new Error("Snapshot capacity exceeded");
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      const used = this.projectBytes(projectId);
+      if (used + Buffer.byteLength(body) > this.limits.maxBytes)
+        throw new Error("Project storage limit reached");
+      this.db
+        .prepare("INSERT INTO snapshots(id,project_id,session_id,event_id,body) VALUES(?,?,?,?,?)")
+        .run(clean.id, projectId, sessionId, eventId, body);
+      this.append([
+        {
+          schemaVersion: 1,
+          id: eventId,
+          deliveryId: eventId,
+          projectId,
+          sessionId,
+          source: project.synthetic ? "synthetic" : "repository",
+          adapterVersion: "0.1.0",
+          sourceLocator: clean.id,
+          producerId: "repository-capture-v1",
+          promptId: null,
+          toolId: null,
+          requestId: null,
+          sourceTime: clean.capturedAt,
+          sourceSequence: null,
+          policyVersion: 1,
+          payload: {
+            kind: "repository_snapshot",
+            snapshotId: clean.id,
+            reason,
+            state: clean.state,
+            dirty: clean.dirty,
+          },
+        },
+      ]);
+      this.db.exec("COMMIT");
+      return stored;
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+  snapshots(projectId: string, sessionId: string): StoredSnapshot[] {
+    return this.db
+      .prepare(
+        "SELECT body FROM snapshots WHERE project_id=? AND session_id=? ORDER BY rowid LIMIT 100",
+      )
+      .all(projectId, sessionId)
+      .map((row) => JSON.parse(String(row.body)) as StoredSnapshot);
+  }
+  snapshotSummaries(projectId: string, sessionId: string, cursor = 0, limit = 50): SnapshotPage {
+    if (
+      !Number.isSafeInteger(cursor) ||
+      cursor < 0 ||
+      !Number.isSafeInteger(limit) ||
+      limit < 1 ||
+      limit > 100
+    )
+      throw new Error("Invalid snapshot cursor");
+    const rows = this.db
+      .prepare(`SELECT rowid AS cursor, id, event_id,
+      json_extract(body,'$.capturedAt') AS captured_at,
+      json_extract(body,'$.head') AS head, json_extract(body,'$.indexIdentity') AS index_identity,
+      json_extract(body,'$.reason') AS reason, json_extract(body,'$.state') AS state,
+      json_extract(body,'$.dirty') AS dirty, json_extract(body,'$.omitted') AS omitted,
+      json_array_length(body,'$.files') AS file_count, json_array_length(body,'$.warnings') AS warning_count
+      FROM snapshots WHERE project_id=? AND session_id=? AND rowid>? ORDER BY rowid LIMIT ?`)
+      .all(projectId, sessionId, cursor, limit + 1);
+    const total = Number(
+      this.db
+        .prepare("SELECT count(*) AS total FROM snapshots WHERE project_id=? AND session_id=?")
+        .get(projectId, sessionId)?.total ?? 0,
+    );
+    return {
+      total,
+      nextCursor: rows.length > limit ? Number(rows[limit - 1].cursor) : null,
+      snapshots: rows.slice(0, limit).map((row) => ({
+        id: String(row.id),
+        projectId,
+        sessionId,
+        eventId: String(row.event_id),
+        capturedAt: String(row.captured_at),
+        head: row.head === null ? null : String(row.head),
+        indexIdentity: row.index_identity === null ? null : String(row.index_identity),
+        reason: row.reason as "baseline" | "checkpoint",
+        state: row.state as "observed" | "racy",
+        dirty: row.dirty === null ? null : Boolean(row.dirty),
+        omitted: Number(row.omitted),
+        fileCount: Number(row.file_count),
+        warningCount: Number(row.warning_count),
+      })),
+    };
+  }
+  snapshot(projectId: string, id: string): StoredSnapshot | null {
+    const row = this.db
+      .prepare("SELECT body FROM snapshots WHERE project_id=? AND id=?")
+      .get(projectId, id);
+    return row ? (JSON.parse(String(row.body)) as StoredSnapshot) : null;
   }
   artifact(projectId: string, id: string, text: string): void {
     if (Buffer.byteLength(text) > 1048576) throw new Error("Artifact exceeds in-memory limit");
@@ -232,9 +429,18 @@ export class Store {
       { text, state: "present", originalBytes: null, categories: ["code"] },
       project.policy,
     );
-    this.db
-      .prepare("INSERT INTO artifacts VALUES(?,?,?)")
-      .run(id, projectId, JSON.stringify(content));
+    const body = JSON.stringify(content);
+    const ownTransaction = !this.db.isTransaction;
+    if (ownTransaction) this.db.exec("BEGIN IMMEDIATE");
+    try {
+      if (this.projectBytes(projectId) + Buffer.byteLength(body) > this.limits.maxBytes)
+        throw new Error("Project storage limit reached");
+      this.db.prepare("INSERT INTO artifacts VALUES(?,?,?)").run(id, projectId, body);
+      if (ownTransaction) this.db.exec("COMMIT");
+    } catch (error) {
+      if (ownTransaction) this.db.exec("ROLLBACK");
+      throw error;
+    }
   }
   close(): void {
     this.db.close();
