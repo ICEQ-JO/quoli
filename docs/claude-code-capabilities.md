@@ -1,6 +1,8 @@
 # Claude Code capability matrix
 
-Research date: **2026-10-22**. Only official documentation supports the findings below. This is documentation discovery, not certification of an installed version. No Claude executable or personal session directory was inspected. Every runtime capability is **unverified** until issue 013 records the tested version, OS, settings and source-shaped sanitized examples.
+Research date: **2026-10-22**. Only official documentation supports the findings below. This is documentation discovery, not certification of an installed version.
+
+**Runtime status:** the runtime gate for [issue #14](https://github.com/ICEQ-JO/quoli/issues/14) is now closed for Claude Code **2.1.306** on Linux. The observed payloads, identifiers, gap behavior and unsupported values are recorded in the [runtime verification report](claude-code-runtime-report.md) with sanitized source-shaped examples in [`fixtures/claude.ts`](../fixtures/claude.ts). A row below is only *verified* where that report says so; everything else stays unverified until it is exercised on the tested version.
 
 ## Sources and documented surfaces
 
@@ -62,7 +64,7 @@ Status-line capture is not needed for MVP. Experimental transcript parsing is is
 
 ## Runtime verification gate before adapter implementation
 
-Issue 013 must supply a supported-version report, not merely update this table from memory:
+Issue 013 supplied a supported-version report against Claude Code 2.1.306 (see the [runtime verification report](claude-code-runtime-report.md)). The checklist below is retained for revalidation on other versions:
 
 - Recheck official contracts; record tested version and configuration, distinguish documented examples from observed fixtures.
 - On an explicitly authorized disposable repository, exercise prompt, allowed/failed/interrupted tool activity, denied actions, a resumed session, shutdown, parallel calls and overlapping sources. Never copy real private sessions.
