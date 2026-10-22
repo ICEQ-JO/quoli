@@ -7,6 +7,8 @@
       "!**/.next-build",
       "!**/.next-e2e",
       "!**/.next-lifecycle",
+      "!**/.next-release",
+      "!**/dist",
       "!**/node_modules",
       "!pnpm-lock.yaml",
       "!test-results",

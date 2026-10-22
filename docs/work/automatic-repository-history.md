@@ -35,3 +35,5 @@ The full browser suite passed 25/25, including connection without hooks, automat
 The running local service uses the normal default private store, so `pnpm connect` can use its normal defaults. No real project was connected on the owner's behalf and no tool configuration was changed. No branch, issue, PR or package was published for this increment.
 
 Next bounded increment: verify supported Codex/Pi/OpenCode integration surfaces, define capability-labelled adapters with sanitized fixtures, then add activity integrations individually. Repository sampling does not substitute for those adapters or establish file authorship. Source-checkout setup is supported; a distributable install-once CLI and managed background lifecycle remain future work.
+
+Subsequent local increment: [CLI and background runtime](cli-background.md) delivers the local distributable and managed lifecycle described above as future work. Agent adapters remain separate.

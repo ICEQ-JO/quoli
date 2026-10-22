@@ -1,5 +1,7 @@
 # Implementation checkpoint
 
+The local branch also includes an [installable production CLI/background runtime](cli.md), with its [acceptance and validation record](work/cli-background.md). This is an unpublished Linux build; new agent activity adapters remain outstanding.
+
 Current local increment: **Quoli automatic repository history**, on `feat/quoli-automatic-repository-history`. [Connection and limits](automatic-history.md), [local acceptance record](work/automatic-repository-history.md). Repository observation is independent of agent/editor; additional agent activity adapters remain planned.
 
 This is a working checkpoint, not a release certification. The source tree, tests, running application and linked PRs are authoritative. Update this page as each increment is demonstrated.

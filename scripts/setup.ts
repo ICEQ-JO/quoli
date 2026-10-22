@@ -21,12 +21,14 @@ import { credential, initializeCredential, runtime } from "../packages/storage/s
  * existing telemetry destination and never hides a conflict.
  */
 
+const connectCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli connect" : "pnpm connect";
+const settingsCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli settings" : "pnpm settings";
 const usage = `Quoli repository connection
 
-pnpm connect /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude] [--telemetry]
-pnpm connect --check /path/to/project
-pnpm connect --disable /path/to/project
-pnpm connect --undo /path/to/project PROJECT_ID
+${connectCommand} /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude] [--telemetry]
+${connectCommand} --check /path/to/project
+${connectCommand} --disable /path/to/project
+${connectCommand} --undo /path/to/project PROJECT_ID
 
 Connect enables automatic repository observation while Quoli is running.
 It works with any coding agent or editor. --agent claude additionally installs
@@ -123,7 +125,7 @@ async function main() {
       store.updateSettings(projectId, { paused: true });
       console.log(`Capture is paused for ${projectId}.`);
       console.log(
-        "The hook entries stay in place and the retained evidence stays readable. Resume it from Settings or with pnpm settings resume.",
+        `The hook entries stay in place and retained evidence stays readable. Resume it from Settings or with ${settingsCommand} resume ${projectId}.`,
       );
       return;
     }
@@ -205,7 +207,7 @@ async function main() {
     store.enableObservation(projectId);
     console.log("Automatic repository history is enabled while Quoli is running.");
     console.log(
-      `Open http://127.0.0.1:${runtime().webPort} and select this project. Start pnpm dev if Quoli is not running.`,
+      `Open http://127.0.0.1:${runtime().webPort} and select this project. ${process.env.QUOLI_RUNTIME_ROOT ? "Use quoli start if capture is stopped." : "Start pnpm dev if Quoli is not running."}`,
     );
     console.log("Repository changes are sampled every 5 seconds. Agent authorship is unknown.");
     if (values.agent === "claude") {
@@ -259,7 +261,7 @@ async function main() {
 
 main().catch(() => {
   console.error(
-    "Setup could not finish. Check the project directory, the local storage permissions and the running collector. Run pnpm connect --help for usage.",
+    `Setup could not finish. Check the project directory, local storage permissions and running collector. Run ${connectCommand} --help for usage.`,
   );
   process.exitCode = 1;
 });

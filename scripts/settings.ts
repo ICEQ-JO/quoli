@@ -3,17 +3,18 @@ import { safeId } from "../packages/schema/src/index";
 import { Store } from "../packages/storage/src/index";
 import { rotateCredential, runtime } from "../packages/storage/src/runtime";
 
+const settingsCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli settings" : "pnpm settings";
 const usage = `Quoli capture controls
 
-pnpm settings list
-pnpm settings show PROJECT_ID
-pnpm settings policy PROJECT_ID [--prompt|--tool|--code|--no-prompt|--no-tool|--no-code]
-pnpm settings pause PROJECT_ID
-pnpm settings resume PROJECT_ID
-pnpm settings retention PROJECT_ID --days 30   (--days 0 keeps everything)
-pnpm settings usage PROJECT_ID
-pnpm settings purge PROJECT_ID --confirm
-pnpm settings rotate-credential
+${settingsCommand} list
+${settingsCommand} show PROJECT_ID
+${settingsCommand} policy PROJECT_ID [--prompt|--tool|--code|--no-prompt|--no-tool|--no-code]
+${settingsCommand} pause PROJECT_ID
+${settingsCommand} resume PROJECT_ID
+${settingsCommand} retention PROJECT_ID --days 30   (--days 0 keeps everything)
+${settingsCommand} usage PROJECT_ID
+${settingsCommand} purge PROJECT_ID --confirm
+${settingsCommand} rotate-credential
 
 Policy changes apply to new observations only. Purge removes retained evidence for the
 project and stops capture; source files, agent transcripts and external backups stay.`;
@@ -143,7 +144,7 @@ async function main() {
 main().catch(() => {
   // Settings errors can include policy details; keep the message generic.
   console.error(
-    "Settings operation failed. Check the command, the project id and local storage permissions. Run pnpm settings --help for usage.",
+    `Settings operation failed. Check the command, project id and local storage permissions. Run ${settingsCommand} --help for usage.`,
   );
   process.exitCode = 1;
 });

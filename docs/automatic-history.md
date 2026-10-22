@@ -14,7 +14,7 @@ pnpm connect /absolute/path/to/project --capture-code
 
 Open http://127.0.0.1:3140, select the project, and open **Repository history** from Sessions. A fresh workspace selects the first registered project automatically. The real-project session list and repository-history review refresh in place without reloading the document.
 
-The connection command enables automatic observation in private local configuration. It does not modify the repository, install agent hooks, run an agent, or install a background OS service. Keep Quoli running to capture changes. Stop it normally to stop observation. There is no published installer/package yet; this source-checkout command is the supported local path.
+The connection command enables automatic observation in private local configuration. It does not modify the repository, install agent hooks, run an agent, or install a background OS service. Keep Quoli running to capture changes. Stop it normally to stop observation. There is no published installer/package yet. An [unpublished local CLI release](cli.md) can now be built and installed once; `quoli connect --capture-code` then connects from inside a target repository and starts background capture. The source-checkout path above remains available.
 
 `--capture-code` explicitly permits bounded, best-effort-redacted code versions. Without it, capture is metadata-only: file bodies and unstaged content edits are unavailable. `--include-untracked` separately permits untracked-file capture. Ignored/excluded paths are omitted. Existing project consent is never silently broadened by reconnecting: use Settings to change it.
 

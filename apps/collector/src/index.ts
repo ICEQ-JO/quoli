@@ -18,3 +18,8 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
     server.close();
     server.closeAllConnections();
   });
+if (process.env.QUOLI_MANAGED_CHILD === "1")
+  process.on("disconnect", () => {
+    server.close();
+    server.closeAllConnections();
+  });

@@ -4,6 +4,7 @@
     "packages/**/*.ts",
     "scripts/**/*.ts",
     "apps/collector/**/*.ts",
+    "apps/cli/**/*.ts",
     "tests/**/*.ts",
     "playwright.config.ts"
   ]

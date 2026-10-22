@@ -2,6 +2,8 @@
 
 Quoli connects a local Git repository once and records automatic repository history while its collector runs. The repository layer works with any coding agent or editor. It does not claim to collect every agent's activity.
 
+An [installable local CLI](cli.md) now supports `quoli connect --capture-code` from inside the target repository and manages the background production runtime. The source-checkout flow below remains available for development.
+
 ## Run and connect
 
 From the source checkout:

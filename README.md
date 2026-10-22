@@ -8,6 +8,10 @@ The local MVP is available: **a session review workspace** with a persistent tim
 
 Live Claude Code collection is implemented as a passive [hook bridge](docs/hook-bridge.md) and a narrow [reported usage receiver](docs/telemetry-receiver.md), verified against Claude Code 2.1.306 in the [runtime report](docs/claude-code-runtime-report.md). The [setup guide](docs/local-setup.md) connects and removes the integration, and the [pilot checklist](docs/pilot-release.md) records what the local MVP guarantees and what it does not.
 
+## Install a local CLI
+
+`pnpm release:local` builds a standalone local Linux archive. Run `node dist/quoli/cli.mjs install` once, then run `quoli connect --capture-code` inside your repository. Capture and the production dashboard run in the background, managed with `quoli start`, `quoli stop` and `quoli status`. Node 24.16+ within Node 24 and Git are required; the installed runtime needs neither pnpm nor this checkout. Nothing is published to a registry. See [CLI installation and lifecycle](docs/cli.md).
+
 ## Connect your repository
 
 From this source checkout, start `pnpm dev`, then run `pnpm connect /path/to/repo --capture-code` in another terminal. Quoli automatically samples file versions, branch/HEAD changes and bounded commit IDs while running, regardless of the agent or editor used. Open the project's **Repository history** to review captured diffs. Code capture is explicit; metadata-only is the default. Untracked capture needs separate consent.
