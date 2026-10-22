@@ -108,6 +108,8 @@ async function main() {
     const project = store.project(projectId);
     const repository = store.repository(projectId);
     if (!project || !repository) throw new Error("Repository not registered");
+    // A paused project stops capture, including scheduled repository captures.
+    if (store.lifecycle(projectId).paused) throw new Error("Capture is paused for this project");
     const currentRoot = await realpath(repository.root);
     const privateData = await canonicalLocation(config.dataDir);
     if (

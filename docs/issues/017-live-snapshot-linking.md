@@ -1,6 +1,6 @@
 # 017: Link live sessions to observed repository snapshots and checks
 
-Status: published as [GitHub #18](https://github.com/ICEQ-JO/quoli/issues/18); this file is the local reference. Milestone: M4.
+Status: published as [GitHub #18](https://github.com/ICEQ-JO/quoli/issues/18); this file is the local reference. Milestone: M4. Implemented on `feat/live-linking`; see the [live linking guide](../live-linking.md).
 
 ## User value
 
@@ -20,10 +20,10 @@ No atomic filesystem guarantee, auto-commit, restore, agent-authorship guarantee
 
 ## Acceptance criteria
 
-- [ ] A consented disposable session yields timeline → snapshot pair → diff → map → command evidence navigation.
-- [ ] Dirty baseline is preserved; Bash/external file changes are observed without falsely treating Edit/Write coverage as exhaustive.
-- [ ] Overlapping sessions/user edits, collector restart, moving HEAD and missing start produce explicit ambiguous or unavailable relationships.
-- [ ] Snapshot load is bounded and capture can pause; registered roots and content policies are enforced on every scheduled task.
+- [x] A consented disposable session yields timeline → snapshot pair → diff → map → command evidence navigation.
+- [x] Dirty baseline is preserved; Bash/external file changes are observed without falsely treating Edit/Write coverage as exhaustive.
+- [x] Overlapping sessions/user edits, collector restart, moving HEAD and missing start produce explicit ambiguous or unavailable relationships.
+- [x] Snapshot load is bounded and capture can pause; registered roots and content policies are enforced on every scheduled task.
 
 ## Test plan
 
