@@ -32,6 +32,8 @@ pnpm demo
 
 `pnpm test` uses Node's test runner, disposable stores and a lifecycle startup/restart test. Browser tests use separate ports, a temporary synthetic store, a separate Next output directory and graceful cleanup. No Claude account is used. `pnpm build` creates `.next-build`, separate from `.next` development output. `pnpm format` formats source/config files; Markdown is maintained deliberately rather than rewritten automatically. CSS selector-specificity linting is disabled for the component stylesheet because the rule compares unrelated component selectors; other recommended checks remain enabled.
 
+`pnpm settings` controls capture policy, pause state, retention and project deletion. See [capture controls](lifecycle-controls.md).
+
 `pnpm privacy:preview` shows how metadata-only policy filters a synthetic prompt. `pnpm privacy:preview --synthetic-content` displays explicitly enabled fixture content. Never pipe personal sessions into this command.
 
 ## Repository capture
@@ -58,7 +60,11 @@ Collector base: `http://127.0.0.1:4318`. All collector routes require `Authoriza
 | `GET /v1/projects/:project/sessions/:session/events?cursor=N` | Eight events after receipt sequence N; `{events,nextCursor,total}`. Cursor does not use source timestamps. |
 | `GET …/events?event=ID` | One project/session-scoped evidence observation. |
 | `POST …/events/query` | Strict `{search,kind,order,cursor}` query; session-wide filtering and keyset pagination. Search ≤200 characters; source order uses timestamp and receipt-sequence tie-break. Search stays out of URL/access-log paths. |
-| `GET …/summary` | Bounded usage, tool-ID evidence relationships and kind counts over retained session observations. |
+| `GET …/summary` | Bounded usage, tool-ID evidence relationships, verification evidence and kind counts over retained session observations. |
+| `GET /v1/projects/:project/settings` | Capture policy, capture state, retention window, deletion state and storage usage. |
+| `POST /v1/projects/:project/settings` | Updates the capture policy, pause state or retention window. Policy changes apply before new content is persisted. |
+| `POST /v1/projects/:project/purge` | Deletes the project evidence, truncates the local write-ahead log, stops capture and leaves a tombstone that blocks stale producers. Idempotent. |
+| `POST …/map` | Bounded change map over one capture pair: `{beforeId, afterId, nodes, edges}`. The two latest captures are used when the pair is absent. |
 
 Status codes: 400 malformed/unsupported schema, 401 credential required, 403 host/origin denied, 404 missing resource, 409 conflicting identity/unregistered project/write unavailable, 413 transport cap, 415 content type, 429 local request cap, 503 missing credential. Error bodies intentionally do not serialize payloads or exception messages. Global local rate cap is 600 requests/minute; no durable transport spool is implemented in this demo. Producers retry the identical delivery ID after a lost acknowledgment. Never retry changed content under the same identity.
 

@@ -4778,6 +4778,140 @@ h1 {
 .map-view > section > ul button:hover .map-edge-route {
   color: var(--accent);
 }
+.settings-view {
+  max-width: 780px;
+  display: flex;
+  flex-direction: column;
+}
+.settings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+.settings-header h1 {
+  font-size: 22px;
+  font-weight: 550;
+  letter-spacing: -0.4px;
+}
+.settings-header p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.settings-section {
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+.settings-section:last-child {
+  border-bottom: 0;
+}
+.settings-section.danger h2 {
+  color: var(--negative);
+}
+.settings-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.settings-section-heading h2 {
+  font-size: 15px;
+  font-weight: 550;
+}
+.settings-section-heading span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.settings-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+}
+.settings-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+.settings-toggle input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+.settings-toggle strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.settings-toggle span span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.settings-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.settings-field select {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.settings-usage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px 18px;
+  margin-top: 10px;
+}
+.settings-usage dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.settings-usage dd {
+  font-size: 15px;
+  margin: 2px 0 0;
+}
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+.settings-notice {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  border: 1px solid var(--negative);
+  background: var(--negative-bg);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 13px 15px;
+  margin: 16px 0 0;
+}
+.settings-notice strong {
+  font-size: 13px;
+  font-weight: 550;
+}
+.settings-notice p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.7;
+}
+.button.danger {
+  color: var(--negative);
+  border-color: var(--negative);
+}
 .session-properties {
   border-left: 1px solid var(--line);
   padding-left: 24px;
@@ -4901,6 +5035,11 @@ h1 {
     gap: 5px;
     padding: 7px;
     min-height: 30px;
+  }
+  /* Keep the settings entry icon-only so the narrow top bar never overflows. */
+  .primary-nav > button.settings-nav {
+    font-size: 0;
+    gap: 0;
   }
   .primary-nav > button > svg {
     width: 14px;

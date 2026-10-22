@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { relationships, usage, verification } from "@traceframe/analysis";
 import { batchSchema, eventQuerySchema, MAX_BODY, safeId } from "@traceframe/schema";
+import { settingsUpdateSchema } from "@traceframe/schema/lifecycle";
 import { Store } from "@traceframe/storage";
 import { credential, initializeCredential, runtime } from "@traceframe/storage/runtime";
 import { demoEvents, demoPolicy } from "../../../fixtures/demo";
@@ -113,6 +114,59 @@ export function startCollector(
           return;
         }
         send(200, store.sessionCounts(project));
+        return;
+      }
+      const settingsMatch = /^\/v1\/projects\/([^/]+)\/settings$/.exec(url.pathname);
+      if (settingsMatch && (req.method === "GET" || req.method === "POST")) {
+        const project = safeId.parse(settingsMatch[1]);
+        if (!store.project(project)) {
+          send(404, { error: "Unknown project" });
+          return;
+        }
+        if (req.method === "GET") {
+          const settings = store.settings(project);
+          send(200, {
+            projectId: project,
+            name: settings.project.name,
+            synthetic: settings.project.synthetic,
+            policy: settings.project.policy,
+            paused: settings.paused,
+            retentionDays: settings.retentionDays,
+            purged: settings.purgedAt !== null,
+            purgedAt: settings.purgedAt,
+            epoch: settings.epoch,
+            usage: settings.usage,
+          });
+          return;
+        }
+        if (req.headers["content-type"] !== "application/json") {
+          send(415, { error: "Use application/json" });
+          return;
+        }
+        const text = await body(req, res);
+        if (text === null) return;
+        const update = settingsUpdateSchema.parse(JSON.parse(text));
+        store.updateSettings(project, update);
+        const settings = store.settings(project);
+        send(200, {
+          projectId: project,
+          name: settings.project.name,
+          synthetic: settings.project.synthetic,
+          policy: settings.project.policy,
+          paused: settings.paused,
+          retentionDays: settings.retentionDays,
+          purged: settings.purgedAt !== null,
+          purgedAt: settings.purgedAt,
+          epoch: settings.epoch,
+          usage: settings.usage,
+        });
+        return;
+      }
+      const purgeMatch = /^\/v1\/projects\/([^/]+)\/purge$/.exec(url.pathname);
+      if (req.method === "POST" && purgeMatch) {
+        const project = safeId.parse(purgeMatch[1]);
+        const result = store.purgeProject(project);
+        send(200, { projectId: project, ...result });
         return;
       }
       const changesMatch = /^\/v1\/projects\/([^/]+)\/sessions\/([^/]+)\/changes$/.exec(

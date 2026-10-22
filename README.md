@@ -4,7 +4,7 @@ A local evidence workbench for AI-assisted development. Repository: `ICEQ-JO/quo
 
 > Show me what my coding agent did, what changed, and what remains unverified.
 
-The local preview is available: **a session review workspace** with a persistent timeline, tool results, evidence links, reported token/cache usage and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md). The dashboard opens on a grouped session work list, with a focused review page, a recorded-gap inbox, and captured before/after inspection. See the [workspace guide](docs/design/session-workspace.md). Live Claude Code collection and the change map are still upcoming.
+The local preview is available: **a session review workspace** with a persistent timeline, tool results, evidence links, reported token/cache usage, recorded verification evidence, a bounded change map and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md), and local capture controls, retention and project deletion through the [settings view](docs/lifecycle-controls.md) and `pnpm settings`. The dashboard opens on a grouped session work list, with a focused review page, a recorded-gap inbox, captured before/after inspection and a map that joins captures to recorded checks. See the [workspace guide](docs/design/session-workspace.md). Live Claude Code collection is still upcoming and needs an authorized runtime check.
 
 ## Run the demo
 
@@ -26,8 +26,10 @@ The demo imports 33 entirely synthetic observations across three sessions. Re-ru
 3. Open **Usage** to inspect the four token categories and the formula behind the cache-read token share.
 4. Switch to **Investigate a slow repository scan**: missing usage remains unknown and the session is incomplete.
 5. Switch to **Content capture disabled**, then open **Coverage** to review what the preview cannot establish.
-6. Return to **Overview** for the recorded capture-gap queue, or search/filter the **Sessions** library. Use **Review gaps**, search the entire session, or copy an evidence link from the inspector. Session, view and evidence selection survive reload.
+6. Open **Map** to see the captured changes joined to the recorded checks, then open **Verification evidence** for the recorded failure, pass and missing result.
+7. Open **Settings** to change the capture policy, pause capture, set a retention window or delete the project's evidence.
+8. Return to **Overview** for the recorded capture-gap queue, or search/filter the **Sessions** library. Use **Review gaps**, search the entire session, or copy an evidence link from the inspector. Session, view and evidence selection survive reload.
 
-Read the [demo and troubleshooting guide](docs/local-demo.md), [development/API reference](docs/development.md), [product plan](docs/README.md), [architecture](docs/architecture.md), [GitHub backlog](docs/issues/README.md), and [working agreements](AGENTS.md).
+Read the [demo and troubleshooting guide](docs/local-demo.md), [verification evidence](docs/verification-evidence.md), [change map](docs/change-map.md), [development/API reference](docs/development.md), [product plan](docs/README.md), [architecture](docs/architecture.md), [GitHub backlog](docs/issues/README.md), and [working agreements](AGENTS.md).
 
 All session evidence stays on your machine. Synthetic content is explicitly enabled for the fixed demo project; new real projects default to metadata-only capture in the shared policy contract. Real-project registration is not exposed yet. Redaction reduces risk and cannot guarantee removal of every secret.
