@@ -63,3 +63,9 @@ To test with a fresh store without deleting anything, set `TRACEFRAME_DATA_DIR` 
 ## Current limitations
 
 The authored demo is synthetic; explicit read-only repository capture is also supported through the CLI. Usage is a deterministic view of retained request observations, not an invoice or proof of complete collection. Ambiguous/conflicting usage returns null; there is no pricing engine. The Changes tab offers [captured before/after inspection](captured-changes.md); a change map remains upcoming. Session, view and selected evidence are encoded as IDs in a local URL and restored on reload. Search text is excluded from that URL. All dates and agent activities in the demo are authored examples. Desktop and a 390-pixel mobile viewport were checked on this Linux environment; other operating systems are not certified.
+
+## Browser shows HTTP 431
+
+Use `http://127.0.0.1:3140` (or your configured web port). Browser cookies are shared across ports on the same hostname; unrelated localhost applications can leave enough cookie data to exceed the server's header limit. The connection flow preserves `127.0.0.1` so it stays in a separate cookie namespace. HTTP 431 alone does not prove which header caused it.
+
+If the IP address also returns 431, try a private browser window. Clearing site data for the affected hostname is optional and may sign you out of other apps on that hostname. Traceframe does not clear unrelated browser data or raise request header limits. A healthy `/api/health` request without browser cookies does not establish that a particular browser profile can load the dashboard.
