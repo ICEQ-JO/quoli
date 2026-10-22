@@ -9,7 +9,15 @@ import { demoEvents, demoPolicy } from "../../../fixtures/demo";
 import { demoSnapshots } from "../../../fixtures/repository";
 import { readChanges } from "./changes";
 import { readMap } from "./map";
+import { otlpUsageEvents, readOtlpBody } from "./otel";
 import { spooledObservations } from "./spool";
+
+/** The project that reported telemetry belongs to. */
+function telemetryProject(): string | null {
+  const configured = process.env.TRACEFRAME_PROJECT_ID;
+  if (configured && /^[a-zA-Z0-9_-]{1,100}$/.test(configured)) return configured;
+  return null;
+}
 
 export function startCollector(
   port = runtime().collectorPort,
@@ -96,6 +104,39 @@ export function startCollector(
           else result.accepted++;
         }
         send(200, result);
+        return;
+      }
+      if (req.method === "POST" && url.pathname === "/v1/logs") {
+        // Narrow local OTLP logs receiver for reported usage.
+        if (!req.headers["content-type"]?.startsWith("application/json")) {
+          send(415, { error: "Use the http/json OTLP encoding" });
+          return;
+        }
+        const text = await body(req, res, 8 * 1024 * 1024);
+        if (text === null) return;
+        const parsed = readOtlpBody(text);
+        if (!parsed) {
+          send(400, { error: "Invalid OTLP logs body" });
+          return;
+        }
+        const projectId = telemetryProject();
+        if (!projectId) {
+          send(409, { error: "Set TRACEFRAME_PROJECT_ID for the reported usage project" });
+          return;
+        }
+        const events = otlpUsageEvents(parsed, projectId);
+        if (!events.length) {
+          send(200, {});
+          return;
+        }
+        try {
+          store.append(events);
+        } catch {
+          health.storageErrors++;
+          send(409, { error: "Reported usage was not persisted" });
+          return;
+        }
+        send(200, {});
         return;
       }
       if (req.method === "POST" && url.pathname === "/v1/ingest") {
@@ -327,14 +368,18 @@ export function startCollector(
   server.on("close", () => store.close());
   return server;
 }
-async function body(req: IncomingMessage, res: ServerResponse): Promise<string | null> {
+async function body(
+  req: IncomingMessage,
+  res: ServerResponse,
+  limit = MAX_BODY,
+): Promise<string | null> {
   let size = 0;
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > MAX_BODY) {
+    if (size > limit) {
       res.writeHead(413);
-      res.end(JSON.stringify({ error: "Request exceeds 1 MiB" }));
+      res.end(JSON.stringify({ error: `Request exceeds ${Math.round(limit / 1024 / 1024)} MiB` }));
       req.resume();
       return null;
     }

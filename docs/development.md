@@ -56,6 +56,7 @@ Collector base: `http://127.0.0.1:4318`. All collector routes require `Authoriza
 | --- | --- |
 | `GET /health` | Metadata-only readiness, rejection and write-failure counters, plus the number of observations waiting in the bridge retry spool. |
 | `POST /v1/demo` | No body. Registers only the fixed synthetic project with its explicit fixture policy, then runs the normal atomic append path. Replays report duplicate counts. |
+| `POST /v1/logs` | Narrow OTLP logs receiver (`application/json` only, 8 MiB cap) for reported request usage. Requires the local credential; drops personal attributes; stores request-usage observations only. The project comes from `TRACEFRAME_PROJECT_ID` or the single registered local project. |
 | `POST /v1/ingest` | `application/json`, body `{events: NormalizedEvent[]}`. Strict runtime validation, 1 MiB body/100-event batch limits, then project-policy filtering and one SQLite transaction. Unknown projects and non-synthetic sources for the demo project are rejected. |
 | `GET /v1/projects` | Up to 50 registered projects and their capture policies. |
 | `GET /v1/projects/:project/sessions` | Up to 50 sessions; title comes from retained start content. |
