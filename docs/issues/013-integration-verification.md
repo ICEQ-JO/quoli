@@ -1,6 +1,6 @@
 # 013: Verify Claude Code contracts on a declared supported version
 
-Status: published as [GitHub #14](https://github.com/ICEQ-JO/quoli/issues/14); this file is the local reference. Milestone: M4.
+Status: published as [GitHub #14](https://github.com/ICEQ-JO/quoli/issues/14); this file is the local reference. Milestone: M4. Verified against Claude Code 2.1.306; see the [runtime verification report](../claude-code-runtime-report.md).
 
 ## User value
 
@@ -20,10 +20,10 @@ No production adapter implementation, reading personal sessions, silent settings
 
 ## Acceptance criteria
 
-- [ ] Report separates documented contracts, runtime observations, experimental formats and unsupported/null fields; links official sources and exact tested version.
-- [ ] Verify prompt/tool/lifecycle/failure/interruption/resume/parallel behavior plus actual command output/exit-code shapes.
-- [ ] Verify authenticated local OTLP delivery, request identity, process identity, overlap and disabled content; select one supported logs encoding.
-- [ ] If a required capability fails, explicitly revise scope or leave the milestone blocked; no invented fallback or live usage without a verified source.
+- [x] Report separates documented contracts, runtime observations, experimental formats and unsupported/null fields; links official sources and exact tested version.
+- [x] Verify prompt/tool/lifecycle/failure/interruption/resume/parallel behavior plus actual command output/exit-code shapes.
+- [x] Verify authenticated local OTLP delivery, request identity, process identity, overlap and disabled content; select one supported logs encoding.
+- [x] If a required capability fails, explicitly revise scope or leave the milestone blocked; no invented fallback or live usage without a verified source.
 
 ## Test plan
 
