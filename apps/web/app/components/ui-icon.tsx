@@ -1,6 +1,48 @@
 import type { ReactNode } from "react";
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   const paths: Record<string, ReactNode> = {
+    brand: (
+      <>
+        <rect x="2" y="2" width="9" height="9" rx="2" />
+        <rect x="13" y="13" width="9" height="9" rx="2" />
+        <path d="M7 14v3h3M14 7h3v3" />
+      </>
+    ),
+    overview: (
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </>
+    ),
+    sessions: (
+      <>
+        <rect x="4" y="4" width="16" height="17" rx="2" />
+        <path d="M8 1v6M16 1v6M8 11h8M8 15h5" />
+      </>
+    ),
+    session: (
+      <>
+        <path d="M6 3h12v18H6zM10 8h4M10 12h4M10 16h2" />
+      </>
+    ),
+    "arrow-left": <path d="m10 5-7 7 7 7M3 12h18" />,
+    "arrow-right": <path d="m14 5 7 7-7 7M21 12H3" />,
+    shield: (
+      <>
+        <path d="m12 2 8 4v6c0 5-8 10-8 10S4 17 4 12V6z" />
+        <path d="m8 12 3 3 5-6" />
+      </>
+    ),
+    branch: (
+      <>
+        <circle cx="6" cy="5" r="2" />
+        <circle cx="18" cy="5" r="2" />
+        <circle cx="6" cy="19" r="2" />
+        <path d="M6 7v10M18 7v3a4 4 0 0 1-4 4H6" />
+      </>
+    ),
     "arrow-down": <path d="M12 4v16m-6-6 6 6 6-6" />,
     link: (
       <>

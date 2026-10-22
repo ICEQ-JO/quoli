@@ -6,7 +6,7 @@ Traceframe answers: **“Show me what my coding agent did, what changed, and wha
 
 To run and test the preview, start with [the local demo guide](local-demo.md) and [development/API reference](development.md).
 
-The current [session-review design reference](design/session-review.md) records UX behavior and its rationale.
+The current [session-review design reference](design/session-review.md) records UX behavior and its rationale. The [dashboard redesign review](design/redesign-review.md) includes screenshots, validation and the independent finish verdict. [Product context](../apps/web/PRODUCT.md) and the [visual system](../apps/web/DESIGN.md) guide future dashboard work.
 
 For product direction, start with the [repository assessment and implementation plan](implementation-plan.md), then review the [architecture](architecture.md), [Claude Code capability matrix](claude-code-capabilities.md), [ordered issue backlog](issues/README.md), and [founder decisions](founder-decisions.md).
 

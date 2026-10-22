@@ -3,6 +3,68 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { demoEvents } from "../../fixtures/demo";
 
+test("workspace overview, searchable library and review queue retain navigation", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Workspace overview" })).toBeVisible();
+  await expect(page.locator(".register-row")).toHaveCount(3);
+  await expect(page.locator(".workspace-ledger")).toContainText("29");
+  await expect(page.locator(".queue-heading")).toContainText("4");
+  await page.getByRole("button", { name: "Explore a session" }).click();
+  await expect(page.locator(".event-row")).toHaveCount(8);
+  await page.getByRole("button", { name: "All sessions", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
+  await page.getByRole("textbox", { name: "Search sessions" }).fill("slow");
+  await expect(page.locator(".register-row")).toHaveCount(1);
+  expect(page.url()).not.toContain("slow");
+  await page.getByRole("textbox", { name: "Search sessions" }).fill("no-match");
+  await expect(page.getByRole("heading", { name: "No sessions match" })).toBeVisible();
+  await page.getByRole("button", { name: "Clear session filters" }).click();
+  await page.getByRole("combobox", { name: "Session capture state" }).selectOption("open");
+  await expect(page.locator(".register-row")).toHaveCount(1);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("button", { name: "Overview", exact: true })
+    .click();
+  await page
+    .locator(".queue-item")
+    .filter({ hasText: "Investigate a slow repository scan" })
+    .click();
+  await expect(page.locator(".event-row")).toHaveCount(2);
+  await expect(
+    page.getByRole("button", { name: "Gaps", exact: false, pressed: true }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("heading", { name: "Workspace overview" })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("button", { name: /Sessions/ })
+    .click();
+  await page.locator(".register-row").first().click();
+  await expect(page.locator(".event-row")).toHaveCount(8);
+});
+
+test("workspace summary errors remain unknown and can be retried", async ({ page }) => {
+  await page.route("**/api/data?resource=summary**", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Summaries unavailable." }),
+    }),
+  );
+  await page.goto("/");
+  await expect(page.getByText("Capture gap summaries couldn’t load.")).toBeVisible();
+  await expect(page.locator(".queue-heading > span")).toHaveText("—");
+  await page.unroute("**/api/data?resource=summary**");
+  await page.getByRole("button", { name: "Retry summaries" }).click();
+  await expect(page.locator(".queue-heading > span")).toHaveText("4");
+});
+
 test("review activity, search the entire session and retain evidence links through reload", async ({
   page,
 }) => {
@@ -13,7 +75,7 @@ test("review activity, search the entire session and retain evidence links throu
   page.on("request", (r) => {
     if (!["127.0.0.1", "localhost"].includes(new URL(r.url()).hostname)) outbound.push(r.url());
   });
-  await page.goto("/");
+  await page.goto("/?session=session-cache&view=activity");
   await expect(
     page.getByRole("heading", { level: 1, name: "Handle an empty cache response" }),
   ).toBeVisible();
@@ -88,7 +150,7 @@ test("mobile evidence opens with protected focus and Escape returns to the selec
     (await request.get("/connect", { headers: { "Sec-Fetch-Site": "cross-site" } })).status(),
   ).toBe(403);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/?session=session-cache&view=activity");
   await expect(page.locator(".event-row")).toHaveCount(8);
   await page.locator(".event-row").nth(1).click();
   const dialog = page.getByRole("dialog", { name: "Evidence details" });
@@ -97,6 +159,20 @@ test("mobile evidence opens with protected focus and Escape returns to the selec
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
   await expect(page.locator(".event-row").nth(1)).toBeFocused();
+  expect(new URL(page.url()).searchParams.has("event")).toBe(false);
+  await page.locator(".event-row").nth(1).click();
+  await expect(dialog).toBeVisible();
+  await page.goBack();
+  await expect(dialog).not.toBeVisible();
+  await page.goForward();
+  await expect(dialog).toBeVisible();
+  await page.getByRole("button", { name: "Close evidence details" }).click();
+  await expect(dialog).not.toBeVisible();
+  expect(new URL(page.url()).searchParams.has("event")).toBe(false);
+  await page.locator(".event-row").nth(1).click();
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+
   await page
     .getByRole("combobox", { name: "Session", exact: true })
     .selectOption("session-interrupted");
@@ -161,7 +237,10 @@ test("captured HTML and instructions stay inert and never trigger external reque
     if (!["127.0.0.1", "localhost"].includes(new URL(r.url()).hostname)) outbound.push(r.url());
   });
   await page.goto("/");
-  await page.getByRole("button", { name: /Inspect untrusted source text/ }).click();
+  await page
+    .getByRole("navigation", { name: "Sessions", exact: true })
+    .getByRole("button", { name: /Inspect untrusted source text/ })
+    .click();
   await expect(page.locator(".desktop-inspector .payload")).toHaveText(unsafe);
   expect(await page.evaluate(() => "__traceframeInjected" in window)).toBe(false);
   expect(await page.locator(".payload img").count()).toBe(0);
@@ -178,7 +257,7 @@ test("query errors recover with Retry without changing stored observations", asy
         })
       : route.continue(),
   );
-  await page.goto("/");
+  await page.goto("/?session=session-cache&view=activity");
   await expect(page.locator(".error-notice")).toContainText("Collector temporarily unavailable.");
   await page.unroute("**/api/data");
   await page.getByRole("button", { name: "Retry", exact: true }).click();
