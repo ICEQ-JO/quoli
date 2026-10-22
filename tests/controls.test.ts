@@ -43,6 +43,39 @@ test("a policy change applies before new content is persisted", () => {
   instance.close();
 });
 
+test("a recorded path is stored relative to the registered root", () => {
+  const instance = store();
+  const root = mkdtempSync(join(tmpdir(), "traceframe-root-"));
+  try {
+    instance.registerLocalRepository("repo-paths", "Paths", root, demoPolicy, false);
+    const event = demoEvents().find((e) => e.payload.kind === "tool_call");
+    assert.ok(event);
+    const inside = structuredClone(event);
+    inside.id = "path-inside";
+    inside.deliveryId = "path-inside";
+    inside.projectId = "repo-paths";
+    if (inside.payload.kind === "tool_call") inside.payload.path = `${root}/src/app.ts`;
+    const outside = structuredClone(event);
+    outside.id = "path-outside";
+    outside.deliveryId = "path-outside";
+    outside.projectId = "repo-paths";
+    if (outside.payload.kind === "tool_call") outside.payload.path = "/elsewhere/other.ts";
+    instance.append([inside, outside]);
+    const stored = instance.allEvents("repo-paths", event.sessionId);
+    const inside_ = stored.find((e) => e.id === "path-inside");
+    const outside_ = stored.find((e) => e.id === "path-outside");
+    assert.equal(inside_?.payload.kind === "tool_call" ? inside_.payload.path : null, "src/app.ts");
+    // A path outside the registered root keeps its own shape.
+    assert.equal(
+      outside_?.payload.kind === "tool_call" ? outside_.payload.path : null,
+      "/elsewhere/other.ts",
+    );
+  } finally {
+    instance.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("paused capture rejects new observations and keeps retained evidence readable", () => {
   const instance = store();
   instance.append(demoEvents());

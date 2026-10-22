@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { chmodSync, mkdirSync, readFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, relative } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import {
   batchSchema,
@@ -317,6 +317,13 @@ export class Store {
           )
           .get(raw.projectId, raw.source, raw.producerId, raw.deliveryId);
         const event = sanitizeEvent(raw, project.policy);
+        // Recorded paths are stored relative to the registered root, so a
+        // captured file and a referenced path describe the same file.
+        const root = this.repository(raw.projectId)?.root;
+        if (root && event.payload.kind === "tool_call" && event.payload.path) {
+          const inside = relative(root, event.payload.path);
+          if (inside && !inside.startsWith("..")) event.payload.path = inside;
+        }
         if (event.payload.kind === "tool_result") {
           const call = this.db
             .prepare(
