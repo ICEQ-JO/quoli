@@ -20,6 +20,8 @@ See the [Claude Code runtime verification report](claude-code-runtime-report.md)
 
 See the [hook bridge](hook-bridge.md) for the passive collection of Claude Code hook events.
 
+See the [reported usage receiver](telemetry-receiver.md) for the narrow local OTLP endpoint.
+
 The current [session workspace reference](design/session-workspace.md) records work-list, session-document, queue and source-inspection behavior. The [UI research](design/product-ui-research.md) explains the structural direction. The earlier [session-review design reference](design/session-review.md) is historical. The [dashboard redesign review](design/redesign-review.md) includes screenshots, validation and the independent finish verdict. [Product context](../apps/web/PRODUCT.md) and the [visual system](../apps/web/DESIGN.md) guide future dashboard work.
 
 For product direction, start with the [repository assessment and implementation plan](implementation-plan.md), then review the [architecture](architecture.md), [Claude Code capability matrix](claude-code-capabilities.md), [ordered issue backlog](issues/README.md), and [founder decisions](founder-decisions.md).

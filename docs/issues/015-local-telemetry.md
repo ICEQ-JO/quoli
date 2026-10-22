@@ -1,6 +1,6 @@
 # 015: Receive reported Claude usage through a narrow local OTLP endpoint
 
-Status: published as [GitHub #16](https://github.com/ICEQ-JO/quoli/issues/16); this file is the local reference. Milestone: M4.
+Status: published as [GitHub #16](https://github.com/ICEQ-JO/quoli/issues/16); this file is the local reference. Milestone: M4. Implemented on `feat/otel-receiver`; see the [reported usage receiver](../telemetry-receiver.md).
 
 ## User value
 
@@ -20,10 +20,10 @@ No standalone OTel service, metric/traces backend, remote exporter, raw API-body
 
 ## Acceptance criteria
 
-- [ ] Authorized local request records display nullable input/output/cache fields and source evidence in the existing dashboard.
-- [ ] Malformed, oversized, unauthorized and unsupported payloads return bounded errors before any raw persistence.
-- [ ] Request IDs and verified producer identity support safe retries; records without identity have explicit ambiguity.
-- [ ] With hooks only or no telemetry, usage remains unavailable with a reason; collection never fabricates counts.
+- [x] Authorized local request records display nullable input/output/cache fields and source evidence in the existing dashboard.
+- [x] Malformed, oversized, unauthorized and unsupported payloads return bounded errors before any raw persistence.
+- [x] Request IDs and verified producer identity support safe retries; records without identity have explicit ambiguity.
+- [x] With hooks only or no telemetry, usage remains unavailable with a reason; collection never fabricates counts.
 
 ## Test plan
 
