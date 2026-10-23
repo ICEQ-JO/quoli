@@ -21,7 +21,7 @@ Nothing else is enabled. `OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_TOOL_DETAILS`, `OTEL
 
 ## What is received
 
-Only the `api_request` record is used. It carries the reported request identity, the model and the four token categories:
+Only the `api_request` record is used. It carries the reported request identity, the model, the four core token categories and any reported provider, reasoning tokens or source cost:
 
 | Reported attribute | Observation |
 | --- | --- |
@@ -33,9 +33,12 @@ Only the `api_request` record is used. It carries the reported request identity,
 | `cache_read_tokens` | Cache reads. |
 | `cache_creation_tokens` | Cache writes. |
 | `model` | The reported model. |
+| `provider` | The reported provider identity, when present. |
+| `reasoning_tokens` or `output_reasoning_tokens` | Reported reasoning tokens, when present. |
+| `cost_usd_micros` | Source-reported cost in micro-USD, kept separate from token totals. |
 | `event.timestamp` | The source time of the request. |
 
-The four counts are independent: a missing count stays null and the usage view reports the total as unknown rather than as zero.
+The four core counts are independent: a missing count stays null and the usage view reports the total as unknown rather than as zero. Reasoning, provider and source cost are additive and remain null when the record does not report them.
 
 ## What is dropped
 

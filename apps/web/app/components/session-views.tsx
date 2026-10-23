@@ -17,6 +17,11 @@ export function UsagePanel({
     ["Output", usage.output, "Output tokens reported by the source."],
     ["Cache read", usage.cacheRead, "Input tokens reported as read from cache."],
     ["Cache write", usage.cacheWrite, "Input tokens reported as written to cache."],
+    [
+      "Reasoning",
+      usage.reasoning,
+      "Reasoning tokens the source reports. Hidden reasoning is never reconstructed.",
+    ],
   ] as const;
   return (
     <section className="usage-view">
@@ -89,15 +94,23 @@ export function UsagePanel({
         <Icon name="info" />
         <p>
           {usage.complete
-            ? "All four fields are present in retained request observations. That does not establish that every request was captured."
-            : "Usage is incomplete, conflicting or unreconciled. Unknown counts are shown as —, never converted to zero."}{" "}
+            ? usage.basis === "cumulative"
+              ? `Totals come from cumulative counters; repeated samples are counted once.${usage.resets > 0 ? ` ${usage.resets} counter reset${usage.resets === 1 ? "" : "s"} observed.` : ""}`
+              : "The four core token categories are present in retained request observations. That does not establish that every request was captured."
+            : usage.basis === "cumulative"
+              ? "Usage comes from cumulative counters and is incomplete or conflicting. Unknown counts are shown as —, never converted to zero."
+              : "Usage is incomplete, conflicting or unreconciled. Unknown counts are shown as —, never converted to zero."}{" "}
           No file or prompt cost allocation is implied.
         </p>
       </div>
       <section className="usage-evidence">
         <div className="section-heading">
           <h3>Inspect the source observations</h3>
-          <span>{usage.requests} identified requests</span>
+          <span>
+            {usage.basis === "cumulative"
+              ? `${usage.cumulativeScopes} counter series`
+              : `${usage.requests} identified requests`}
+          </span>
         </div>
         {usage.evidenceIds.length ? (
           usage.evidenceIds.map((id) => (

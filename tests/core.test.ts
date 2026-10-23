@@ -215,7 +215,12 @@ test("usage is nullable, deduplicated by request, and never mixes counter sample
   assert.equal(usage([...main, conflict]).input, null);
   const cumulative = structuredClone(original);
   if (cumulative.payload.kind === "usage") cumulative.payload.temporality = "cumulative";
-  assert.equal(usage([...main, cumulative]).input, null);
+  // Deltas stay the reported total; the counter overlap is visible, never added.
+  const mixed = usage([...main, cumulative]);
+  assert.equal(mixed.basis, "request_delta");
+  assert.equal(mixed.input, 3100);
+  assert.equal(mixed.omitted, 1);
+  assert.equal(mixed.complete, false);
   assert.equal(usage(stored().filter((e) => e.sessionId === "session-interrupted")).output, null);
   assert.equal(usage([]).input, null);
 });

@@ -150,10 +150,13 @@ export function otlpUsageEvents(body: OtlpBody, projectId: string): NormalizedEv
         // usage view reports the gap instead of quietly losing it.
         const requestId = typeof attrs.request_id === "string" ? attrs.request_id : null;
         const model = typeof attrs.model === "string" ? attrs.model : null;
+        const provider = typeof attrs.provider === "string" ? attrs.provider : null;
         const input = count(attrs.input_tokens);
         const output = count(attrs.output_tokens);
         const cacheRead = count(attrs.cache_read_tokens);
         const cacheWrite = count(attrs.cache_creation_tokens);
+        const reasoning = count(attrs.reasoning_tokens ?? attrs.output_reasoning_tokens);
+        const costUsdMicros = count(attrs.cost_usd_micros);
         const identity = requestId ?? [record.timeUnixNano, attrs["event.sequence"]];
         events.push({
           schemaVersion: 1,
@@ -179,6 +182,9 @@ export function otlpUsageEvents(body: OtlpBody, projectId: string): NormalizedEv
             cacheWrite,
             model: model ?? "unknown-model",
             temporality: "request_delta",
+            provider,
+            reasoning,
+            costUsdMicros,
           },
         });
       }

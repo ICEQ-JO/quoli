@@ -52,6 +52,9 @@ test("reported request usage becomes one usage observation and drops personal at
     output_tokens: 84,
     cache_read_tokens: 10648,
     cache_creation_tokens: 23468,
+    reasoning_tokens: 12,
+    provider: "anthropic",
+    cost_usd_micros: 191562,
     "event.sequence": 59,
     "user.email": "person@example.invalid",
     "user.id": "personal-id",
@@ -75,6 +78,9 @@ test("reported request usage becomes one usage observation and drops personal at
     assert.equal(event.payload.output, 84);
     assert.equal(event.payload.cacheRead, 10648);
     assert.equal(event.payload.cacheWrite, 23468);
+    assert.equal(event.payload.reasoning, 12);
+    assert.equal(event.payload.provider, "anthropic");
+    assert.equal(event.payload.costUsdMicros, 191562);
     assert.equal(event.payload.temporality, "request_delta");
   }
 });

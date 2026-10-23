@@ -102,6 +102,14 @@ export const payloadSchema = z.discriminatedUnion("kind", [
       cacheWrite: count,
       model: z.string().regex(/^[a-zA-Z0-9._-]{1,100}$/),
       temporality: z.enum(["request_delta", "cumulative", "context_sample"]),
+      // Optional additions: absent means the source did not report the field.
+      provider: z
+        .string()
+        .regex(/^[a-zA-Z0-9._-]{1,100}$/)
+        .nullable()
+        .optional(),
+      reasoning: count.optional(),
+      costUsdMicros: count.optional(),
     })
     .strict(),
   z
@@ -281,12 +289,16 @@ export type UsageView = {
   output: number | null;
   cacheRead: number | null;
   cacheWrite: number | null;
+  reasoning: number | null;
   cacheReadShare: number | null;
   requests: number;
+  cumulativeScopes: number;
   evidenceIds: string[];
   complete: boolean;
   conflicts: number;
   omitted: number;
+  resets: number;
+  basis: "request_delta" | "cumulative" | null;
   rule: string;
 };
 export type EventPage = { events: StoredEvent[]; nextCursor: number | null; total: number };
