@@ -463,6 +463,12 @@
       "uuid": "ae2b4199-f2b9-4ca2-9982-6b04a20fcf0e",
       "url": "https://linear.app/quolii/issue/QUO-81/v45-implement-enterprise-sso-and-enforced-workspace-access-policy",
       "title": "[V45] Implement enterprise SSO and enforced workspace access policy"
+    },
+    "D01": {
+      "id": "QUO-82",
+      "uuid": "32716f5c-1541-41e0-8d63-11ac37489d7c",
+      "url": "https://linear.app/quolii/issue/QUO-82/d01-rebuild-quolis-visual-system-workspace-uiux-and-landing-page-from",
+      "title": "[D01] Rebuild Quoli's visual system, workspace UI/UX and landing page from a deliberate design direction"
     }
   }
 }

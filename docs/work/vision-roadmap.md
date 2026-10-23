@@ -16,13 +16,18 @@ Owner direction: 2026-10-23. Tracking: [QUO-5](https://linear.app/quolii/issue/Q
 
 Issue relations determine start order. Optional model summaries and extra languages stay conditional increments; core cloud functionality and four-harness destination are no longer discovery placeholders. Policy enforcement follows evidence validation but has concrete build issues now. No delivery dates or completed-feature claims are implied.
 
+## Design reset (D01)
+
+[QUO-82](../issues/vision/d01.md) is a cross-cutting design workstream, owner-prioritized 2026-10-23. It will replace the generic current visual system and landing page, and sets the direction that C12, V17, V21, V24, V25, V40 and V41 implement. The first gate is an owner choice among three recorded directions in [docs/design/directions/d01](../design/directions/d01/README.md); implementation waits for that choice. D01 does not hard-block backend, cloud or evidence-contract work, and it must not silently redefine the related feature scopes.
+
 ## First actionable batch
 
 1. V02: repair policy-before-spool; V03 follows with deletion/retry fencing.
 2. V05: establish CI baseline. V04 is this documentation/backlog alignment, tracked by QUO-5.
 3. C01: finalize the hosted data/sync/security contract while V01 settles commercial/launch limits.
 4. After V05, implement V06, then V07/V08. After C01, start C02 and cloud account/workspace isolation.
-5. Pair devices only after identity/roles and signed connector foundations; build upload delivery only after privacy and lifecycle repairs. Test with synthetic data until hosted readiness gates pass.
+5. Run the D01 direction gate alongside C01/C02. Hold UI-facing increments until the owner chooses; backend and evidence-contract work can continue.
+6. Pair devices only after identity/roles and signed connector foundations; build upload delivery only after privacy and lifecycle repairs. Test with synthetic data until hosted readiness gates pass.
 
 ## Keep, replace and delete
 
@@ -36,7 +41,7 @@ Delete superseded documentation bodies and contradictory guidance now; retain us
 
 Each issue is relative M and must yield one bounded demonstration and reviewed PR. Re-estimate/split when implementation evidence changes scope. Use an isolated checkout/branch per issue and avoid competing schema/storage edits.
 
-Ownership lanes: evidence/contracts; one adapter/provider; cloud identity/storage/sync; analysis/scenes/cost; hosted experience; architecture/policy/debt; release/security/operations. Shared contracts land before downstream feature branches consume them.
+Ownership lanes: evidence/contracts; one adapter/provider; cloud identity/storage/sync; analysis/scenes/cost; design system and brand; hosted experience; architecture/policy/debt; release/security/operations. Shared contracts land before downstream feature branches consume them.
 
 Use required Ponytail/Impeccable/Ponytail Review skills for coding/UI/review. If supporting OpenCode agents are used, verify the installed free MiniMax identifier, bound ownership, isolate checkout and exclude private sessions, captured user code and credentials from prompts. Supporting agents do not publish, merge or alter owner tooling. Primary review and meaningful checks precede integration.
 
