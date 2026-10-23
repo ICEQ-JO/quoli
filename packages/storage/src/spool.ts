@@ -96,7 +96,7 @@ function parseEntry(line: string): Entry | null {
   try {
     const parsed = JSON.parse(line) as Record<string, unknown>;
     // Entries written before generation fencing carry the bare event.
-    if (parsed.schemaVersion === 1) {
+    if (parsed.schemaVersion === 1 || parsed.schemaVersion === 2) {
       const event = eventSchema.safeParse(parsed);
       return event.success ? { spooledAt: null, epoch: null, event: event.data } : null;
     }

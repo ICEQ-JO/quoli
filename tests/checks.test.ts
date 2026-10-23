@@ -3,7 +3,11 @@ import { test } from "node:test";
 import { demoEvents } from "../fixtures/demo";
 import { parseTestOutput, verification } from "../packages/analysis/src/checks";
 import { checkObservationSchema, verificationViewSchema } from "../packages/schema/src/checks";
-import { relationshipSchema, type StoredEvent } from "../packages/schema/src/index";
+import {
+  relationshipSchema,
+  type StoredEvent,
+  type V1StoredEvent,
+} from "../packages/schema/src/index";
 
 const stored = (events = demoEvents()): StoredEvent[] =>
   events.map((e, i) => ({ ...e, sequence: i + 1, receivedAt: "2026-10-22T10:00:00.000Z" }));
@@ -12,9 +16,9 @@ let clock = 0;
 function event(
   id: string,
   sessionId: string,
-  payload: StoredEvent["payload"],
-  extras: Partial<StoredEvent> = {},
-): StoredEvent {
+  payload: V1StoredEvent["payload"],
+  extras: Partial<V1StoredEvent> = {},
+): V1StoredEvent {
   // Creation order is source order, so the projection sees a stable timeline.
   clock += 1;
   return {

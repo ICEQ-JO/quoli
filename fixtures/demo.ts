@@ -1,4 +1,4 @@
-import type { CapturePolicy, Content, NormalizedEvent } from "../packages/schema/src/index";
+import type { CapturePolicy, Content, V1NormalizedEvent } from "../packages/schema/src/index";
 
 export const demoPolicy: CapturePolicy = {
   version: 1,
@@ -8,7 +8,7 @@ export const demoPolicy: CapturePolicy = {
   maxFieldBytes: 65536,
   excludedPaths: [".env", ".git", "node_modules", "secrets", "credentials"],
 };
-export function demoEvents(): NormalizedEvent[] {
+export function demoEvents(): V1NormalizedEvent[] {
   let index = 0;
   const content = (
     text: string | null,
@@ -17,9 +17,9 @@ export function demoEvents(): NormalizedEvent[] {
   ): Content => ({ text, state, originalBytes: null, categories });
   function event(
     sessionId: string,
-    payload: NormalizedEvent["payload"],
-    extras: Partial<NormalizedEvent> = {},
-  ): NormalizedEvent {
+    payload: V1NormalizedEvent["payload"],
+    extras: Partial<V1NormalizedEvent> = {},
+  ): V1NormalizedEvent {
     const n = ++index;
     return {
       schemaVersion: 1,

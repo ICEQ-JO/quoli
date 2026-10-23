@@ -2,16 +2,16 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { usage } from "../packages/analysis/src/index";
 import { reconcile } from "../packages/analysis/src/reconcile";
-import type { StoredEvent } from "../packages/schema/src/index";
+import type { V1StoredEvent } from "../packages/schema/src/index";
 
 let sequence = 0;
 function event(
   source: "claude_hook" | "claude_otel",
   sessionId: string,
   toolId: string | null,
-  payload: StoredEvent["payload"],
-  extra: Partial<StoredEvent> = {},
-): StoredEvent {
+  payload: V1StoredEvent["payload"],
+  extra: Partial<V1StoredEvent> = {},
+): V1StoredEvent {
   sequence += 1;
   return {
     schemaVersion: 1,

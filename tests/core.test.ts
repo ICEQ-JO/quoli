@@ -13,7 +13,7 @@ import {
   relationshipSchema,
   type StoredEvent,
 } from "../packages/schema/src/index";
-import { sanitizeContent, sanitizeEvent } from "../packages/schema/src/privacy";
+import { sanitizeContent, sanitizeEvent, withholdContent } from "../packages/schema/src/privacy";
 import { Store } from "../packages/storage/src/index";
 
 const stored = (events = demoEvents()): StoredEvent[] =>
@@ -33,6 +33,109 @@ test("versioned contracts reject invented/malformed usage and provenance", () =>
       evidenceIds: [],
       rule: null,
       uncertainty: "Unknown",
+    }),
+  );
+});
+test("v2 preserves v1 evidence and records explicit activity capabilities", () => {
+  const v2 = {
+    schemaVersion: 2,
+    id: "v2-tool",
+    deliveryId: "v2-delivery",
+    projectId: "demo-quoli",
+    sessionId: "session-v2",
+    source: "future_harness",
+    sourceVersion: "2026.10",
+    adapterId: "future-adapter",
+    adapterVersion: "2.0.0",
+    sourceLocator: "future_harness:tool",
+    producerId: "fixture-v2",
+    promptId: null,
+    toolId: "tool-v2",
+    requestId: null,
+    sourceTime: null,
+    sourceSequence: null,
+    policyVersion: 1,
+    tool: { rawName: "workspace.apply_patch", category: "Other" },
+    activity: {
+      turnId: "turn-v2",
+      parentSessionId: null,
+      parentTurnId: null,
+      childSessionId: null,
+      childTurnId: null,
+    },
+    fieldCapabilities: {
+      content: "available",
+      plan: "available",
+      decision: "unsupported",
+      approval: "disabled",
+      correction: "unavailable",
+    },
+    declared: {
+      plan: {
+        text: "token=example-v2-secret",
+        state: "present",
+        originalBytes: null,
+        categories: ["prompt"],
+      },
+      decision: null,
+      approval: null,
+      correction: null,
+    },
+    payload: {
+      kind: "tool_call",
+      toolName: "Other",
+      content: {
+        text: "apply a synthetic patch",
+        state: "present",
+        originalBytes: null,
+        categories: ["tool"],
+      },
+      path: null,
+    },
+  };
+  const parsed = eventSchema.parse(v2);
+  assert.equal(parsed.schemaVersion, 2);
+  if (parsed.schemaVersion === 2) {
+    assert.equal(parsed.tool?.rawName, "workspace.apply_patch");
+    assert.equal(parsed.tool?.category, "Other");
+  }
+  const clean = sanitizeEvent(parsed, demoPolicy);
+  if (clean.schemaVersion === 2) {
+    assert.equal(clean.declared.plan?.text?.includes("example-v2-secret"), false);
+    assert.equal(clean.declared.decision, null);
+  }
+  const disabled = sanitizeEvent(parsed, defaultPolicy);
+  if (disabled.schemaVersion === 2) {
+    assert.equal(disabled.declared.plan?.text, null);
+    assert.equal(disabled.declared.plan?.state, "disabled");
+  }
+  const withheld = withholdContent(parsed);
+  if (withheld.schemaVersion === 2) {
+    assert.equal(withheld.declared.plan?.text, null);
+    assert.equal(withheld.declared.plan?.state, "unavailable");
+  }
+  const store = new Store(":memory:");
+  store.registerProject("demo-quoli", "quoli", false, demoPolicy);
+  assert.equal(store.append([parsed]).accepted, 1);
+  const retained = store.allEvents("demo-quoli", "session-v2")[0];
+  assert.equal(retained?.schemaVersion, 2);
+  if (retained?.schemaVersion === 2) assert.equal(retained.tool?.rawName, "workspace.apply_patch");
+  store.close();
+  assert.equal(batchSchema.parse({ events: demoEvents() }).events[0]?.schemaVersion, 1);
+  assert.throws(() => eventSchema.parse({ ...v2, sourceVersion: "" }));
+  assert.throws(() =>
+    eventSchema.parse({
+      ...v2,
+      fieldCapabilities: { ...v2.fieldCapabilities, plan: "unsupported" },
+    }),
+  );
+  assert.throws(() =>
+    eventSchema.parse({ ...v2, activity: { ...v2.activity, turnId: "not a safe id" } }),
+  );
+  assert.throws(() =>
+    eventSchema.parse({
+      ...v2,
+      fieldCapabilities: { ...v2.fieldCapabilities, content: "disabled" },
     }),
   );
 });

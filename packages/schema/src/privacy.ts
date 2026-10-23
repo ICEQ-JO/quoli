@@ -71,12 +71,25 @@ const denyAllPolicy: CapturePolicy = {
 export function withholdContent(raw: NormalizedEvent): NormalizedEvent {
   const event = sanitizeEvent(raw, denyAllPolicy);
   if ("content" in event.payload) event.payload.content.state = "unavailable";
+  if (event.schemaVersion === 2) {
+    for (const field of ["plan", "decision", "approval", "correction"] as const) {
+      const content = event.declared[field];
+      if (content !== null)
+        event.declared[field] = { ...content, text: null, state: "unavailable" };
+    }
+  }
   return eventSchema.parse(event);
 }
 
 export function sanitizeEvent(raw: NormalizedEvent, policy: CapturePolicy): NormalizedEvent {
   const event = eventSchema.parse(raw);
   if (event.sourceLocator !== null) event.sourceLocator = redact(event.sourceLocator);
+  if (event.schemaVersion === 2) {
+    for (const field of ["plan", "decision", "approval", "correction"] as const) {
+      const content = event.declared[field];
+      if (content !== null) event.declared[field] = sanitizeContent(content, policy);
+    }
+  }
   const p = event.payload;
   if (p.kind === "repository_state" && p.branch !== null) p.branch = redact(p.branch);
   if ("content" in p) {
