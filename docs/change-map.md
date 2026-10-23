@@ -24,6 +24,8 @@ The default view is bounded to 100 nodes and 200 edges. When anything is left ou
 
 Without two repository captures the map states that it needs a baseline and a checkpoint instead of implying an empty or complete change set. The pair can be chosen explicitly through the URL or the captured-changes view.
 
+The map is one source for the versioned [evidence-scene contract](evidence-scenes.md); its file and check nodes convert, while its reference edges are counted as omitted because a reference is not coverage.
+
 ## Bounds and API
 
 `POST /v1/projects/:project/sessions/:session/map` accepts `beforeId` and `afterId` (both optional: the two latest captures are used when they are absent), plus `nodes` and `edges` caps. The browser uses the protected `/api/map` proxy with a 4 KiB body limit; credentials stay on the server and no captured content is placed in a URL.

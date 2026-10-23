@@ -10,6 +10,7 @@
     "./changes": "./src/changes.ts",
     "./checks": "./src/checks.ts",
     "./map": "./src/map.ts",
+    "./scene": "./src/scene.ts",
     "./lifecycle": "./src/lifecycle.ts",
     "./reconcile": "./src/reconcile.ts"
   },
