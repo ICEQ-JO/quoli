@@ -61,6 +61,19 @@ that is stored, never of raw file bytes.
 Options above a ceiling are rejected. Untracked files are captured only when
 `includeUntracked` is set; ignored files are never captured.
 
+## Provider contract
+
+`boundedProvider` defines the read-only local or remote provider boundary. Every
+tree, blob and comparison response carries a provider/repository identity and the
+requested and resolved revision. Results explicitly report `missing`, `denied`,
+`truncated`, `stale`, `rate_limited` or `unavailable` rather than treating a partial
+read as complete. Callers set entry and byte caps before a provider receives a
+request; provider responses are validated again at the boundary.
+
+The contract does not include credentials, fetching, script execution or a remote
+implementation. Content returned through it uses the shared sanitized `Content`
+shape, and a provider observation is not a complete repository audit.
+
 ## Known limitations
 
 - A snapshot is not an atomic filesystem view. Files are read one after another, so a

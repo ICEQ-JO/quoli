@@ -12,6 +12,8 @@ import {
   splitNulBytes,
 } from "./git";
 
+export * from "./provider";
+
 export type CaptureOptions = {
   includeUntracked?: boolean;
   maxFiles?: number;
