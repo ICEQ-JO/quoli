@@ -255,6 +255,35 @@ test("retention removes expired pending retries through the settings endpoint", 
   }
 });
 
+test("a damaged spool line is dropped without blocking delivery", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-damaged-"));
+  const previous = process.env.TRACEFRAME_DATA_DIR;
+  process.env.TRACEFRAME_DATA_DIR = dir;
+  const store = new Store(join(dir, "traceframe.sqlite"));
+  store.registerProject("alpha", "Alpha", false, openPolicy);
+  try {
+    const good = { spooledAt: new Date().toISOString(), epoch: 1, event: promptEvent("alpha") };
+    writeFileSync(
+      spoolPath(),
+      `${JSON.stringify(good)}\nnot json\n${JSON.stringify({ ...good, event: { broken: true } })}\n`,
+      { mode: 0o600 },
+    );
+    const delivered: string[] = [];
+    const result = await drainSpool(async (event) => {
+      delivered.push(event.id);
+      return true;
+    });
+    assert.equal(result.sent, 1);
+    assert.equal(delivered.length, 1);
+    assert.equal(entries(dir).length, 0);
+  } finally {
+    store.close();
+    if (previous === undefined) delete process.env.TRACEFRAME_DATA_DIR;
+    else process.env.TRACEFRAME_DATA_DIR = previous;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("concurrent hook appends and a purge preserve the other project", async () => {
   const dir = mkdtempSync(join(tmpdir(), "traceframe-concurrent-"));
   const previous = process.env.TRACEFRAME_DATA_DIR;

@@ -58,14 +58,15 @@ Commit: `66b01ff` (`fix(storage): fence and prune retries across project lifecyc
 - A retention window removes expired pending entries through the same endpoint.
 - Eight concurrent hook subprocesses plus a purge keep the other project's four entries intact; drain delivers none for the purged project.
 - Drain revalidates policy, pause state, retention and epoch before each send, and reports delivered, kept and dropped counts.
+- A damaged or malformed spool line is dropped without blocking delivery of the valid entries.
 
 ### Checks
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Focused lifecycle tests | `node --import tsx --test tests/retry-lifecycle.test.ts` | 6 pass, 0 fail |
+| Focused lifecycle tests | `node --import tsx --test tests/retry-lifecycle.test.ts` | 7 pass, 0 fail |
 | Focused bridge tests | `node --import tsx --test tests/bridge.test.ts` | 15 pass, 0 fail |
-| Full unit/integration suite | `pnpm test` | 133 pass, 0 fail, 4 skipped (release/e2e suites requiring `QUOLI_RELEASE_TEST` or browsers) |
+| Full unit/integration suite | `pnpm test` | 134 pass, 0 fail, 4 skipped (release/e2e suites requiring `QUOLI_RELEASE_TEST` or browsers) |
 | Type check | `pnpm typecheck` | pass |
 | Lint | `pnpm lint` | no errors; 3 pre-existing warnings outside this diff |
 | Packaged release | `pnpm release:local` then `pnpm test:release` | 4 pass, 0 fail (19 s relocated install/capture/restart/uninstall, startup guards, supervisor crash recovery, install guards) |

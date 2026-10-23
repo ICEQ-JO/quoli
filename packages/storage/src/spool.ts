@@ -1,7 +1,6 @@
 import {
   chmodSync,
   closeSync,
-  existsSync,
   mkdirSync,
   openSync,
   readFileSync,
@@ -11,7 +10,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname } from "node:path";
-import type { CapturePolicy, NormalizedEvent } from "@traceframe/schema";
+import { type CapturePolicy, eventSchema, type NormalizedEvent } from "@traceframe/schema";
 import { sanitizeEvent, withholdContent } from "@traceframe/schema/privacy";
 import { retryCaptureState } from "./policy";
 import { runtime } from "./runtime";
@@ -97,13 +96,16 @@ function parseEntry(line: string): Entry | null {
   try {
     const parsed = JSON.parse(line) as Record<string, unknown>;
     // Entries written before generation fencing carry the bare event.
-    if (parsed.schemaVersion === 1)
-      return { spooledAt: null, epoch: null, event: parsed as unknown as NormalizedEvent };
-    if (typeof parsed.event !== "object" || parsed.event === null) return null;
+    if (parsed.schemaVersion === 1) {
+      const event = eventSchema.safeParse(parsed);
+      return event.success ? { spooledAt: null, epoch: null, event: event.data } : null;
+    }
+    const event = eventSchema.safeParse(parsed.event);
+    if (!event.success) return null;
     return {
       spooledAt: typeof parsed.spooledAt === "string" ? parsed.spooledAt : null,
       epoch: typeof parsed.epoch === "number" ? parsed.epoch : null,
-      event: parsed.event as NormalizedEvent,
+      event: event.data,
     };
   } catch {
     // A damaged line is dropped rather than blocking the rest of the spool.
@@ -112,9 +114,15 @@ function parseEntry(line: string): Entry | null {
 }
 
 function readEntries(path: string): Entry[] {
-  if (!existsSync(path)) return [];
+  let raw: string;
+  try {
+    raw = readFileSync(path, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw error;
+  }
   const entries: Entry[] = [];
-  for (const line of readFileSync(path, "utf8").split("\n")) {
+  for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
     const entry = parseEntry(line);
     if (entry) entries.push(entry);
