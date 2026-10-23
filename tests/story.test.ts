@@ -157,6 +157,10 @@ test("missing evidence stays visible: no baseline, unresolved child, deleted evi
   );
   assert.ok(parentOnly.claims.some((claim) => claim.kind === "gap"));
 
+  const uncaptured = build({ beforeId: null, afterId: null, files: [] });
+  assert.equal(uncaptured.scene.window.after, "story-root-end");
+  assert.match(uncaptured.scene.uncertainty, /last retained observation, not a snapshot/);
+
   const complete = build();
   const known = knownEvidence();
   assert.deepEqual(unknownSceneEvidence(complete.scene, known), []);
@@ -183,6 +187,9 @@ test("claims stay capped and a story needs retained observations", () => {
   assert.equal(bounded.claims.length, 1);
   assert.equal(bounded.caps.claims, 1);
   assert.ok(bounded.omittedClaims > 0);
+
+  const omissions = build({ omittedFiles: 2, beforeId: null });
+  assert.match(omissions.scene.uncertainty, /2 captured change observations were omitted/);
 
   assert.throws(() => build({ events: [] }), /at least one retained observation/);
 });

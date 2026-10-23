@@ -529,7 +529,7 @@ export function story(input: {
       claim(
         "checks",
         [input.sessionId],
-        `${checks.checks.length} recorded command result${checks.checks.length === 1 ? " was" : "s were"} projected.`,
+        `${checks.checks.length} recorded command observation${checks.checks.length === 1 ? " was" : "s were"} projected.`,
         checks.checks.flatMap((check) => check.evidenceIds),
         "A recorded command result does not establish that it covered the captured changes or that the feature works.",
         checks.checks.map((check) => checkNodes.get(check.id) ?? ""),
@@ -578,6 +578,18 @@ export function story(input: {
     );
   if (beforeId === null)
     omissions.push("No baseline capture was supplied, so no captured file change is claimed.");
+  if (input.afterId == null)
+    omissions.push(
+      "No capture bounds this scene; the window's after value names the last retained observation, not a snapshot.",
+    );
+  if (cappedNodes.length < nodes.length || cappedEdges.length < edges.length)
+    omissions.push(
+      `${nodes.length - cappedNodes.length} node and ${edges.length - cappedEdges.length} edge observations are omitted by the 500-node/1000-edge cap; claims for omitted nodes are dropped.`,
+    );
+  if ((input.omittedFiles ?? 0) > 0)
+    omissions.push(
+      `${input.omittedFiles} captured change observation${input.omittedFiles === 1 ? " was" : "s were"} omitted by the caller's comparison.`,
+    );
   const scene: Scene = {
     version: 1,
     projectId: input.projectId,
