@@ -12,6 +12,7 @@
     "./cost": "./src/cost.ts",
     "./map": "./src/map.ts",
     "./scene": "./src/scene.ts",
+    "./story": "./src/story.ts",
     "./lifecycle": "./src/lifecycle.ts",
     "./reconcile": "./src/reconcile.ts"
   },
