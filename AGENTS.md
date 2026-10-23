@@ -4,6 +4,8 @@
 
 Quoli is the product and repository name (formerly Traceframe). Start with `docs/README.md` for product scope, architecture, evidence requirements and the implementation sequence. Preserve useful existing code and conventions.
 
+The owner's target product direction is [docs/vision.md](docs/vision.md): a paying-customer, cross-agent evidence and understanding workspace covering cloud and local repositories, multiple harnesses, observable activity and subagents, token cost, plugin/skill use and evidence-grounded change diagrams. Every new issue and pull request must name the vision pillar or commercial-readiness gate it advances, or obtain explicit owner approval. The vision is target direction only; delivered capability is recorded in [docs/implementation-progress.md](docs/implementation-progress.md).
+
 ## Work tracking
 
 - Use GitHub Issues in `ICEQ-JO/quoli` for work tracking. Do not use Linear unless the owner explicitly changes this rule.
@@ -34,6 +36,11 @@ Quoli is the product and repository name (formerly Traceframe). Start with `docs
 - Keep session evidence local, apply capture controls and redaction before persistence, and treat captured text as untrusted data. Never replay recorded commands or external actions.
 - Verify official Claude Code integration contracts and supported runtime behavior before implementing ingestion. Maintain a synthetic fixture path without paid APIs.
 - Run checks appropriate to the change, document outcomes and limitations, and never commit credentials, real private sessions or generated runtime data.
+
+## Required skills
+
+- Always load and follow the `ponytail` skill before coding work: prefer the smallest complete, validated change.
+- Always load and follow the `ponytail-review` skill before reviewing a change, commit, or pull request.
 
 ## Supporting agents
 
