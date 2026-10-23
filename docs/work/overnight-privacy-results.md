@@ -6,10 +6,10 @@
 
 | Increment | Linear | Branch | Pull request | Status |
 | --- | --- | --- | --- | --- |
-| V02 — policy before retry persistence | [QUO-39](https://linear.app/quolii/issue/QUO-39/v02-apply-project-capture-policy-before-retry-persistence) | `feat/quo-39-retry-capture-policy` | [#59](https://github.com/ICEQ-JO/quoli/pull/59) | Implemented, in review; not merged |
-| V03 — fence and remove retries | [QUO-40](https://linear.app/quolii/issue/QUO-40/v03-fence-and-remove-retries-during-project-lifecycle-changes) | `feat/quo-40-retry-lifecycle` | [#62](https://github.com/ICEQ-JO/quoli/pull/62) (draft) | Implemented as a stacked draft; blocked by #59 |
+| V02 — policy before retry persistence | [QUO-39](https://linear.app/quolii/issue/QUO-39/v02-apply-project-capture-policy-before-retry-persistence) | `feat/quo-39-retry-capture-policy` | [#59](https://github.com/ICEQ-JO/quoli/pull/59) | Merged as `2f5d8df` |
+| V03 — fence and remove retries | [QUO-40](https://linear.app/quolii/issue/QUO-40/v03-fence-and-remove-retries-during-project-lifecycle-changes) | `feat/quo-40-retry-lifecycle` | [#62](https://github.com/ICEQ-JO/quoli/pull/62) | Merged in #62 |
 
-Both branches are based on [#58](https://github.com/ICEQ-JO/quoli/pull/58) `docs/vision-backlog-scaffold`, which is still open and unmerged. PR #59 therefore targets that branch, not `main`; #62 targets #59.
+All three PRs are merged into `main` in order: [#58](https://github.com/ICEQ-JO/quoli/pull/58) (`eb3c8f4`), #59 (`2f5d8df`) and #62 (this PR).
 
 ## QUO-39 — apply project capture policy before retry persistence
 
@@ -47,7 +47,7 @@ Environment: Node 24.16.0, pnpm 11.12.0, isolated worktree at `~/Dev/quoli-night
 
 ## QUO-40 — fence and remove retries during project lifecycle changes
 
-Commit: `66b01ff` (`fix(storage): fence and prune retries across project lifecycle`), author and committer ICEQ-JO. Follow-ups: `51013d0` and `b15bc61` (validation record), `6b98c34` (a spool cleanup failure no longer fails an already-committed lifecycle action), `63ddd59` (damaged entries are dropped instead of stalling drain). Stacked draft [#62](https://github.com/ICEQ-JO/quoli/pull/62) against the QUO-39 branch. The Linear dependency on QUO-39 stays open: an unmerged draft is not a completed prerequisite.
+Commit: `66b01ff` (`fix(storage): fence and prune retries across project lifecycle`), author and committer ICEQ-JO. Follow-ups: `51013d0` and `b15bc61` (validation record), `6b98c34` (a spool cleanup failure no longer fails an already-committed lifecycle action), `63ddd59` (damaged entries are dropped instead of stalling drain). Merged as [#62](https://github.com/ICEQ-JO/quoli/pull/62) after [#59](https://github.com/ICEQ-JO/quoli/pull/59); the QUO-39 dependency is satisfied.
 
 ### Demonstrated behavior
 
@@ -85,5 +85,5 @@ Environment: Node 24.16.0, pnpm 11.12.0, isolated worktree at `~/Dev/quoli-night
 
 ## Blockers and next safe action
 
-- No external blocker forced a stop. Merging is not authorized; owner review of #59 remains, and #62 stays a draft until #59 is merged.
-- Next safe action: review and merge #58, then #59, then rebase #62 onto the updated parent, re-run the focused and full checks, and review it. Do not merge either privacy PR on the agent's judgment.
+- Owner authorized the merge on 2026-10-23. #58, #59 and #62 were merged into `main` in that order; QUO-39 and QUO-40 are Done in Linear.
+- Next safe action: start the next roadmap increment from the merged `main`. No privacy repair from this packet remains open.
