@@ -1,28 +1,33 @@
 # Implementation checkpoint
 
-Target direction: [Quoli product vision](vision.md). This page records delivered capability only; the vision is not evidence that a feature exists.
+Updated for planning: 2026-10-23. This page distinguishes existing local code and recorded validation from the [target hosted product](vision.md). It does not certify a cloud release.
 
-The local branch also includes an [installable production CLI/background runtime](cli.md), with its [acceptance and validation record](work/cli-background.md). This is an unpublished Linux build; new agent activity adapters remain outstanding.
+## Delivered local foundation
 
-Current local increment: **Quoli automatic repository history**, on `feat/quoli-automatic-repository-history`. [Connection and limits](automatic-history.md), [local acceptance record](work/automatic-repository-history.md). Repository observation is independent of agent/editor; additional agent activity adapters remain planned.
-
-This is a working checkpoint, not a release certification. The source tree, tests, running application and linked PRs are authoritative. Update this page as each increment is demonstrated.
-
-| Capability | Current evidence | Remaining work |
+| Capability | Implementation/record | Known boundary |
 | --- | --- | --- |
-| Local collector, persistent normalized history, synthetic sessions | [PR #22](https://github.com/ICEQ-JO/quoli/pull/22), unit/integration/lifecycle checks | Live-source compatibility and lifecycle controls are separate gates. |
-| Full-history activity search, source inspection and reported usage | [PR #24](https://github.com/ICEQ-JO/quoli/pull/24), browser flows | Live-source reconciliation and null handling must be verified against real supported contracts. |
-| Workspace overview, library and redesigned evidence workbench | [PR #27](https://github.com/ICEQ-JO/quoli/pull/27), six passing browser flows, independent finish PASS | Superseded by the founder-approved session-first workspace on `feat/compact-workbench` ([#32](https://github.com/ICEQ-JO/quoli/issues/32)); see [research](design/product-ui-research.md) and [implemented workflow](design/session-workspace.md). |
-| Session-first work list, review document and gap queue | [Issue #32](https://github.com/ICEQ-JO/quoli/issues/32), 68 unit/integration and 14 browser checks, independent finish PASS; [workflow and screenshots](design/session-workspace.md) | Founder visual feedback and live integration remain separate. |
-| Explicit repository registration and read-only snapshots | [PR #28](https://github.com/ICEQ-JO/quoli/pull/28), [issue #9](https://github.com/ICEQ-JO/quoli/issues/9), CLI/storage/temporary Git checks and browser registration flow | Linux descriptor traversal is supported; unsupported platforms fail closed. |
-| Before/after file inspection | Implemented on `feat/captured-diffs`, [#10](https://github.com/ICEQ-JO/quoli/issues/10); deterministic diff and scoped API checks, desktop/mobile inspection | Live-source capture remains a separate gate. See [review behavior and bounds](captured-changes.md). |
-| Evidence-backed checks and change map | Checks on `feat/evidence-checks`, [#11](https://github.com/ICEQ-JO/quoli/issues/11); [verification evidence](verification-evidence.md). Bounded change map implemented on `feat/change-map`, [#12](https://github.com/ICEQ-JO/quoli/issues/12); [change map](change-map.md) | Derive only from established records; expose uncertainty and keyboard-equivalent lists. Live-source capture of these relationships remains a later gate. |
-| Retention/deletion and capture controls | Implemented on `feat/lifecycle-controls`, [#13](https://github.com/ICEQ-JO/quoli/issues/13); [capture controls](lifecycle-controls.md), storage/CLI/browser checks | Required before real-session data paths. Live adapters must respect the pause state and the deletion tombstone. |
-| Claude compatibility, hooks, usage reconciliation and setup | Runtime gate verified on Claude Code 2.1.306 ([#14](https://github.com/ICEQ-JO/quoli/issues/14)); [runtime report](claude-code-runtime-report.md) and sanitized fixtures. Passive hook bridge implemented on `feat/hook-bridge`, [#15](https://github.com/ICEQ-JO/quoli/issues/15); [hook bridge](hook-bridge.md). Narrow local OTLP usage receiver implemented on `feat/otel-receiver`, [#16](https://github.com/ICEQ-JO/quoli/issues/16); [reported usage receiver](telemetry-receiver.md). Cross-source reconciliation implemented on `feat/reconciliation`, [#17](https://github.com/ICEQ-JO/quoli/issues/17); [source reconciliation](source-reconciliation.md). Live linking implemented on `feat/live-linking`, [#18](https://github.com/ICEQ-JO/quoli/issues/18); [live linking](live-linking.md). Guided reversible setup implemented on `feat/local-setup`, [#19](https://github.com/ICEQ-JO/quoli/issues/19); [local setup](local-setup.md). Pilot validation implemented on `feat/pilot-release`, [#20](https://github.com/ICEQ-JO/quoli/issues/20); [pilot checklist](pilot-release.md) | A fresh-machine and macOS walkthrough stays with the owner; the PR stack is unmerged. |
-| Ready-to-use pilot | Fixture-only pilot validation on `feat/pilot-release`, [#20](https://github.com/ICEQ-JO/quoli/issues/20); [pilot checklist](pilot-release.md) | A fresh-machine walkthrough with the owner's own Claude access is still outstanding; a passing fixture run alone does not satisfy this. |
+| Local collector, SQLite history, normalized evidence and synthetic sessions | `apps/collector`, `packages/schema`, `packages/storage`; [development reference](development.md), [demo](local-demo.md); historical [PR #22](https://github.com/ICEQ-JO/quoli/pull/22) | Local, not tenant-scoped hosted ingestion |
+| Session workspace, source inspection, search and gap queue | `apps/web`; [current workspace](design/session-workspace.md), [product experience record](work/product-experience.md) | Existing loopback session/API assumptions require hosted adaptation |
+| Read-only local repository capture and observed history | `packages/repository`, collector observer; [capture](repository-capture.md), [automatic history](automatic-history.md), [work record](work/automatic-repository-history.md) | No automatic authorship; safe file traversal is Linux-specific |
+| Captured file diffs and recorded checks | `packages/analysis`; [diffs](captured-changes.md), [verification evidence](verification-evidence.md) | Successful command does not establish correctness or coverage |
+| File/check change map | `packages/schema/src/map.ts`, analysis/map and web map; [reference](change-map.md) | Not the full proposed scene language or syntax-aware impact view |
+| Claude hook bridge, narrow reported usage and reconciliation | `apps/bridge`, collector OTLP parser; [versioned runtime report](claude-code-runtime-report.md), [hooks](hook-bridge.md), [receiver](telemetry-receiver.md), [reconciliation](source-reconciliation.md) | Runtime report covers Claude Code 2.1.306 on Linux; current/new versions require verification; no other detailed harness adapter delivered |
+| Capture settings, pause, retention and database purge | [controls](lifecycle-controls.md), schema/privacy and storage lifecycle | Known retry spool policy/purge gap; see below |
+| Installable local production CLI and managed runtime | `apps/cli`, release builder; [CLI](cli.md), [work record](work/cli-background.md) | Unpublished Linux local build; not a signed cloud connector distribution |
+| Local fixture/release/browser validation records | [pilot record](pilot-release.md), test suite and dated design/work evidence | Not cloud-security certification; fresh-machine/platform results require explicit evidence |
 
-## Supporting work
+Historical implementation branches and PR references describe how local work was built. The original MVP stack was merged; old per-feature branch names are not current implementation status. New work follows Quolii Linear and the active [backlog](issues/vision/README.md).
 
-The founder requested OpenCode agents with a free MiniMax model. The installed model list exposes `opencode/minimax-m3.1-flash-free`; isolated supporting runs supplied the repository reader and bounded diff engine, both reviewed and tested before integration. A subsequent checks-analysis draft is awaiting primary-agent review. Their output is not trusted as finished until reviewed and rerun by the primary agent. No real session evidence or credentials are supplied to those agents.
+## Confirmed planning-time defects
 
-The original 19-PR implementation stack was merged into main at the owner's request. The subsequent reload fix and this automatic-history increment are included in the current local branch. The owner subsequently authorized publication and merge of these increments, tracked in [#48](https://github.com/ICEQ-JO/quoli/issues/48) and [#49](https://github.com/ICEQ-JO/quoli/issues/49).
+The bridge normalizes/redacts content but does not consult current project capture settings before failed delivery is written to `bridge-spool.jsonl`. Database purge does not remove that spool. A synthetic temporary check confirmed disabled prompt content remained in the spool and remained after purge; it invoked normalization/spooling directly and did not collect a private session. V02/V03 track repairs. No fix is claimed by this documentation change.
+
+See the [source-informed assessment](work/vision-repository-assessment.md) for evidence, boundaries and capacity checks still needed.
+
+## Not delivered
+
+Cloud accounts/workspaces, device pairing, consented synchronization, cloud evidence/artifact storage, tenant isolation, hosted queries/dashboard operation, cloud deletion/backup recovery, GitHub remote observations, OpenCode/Codex/Pi adapters, request-level cost estimates, extension inventory/invocation views, full evidence scenes/syntax-aware diffs, paid entitlements, signed updates and architecture/debt enforcement remain implementation work. Their presence in the vision or Linear does not mean they run.
+
+## Supporting-agent work
+
+Previous OpenCode support runs used the installed `opencode/minimax-m3.1-flash-free` model for bounded local contributions, reviewed/tested by the primary agent before integration. Verify the installed identifier again before new use. This planning/publication pass uses no supporting agent and uploads no private evidence.

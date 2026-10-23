@@ -4,11 +4,11 @@ Open **Settings** in the workspace sidebar, or use the `pnpm settings` CLI. Thes
 
 ## Capture policy
 
-Three independent controls decide what may be persisted: prompts, tool output and code. A change applies **before** new content is written, so the next observation is sanitized under the new policy. History already retained is not rewritten; delete it explicitly if you want it gone.
+Three independent controls decide what the collector may persist: prompts, tool output and code. The collector applies changes **before** new database content is written, so the next accepted observation is sanitized under the new policy. History already retained is not rewritten; delete it explicitly if you want it gone.
 
 Tool output may contain code in any nested position, so tool and code consent are both required before any content is stored. Enabling code capture therefore enables tool capture. Excluded paths (`node_modules`, `.git`, `.env`, …) stay configured regardless of the toggles.
 
-Nothing is queued in a durable spool in this preview: content is sanitized and stored inside the ingestion transaction, so there is no stored batch that could bypass a later policy change.
+The bridge has a durable retry spool. Known gap: failed deliveries can persist normalized content before current project policy is applied, and database purge does not remove that spool. V02/V03 in the [active backlog](issues/vision/README.md) track pre-persistence policy and coordinated lifecycle repairs. Collector-side sanitization does not undo earlier spool writes. These controls currently describe local database behavior, not complete spool or cloud deletion guarantees.
 
 ## Capture state
 

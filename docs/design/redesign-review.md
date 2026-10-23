@@ -1,5 +1,7 @@
 # Dashboard redesign review
 
+> Local implementation/validation reference. The [hosted product vision](../vision.md) supersedes local-only product scope; dated checks below are historical evidence, not cloud readiness.
+
 The founder requested a replacement dashboard experience, preserving the working evidence flows. The browser inspection found an app that opened directly into one session, with no workspace orientation or separate session library. The implemented redesign adds Overview and Sessions before the focused Activity / Usage / Coverage review.
 
 Historical GitHub delivery issues: [workspace and session library #25](https://github.com/ICEQ-JO/quoli/issues/25), [review workbench #26](https://github.com/ICEQ-JO/quoli/issues/26). Ongoing work is tracked only in the Quolii Linear workspace.

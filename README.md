@@ -1,10 +1,10 @@
 # Quoli
 
-A local evidence workbench for AI-assisted development. Repository: `ICEQ-JO/quoli`.
+A hosted evidence, change-understanding, architecture-integrity and technical-debt workspace for AI-assisted development, connected to locally running coding agents. The current implementation is a local MVP. Repository: `ICEQ-JO/quoli`.
 
 > Show me what my coding agent did, what changed, and what remains unverified.
 
-**Target direction:** [Quoli's paying-customer product vision](docs/vision.md) — cloud and local repositories, multiple harnesses, observable activity and subagents, token cost, plugin/skill use and evidence-grounded change diagrams. The running application below is the current local MVP, not that full target.
+**Target direction:** [Quoli's paying-customer product vision](docs/vision.md) — a cloud dashboard with local connectors, cloud/local repositories, OpenCode/Pi/Claude Code/Codex activity, token cost, extension use, evidence-grounded change diagrams, and architecture/debt controls. See the [active Linear-backed roadmap](docs/work/vision-roadmap.md). The running application below is the current local MVP, not that full target.
 
 The local MVP is available: **a session review workspace** with a persistent timeline, tool results, evidence links, reported token/cache usage, recorded verification evidence, a bounded change map, cross-source reconciliation and explicit capture gaps. Explicit read-only repository capture is available through the [capture CLI](docs/repository-capture.md), and local capture controls, retention and project deletion through the [settings view](docs/lifecycle-controls.md) and `pnpm settings`. The dashboard opens on a grouped session work list, with a focused review page, a recorded-gap inbox, captured before/after inspection and a map that joins captures to recorded checks. See the [workspace guide](docs/design/session-workspace.md).
 
@@ -44,6 +44,6 @@ The demo imports 33 entirely synthetic observations across three sessions. Re-ru
 7. Open **Settings** to change the capture policy, pause capture, set a retention window or delete the project's evidence.
 8. Return to **Overview** for the recorded capture-gap queue, or search/filter the **Sessions** library. Use **Review gaps**, search the entire session, or copy an evidence link from the inspector. Session, view and evidence selection survive reload.
 
-Read the [demo and troubleshooting guide](docs/local-demo.md), [verification evidence](docs/verification-evidence.md), [change map](docs/change-map.md), [capture controls](docs/lifecycle-controls.md), [local setup](docs/local-setup.md), [pilot checklist](docs/pilot-release.md), [development/API reference](docs/development.md), [product plan](docs/README.md), [architecture](docs/architecture.md), [GitHub backlog](docs/issues/README.md), and [working agreements](AGENTS.md).
+Read the [demo and troubleshooting guide](docs/local-demo.md), [verification evidence](docs/verification-evidence.md), [change map](docs/change-map.md), [capture controls](docs/lifecycle-controls.md), [local setup](docs/local-setup.md), [pilot checklist](docs/pilot-release.md), [development/API reference](docs/development.md), [product plan](docs/README.md), [architecture](docs/architecture.md), [active backlog](docs/issues/README.md), and [working agreements](AGENTS.md).
 
-All session evidence stays on your machine. Synthetic content is explicitly enabled for the fixed demo project; new real projects default to metadata-only capture in the shared policy contract. Real-project registration is not exposed yet. Redaction reduces risk and cannot guarantee removal of every secret.
+In the current local MVP, session evidence stays on your machine. Synthetic content is explicitly enabled for the fixed demo project; new real projects default to metadata-only capture in the shared policy contract. Real projects can be connected explicitly through the CLI. The existing retry spool has known capture-policy/deletion gaps tracked in the [implementation checkpoint](docs/implementation-progress.md); this is not a cloud-ready release. Redaction reduces risk and cannot guarantee removal of every secret.

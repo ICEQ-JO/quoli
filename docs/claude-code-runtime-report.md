@@ -84,5 +84,5 @@ In one session with both transports active, the identifiers matched exactly:
 
 ## Remaining verification
 
-- The bridge and the receiver are not implemented yet; they are the next increments ([#15](https://github.com/ICEQ-JO/quoli/issues/15), [#16](https://github.com/ICEQ-JO/quoli/issues/16)).
+- The bridge and receiver were implemented after this runtime gate; see [hook bridge](hook-bridge.md) and [usage receiver](telemetry-receiver.md). This dated runtime evidence does not establish support for newer versions.
 - The setup guide and the pilot validation ([#19](https://github.com/ICEQ-JO/quoli/issues/19), [#20](https://github.com/ICEQ-JO/quoli/issues/20)) still need a fresh-machine run.

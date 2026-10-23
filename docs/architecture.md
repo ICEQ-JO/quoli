@@ -1,118 +1,82 @@
-# Local architecture and planned extensions
+# Quoli target architecture and current boundaries
 
-## Managed local runtime
+Status: target design approved in direction, implementation outstanding. The [vision](vision.md) defines outcomes and truth/privacy boundaries. The [checkpoint](implementation-progress.md) describes today's local software. This page does not imply the cloud exists.
 
-The unpublished CLI release combines bundled Node entry points with Next.js standalone production output and local SQL migrations. Installation is user-local and separate from the compatible private evidence store. A detached supervisor owns both app listeners; private HMAC challenge/response establishes control identity before stop/status bearer requests. Saved PIDs are not stop targets. IPC disconnect handling prevents a dead supervisor from leaving its runtime children listening. Optional systemd user startup is explicit; source development remains separate. See [CLI lifecycle and limits](cli.md).
-
-## Current owner direction: Quoli and agent-independent history
-
-Quoli is the product name (formerly Traceframe). The repository observation layer is independent of agent harnesses: an explicit connection opts a local Git root into safe, bounded sampling while the collector runs. Sanitized working-tree snapshots and observed Git transitions are primary records. Daily repository history is displayed separately from agent sessions; shared file paths or nearby timestamps do not establish authorship. The current [automatic-history increment](automatic-history.md) and [local work record](work/automatic-repository-history.md) supersede earlier manual-only repository-capture scope below.
-
-Detailed agent activity remains a separate adapter boundary. Claude is the only implemented activity adapter; Codex, Pi, OpenCode and others require independently verified contracts, source identities, capabilities and synthetic fixtures before implementation. Repository observation provides useful evidence with all of those tools without claiming their activity has been captured. Internal package/config/storage names remain compatible during the visible Quoli rename.
-
-
-## Implemented preview
-
-The current synthetic preview implements `apps/web`, `apps/collector`, and the schema/storage/analysis/repository/ui packages. Run it with `pnpm demo`; see the [development reference](development.md) for exact routes, limits and behavior. It has an explicit local repository registration/capture CLI and persisted snapshot observations. The dashboard compares immutable snapshot pairs through a pure bounded projection. Live adapters and graph remain separate increments.
-
-The initial storage binding is Node 24's built-in SQLite API. Sanitized small artifacts are stored as transactional SQLite values initially; separate blob files and source-file cursors are deferred until adapters/snapshots need them. This avoids introducing a filesystem recovery boundary in the first demo. Dev, production and tests use separate Next output directories. The web port is 3140 because 3000 was occupied in the development environment.
-
-The diagram and directory tree below remain the target MVP architecture; not all components exist yet.
-
-## Process and package boundaries
+## Target data flow
 
 ```text
-Claude Code hooks / optional local OTLP logs
-       ↓ local adapter bridge: classify → redact → bound → validate
-127.0.0.1 collector + local credential
-       ↓ revalidate policy → transaction → acknowledge durable write
-SQLite event history + per-project redacted artifact storage
-       ↑
-Read-only Git / bounded file snapshots → snapshot observations
-       ↓
-Versioned deterministic analysis → usage/query views → bounded graph
-       ↓ authenticated server-to-server reads
-Next.js server → local browser dashboard
+Developer machine                          Quoli cloud
+─────────────────                          ───────────
+Harness adapters + read-only repo observer
+  → classify, capture policy, redact
+  → local SQLite history
+  → separate upload policy + device epoch
+  → bounded durable outbox ── TLS ────────→ device-authenticated ingestion
+                                            → tenant/project authorization
+                                            → immutable observation commit + receipt
+                                            → scoped artifact storage
+                                            → versioned replayable projections
+                                            → authorized query API
+                                                      ↑
+                                            hosted Next.js dashboard
+                                            user auth + workspace roles
+
+GitHub/GitLab app → signed webhooks → scoped PR/commit observations
+  → bounded static architecture analysis → deterministic policy report
+  → exact-commit check delivery + technical-debt ledger
 ```
 
-Two application processes, one collector writer, no broker and no cloud. The collector owns migrations, database writes and artifact access; the dashboard does not open a second database connection for writes. The web server proxies authenticated reads and local control actions. It holds the collector credential server-side; never embed it in browser JavaScript. Both servers bind to loopback by default. Separate data directories and storage keys isolate projects even when the collector hosts several projects.
+The connector is passive. Quoli never controls the coding agent or replays captured actions. The web app cannot receive a local collector's bearer credential. Devices authenticate as devices, users as users, and repository apps have separate least-privilege credentials.
 
-Use a supported SQLite binding behind `packages/storage`, runtime schemas (proposed: Zod), explicit SQL migrations and parameterized queries. A mature diff renderer and graph viewer may be selected during the relevant issues; neither requires a custom DSL. Use workspace scripts and a small supervisor for local development, with process shutdown and clear port errors. Do not add orchestration infrastructure.
+## Reuse and rebuild boundaries
 
-## Target MVP tree (partially implemented)
+| Existing area | Target treatment |
+| --- | --- |
+| `packages/schema` | Compatible v2 contracts: source versions, open tools, capabilities, turns, children, decisions; retain v1 reading |
+| `packages/storage` | Keep local SQLite and immutable observations; separate cloud persistence with explicit tenant/project keys and migration evidence |
+| `apps/bridge`, collector source parsers | Retain verified mappings; move behind adapter contracts, repair pre-spool privacy, add OpenCode/Codex/Pi |
+| `apps/collector`, observer | Keep local capture/security and repository observation; add a device-bound upload outbox, not a public-bind mode |
+| `packages/repository` | Keep safe local reads; add bounded providers and sanitized cache with local/cloud consent separation |
+| `packages/analysis` | Reuse pure rules/diffs/checks/reconciliation; version projections for tenant-scoped background processing |
+| `apps/web` | Reuse session navigation, inspector, diffs, settings and visual system; replace loopback-only data/session assumptions in the hosted deployment |
+| Map schema/rendering | Compatible migration to evidence scenes; remove the old map path only after parity and reference checks |
+| CLI/supervisor/install | Keep local lifecycle and identity protections; distribute a signed connector with pairing and verified updates |
+| Historical planning docs | Consolidate into current vision/architecture/decisions/backlog; preserve useful runtime/validation references |
 
-```text
-apps/
-  web/                       # Next.js pages, server proxy, local browser access
-  collector/                 # loopback API, OTLP subset, writer, lifecycle CLI
-packages/
-  schema/                    # event, evidence, policy and API contracts
-  storage/                   # SQL migrations, append-only writes, read queries
-  adapters/claude-code/      # documented hooks/OTel; experimental module isolated
-  repository/                # safe Git reads, snapshots and diff artifacts
-  analysis/                  # versioned deterministic joins, usage and check views
-  graph/                     # bounded evidence-backed projection, no DSL
-  ui/                        # timeline, evidence inspector, diff/map primitives
-fixtures/
-  sessions/                  # synthetic normalized and source-shaped records
-  repositories/              # recipes for temporary Git fixtures, no private code
-  expected/                  # expected queries, evidence and usage totals
-  manifest.json              # synthetic origin, schema/source version, omissions
-scripts/                     # developer lifecycle and validation helpers
-docs/
-  README.md
-  implementation-plan.md
-  architecture.md
-  claude-code-capabilities.md
-  founder-decisions.md
-  issues/                    # unpublished drafts and dependency index
-package.json                 # pinned engines/packageManager and workspace commands
-pnpm-workspace.yaml
-pnpm-lock.yaml
-tsconfig.base.json
-.gitignore
-```
+Do not add runtime skeleton packages solely because this diagram names responsibilities. Build the smallest service/process layout that satisfies the selected cloud contract. Hosting, database/object-store and auth vendors must be selected and verified in the foundation issue. Do not migrate the local store to a network database or rename `TRACEFRAME_*` compatibility surfaces as a prerequisite.
 
-## Primary records and provenance
+## Primary records and projections
 
-Proposed entities: `projects`, `session_observations`, `event_observations`, `artifacts`, `snapshot_observations`, `evidence_relationships`, `ingestion_receipts`, `source_cursors`, `capture_policies`, and rebuildable `projection_state`. Session status is a view over lifecycle observations, not a mutable claim that a crashed session ended normally. Foreign keys include project identity.
+Accepted observations retain source identity, adapter/schema versions, delivery identity, receipt sequence, timestamps with their basis, project/device generation and sanitized provenance. Append-only is the primary history; corrections append observations. Retention/deletion are explicit exceptions. Acknowledgement follows durable commit; same-delivery retries return the prior receipt.
 
-A normalized event envelope has:
+Cloud tables, object keys, caches, jobs, cursors and query scopes include tenant/project identity. Enforce this server-side from authenticated membership/device registration, not from a client-provided tenant ID. Test cross-tenant access through every surface, including background processing, signed artifact URLs and exports.
 
-- Schema version, locally generated event ID, project ID, source kind, adapter version and producer instance.
-- Nullable source session, prompt, tool, message and request identifiers; source timestamp/sequence if reported, plus collector receipt time and commit sequence.
-- Discriminated event kind and validated payload; independent numeric usage fields with units, reporting scope and temporality.
-- Content state per field: present, disabled, redacted, truncated, unavailable, unsupported or malformed. Missing values are null, not zero or invented text. Include original byte count when known and a truncation marker.
-- Provenance locator into the retained sanitized observation (event/payload pointer or artifact range), source identity when available, redaction policy version and capture coverage. Avoid raw secret-bearing hashes and raw payload retention.
+Scene, cost, activity and architecture views are bounded versioned derivations with evidence IDs, rule versions and omissions. They can be rebuilt and invalidated when evidence expires. Missing fields remain null with a reason; request deltas and cumulative usage are reconciled before totals. A complete graph cannot be inferred from a partial repository read.
 
-An evidence relationship has subject/object IDs, `recorded | derived | inferred`, supporting observation IDs, rule ID/version where applicable, and an uncertainty explanation. Derived claims such as a token sum or a session-to-file time-window link retain the inputs. Inferred claims are optional, visually distinct, and excluded from factual totals; MVP need not produce any. Observing a path in tool input records the reference, not that the file changed. A before/after diff is derived from recorded snapshots. Temporal proximity alone never establishes authorship or test coverage.
+## Local capture and upload
 
-Append-only applies within retained history: no in-place edits to accepted observations. Corrections and reconciliation append new observations or versioned relationships. Same-source retry deduplication uses a stable bridge delivery ID persisted before retry, or documented source event identity. New adapters must not treat equal text or timestamps as identity. Different-source overlap retains separate observations and projects one logical action only when IDs establish the match. Conflicts remain inspectable. Unidentified overlaps are kept separate and excluded from an asserted combined total.
+Local metadata-only capture remains the default. Upload is separately enabled per project/category and destination after account pairing. Unknown policy fails closed for content. A local-only project stays local, even when another project is paired. Policy generations travel with outbox entries; pause, reduced consent, retention, project deletion and device revocation fence pending deliveries.
 
-## Read APIs and bounded views
+Bound stdin, requests, fields, files, batches and outbox storage before expensive parsing/persistence. Record drops/caps without recording private payloads. Drain with restart-safe cursors, backoff and atomic ownership; a crashed drain cannot lose a concurrent append. Recheck active policy before upload and at cloud ingestion. A restored backup must reapply deletion tombstones before accepting retries.
 
-Propose `/v1/projects`, project-scoped session lists, cursor-paginated events, evidence, usage, snapshots, diff artifacts and graph views. `/v1/ingest` handles normalized batches; a separate narrow `/v1/otel/v1/logs` handles the verified OTLP format. Publish endpoint contracts before implementation. Unknown fields/event versions are rejected or counted as unsupported without logging payloads.
+Local file reads retain descriptor/symlink protections and explicit racy states. Current file traversal is Linux-specific; macOS requires equivalent protections, not a weaker path-string check. Git/provider observations do not establish agent authorship.
 
-A graph initially has session, file and command/check nodes with observed tool references and snapshot-backed relationships. No whole-repository call graph. Default per-view caps: 100 nodes and 200 edges, with an omitted-count indicator, deterministic sort and filters. Expanding a region is another bounded query. Each selection opens the underlying source, rule and captured diff/check evidence; keyboard users have an equivalent list. Unsupported languages still receive file-level explanations.
+## Cloud security and lifecycle
 
-Usage displays separately reported non-cache input, output, cache-read and cache-write tokens. Missing components remain null. A displayed cache-read share is explicitly `cache_read / (input + cache_read + cache_creation)` when every denominator component is known and positive; otherwise it is null. It is a token share, not a request cache-hit rate. No cross-source summation of cumulative snapshots and request deltas. Reported monetary estimates, if retained, are not invoices or per-file costs.
+Use authenticated encrypted transport, encrypted retained storage, secure key management, revocable scoped device credentials, user session/CSRF protection, safe origin policy, least-privilege service roles and tenant/project authorization. No public exposure of the existing loopback collector. No secrets in URLs, evidence, logs or frontend bundles.
 
-Checks have independent statuses: command observed, result observed, exit code if available, parsed test counts for an explicitly supported format, snapshot association, and coverage unknown. “Exit 0 reported” cannot become “feature verified.” A later file change makes an earlier check stale relative to that file version. Lack of a check is shown as “no recorded check,” not “not tested.”
+Deletion coordinates producer fencing, local history/outbox/cache, cloud observations/artifacts/projections/jobs and retention/backup schedules. Exports have explicit selection and content preview; copies outside Quoli cannot be recalled. Audit records minimize content and follow their own approved retention. Clearly communicate active storage deletion versus backup expiry and physical erasure limits.
 
-## Privacy and local security
+Service observability uses allowlisted IDs/counters rather than prompt/tool/code payloads. Apply admission/rate/storage limits and project/device health states. Version deployments and migrations, test restore/rollback, and rehearse incident response before paid production ingestion.
 
-Default to metadata-only capture. Prompt text, tool input/output and code each require explicit project controls; disabling one class also removes it from nested tool arguments, telemetry attributes, diffs and diagnostic paths. Text can contain several classes. Apply the most restrictive matching policy. Filtering and redaction happen in memory before any queue/spool, SQLite write, artifact, diagnostic log or exception serialization; receiver policy is a second boundary. Redaction is best-effort risk reduction, not guaranteed secret removal.
+## Architecture integrity and debt
 
-Proposed initial limits, configurable within hard ceilings: 64 KiB per captured text field, 1 MiB request body, 100 events per batch, 1 MiB per code file, 20 MiB per snapshot operation, 50 MiB per project spool, 1 GiB project storage. Mark policy omissions explicitly; reject oversized transport before parsing, then redact complete allowed fields before safe truncation so regex boundaries do not leak partial secrets. Streaming raw unbounded records to disk is forbidden. Full queues cause visible capture-loss counters; they do not stall the coding agent indefinitely.
+PR analysis reads the exact repository installation/ref/SHA using scoped app credentials and verified webhooks. Never execute repository scripts or untrusted rules. Parse bounded supported syntax into versioned static observations for modules, dependencies, ownership and schemas. Architecture models and rules are validated data, reviewed and scoped per repository.
 
-Generate an ingestion credential from secure randomness on first local setup; store outside the repository with owner-only permissions and rotate/revoke it. Never put credentials in URLs, committed config, payloads or logs. Authenticate ingestion, read and control routes. Reject unexpected Host/Origin, cross-site requests and permissive CORS; protect the local browser session and control endpoints against CSRF and DNS rebinding. Loopback authentication protects against web-origin abuse, not an already compromised same-user process. Do not expose public bind mode in MVP.
+Policy results carry rule/model/engine versions, exact base/head commit, evidence, missing-data state, deterministic verdict and machine-readable fix requests. Only owner-configured deterministic rules block. Missing/stale analysis cannot become a pass. Findings without agent evidence remain unattributed.
 
-Artifacts and database live under a platform-appropriate user-data directory outside the observed repo, owner-only and ignored if a development override is used. Store project-scoped redacted blobs using opaque/content IDs derived only after sanitization. No externally loaded fonts, analytics, session uploads, error reporters or generated explanations requiring remote models. Live Claude's own network use is separate from Traceframe.
+Debt records have stable IDs, owner, reason, scope, expiry, evidence, status and follow-up links. Approval/waiver/renewal is append-only audit history, not silent rule suppression. Observe false-positive behavior before activating merge checks. GitLab delivery follows the same exact-revision/reporting contract after GitHub.
 
-All captured content is untrusted: escaped text only, no HTML execution, fetched URLs, automatic link opening, shell interpolation or recorded-command replay. Git access uses fixed argument arrays, read-only commands, disabled external diff/text conversion, no hooks, no checkout/fetch, and safe path resolution. Do not follow artifact pointers, symlinks or tool paths outside registered roots. Explicitly reject nested submodule traversal for initial snapshots. Git metadata and filenames are untrusted too.
+## Today's runtime
 
-Project deletion and retention are explicit exceptions to event immutability. Pause and fence producers, reject old credential epochs, purge database rows, blobs, queues, cursors, projections and caches, checkpoint the WAL and handle interrupted deletion idempotently. Explain that filesystem snapshots, user backups and secure physical erasure are outside the guarantee. Propose a configurable 30-day retention default; expose storage usage and avoid quietly deleting data when the storage cap is reached. Retention invalidates dependent evidence instead of leaving dangling factual claims.
-
-## Repository observations
-
-Capture baseline working-tree state including staged/unstaged changes and explicitly allowed untracked files; HEAD alone is not a baseline. Keep HEAD/index identities and snapshot timing. Collect checkpoints at session boundaries and bounded tool-result/debounced intervals; these are observations, not atomic filesystem snapshots. Detect moving HEAD, file changes during reads and overlapping sessions; mark racy observations and ambiguous ownership. Missed beginnings produce an unavailable baseline, never a fabricated before-state. Handle deleted, renamed, binary, oversized and ignored paths with explicit states. Snapshots must not stage or alter user files.
+Today's CLI packages Node entry points, Next standalone output and SQLite migrations. The detached supervisor controls two loopback listeners with identity checks; saved PIDs are not stop targets. The collector owns local writes; the browser uses protected server proxies. No hosted identity, sync or tenant boundary is delivered. See [CLI](cli.md), [development/API reference](development.md), [capture controls](lifecycle-controls.md) and the [repository assessment](work/vision-repository-assessment.md) for existing behavior and known retry gaps.

@@ -1,5 +1,7 @@
 # Product experience validation
 
+> Local implementation/validation reference. The [hosted product vision](../vision.md) supersedes local-only product scope; dated checks below are historical evidence, not cloud readiness.
+
 Delivered in [PR #55](https://github.com/ICEQ-JO/quoli/pull/55), implementing #51–#54. Landing and all ten application destinations were inspected; useful work-list, document, queue, comparison and source-inspection structures were preserved. This is reviewable implementation, not an authorization to merge or owner acceptance.
 
 ## Primary-agent verification
