@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { claudeAdapter } from "../apps/bridge/src/adapter";
+import { claudeAdapter, adapters as productAdapters } from "../apps/bridge/src/adapter";
 import { hookStatus, installHooks, uninstallHooks } from "../apps/bridge/src/install";
 import { normalizeHook } from "../apps/bridge/src/normalize";
 import { syntheticAdapter } from "../fixtures/adapters";
@@ -16,9 +16,9 @@ import {
 } from "../packages/schema/src/adapter";
 import { payloadSchema } from "../packages/schema/src/index";
 
-// One suite, every registration: Claude plus a synthetic adapter that exercises
+// One suite, every product registration plus a synthetic adapter that exercises
 // different capability declarations.
-const adapters: AdapterDescriptor[] = [claudeAdapter, syntheticAdapter];
+const adapters: AdapterDescriptor[] = [...productAdapters, syntheticAdapter];
 
 function registration({ deliveryId: _deliveryId, ...rest }: AdapterDescriptor) {
   return rest;
