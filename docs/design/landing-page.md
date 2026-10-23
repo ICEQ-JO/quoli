@@ -1,5 +1,7 @@
 # Quoli landing page
 
+> Local implementation/validation reference. The [hosted product vision](../vision.md) supersedes local-only product scope; dated checks below are historical evidence, not cloud readiness.
+
 Implemented for [#51](https://github.com/ICEQ-JO/quoli/issues/51) on `feat/quoli-product-experience`. This records the landing surface only. The [whole-product experience rebuild](../work/product-experience.md) still has workspace, investigation, lifecycle and cross-product work pending.
 
 ## Purpose and rationale

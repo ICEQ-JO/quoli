@@ -1,5 +1,7 @@
 # Whole-product experience rebuild
 
+> Local implementation/validation reference. The [hosted product vision](../vision.md) supersedes local-only product scope; dated checks below are historical evidence, not cloud readiness.
+
 Owner brief: full product management, UX, visual design and implementation ownership across the landing page and every application surface. This record survives resets; completing one phase does not complete the goal.
 
 ## Product truth

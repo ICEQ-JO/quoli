@@ -1,0 +1,468 @@
+{
+  "workspace": "https://linear.app/quolii",
+  "project": "https://linear.app/quolii/project/quoli-cloud-evidence-and-architecture-workspace-11b6b1c2b4b0",
+  "issues": {
+    "V04": {
+      "id": "QUO-5",
+      "uuid": "69e9bd0d-e25e-4f14-9f70-93a0e43671f0",
+      "url": "https://linear.app/quolii/issue/QUO-5/align-product-documentation-and-executable-backlog-with-the-hosted",
+      "title": "[V04] Align documentation and publish the cloud implementation backlog"
+    },
+    "A01": {
+      "id": "QUO-6",
+      "uuid": "16a90f00-a2d2-4bd3-9052-09ffecffc883",
+      "url": "https://linear.app/quolii/issue/QUO-6/a01-connect-a-least-privilege-github-app-and-verified-pr-webhooks",
+      "title": "[A01] Connect a least-privilege GitHub app and verified PR webhooks"
+    },
+    "A02": {
+      "id": "QUO-7",
+      "uuid": "9eb6e374-5b02-440a-b4af-899b261bf0cc",
+      "url": "https://linear.app/quolii/issue/QUO-7/a02-persist-a-versioned-architecture-model-and-ownership-boundaries",
+      "title": "[A02] Persist a versioned architecture model and ownership boundaries"
+    },
+    "A03": {
+      "id": "QUO-8",
+      "uuid": "0303ef5c-8f5d-43e1-8fe9-c383c4b88f1a",
+      "url": "https://linear.app/quolii/issue/QUO-8/a03-implement-validated-versioned-policy-rules-as-data",
+      "title": "[A03] Implement validated versioned policy rules as data"
+    },
+    "A04": {
+      "id": "QUO-9",
+      "uuid": "38f1e3aa-1b34-4b46-b15a-967cde4d22c8",
+      "url": "https://linear.app/quolii/issue/QUO-9/a04-extract-bounded-static-dependency-and-schema-observations",
+      "title": "[A04] Extract bounded static dependency and schema observations"
+    },
+    "A05": {
+      "id": "QUO-10",
+      "uuid": "d4f98e24-518d-4365-8afa-f07bb4008730",
+      "url": "https://linear.app/quolii/issue/QUO-10/a05-evaluate-architecture-boundaries-dependencies-and-schema-rules",
+      "title": "[A05] Evaluate architecture boundaries, dependencies and schema rules"
+    },
+    "A06": {
+      "id": "QUO-11",
+      "uuid": "6151e8c3-7051-4223-9197-655acac695b5",
+      "url": "https://linear.app/quolii/issue/QUO-11/a06-detect-bounded-duplication-and-report-explainable-candidates",
+      "title": "[A06] Detect bounded duplication and report explainable candidates"
+    },
+    "A07": {
+      "id": "QUO-12",
+      "uuid": "91fb388a-8441-4a98-9eb3-05a5077c78ab",
+      "url": "https://linear.app/quolii/issue/QUO-12/a07-project-evidence-cited-static-blast-radius-for-a-change",
+      "title": "[A07] Project evidence-cited static blast radius for a change"
+    },
+    "A08": {
+      "id": "QUO-13",
+      "uuid": "19f41d2c-0d8f-4f88-b7ce-5718dfa110b4",
+      "url": "https://linear.app/quolii/issue/QUO-13/a08-implement-the-owned-technical-debt-ledger-and-expiring-waivers",
+      "title": "[A08] Implement the owned technical-debt ledger and expiring waivers"
+    },
+    "A09": {
+      "id": "QUO-14",
+      "uuid": "e5463ef3-371b-4be3-926d-36a0079db9a8",
+      "url": "https://linear.app/quolii/issue/QUO-14/a09-produce-deterministic-policy-verdicts-and-machine-readable-fix",
+      "title": "[A09] Produce deterministic policy verdicts and machine-readable fix requests"
+    },
+    "A10": {
+      "id": "QUO-15",
+      "uuid": "8954b0b1-0b76-4796-ac1c-9b3a7ef4ed3a",
+      "url": "https://linear.app/quolii/issue/QUO-15/a10-publish-exact-commit-github-policy-checks-and-invalidate-stale",
+      "title": "[A10] Publish exact-commit GitHub policy checks and invalidate stale results"
+    },
+    "A11": {
+      "id": "QUO-16",
+      "uuid": "c9bb8056-a3c5-4c53-85bb-5aa749cb813c",
+      "url": "https://linear.app/quolii/issue/QUO-16/a11-build-architecture-policy-and-debt-controls-in-the-hosted",
+      "title": "[A11] Build architecture, policy and debt controls in the hosted dashboard"
+    },
+    "A12": {
+      "id": "QUO-17",
+      "uuid": "7794a513-2328-4cfe-8346-2e2d9c1646da",
+      "url": "https://linear.app/quolii/issue/QUO-17/a12-validate-architecture-policy-in-observation-mode-before",
+      "title": "[A12] Validate architecture policy in observation mode before enforcement"
+    },
+    "A13": {
+      "id": "QUO-18",
+      "uuid": "56c380d5-e942-454c-bf43-f0dde2265823",
+      "url": "https://linear.app/quolii/issue/QUO-18/a13-deliver-architecture-policy-reports-to-gitlab-merge-requests",
+      "title": "[A13] Deliver architecture policy reports to GitLab merge requests"
+    },
+    "C01": {
+      "id": "QUO-19",
+      "uuid": "0b7ea488-cd41-4e37-bf32-9e2c01be54cd",
+      "url": "https://linear.app/quolii/issue/QUO-19/c01-specify-the-hosted-data-flow-sync-contract-and-threat-model",
+      "title": "[C01] Specify the hosted data flow, sync contract and threat model"
+    },
+    "C02": {
+      "id": "QUO-20",
+      "uuid": "e38abbd4-9a6b-463d-aedb-6c6072614f44",
+      "url": "https://linear.app/quolii/issue/QUO-20/c02-create-reproducible-isolated-cloud-development-and-staging",
+      "title": "[C02] Create reproducible isolated cloud development and staging environments"
+    },
+    "C03": {
+      "id": "QUO-21",
+      "uuid": "fd63e242-8b12-4a89-91cb-8af124240f98",
+      "url": "https://linear.app/quolii/issue/QUO-21/c03-implement-cloud-user-sign-in-and-secure-session-lifecycle",
+      "title": "[C03] Implement cloud user sign-in and secure session lifecycle"
+    },
+    "C04": {
+      "id": "QUO-22",
+      "uuid": "fb1aaa86-9fa7-4110-ae5e-6afcb89b8c0c",
+      "url": "https://linear.app/quolii/issue/QUO-22/c04-implement-tenant-workspaces-project-membership-and-basic-roles",
+      "title": "[C04] Implement tenant workspaces, project membership and basic roles"
+    },
+    "C05": {
+      "id": "QUO-23",
+      "uuid": "403f0c32-d65f-4477-8e77-1a709fd6566e",
+      "url": "https://linear.app/quolii/issue/QUO-23/c05-pair-and-revoke-local-connectors-using-scoped-device-credentials",
+      "title": "[C05] Pair and revoke local connectors using scoped device credentials"
+    },
+    "C06": {
+      "id": "QUO-24",
+      "uuid": "2066b3e4-ba1a-4a08-9d60-fa398792d382",
+      "url": "https://linear.app/quolii/issue/QUO-24/c06-build-the-policy-aware-durable-local-upload-outbox",
+      "title": "[C06] Build the policy-aware durable local upload outbox"
+    },
+    "C07": {
+      "id": "QUO-25",
+      "uuid": "5cad0651-8e2d-47c9-8384-803c0e587043",
+      "url": "https://linear.app/quolii/issue/QUO-25/c07-implement-authenticated-bounded-cloud-ingestion-and-durable",
+      "title": "[C07] Implement authenticated bounded cloud ingestion and durable receipts"
+    },
+    "C08": {
+      "id": "QUO-26",
+      "uuid": "db84b3fc-833b-4780-8b92-bc90731eb4e2",
+      "url": "https://linear.app/quolii/issue/QUO-26/c08-implement-tenant-scoped-immutable-cloud-evidence-storage",
+      "title": "[C08] Implement tenant-scoped immutable cloud evidence storage"
+    },
+    "C09": {
+      "id": "QUO-27",
+      "uuid": "34e31ed1-34df-421e-b207-b89121a07567",
+      "url": "https://linear.app/quolii/issue/QUO-27/c09-store-and-serve-consented-artifacts-with-scoped-access",
+      "title": "[C09] Store and serve consented artifacts with scoped access"
+    },
+    "C10": {
+      "id": "QUO-28",
+      "uuid": "dc818c9c-004b-46be-8862-1d71b0ff9400",
+      "url": "https://linear.app/quolii/issue/QUO-28/c10-run-replayable-bounded-cloud-evidence-projections",
+      "title": "[C10] Run replayable bounded cloud evidence projections"
+    },
+    "C11": {
+      "id": "QUO-29",
+      "uuid": "b005f26c-c3ff-450b-8a33-1117c2ed0eb6",
+      "url": "https://linear.app/quolii/issue/QUO-29/c11-serve-authorized-cloud-sessions-evidence-and-projection-queries",
+      "title": "[C11] Serve authorized cloud sessions, evidence and projection queries"
+    },
+    "C12": {
+      "id": "QUO-30",
+      "uuid": "8bdf55f6-a33d-40c9-b52a-78b8cca50e4f",
+      "url": "https://linear.app/quolii/issue/QUO-30/c12-adapt-the-existing-workspace-into-the-hosted-dashboard",
+      "title": "[C12] Adapt the existing workspace into the hosted dashboard"
+    },
+    "C13": {
+      "id": "QUO-31",
+      "uuid": "2a29bb80-81a8-45b9-bef5-3b06a1b78fa0",
+      "url": "https://linear.app/quolii/issue/QUO-31/c13-implement-cloud-onboarding-device-health-and-sync-coverage",
+      "title": "[C13] Implement cloud onboarding, device health and sync coverage"
+    },
+    "C14": {
+      "id": "QUO-32",
+      "uuid": "dfa07742-468a-4073-bb31-4c738f716e10",
+      "url": "https://linear.app/quolii/issue/QUO-32/c14-implement-coordinated-local-and-cloud-retention-and-deletion",
+      "title": "[C14] Implement coordinated local and cloud retention and deletion"
+    },
+    "C15": {
+      "id": "QUO-33",
+      "uuid": "0967c26b-0b6c-48b4-9e60-d48ed0ed49b8",
+      "url": "https://linear.app/quolii/issue/QUO-33/c15-record-scoped-access-consent-and-administrative-audit-history",
+      "title": "[C15] Record scoped access, consent and administrative audit history"
+    },
+    "C16": {
+      "id": "QUO-34",
+      "uuid": "7c4f2a0e-0b78-4f87-9ba1-793e0deec6bf",
+      "url": "https://linear.app/quolii/issue/QUO-34/c16-add-content-free-cloud-service-health-quotas-and-operational",
+      "title": "[C16] Add content-free cloud service health, quotas and operational alerts"
+    },
+    "C17": {
+      "id": "QUO-35",
+      "uuid": "4d4e1e07-363c-4a16-b2fa-8bf66c85ee56",
+      "url": "https://linear.app/quolii/issue/QUO-35/c17-implement-cloud-backups-tested-restore-and-deletion-replay",
+      "title": "[C17] Implement cloud backups, tested restore and deletion replay"
+    },
+    "C18": {
+      "id": "QUO-36",
+      "uuid": "0e52590a-3137-410e-855b-9931c3f19425",
+      "url": "https://linear.app/quolii/issue/QUO-36/c18-harden-cloud-releases-secrets-and-incident-recovery",
+      "title": "[C18] Harden cloud releases, secrets and incident recovery"
+    },
+    "C19": {
+      "id": "QUO-37",
+      "uuid": "c7413456-cf28-4d92-abaa-c285e4509b4c",
+      "url": "https://linear.app/quolii/issue/QUO-37/c19-validate-the-hosted-trust-boundary-before-paid-production",
+      "title": "[C19] Validate the hosted trust boundary before paid production ingestion"
+    },
+    "V01": {
+      "id": "QUO-38",
+      "uuid": "3d6a4012-d69a-4d36-8cd5-153087fd6e65",
+      "url": "https://linear.app/quolii/issue/QUO-38/v01-set-hosted-pilot-buyer-pricing-platform-and-retention-limits",
+      "title": "[V01] Set hosted pilot buyer, pricing, platform and retention limits"
+    },
+    "V02": {
+      "id": "QUO-39",
+      "uuid": "fea7883c-e832-4f4d-ac49-ab50d3d2a933",
+      "url": "https://linear.app/quolii/issue/QUO-39/v02-apply-project-capture-policy-before-retry-persistence",
+      "title": "[V02] Apply project capture policy before retry persistence"
+    },
+    "V03": {
+      "id": "QUO-40",
+      "uuid": "a4ffbad5-e8ec-4e2c-98e1-d2fd87debd0e",
+      "url": "https://linear.app/quolii/issue/QUO-40/v03-fence-and-remove-retries-during-project-lifecycle-changes",
+      "title": "[V03] Fence and remove retries during project lifecycle changes"
+    },
+    "V05": {
+      "id": "QUO-41",
+      "uuid": "8b0004d6-faec-4acb-9565-e2160952ced1",
+      "url": "https://linear.app/quolii/issue/QUO-41/v05-establish-automated-pr-checks-and-a-synthetic-release-baseline",
+      "title": "[V05] Establish automated PR checks and a synthetic release baseline"
+    },
+    "V06": {
+      "id": "QUO-42",
+      "uuid": "2694774d-d0a1-4c5e-a0f2-b9abfa1c24d5",
+      "url": "https://linear.app/quolii/issue/QUO-42/v06-define-compatible-v2-activity-and-field-capability-contracts",
+      "title": "[V06] Define compatible v2 activity and field-capability contracts"
+    },
+    "V07": {
+      "id": "QUO-43",
+      "uuid": "af1cc34d-98f3-44bf-8367-1cfdf4dbf858",
+      "url": "https://linear.app/quolii/issue/QUO-43/v07-persist-and-read-mixed-version-evidence-without-rewriting-history",
+      "title": "[V07] Persist and read mixed-version evidence without rewriting history"
+    },
+    "V08": {
+      "id": "QUO-44",
+      "uuid": "fb7a52ad-6acb-40cf-81b7-06357ef228a5",
+      "url": "https://linear.app/quolii/issue/QUO-44/v08-define-adapter-registration-capabilities-and-conformance-fixtures",
+      "title": "[V08] Define adapter registration, capabilities and conformance fixtures"
+    },
+    "V09": {
+      "id": "QUO-45",
+      "uuid": "f8b79e52-a44c-4e24-a8d3-2599fda0b7f1",
+      "url": "https://linear.app/quolii/issue/QUO-45/v09-project-turns-declared-activity-and-subagent-trees",
+      "title": "[V09] Project turns, declared activity and subagent trees"
+    },
+    "V10": {
+      "id": "QUO-46",
+      "uuid": "dc39cd81-1c00-4ccb-bc67-913a1963f2e7",
+      "url": "https://linear.app/quolii/issue/QUO-46/v10-verify-and-migrate-the-claude-adapter-to-v2",
+      "title": "[V10] Verify and migrate the Claude adapter to v2"
+    },
+    "V11": {
+      "id": "QUO-47",
+      "uuid": "1778a535-b683-41b0-9b10-e34a2c924588",
+      "url": "https://linear.app/quolii/issue/QUO-47/v11-implement-the-verified-opencode-activity-adapter",
+      "title": "[V11] Implement the verified OpenCode activity adapter"
+    },
+    "V12": {
+      "id": "QUO-48",
+      "uuid": "7b347cba-79d8-44ac-b1f5-b50db4ae5f94",
+      "url": "https://linear.app/quolii/issue/QUO-48/v12-define-repository-provider-observations-and-bounded-reads",
+      "title": "[V12] Define repository-provider observations and bounded reads"
+    },
+    "V13": {
+      "id": "QUO-49",
+      "uuid": "965783fd-5970-4140-bce7-38a65159e570",
+      "url": "https://linear.app/quolii/issue/QUO-49/v13-connect-github-with-least-privilege-repository-credentials",
+      "title": "[V13] Connect GitHub with least-privilege repository credentials"
+    },
+    "V14": {
+      "id": "QUO-50",
+      "uuid": "6ead8ca3-faeb-487f-b129-1c4aaebb7b20",
+      "url": "https://linear.app/quolii/issue/QUO-50/v14-observe-github-refs-trees-blobs-and-comparisons-locally",
+      "title": "[V14] Observe GitHub refs, trees, blobs and comparisons locally"
+    },
+    "V15": {
+      "id": "QUO-51",
+      "uuid": "73180fda-5db8-4fc7-bf78-d49ae06f13a2",
+      "url": "https://linear.app/quolii/issue/QUO-51/v15-normalize-request-usage-and-reconcile-cumulative-reports",
+      "title": "[V15] Normalize request usage and reconcile cumulative reports"
+    },
+    "V16": {
+      "id": "QUO-52",
+      "uuid": "1e4c1e5b-50c4-4675-b4f3-ed37130bd80b",
+      "url": "https://linear.app/quolii/issue/QUO-52/v16-version-model-prices-and-calculate-inspectable-cost-estimates",
+      "title": "[V16] Version model prices and calculate inspectable cost estimates"
+    },
+    "V17": {
+      "id": "QUO-53",
+      "uuid": "17a002a5-234f-44cf-8dbe-3229c3a27d1e",
+      "url": "https://linear.app/quolii/issue/QUO-53/v17-show-token-cost-and-supported-attribution-in-the-workspace",
+      "title": "[V17] Show token cost and supported attribution in the workspace"
+    },
+    "V18": {
+      "id": "QUO-54",
+      "uuid": "85992092-f436-442e-b67e-d12b37c5a782",
+      "url": "https://linear.app/quolii/issue/QUO-54/v18-capture-and-inspect-extension-inventory-versus-invocation",
+      "title": "[V18] Capture and inspect extension inventory versus invocation"
+    },
+    "V19": {
+      "id": "QUO-55",
+      "uuid": "0b66e973-a3a1-4041-afbe-d2f96d3cb71c",
+      "url": "https://linear.app/quolii/issue/QUO-55/v19-define-the-versioned-evidence-scene-contract",
+      "title": "[V19] Define the versioned evidence-scene contract"
+    },
+    "V20": {
+      "id": "QUO-56",
+      "uuid": "cf478224-0f5a-4337-b49c-4d863baafaf0",
+      "url": "https://linear.app/quolii/issue/QUO-56/v20-generate-story-scenes-and-deterministic-cited-narratives",
+      "title": "[V20] Generate Story scenes and deterministic cited narratives"
+    },
+    "V21": {
+      "id": "QUO-57",
+      "uuid": "0fc4b66d-437c-4116-bab1-556df29ce8a3",
+      "url": "https://linear.app/quolii/issue/QUO-57/v21-render-story-scenes-with-evidence-and-accessible-navigation",
+      "title": "[V21] Render Story scenes with evidence and accessible navigation"
+    },
+    "V22": {
+      "id": "QUO-58",
+      "uuid": "708f608e-80f2-457c-9b33-0a34580f26a2",
+      "url": "https://linear.app/quolii/issue/QUO-58/v22-group-typescript-and-javascript-diffs-by-syntax-aware-symbols",
+      "title": "[V22] Group TypeScript and JavaScript diffs by syntax-aware symbols"
+    },
+    "V23": {
+      "id": "QUO-59",
+      "uuid": "017a0f30-e92c-4d8a-9d7f-892f24ab6964",
+      "url": "https://linear.app/quolii/issue/QUO-59/v23-link-symbols-and-hunks-into-cited-story-explanations",
+      "title": "[V23] Link symbols and hunks into cited Story explanations"
+    },
+    "V24": {
+      "id": "QUO-60",
+      "uuid": "e29097b9-c57f-47ea-8a69-bd27513322b0",
+      "url": "https://linear.app/quolii/issue/QUO-60/v24-review-turns-approvals-and-subagents-in-the-existing-workspace",
+      "title": "[V24] Review turns, approvals and subagents in the existing workspace"
+    },
+    "V25": {
+      "id": "QUO-61",
+      "uuid": "cef65a59-3e0c-4ba8-bf1f-6b1eaf21779f",
+      "url": "https://linear.app/quolii/issue/QUO-61/v25-connect-repositories-and-harnesses-through-a-capability-aware",
+      "title": "[V25] Connect repositories and harnesses through a capability-aware onboarding flow"
+    },
+    "V26": {
+      "id": "QUO-62",
+      "uuid": "5470cd1f-3dc8-4933-9c51-58e0c897bb8a",
+      "url": "https://linear.app/quolii/issue/QUO-62/v26-measure-pilot-capacity-and-expose-query-limits-without-silent-loss",
+      "title": "[V26] Measure pilot capacity and expose query limits without silent loss"
+    },
+    "V27": {
+      "id": "QUO-63",
+      "uuid": "ae7b90ca-deca-41cb-af86-489788ef489c",
+      "url": "https://linear.app/quolii/issue/QUO-63/v27-export-selected-sanitized-evidence-with-provenance-and-deletion",
+      "title": "[V27] Export selected sanitized evidence with provenance and deletion coverage"
+    },
+    "V28": {
+      "id": "QUO-64",
+      "uuid": "e340af78-aea6-4491-abb0-c6a160f2967f",
+      "url": "https://linear.app/quolii/issue/QUO-64/v28-produce-versioned-signed-release-artifacts",
+      "title": "[V28] Produce versioned signed release artifacts"
+    },
+    "V29": {
+      "id": "QUO-65",
+      "uuid": "7955439d-44fa-4090-84bf-582037606771",
+      "url": "https://linear.app/quolii/issue/QUO-65/v29-install-verified-updates-with-rollback-and-data-compatibility",
+      "title": "[V29] Install verified updates with rollback and data compatibility"
+    },
+    "V30": {
+      "id": "QUO-66",
+      "uuid": "a3611041-9721-40fa-aa33-e190dc1ca64f",
+      "url": "https://linear.app/quolii/issue/QUO-66/v30-certify-safe-macos-repository-reads-and-background-lifecycle",
+      "title": "[V30] Certify safe macOS repository reads and background lifecycle"
+    },
+    "V31": {
+      "id": "QUO-67",
+      "uuid": "a02ad819-4c43-4fbc-81e4-d482fd4d3478",
+      "url": "https://linear.app/quolii/issue/QUO-67/v31-verify-linux-clean-machine-installation-and-recovery",
+      "title": "[V31] Verify Linux clean-machine installation and recovery"
+    },
+    "V32": {
+      "id": "QUO-68",
+      "uuid": "ca611bb6-1b40-4cb1-99f7-b96c98c7f740",
+      "url": "https://linear.app/quolii/issue/QUO-68/v32-implement-hosted-subscription-trial-and-entitlement-lifecycle",
+      "title": "[V32] Implement hosted subscription, trial and entitlement lifecycle"
+    },
+    "V33": {
+      "id": "QUO-69",
+      "uuid": "23af4f9e-aab8-4f77-aea5-d4de32f446b6",
+      "url": "https://linear.app/quolii/issue/QUO-69/v33-publish-a-reviewed-trust-legal-and-support-pack",
+      "title": "[V33] Publish a reviewed trust, legal and support pack"
+    },
+    "V34": {
+      "id": "QUO-70",
+      "uuid": "01cd5b4e-6e7d-4020-a706-6c11deaceeed",
+      "url": "https://linear.app/quolii/issue/QUO-70/v34-validate-the-paid-pilot-journey-against-truth-and-privacy",
+      "title": "[V34] Validate the paid-pilot journey against truth and privacy boundaries"
+    },
+    "V35": {
+      "id": "QUO-71",
+      "uuid": "c1ab1c18-f765-4894-bcc0-964986b6a3af",
+      "url": "https://linear.app/quolii/issue/QUO-71/v35-add-opt-in-diagnostics-with-a-reviewed-payload-allowlist",
+      "title": "[V35] Add opt-in diagnostics with a reviewed payload allowlist"
+    },
+    "V36": {
+      "id": "QUO-72",
+      "uuid": "8732e138-6518-4349-bc67-c6a47928ebd7",
+      "url": "https://linear.app/quolii/issue/QUO-72/v36-implement-the-verified-codex-activity-adapter",
+      "title": "[V36] Implement the verified Codex activity adapter"
+    },
+    "V37": {
+      "id": "QUO-73",
+      "uuid": "caad30f4-7fe6-421b-8105-cfdd4fea58ac",
+      "url": "https://linear.app/quolii/issue/QUO-73/v37-add-a-verified-pi-adapter",
+      "title": "[V37] Add a verified Pi adapter"
+    },
+    "V38": {
+      "id": "QUO-74",
+      "uuid": "ba529246-380e-45e9-8ae4-163f22f74378",
+      "url": "https://linear.app/quolii/issue/QUO-74/v38-add-gitlab-read-only-repository-observations",
+      "title": "[V38] Add GitLab read-only repository observations"
+    },
+    "V39": {
+      "id": "QUO-75",
+      "uuid": "03b5d8e9-860d-4d06-9808-2ab7e7adc83d",
+      "url": "https://linear.app/quolii/issue/QUO-75/v39-add-bitbucket-read-only-repository-observations",
+      "title": "[V39] Add Bitbucket read-only repository observations"
+    },
+    "V40": {
+      "id": "QUO-76",
+      "uuid": "3c351d7a-ef46-4fb3-91b3-4774246e80bc",
+      "url": "https://linear.app/quolii/issue/QUO-76/v40-add-impact-scenes-for-captured-modules-files-and-symbols",
+      "title": "[V40] Add Impact scenes for captured modules, files and symbols"
+    },
+    "V41": {
+      "id": "QUO-77",
+      "uuid": "d0ed5c99-db48-4b97-9a27-21313579bd6e",
+      "url": "https://linear.app/quolii/issue/QUO-77/v41-add-cost-and-timeline-evidence-scene-views",
+      "title": "[V41] Add Cost and Timeline evidence-scene views"
+    },
+    "V42": {
+      "id": "QUO-78",
+      "uuid": "0985026a-4985-40f6-86b6-a85192adbe07",
+      "url": "https://linear.app/quolii/issue/QUO-78/v42-add-one-buyer-requested-syntax-language-through-the-existing",
+      "title": "[V42] Add one buyer-requested syntax language through the existing parser contract"
+    },
+    "V43": {
+      "id": "QUO-79",
+      "uuid": "7ea03f47-b4be-45cb-961b-90273728b144",
+      "url": "https://linear.app/quolii/issue/QUO-79/v43-evaluate-optional-cited-model-summaries-without-weakening-the",
+      "title": "[V43] Evaluate optional cited model summaries without weakening the deterministic view"
+    },
+    "V44": {
+      "id": "QUO-80",
+      "uuid": "cc76c723-8d97-47bf-a10f-1bd732dc53ae",
+      "url": "https://linear.app/quolii/issue/QUO-80/v44-implement-revocable-read-only-team-review-sharing",
+      "title": "[V44] Implement revocable read-only team review sharing"
+    },
+    "V45": {
+      "id": "QUO-81",
+      "uuid": "ae2b4199-f2b9-4ca2-9982-6b04a20fcf0e",
+      "url": "https://linear.app/quolii/issue/QUO-81/v45-implement-enterprise-sso-and-enforced-workspace-access-policy",
+      "title": "[V45] Implement enterprise SSO and enforced workspace access policy"
+    }
+  }
+}

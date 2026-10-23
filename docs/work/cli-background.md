@@ -1,5 +1,7 @@
 # Quoli CLI and background runtime (local increment)
 
+> Local implementation/validation reference. The [hosted product vision](../vision.md) supersedes local-only product scope; dated checks below are historical evidence, not cloud readiness.
+
 Originally developed on one local branch under the owner’s no-push instruction. The owner subsequently authorized publication and merge. Tracked in [#49](https://github.com/ICEQ-JO/quoli/issues/49). Relative size: M.
 
 ## User value and scope

@@ -1,4 +1,6 @@
 <!-- impeccable:product-schema 1 -->
+
+> Local implementation/validation reference. The [hosted product vision](../../docs/vision.md) supersedes local-only product scope; dated checks below are historical evidence, not cloud readiness.
 # Quoli
 
 ## Platform and audience

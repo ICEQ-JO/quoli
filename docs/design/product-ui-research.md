@@ -1,5 +1,7 @@
 # Product UI research: Linear and agent observability
 
+> Local implementation/validation reference. The [hosted product vision](../vision.md) supersedes local-only product scope; dated checks below are historical evidence, not cloud readiness.
+
 Research date: 2026-10-22. This is a proposed interaction architecture, not a certification of the running UI. The founder rejected both the original spacious dashboard and the subsequent mostly visual restyle. Linear is an explicit reference for product behavior and composition, not permission to use Linear for issue tracking.
 
 ## Sources actually inspected

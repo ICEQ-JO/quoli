@@ -1,175 +1,111 @@
 # Quoli product vision
 
-Owner direction recorded: 2026-10-23. Status: **target direction, not delivered capability.**
+Owner direction: 2026-10-23. **Target product, not delivered capability.** The latest owner clarification supersedes the earlier local-dashboard-only plan. See [current implementation](implementation-progress.md), [target architecture](architecture.md) and [delivery roadmap](work/vision-roadmap.md).
 
-This page is the north star for product work. It describes what Quoli is trying to become for paying customers. It does not replace the [implementation checkpoint](implementation-progress.md), which records what actually runs today. If this page and the implementation disagree, the implementation is the truth about today; this page is the truth about where we are going.
+## Product
 
-**Owner commitment:** Quoli is now being pursued as a potential SaaS startup, not merely as a hobby project. Prioritize a credible paid pilot, customer value, security and operational readiness. This records product intent; it does not claim incorporation, funding, customers or delivered SaaS capabilities.
+Quoli is a hosted evidence, change-understanding, architecture-integrity and technical-debt workspace for AI-assisted development. A developer uses their coding agent locally, then opens Quoli in the cloud to understand what happened, what changed, what it cost, which extensions it used and what remains unverified. Teams can use the same evidence to review changes and enforce explicit architecture policies.
 
-## One sentence
+The experience is:
 
-Quoli should be the privacy-preserving, cross-agent evidence and understanding workspace that shows a developer what an AI coding agent did, what changed, what it cost, what it used, and what remains unverified — with diagrams that explain changes instead of only listing them.
+```text
+OpenCode / Pi / Claude Code / Codex on a developer machine
+    → Quoli local connector: capture controls, sanitization, bounded durable delivery
+    → authenticated Quoli cloud: tenant-scoped evidence and derived views
+    → hosted dashboard: activity, subagents, costs, extensions, change scenes, policies and debt
+```
 
-## The owner's ask, in the owner's terms
+The local connector is required for local activity; a cloud repository connection alone cannot reveal a developer's local prompts, tools or subagents. Each harness needs a verified adapter. “Whatever harness” is the extensible product direction, not a claim of automatic universal support.
 
-1. **Connect to cloud repositories**, not only local Git roots.
-2. **Work with whatever harness the developer uses** — OpenCode, Pi, Claude Code, Codex and future tools.
-3. **Track every tool call, every decision, every user prompt and every subagent.** The product boundary for “decision” is defined under Pillar 3: observable and declared decisions, never hidden reasoning.
-4. **Track token spend**: how many tokens, of which kind, and what they were spent on.
-5. **Track the plugins and skills that were used.**
-6. **Provide a diagramming language that makes sense** and helps developers understand code changes and diffs.
-7. **Make the result good enough that developers and teams will pay for it.**
+## Customer outcomes and pillars
 
-The rest of this document defines what those asks mean in a product that keeps Quoli's evidence guarantees.
+Every issue and PR names one or more pillars or commercial gates.
 
-## Target customer outcome
+### P1 — Repositories anywhere
 
-A developer can connect a repository, keep working in any supported agent, and later answer four questions without rereading the whole transcript:
+Connect local repositories and cloud repositories: GitHub first, then GitLab and Bitbucket. Select branches, commits and pull/merge requests; inspect bounded tree, blob and comparison observations. Preserve repository/ref/commit identity, rate limits, permission denials and partial-fetch states. Keep read operations separate from the later app permissions needed to publish policy checks.
 
-- What did the agent actually do?
-- What changed, and what evidence explains the change?
-- What did it cost, and which model, turn, tool or subagent consumed the budget?
-- What is still unknown or unverified?
+A provider response is an observation, not a complete repository audit. Unfetched paths and denied scopes remain unknown. Provider credentials use least privilege, scoped encrypted storage and revocation; local credentials use the OS keychain where supported.
 
-A team lead or reviewer can use the same record to review AI-assisted work without receiving the whole session, the prompt history or the source code.
+### P2 — Cross-harness evidence
 
-## Product pillars
+Support OpenCode, Pi, Claude Code, Codex and future tools through versioned adapters, a published capability matrix, synthetic fixtures and reversible setup. First integrate Claude Code and OpenCode, then complete Codex and Pi before claiming the full four-harness product. This sequence is a planning choice; change it when a demonstrated user need warrants it.
 
-Every future issue and pull request must name the pillar or commercial gate it advances. Work that advances none of them needs explicit owner approval.
+Capture every event the supported source exposes, with explicit gaps. Installed, detected, supported and connected are different states. A harness may never report exact exit codes, per-request usage or full child scope; the dashboard must show that limit.
 
-### Pillar 1 — Repositories anywhere
+### P3 — Observable activity and subagents
 
-**Customer outcome:** connect a local repository or a cloud repository (GitHub first, then GitLab/Bitbucket) and review its observed history.
+Track user prompts, turns, tool calls/results, declared plans and decisions, approvals, corrections and subagents. Preserve raw tool names with normalized categories, parent/child identities, spawn provenance, timing basis and field-level capability/content states.
 
-**Required capabilities:** provider abstraction; OAuth or least-privilege tokens; short-lived credentials in the OS keychain; branch/commit/PR selection; bounded tree, blob and comparison reads; local caching; rate-limit and partial-fetch states; read-only guarantees.
+A decision is an emitted plan, rationale, approval, todo change or correction, or an explicitly marked derived grouping. Never collect or reconstruct hidden chain-of-thought. Do not join activity by text similarity or timestamps when IDs are missing. A missing result or ending stays a gap.
 
-**Truth boundary:** a remote read is an observation of the provider's response, not a complete audit of the repository. Unfetched paths, denied scopes and truncated responses remain unknown.
+### P4 — Token cost and attribution
 
-**Privacy boundary:** the default architecture is local-first remote fetch. If code is ever stored in a hosted service, that is a separate product and security decision.
+Show input, output, cache-read, cache-write and reasoning tokens where reported. Reconcile per-request and cumulative reports without double counting. Explain estimated cost using effective-dated model prices, currency, units and formulas. Separate provider-reported cost, list-price estimates and subscription cost.
 
-### Pillar 2 — Any harness
+Break down by session, turn, request, model, subagent and tool only where evidence supports it. Unknown attribution stays unknown; no invented file/tool allocation. Estimates are not invoices. Old estimates retain the price version that explains them.
 
-**Customer outcome:** use the agent the developer already uses and still get a coherent Quoli record.
+### P5 — Plugins, skills and MCP use
 
-**Required capabilities:** one adapter contract; per-adapter versioning; a published capability matrix; installers and reversible removal; synthetic fixtures; version gates; explicit gaps for unsupported fields.
+Show consented inventories and actual invocation of plugins, skills, MCP servers and commands, including name, version, source and status when exposed. Link invocations to the activity they served. Installed is not invoked, invoked is not effective, and opaque internals remain opaque. Discovery must not execute an extension.
 
-**Harness order:** an open decision, not settled by this document. Any order must verify official contracts and ship with fixtures before claiming support.
+### P6 — Evidence-grounded change language
 
-**Truth boundary:** adapters capture what the harness exposes. Some harnesses will never expose hidden reasoning, exact exit codes, complete subagent scope or per-request usage. Quoli shows the capability and the gap; it does not fabricate parity.
+Explain changes with a constrained, versioned evidence-scene schema, deterministic cited narrative and exact diff drill-down. Native scene data is the source of truth; Mermaid/SVG or other formats can be exports.
 
-### Pillar 3 — Complete observable activity
+Node vocabulary: `turn`, `prompt`, `decision`, `subagent`, `tool`, `file`, `symbol`, `hunk`, `check`, `gap`, `cost`, `capability`. Edge vocabulary: `prompted`, `declared`, `spawned`, `invoked`, `touched`, `changed`, `verified`, `failed`, `cost_of`, `used`.
 
-**Customer outcome:** see prompts, turns, tool calls, tool results, declared plans/decisions, approvals, subagents and user corrections in one trace.
+Every node and edge carries recorded/derived/inferred basis, a generating rule, supporting evidence IDs and uncertainty. The `verified` vocabulary never means feature correctness merely because a command succeeded. Views: Story, Impact, Cost and Timeline. Syntax-aware diffs use bounded tree-sitter parsing for supported languages with file fallback. Hunk-to-prompt/tool links and “why” require supporting IDs or declared rationale. An optional model summary must remain secondary, explicitly consented and citation checked.
 
-**Required capabilities:** schema support for turns, decision/plan/approval events, open tool names with normalized categories, parent/child sessions, subagent scope, spawn provenance and capability state on every field.
+### P7 — Architecture integrity and technical-debt control plane
 
-**Definition of “decision”:** a decision is a plan, rationale, approval, todo change or correction the harness actually emitted, or a derived grouping clearly marked as derived. It is never hidden chain-of-thought and never a reconstructed certainty.
+This is part of the full product, with concrete implementation issues after the evidence/cloud foundation. It is not a discovery-only placeholder, and it need not delay the first paid evidence pilot.
 
-**Truth boundary:** “every tool call the source exposes” is the promise. “Every decision the agent made” is not a promise. Missing items become explicit gaps, not silent omissions.
+Build a versioned architecture model covering modules, dependencies, ownership boundaries, database schema and approved patterns. Add validated rules-as-code, deterministic dependency/schema/boundary checks, bounded duplication signals and explainable static blast-radius views. Keep a technical-debt ledger with owner, reason, expiry, evidence and follow-up.
 
-### Pillar 4 — Token cost and attribution
+A GitHub app, then GitLab integration, connects pull/merge requests and exact commit identities. Reports provide pass/warn/block outcomes, missing-evidence states, deterministic rule findings and machine-readable fix requests. Only explicitly configured deterministic rules may block; model text may explain or suggest, never gate. PRs without provenance can be analyzed but cannot be labeled agent-created. Stale results cannot approve a newer commit. Run in observation mode and evaluate false positives before enabling enforcement.
 
-**Customer outcome:** understand token spend by session, turn, model, request, subagent and tool call, with the formula visible.
+A policy gate is not a safety or correctness certification. Static dependency reach is not observed runtime impact. Self-hosting and enterprise certification remain separate demand-driven work.
 
-**Required capabilities:** per-request usage observations; input, output, cache-read, cache-write and reasoning tokens where reported; a versioned model-price catalog with effective dates and currency; provider-reported cost when available; cumulative/delta reconciliation; duplicate handling; unpriced-model states; list-price estimates separated from subscription cost.
+## Cloud and privacy contract
 
-**Truth boundary:** cost is an **estimate**, not an invoice. File-level allocation is not claimed unless the source reports it. Unknown token categories stay null. Price changes are versioned so old views remain explainable.
+The hosted dashboard and consented local-to-cloud synchronization are now approved product architecture. This does **not** authorize uploading this repository's existing private sessions or changing anyone's runtime capture settings during development.
 
-### Pillar 5 — Plugins and skills
+- Default to metadata-only collection and synchronization. Prompt text, tool content, code/diffs and extension configuration each need explicit capture and upload controls. Explain when a richer diagram needs content that is disabled.
+- Separate permission to retain evidence locally from permission to send it to the cloud. Preview categories, destination, retention and project scope during connector pairing. Deny unknown policy or stale consent generations before any durable outbox write or upload.
+- Apply controls and sanitization before local persistence and network transmission; revalidate on the cloud boundary. Redaction reduces risk and cannot guarantee removal of every secret.
+- Keep a durable bounded outbox, stable delivery IDs and acknowledge only committed cloud writes. Retries must not duplicate activity or resurrect deleted projects.
+- Authenticate users and devices separately. Tenant/project authorization applies to every event, blob, query, job, cache and export; never trust tenant identity supplied in payloads. Encrypt transport and retained cloud data; keep keys and tokens out of evidence.
+- Provide device revocation, access audit, export, retention, deletion and documented backup expiry. Delete derived data and caches with primary evidence; fence disconnected producers. Explain that user-exported copies and external backups are outside immediate revocation.
+- Treat captured content as inert untrusted data. Never replay commands, execute repository code or follow embedded links during ingestion/analysis.
 
-**Customer outcome:** see which plugins, skills, MCP servers and commands were installed and which were actually invoked.
+## Commercial and operational gates
 
-**Required capabilities:** an inventory at session start or connection time; invocation events with name, version, source and status; links to the tool calls and prompts they served; harness-specific discovery that is read-only and consented.
-
-**Truth boundary:** installed is not invoked. Invoked is not necessarily effective. Opaque plugin internals remain opaque.
-
-### Pillar 6 — An evidence-grounded change language
-
-**Customer outcome:** a developer can understand a change through a diagram and a short narrative that cite the evidence behind them.
-
-**Required shape:** a versioned scene schema with a constrained vocabulary. Proposed node kinds: `turn`, `prompt`, `decision`, `subagent`, `tool`, `file`, `symbol`, `hunk`, `check`, `gap`, `cost`, `capability`. Proposed edge kinds: `prompted`, `declared`, `spawned`, `invoked`, `touched`, `changed`, `verified`, `failed`, `cost_of`, `used`.
-
-Every node and edge carries:
-
-- `basis`: `recorded`, `derived` or `inferred`;
-- the rule that produced it;
-- supporting evidence IDs;
-- an uncertainty statement.
-
-**Views:** Story (request → declared plan/decision → subagent/tool sequence → files → checks → unknowns), Impact (repository/module/file/symbol), Cost (session/turn/model/subagent) and Timeline (concurrency, retries, subagents, long-running tools).
-
-**Diff understanding:** syntax-aware changes through tree-sitter for supported languages; symbol-level grouping; hunk-to-tool-call and hunk-to-prompt links only where IDs support them; “why” only where a declared decision exists.
-
-**Language rule:** deterministic, evidence-cited narrative first. An optional model-written summary may be added only with citations and must never replace the deterministic view.
-
-**Truth boundary:** this is a constrained evidence scene format, not a general-purpose diagramming DSL. Mermaid or another external format may be an export, not the source of truth. No diagram may imply authorship, test coverage or correctness without evidence.
-
-### Pillar 7 — Architecture and policy guardrail (deferred)
-
-This pillar records a later direction proposed by the owner's friend. It is **not part of the initial paid pilot** and must not displace the evidence and understanding work above. Revisit it only after the earlier product has paying validation and a narrow buyer.
-
-**Customer outcome:** a team can gate agent-created changes on architecture and policy integrity before merge, with evidence explaining the decision.
-
-**Required capabilities:** a GitHub/GitLab app; a versioned architecture model of modules, dependencies, ownership boundaries, database schema and approved patterns; team rules-as-code; diff, dependency, schema, duplication and blast-radius analysis; agent provenance from Quoli; a pass/warn/block report with evidence and a machine-readable fix request; a technical-debt ledger with owner, reason, expiry and follow-up.
-
-**Truth boundary:** this is a **policy gate**, not a safety certification. Deterministic rules and recorded evidence make the decision; a model may explain or suggest, never gate. A PR with no agent provenance is still reviewable, but it must not be labeled agent-created. False positives are a product defect, not an acceptable cost.
-
-**Commercial boundary:** the buyer is a team, not an individual developer. This direction implies a hosted GitHub/GitLab control plane, webhooks, repository analysis and a much larger security and compliance surface. A self-hosted option may be required for privacy-sensitive customers.
-
-## Commercial-readiness gates
-
-A good local tool is not automatically a good paid product. These gates are part of the vision, not an afterthought.
-
-| Gate | What it means |
+| Gate | Required outcome |
 | --- | --- |
-| Distribution | Signed, versioned downloads; supported platforms; a safe update path |
-| Platforms | Linux and macOS at launch; Windows either supported or explicitly excluded |
-| Licensing and billing | A way to pay, a license, trials, refunds and plan limits |
-| Onboarding | Detect harnesses, connect a repository, seed a useful first review |
-| Support | A support channel, documentation, status and recovery guidance |
-| Legal and trust | EULA, privacy policy, security page, vulnerability disclosure, dependency hygiene |
-| Data controls | Export, deletion, retention defaults, token storage, audit of access |
-| CI and release discipline | Automated checks and reproducible releases before charging money |
-| Observability | Opt-in crash and usage reporting, with no private code in the payload |
-| Team readiness | Accounts, roles and sharing only when paying customers need them |
+| Cloud foundation | Reproducible environments, accounts, tenant isolation, connector pairing, ingestion/storage, hosted query/dashboard path |
+| Distribution and platforms | Signed versioned connector downloads, verified updates and rollback, tested Linux/macOS support; Windows explicitly excluded until implemented |
+| Licensing and billing | Hosted trial/subscription entitlements, plan limits, cancellation/refund behavior; existing evidence remains readable/exportable after expiry |
+| Onboarding | Sign in, create workspace/project, pair device, choose capture/upload settings, connect repository/harness, review first evidence |
+| Data controls | Category consent, local/cloud retention and deletion, revoke devices, export, access audit, secure tokens |
+| CI and release discipline | Automated synthetic checks, migration/release validation, staging rollout and recovery |
+| Security and trust | Threat model, adversarial cross-tenant tests, reviewed legal/privacy/security terms, disclosure and dependency hygiene |
+| Operations and support | Content-free service metrics, bounded queues/quotas, backups with tested restore, incident/deletion/recovery runbooks and support |
+| Team readiness | Workspace memberships and basic roles for hosted isolation; secure sharing, then enterprise identity as a later increment |
 
-## Alignment rule
+## Delivery sequence
 
-1. Every issue and pull request names the pillar(s) or commercial gate it advances.
-2. A task that fits no pillar needs explicit owner approval before implementation.
-3. A feature that would weaken a truth boundary is a product change, not an implementation detail; surface it.
-4. Documentation distinguishes target direction from delivered capability.
-5. When the owner changes direction, update this page and record the decision rather than leaving stale guidance.
+1. Repair retry privacy/lifecycle gaps, establish CI and pin the cloud data/security contract.
+2. Migrate evidence contracts compatibly and build cloud identity, isolated storage, pairing, durable sync and authorized queries.
+3. Adapt the existing session workspace into the hosted dashboard. Ship Claude/OpenCode, repository connections, subagents, cost, extension use and Story/syntax-aware review behind the cloud gates.
+4. Complete signed connectors, lifecycle controls, payment, trust/operations and a fresh-machine hosted paid-pilot demonstration.
+5. Complete Codex/Pi, other providers, all scene views, team sharing and the architecture/debt implementation track. Observe policy behavior before enforcing rules.
+6. Add more languages, enterprise SSO and optional model summaries according to customer evidence. Self-hosting and certifications require their own decisions.
 
-## Proposed sequence
+Exact prerequisite relations live in [the issue index](issues/vision/README.md). A sequenced backlog is not a delivery date or a claim that all features exist.
 
-This is a sequencing proposal, not a delivery commitment.
+## Remaining decisions
 
-1. **Foundation:** schema v2, adapter contract, price-catalog contract, scene schema, CI, licensing and distribution decisions.
-2. **Paid pilot:** GitHub read-only, Claude Code + OpenCode, subagent tree, declared decisions, cost dashboard, plugin/skill inventory, Story diagram, syntax-aware diff for a small language set, export, billing and signed updates.
-3. **Broaden:** GitLab/Bitbucket, Codex/Pi, more languages, shared read-only reviews, macOS maturity.
-4. **Team/enterprise:** hosted sync, roles, SSO, audit, retention policy and compliance work — only if customers require them.
-5. **Deferred guardrail:** the architecture and policy guardrail (Pillar 7). Do not start it until the evidence product has paying validation and the owner chooses a team buyer and cloud/self-hosted shape.
+Cloud dashboard plus local connectors, the full four-harness destination, native evidence scenes and concrete architecture/debt scope are settled owner direction. Do not reopen them as local-only-versus-cloud discovery.
 
-## Open decisions
-
-These are not settled by this document. The owner decides them explicitly.
-
-| Decision | Options | Why it matters |
-| --- | --- | --- |
-| Architecture | Local-first remote fetch vs hosted cloud sync | Privacy posture, compliance burden, collaboration |
-| First two harnesses | Claude Code + OpenCode, or Claude Code + Codex | Adapter effort and initial market |
-| Narrative generation | Deterministic only vs optional model summary | Trust, cost, privacy |
-| First paid segment | Individual developers vs teams vs regulated organizations | Accounts, licensing, sales and feature priority |
-| Launch platforms | Linux-only pilot vs Linux + macOS | Paying-developer expectations |
-| Pricing model | Subscription vs one-time license vs open-core | Distribution and support economics |
-| Diagram source of truth | Native scene schema vs external format | Provenance, export and rendering quality |
-| Guardrail timing and shape | Defer until paid evidence validation vs build as the primary team product | Focus, buyer, cloud/compliance burden and competitive risk |
-
-## What this vision is not
-
-- It is not a claim that cloud repositories, multiple harnesses, subagent tracking, cost attribution, plugin/skill capture or the new diagrams exist today.
-- It is not a general LLM observability/APM platform, a code host, an autonomous agent, a correctness scorer or a hidden-reasoning extractor.
-- It is not permission to upload session evidence, prompts or code to a Quoli service.
-- It is not permission to call an estimate a bill, a derived grouping a fact, or a successful command a verified feature.
-- It is not a commitment to ship the deferred architecture guardrail in the initial paid product.
+Still decide the first paid buyer, hosting provider/region and data-residency obligations, auth/payment vendors, exact trial/pricing/limits, supported OS versions/architectures, launch retention defaults, initial syntax languages beyond TypeScript/JavaScript, and policy pilot rule set. Record implementation choices in [decisions](decisions.md); verify external contracts before coding integrations.
