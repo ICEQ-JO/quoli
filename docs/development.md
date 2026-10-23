@@ -6,7 +6,7 @@
 - `apps/collector`: one loopback Node HTTP server; no installed daemon.
 - `packages/schema`: Zod contracts and conservative pre-persistence content policy.
 - `packages/storage`: Node 24 built-in `node:sqlite`, explicit SQL migration, transactional append and cursor reads.
-- `packages/analysis`: deterministic usage and tool-ID evidence rules.
+- `packages/analysis`: deterministic usage, cost and tool-ID evidence rules.
 - `packages/repository`: bounded read-only Linux working-tree capture; explicit registration/capture via `pnpm repository`, with sanitized snapshots and atomic history markers.
 - `packages/ui`: shared display labels and number/time formatting.
 - `fixtures/demo.ts`: authored, versioned synthetic evidence; `fixtures/manifest.json` specifies expected usage and omissions.
@@ -80,6 +80,8 @@ See `packages/schema/src/index.ts` for the exact strict contract. V1 events rema
 SQLite adds a durable receipt sequence and timestamp. Unique `(project, source, producer, delivery)` prevents retry duplication; equal text is not identity. Attempts to reuse an identity with a different retained observation reject the entire batch. UPDATE/DELETE event triggers prevent normal history mutation. New observations can supplement earlier ones; a future explicit correction envelope/projection rule must be designed before accepting source corrections. Lifecycle deletion will be a privileged, documented exception to the triggers.
 
 `explicit-activity-identities/v1` groups v2 turns and declared fields, and projects parent/spawned child references only from recorded identities. Missing parents, children and session ends remain evidence-linked gaps; timestamps and content similarity do not create links. `same-session-tool-id/v1` produces derived tool links only for explicit matching IDs inside a project/session. `reported-request-sum/v2` aggregates independently nullable token categories over uniquely identified request deltas. Equal corroborating requests count once; conflicts or unidentified requests stay visible instead of being summed. When request deltas and cumulative counters coexist, deltas are the reported total and cumulative samples are counted as omitted overlap; with cumulative data only, repeated samples count once and a decrease starts a new counter run. Counters are scoped by project, session, source, provider and model. Usage payloads may carry an optional `provider`, `reasoning` and `costUsdMicros`; absence means the source did not report the value, existing v1 bodies remain valid, and source cost is never folded into token totals. These are not general cross-source reconciliation guarantees; the verified live-source reconciliation remains GitHub #17.
+
+`list-price-usage/v1` prices resolved request deltas against an effective-dated catalog and records the catalog version, rates and formula in each estimate. Rates are integer micros per million tokens; subtotals round half-up per category. Unknown or ambiguous models, missing dates, missing tokens, missing rates and overflow remain visible as partial or unpriced, and cumulative-only usage is not priced because it has no per-request date. See [cost estimates](cost-estimates.md). The shipped catalog is synthetic; verified production prices remain required.
 
 ## Validation at this increment
 

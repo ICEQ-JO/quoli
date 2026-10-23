@@ -13,6 +13,7 @@ Updated for planning: 2026-10-23. This page distinguishes existing local code an
 | File/check change map | `packages/schema/src/map.ts`, analysis/map and web map; [reference](change-map.md) | Not the full proposed scene language or syntax-aware impact view |
 | Evidence-scene contract and change-map compatibility | `packages/schema/src/scene.ts`, `packages/analysis/src/scene.ts`; [contract](evidence-scenes.md) | Definition and legacy conversion only; no scene view, and no producer emits symbol, hunk, decision, subagent or cost nodes yet |
 | Claude hook bridge, narrow reported usage and reconciliation | `apps/bridge`, collector OTLP parser; [versioned runtime report](claude-code-runtime-report.md), [hooks](hook-bridge.md), [receiver](telemetry-receiver.md), [reconciliation](source-reconciliation.md) | Runtime report covers Claude Code 2.1.306 on Linux; current/new versions require verification; no other detailed harness adapter delivered |
+| Versioned list-price cost estimates | `packages/schema/src/cost.ts`, `packages/analysis/src/cost.ts`; [reference](cost-estimates.md), [work record](work/quo-52-model-prices.md) | Synthetic catalog only; no verified production prices, cost view, live FX or billing ledger; cumulative-only usage stays unpriced |
 | Static adapter registration and conformance fixtures | `packages/schema/src/adapter.ts`, `apps/bridge/src/adapter.ts`; [adapter contract](adapters.md) | Declarative, one product adapter; the hook payload reports no source version, so per-version gating is not enforced at capture |
 | Capture settings, pause, retention and database purge | [controls](lifecycle-controls.md), schema/privacy and storage lifecycle | Known retry spool policy/purge gap; see below |
 | Installable local production CLI and managed runtime | `apps/cli`, release builder; [CLI](cli.md), [work record](work/cli-background.md) | Unpublished Linux local build; not a signed cloud connector distribution |
@@ -28,7 +29,7 @@ See the [source-informed assessment](work/vision-repository-assessment.md) for e
 
 ## Not delivered
 
-Cloud accounts/workspaces, device pairing, consented synchronization, cloud evidence/artifact storage, tenant isolation, hosted queries/dashboard operation, cloud deletion/backup recovery, GitHub remote observations, OpenCode/Codex/Pi adapters, request-level cost estimates, extension inventory/invocation views, full evidence scenes/syntax-aware diffs, paid entitlements, signed updates and architecture/debt enforcement remain implementation work. Their presence in the vision or Linear does not mean they run.
+Cloud accounts/workspaces, device pairing, consented synchronization, cloud evidence/artifact storage, tenant isolation, hosted queries/dashboard operation, cloud deletion/backup recovery, GitHub remote observations, OpenCode/Codex/Pi adapters, the cost view and billing ledger, extension inventory/invocation views, full evidence scenes/syntax-aware diffs, paid entitlements, signed updates and architecture/debt enforcement remain implementation work. Their presence in the vision or Linear does not mean they run.
 
 ## Supporting-agent work
 

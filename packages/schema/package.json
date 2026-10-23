@@ -9,6 +9,7 @@
     "./repository": "./src/repository.ts",
     "./changes": "./src/changes.ts",
     "./checks": "./src/checks.ts",
+    "./cost": "./src/cost.ts",
     "./map": "./src/map.ts",
     "./scene": "./src/scene.ts",
     "./lifecycle": "./src/lifecycle.ts",
