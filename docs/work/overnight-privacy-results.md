@@ -77,7 +77,7 @@ Environment: Node 24.16.0, pnpm 11.12.0, isolated worktree at `~/Dev/quoli-night
 ### Unsupported and residual cases
 
 - Delivery is at-least-once: a crash during drain or two concurrent drains can re-deliver an entry. The collector deduplicates by delivery ID, so evidence is not duplicated.
-- Spool cleanup is best-effort under lock contention (100 ms). A purge that cannot take the lock leaves entries, but the new generation fences them at the next drain. The purge API reports database counts only.
+- Spool cleanup is best-effort under lock contention (100 ms). A purge that cannot take the lock leaves entries, but the new generation fences them at the next drain. A cleanup failure increments the collector health counter and does not fail the already-committed lifecycle action; the purge API reports database counts only.
 - The lock is a local file lock for one machine, not a distributed one.
 - No live Claude Code session was recaptured.
 

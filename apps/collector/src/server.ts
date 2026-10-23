@@ -210,8 +210,14 @@ export function startCollector(
         store.updateSettings(project, update);
         const settings = store.settings(project);
         // Pending retries follow the same policy and retention window; content
-        // that just became disallowed must not survive in the spool.
-        cleanupProjectSpool(project, settings.project.policy, settings.retentionDays);
+        // that just became disallowed must not survive in the spool. The state
+        // change is already committed, so a spool failure must not report it as
+        // failed; the generation and drain fence still apply.
+        try {
+          cleanupProjectSpool(project, settings.project.policy, settings.retentionDays);
+        } catch {
+          health.storageErrors++;
+        }
         send(200, {
           projectId: project,
           name: settings.project.name,
@@ -231,8 +237,14 @@ export function startCollector(
         const project = safeId.parse(purgeMatch[1]);
         const result = store.purgeProject(project);
         // The tombstone fences future retries; the cleanup removes the ones
-        // already waiting, so a re-registration cannot bring them back.
-        purgeProjectSpool(project);
+        // already waiting, so a re-registration cannot bring them back. The
+        // deletion is already committed, so spool cleanup is best-effort and
+        // must not turn a successful deletion into an error response.
+        try {
+          purgeProjectSpool(project);
+        } catch {
+          health.storageErrors++;
+        }
         send(200, { projectId: project, ...result });
         return;
       }
