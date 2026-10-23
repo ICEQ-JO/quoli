@@ -37,6 +37,11 @@ The owner's target product direction is [docs/vision.md](docs/vision.md): a payi
 - Verify official Claude Code integration contracts and supported runtime behavior before implementing ingestion. Maintain a synthetic fixture path without paid APIs.
 - Run checks appropriate to the change, document outcomes and limitations, and never commit credentials, real private sessions or generated runtime data.
 
+## Required skills
+
+- Always load and follow the `ponytail` skill before coding work: prefer the smallest complete, validated change.
+- Always load and follow the `ponytail-review` skill before reviewing a change, commit, or pull request.
+
 ## Supporting agents
 
 The owner authorizes OpenCode supporting agents using the available free MiniMax model. Verify the installed model identifier rather than assuming a name. Give each implementation task a bounded ownership area and isolated checkout; keep private sessions, credentials and captured user code out of prompts. The primary agent reviews generated code and reruns meaningful checks before integration. Agents do not publish, merge, or change the owner's tool configuration independently.
