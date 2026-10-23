@@ -5,9 +5,9 @@ test.describe("Quoli product introduction", () => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/landing");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Your agent moved fast.See what changed.",
-    );
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect(heading).toContainText("Every agent change");
+    await expect(heading).toContainText("accounted for");
     await expect(page.getByText("Synthetic example", { exact: true })).toBeVisible();
     await page.getByRole("link", { name: "Open the local sample" }).click();
     await expect(
@@ -43,38 +43,31 @@ test.describe("Quoli product introduction", () => {
     await expect(changes).toHaveAttribute("aria-selected", "true");
   });
 
-  test("theme persists between marketing and workspace", async ({ page }) => {
+  test("answers the honest questions and links to the workspace", async ({ page }) => {
     await page.goto("/landing");
-    await page.getByRole("button", { name: "Switch to light mode" }).click();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-    await page.reload();
-    await expect(page.locator(".landing-root")).toHaveAttribute("data-theme", "light");
+    const question = page.getByText("Does Quoli upload my code?", { exact: true });
+    await question.click();
+    await expect(
+      page.getByText("Not by default. Capture and upload", { exact: false }),
+    ).toBeVisible();
     await page.getByRole("link", { name: "Open workspace" }).first().click();
-    await expect(page.getByRole("button", { name: "Switch to dark theme" })).toBeVisible();
+    await expect(page).not.toHaveURL(/\/landing$/);
   });
 
-  test("setup copy confirms success only after writing and offers recovery on denial", async ({
-    page,
-    context,
-  }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto("/landing#start");
-    const copy = page.getByRole("button", { name: "Copy demo commands" });
-    await copy.click();
-    await expect(copy).toContainText("Copied");
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-      "pnpm install --frozen-lockfile\npnpm demo",
-    );
-    await page.evaluate(() => {
-      Object.defineProperty(navigator.clipboard, "writeText", {
-        value: () => Promise.reject(new Error("Denied")),
-      });
+  test("loads no remote assets or fonts", async ({ page }) => {
+    const external: string[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (
+        !["127.0.0.1", "localhost"].includes(url.hostname) &&
+        !["data:", "blob:"].includes(url.protocol)
+      ) {
+        external.push(request.url());
+      }
     });
-    await copy.click();
-    await expect(page.getByRole("status")).toContainText(
-      "Couldn’t copy. Select the commands above",
-    );
-    await expect(copy).toContainText("Copy");
+    await page.goto("/landing");
+    await page.waitForLoadState("networkidle");
+    expect(external).toEqual([]);
   });
 
   for (const width of [320, 390, 768, 1440]) {
@@ -86,7 +79,8 @@ test.describe("Quoli product introduction", () => {
       await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
       expect(
         await page
-          .locator(".q-example")
+          .locator(".q-headline-text")
+          .first()
           .evaluate((element) => getComputedStyle(element).animationName),
       ).toBe("none");
       for (const name of ["File changes", "Recorded checks", "Missing evidence"]) {
@@ -96,8 +90,8 @@ test.describe("Quoli product introduction", () => {
           true,
         );
       }
-      await page.getByRole("link", { name: "Get started locally" }).click();
-      await expect(page.getByRole("button", { name: "Copy demo commands" })).toBeInViewport();
+      await page.getByRole("link", { name: "See the evidence" }).click();
+      await expect(page.getByRole("heading", { name: "A review you can trace." })).toBeInViewport();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );

@@ -10,6 +10,14 @@ Rationale: the owner wants a SaaS product that works across locally running agen
 
 Consequences: add tenant isolation, separate capture/upload consent, secure device identity, durable sync, cloud lifecycle/operations and hosted query/dashboard issues. Retain useful local storage/capture/diff code. Product approval does not authorize automatic upload of existing private data.
 
+## 2026-10-23 — Landing direction D: the evidence field
+
+The owner chose a supplied black/Inter/Instrument Serif landing reference over the three D01 gate directions (A survey field book, B phosphor terminal, C one-bit desktop). The landing now uses direction **D — The Evidence Field**: pure black, locally bundled Inter with an Instrument Serif italic accent, liquid-metal navigation pills, a drawn synthetic evidence constellation and a three-beat pipeline row.
+
+Rationale: the owner preferred the reference's restraint and typographic contrast. The template's fabricated social proof ("4.2M+ workflows", "92% reduction", "180+ teams") and external hero video were rejected; the page uses the product pipeline, a local synthetic visual and explicit "in development" labels instead.
+
+Consequences: the landing is dark-only and scoped with `--q-*` tokens; the workspace keeps Geist/fern until the workspace adoption increment. The landing's anchor navigation hides below 900px and the footer carries the section links. Recorded in [directions/d01](design/directions/d01/README.md) and implemented under QUO-83.
+
 ## Hosted pilot decisions
 
 [Hosted pilot](hosted-pilot.md) records the owner's choices for the first paid buyer, the USD 19 per-seat monthly Pilot plan, connector platforms (Linux x64 and macOS 14+, Windows excluded), the 90-day cloud retention default and the launch success criteria. Trial and plan limits, cancellation/refund, hosting region and data residency, auth/payment vendors and initial policy rules remain open; the record names the owner and follow-on issue for each. Do not mistake proposed vendors, code layouts or dates for owner-approved implementation. Enterprise SSO, more languages, optional model summaries and self-hosting remain later gated increments.

@@ -157,7 +157,7 @@ components:
 
 Quoli starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained fern selection support that hierarchy; a palette change alone does not define the workflow.
 
-Landing and application now share the precise evidence desk direction: neutral planes, fern interaction and explicit source limits. Workspace/discovery, investigation and lifecycle surfaces are implemented under #52–#54; final full-suite QA and independent material review are recorded in the [whole-product experience rebuild](../../docs/work/product-experience.md).
+The landing and the workspace are currently two scoped surfaces. The workspace keeps the precise evidence desk direction: neutral planes, fern interaction and explicit source limits. The `/landing` surface uses direction **D — The Evidence Field** (pure black, Inter, Instrument Serif italic, a drawn synthetic evidence field), recorded in [directions/d01](../../docs/design/directions/d01/README.md) and rebuilt in QUO-83. Workspace/discovery, investigation and lifecycle surfaces are implemented under #52–#54; final full-suite QA and independent material review are recorded in the [whole-product experience rebuild](../../docs/work/product-experience.md).
 
 The workspace sections record the implemented direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and production dark, light and mobile captures. Earlier workspace references remain useful structural context; they do not establish acceptance of this increment.
 
@@ -171,7 +171,7 @@ The workspace sections record the implemented direction in `../../docs/design/se
 
 ### Landing-specific tokens
 
-The `/landing` surface uses scoped `--q-*` properties from `app/components/landing/landing.css`; it does not replace the workspace palette below. Dark is the default and light is an explicit override. These pairs are dark / light: `bg` #141717 / #f9faf8, `surface` #1b1f1e / #ffffff, `raised` #222725 / #eef2ed, `ink` #f0f3f1 / #202a24, `muted` #a8b2ac / #59655d, `line` #343e38 / #d6ded6, `accent` #b9d5b5 / #355b3c, `button` #c6e1c1 / #2f5138, `button-ink` #172b1c / #ffffff, `add` #243b2d / #e6f1e6, `remove` #382b2c / #f8eaea, `negative` #e3adaf / #95434d and `warning` #dec49b / #805b24. Fern green identifies actions and selected evidence; literal labels and diff signs carry meaning alongside color. CSS is the source of truth for these scoped tokens; frontmatter above describes the current workspace. Some specialist source/diff surfaces retain literal neutral pairs rather than root variables.
+The `/landing` surface uses scoped `--q-*` properties from `app/components/landing/landing.css`; it does not replace the workspace palette below. It is dark-only: background `#000000`, text `#ffffff`, supporting text `#9a9a9a`, metadata `#7e7e7e`, rules at 14% / 8% white, surfaces `#050505` / `#0b0b0b`, addition `#0e1a12` / `#b9d5b5`, removal `#1c1012` / `#e3adaf` and unknown `#e0c48d`. Liquid-metal pills are the only decorative gradients; the solid white action identifies the primary path. Literal labels and diff signs carry meaning alongside color. CSS is the source of truth for these scoped tokens; frontmatter above describes the current workspace. Some specialist source/diff surfaces retain literal neutral pairs rather than root variables.
 
 ### Workspace palette
 
@@ -201,7 +201,7 @@ Frontmatter preserves the shipped `light-dark(light, dark)` values. Dark is the 
 
 ### Landing type
 
-The landing uses locally bundled Geist Variable with sans-serif fallback, body 15px/1.6. Display type is `clamp(42px, 4.4vw, 64px)`, weight 520, line-height 1.09, tracking −0.038em; section headings are `clamp(30px, 3vw, 42px)`, weight 500, line-height 1.2 and tracking −0.03em. Hero supporting text is 16px/1.75, capability reading text 14px/1.85, and example metadata 10–12px. Code uses SFMono-Regular, Consolas, Liberation Mono and monospace at 12px/1.9. At 1100px the hero title is 60px; at 760px it becomes `clamp(35px, 7.8vw, 54px)` and supporting text 15px.
+The landing uses locally bundled Inter Variable with system fallbacks; Instrument Serif italic is reserved for the emphasised phrase in the headline and section titles. The hero headline is `clamp(38px, 4.4vw, 62px)`, weight 500, line-height 1.04 and tracking −0.045em. Section titles are `clamp(30px, 3.2vw, 46px)` at line-height 1.08 and tracking −0.035em. Hero supporting text is 15.5px/1.6; section copy is 14.5px/1.7; metadata is 9.5–12.5px. Code uses SFMono-Regular, Consolas, Liberation Mono and monospace at 12px/1.85. At 760px the headline becomes `clamp(36px, 8.6vw, 46px)`; at 560px it becomes `clamp(33px, 9.6vw, 40px)`. Neither Inter nor Instrument Serif is fetched at runtime.
 
 ### Workspace type
 
@@ -217,7 +217,7 @@ Activity titles use (14px, weight 500), previews (13px), and tool previews/sourc
 
 ### Landing layout
 
-The precise evidence desk places the review example near the offer. Content caps at 1180px with 48px side margins; the sticky header caps at 1360px with 32px margins and a 76px minimum height. Hero copy uses two columns, the example a 31% context rail, capabilities three ruled columns, and privacy/setup two columns. At 1100px, content margins become 32px and hero copy stacks. At 760px, margins become 20px, the header becomes 64px, anchor navigation hides, and the example/capabilities/privacy/setup stack. Theme and workspace access remain visible. Context properties use three columns; code scrolls within its panel. At 360px margins reduce to 14px. Anchor targets have 94px scroll clearance. See [the landing reference](../../docs/design/landing-page.md) for screenshots and full surface behavior.
+The evidence field landing is a full-height bottom-aligned hero followed by four ruled sections. Content caps at 1200px with 48px side margins; the sticky header is 72px and uses 40px padding. The hero carries a badge, two masked headline lines, one citation sentence, two actions, a development note and a three-item pipeline row. Evidence keeps the synthetic review artifact with a 300px context rail. How it works uses three ruled steps; Privacy pairs copy with a four-row ledger; FAQ pairs a heading with native disclosures. At 1100px margins become 40px. At 900px the nav hides, stats centre, steps stack and privacy/FAQ become one column. At 760px the example stacks and margins become 20px. At 560px actions become full-width and code drops to 11.5px. At 360px margins become 14px. The page scrolls; there is no desktop overflow lock. Anchor targets clear the sticky header by 24px. See [the landing reference](../../docs/design/landing-page.md) for screenshots and full surface behavior.
 
 ### Workspace layout
 
@@ -311,7 +311,8 @@ Usage retains category counts, labeled composition, formula, and supporting obse
 - **Do** preserve readable captured requests, source actions, explicit uncertainty, and unknown values.
 - **Do** implement both actual root themes with the paired token values.
 - **Do** preserve mobile capture status, keyboard focus, source selection, and recovery from unavailable metadata.
-- **Do** keep local Geist, neutral rules, compact controls, and restrained fern emphasis.
+- **Do** keep local Geist, neutral rules, compact controls, and restrained fern emphasis in the workspace.
+- **Do** keep the landing's black, Inter and Instrument Serif system scoped to `/landing` until the workspace adoption increment explicitly migrates it.
 
 ### Don't:
 - **Don't** restore the municipal dashboard, cobalt selection system, or default overview as current authority.

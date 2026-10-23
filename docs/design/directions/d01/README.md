@@ -1,6 +1,6 @@
 # D01 direction gate
 
-Status: **awaiting owner choice**. Date: 2026-10-23. Tracking: [QUO-82](https://linear.app/quolii/issue/QUO-82/d01-rebuild-quolis-visual-system-workspace-uiux-and-landing-page-from).
+Status: **resolved — direction D chosen**. Date: 2026-10-23. Tracking: [QUO-82](https://linear.app/quolii/issue/QUO-82/d01-rebuild-quolis-visual-system-workspace-uiux-and-landing-page-from), landing increment [QUO-83](https://linear.app/quolii/issue/QUO-83/d02-rebuild-the-landing-page-in-the-chosen-black-evidence-direction).
 
 Open [index.html](index.html) in a browser. Use the **Landing / Workspace** switch in each board. All evidence is synthetic; no private session, credential or real provider price is used.
 
@@ -70,14 +70,33 @@ These are three complete visual worlds, not three colour skins. Each shows the s
 
 **Best if** you want the most memorable, category-breaking surface and are willing to invest in the interaction model.
 
+## D — The Evidence Field
+
+**Chosen by the owner on 2026-10-23.** Proposed after the gate, from a landing reference the owner supplied.
+
+**Thesis.** Agent work is a field of evidence: captured points, derived links and explicitly labelled unknown ground. Quoli is the instrument that reads it.
+
+**World.** Pure black, Inter for interface text and a single Instrument Serif italic accent for emphasis. Liquid-metal navigation pills, one solid white action, thin grain, and a drawn evidence constellation instead of a stock hero video. No cards, no invented metrics, no external media.
+
+**Landing.** One fold: badge, a two-line headline ("Every agent change, / *accounted for*."), one citation sentence, two actions, and a three-beat pipeline row. Four ruled sections follow: How it works, Evidence, Privacy, FAQ, then a footer.
+
+**Workspace.** Not yet designed or implemented. Workspace adoption remains D01 increment 3 and keeps the existing fern/Geist system until then.
+
+**Signature interaction.** The evidence field labels every node recorded, derived or inferred, and the gap edges are the only moving part. Reduced motion removes the drift and the entrance reveal.
+
+**Why it fits.** It keeps the owner's preferred restraint and typographic contrast while replacing the template's fabricated social proof and external video with the product's own provenance language. Every hero claim is either a product definition or explicitly marked planned.
+
+**Honest risk.** The dark liquid-metal treatment is closer to conventional premium SaaS than A, B or C, and the glass/gradient pills sit against D01's anti-goals. The direction is accepted because the owner chose it; the evidence field and the provenance labels are what keep it from being a generic dark template.
+
 ## Decision
 
-- **Chosen:** _pending_
-- **Rejected:** _pending_
-- **Rationale:** _pending_
-- **Date:** _pending_
+- **Chosen:** **D — The Evidence Field** (owner-supplied black/Inter/Instrument Serif direction, applied to the landing in QUO-83).
+- **Rejected:** A — The Surveyor's Field Book; B — The Phosphor Terminal; C — The One-Bit Desktop. Each was a complete world and none is being implemented.
+- **Rationale:** The owner preferred the supplied reference. It carries the clean black/serif contrast the owner asked for; the fabricated stats and stock video were replaced with the product pipeline and a synthetic evidence field.
+- **Trade-off accepted:** D is less category-breaking than A or B and uses glass/gradient pills. It is dark-only for the landing; workspace light/dark is unchanged.
+- **Date:** 2026-10-23.
 
-Reply with **A**, **B** or **C**. If none fit, ask for a re-roll and name the quality that is missing. The conventional canon — a best-in-class conventional developer SaaS, executed straight — is available on request; it is the path this reset exists to leave.
+The earlier A/B/C boards remain in [index.html](index.html) as the record of what was rejected. They are not a second live direction.
 
 ## What happens after the choice
 

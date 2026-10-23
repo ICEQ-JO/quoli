@@ -1,6 +1,6 @@
 # Session workspace
 
-The implemented workspace uses a familiar session work-list/detail workflow informed by [primary-source product research](product-ui-research.md), now aligned with the landing's neutral/fern evidence desk. This reference covers #52 (workspace/discovery), #53 (investigation/recovery) and #54 (settings/lifecycle) under the [whole-product rebuild](../work/product-experience.md). Final full-suite QA passes and the independent material review is closed; implementation is not owner acceptance.
+The implemented workspace uses a familiar session work-list/detail workflow informed by [primary-source product research](product-ui-research.md), in the neutral/fern evidence desk direction. The marketing landing has since moved to direction D (black/Inter/Instrument Serif) in [directions/d01](directions/d01/README.md); the workspace is unchanged and keeps this system until its own adoption increment. This reference covers #52 (workspace/discovery), #53 (investigation/recovery) and #54 (settings/lifecycle) under the [whole-product rebuild](../work/product-experience.md). Final full-suite QA passes and the independent material review is closed; implementation is not owner acceptance.
 
 ## Main tasks
 

@@ -1,9 +1,9 @@
 import { LandingPage } from "../components/landing/landing-page";
 
 export const metadata = {
-  title: "Quoli — The Agent Flight Recorder",
+  title: "Quoli — Evidence for AI-assisted development",
   description:
-    "Show me what my coding agent did, what changed, and what remains unverified. Local-first flight recorder for Claude Code.",
+    "A cited record of what your coding agents did, what changed, what it cost and what remains unverified. Locally first; in the cloud only when you choose.",
 };
 
 export default function Page() {
