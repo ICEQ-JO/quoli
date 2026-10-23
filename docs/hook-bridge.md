@@ -36,7 +36,9 @@ A `Stop` event is not collected: it carries the assistant's final text for the t
 
 ## Delivery and retry
 
-The bridge posts each observation to the local collector over the loopback interface with the local credential. If the collector is not reachable, the observation is kept in a bounded retry spool inside the private local data directory (mode 0600, at most 1,000 observations and 10 MiB). The spool only ever holds observations that already passed the privacy pipeline.
+The bridge posts each observation to the local collector over the loopback interface with the local credential. If the collector is not reachable, the observation is written to a bounded retry spool inside the private local data directory (mode 0600, at most 1,000 observations and 10 MiB).
+
+The spool is written **after** the project's current capture policy is applied. The hook opens the local store read-only, reads the policy and lifecycle state, and sanitizes the event exactly as the collector would: disabled content classes become metadata with no text, excluded paths lose their path and content, and the collector sanitizes again before persistence. An unreadable policy withholds content and keeps the observation with an `unavailable` state; a paused or deleted project is not spooled. Hook input is read to the same 1 MiB bound as the collector and dropped before parsing when it is larger.
 
 ```sh
 pnpm bridge drain
@@ -57,6 +59,6 @@ The bridge generates its own event and delivery identities from the session, the
 
 ## Validation
 
-`tests/bridge.test.ts` covers the normalization of every observed event shape, the stability of the delivery identity, acceptance by the local store, a reversible installation that preserves existing hooks, the empty stdout contract and the retry spool. The bridge was exercised end to end against Claude Code 2.1.306 in a disposable repository: a session produced a start, a prompt, a tool call, a tool result and an end observation, and the retry spool released the observations that were captured while the collector was unreachable.
+`tests/bridge.test.ts` covers the normalization of every observed event shape, the stability of the delivery identity, acceptance by the local store, a reversible installation that preserves existing hooks, the empty stdout contract and the retry spool. It also runs the real hook subprocess with an unreachable collector and inspects the spool for default-policy attacks, permitted capture, nested code consent, excluded paths, a paused project, an unreadable policy and malformed or oversized input. The bridge was exercised end to end against Claude Code 2.1.306 in a disposable repository: a session produced a start, a prompt, a tool call, a tool result and an end observation, and the retry spool released the observations that were captured while the collector was unreachable. Those runtime captures predate the pre-spool policy change; the new tests demonstrate the policy behavior, not a live-client recapture.
 
 See the [runtime verification report](claude-code-runtime-report.md) for the observed payload shapes.

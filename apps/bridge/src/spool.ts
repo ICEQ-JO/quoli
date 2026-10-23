@@ -1,5 +1,7 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import type { NormalizedEvent } from "@traceframe/schema";
+import { sanitizeEvent, withholdContent } from "@traceframe/schema/privacy";
+import { retryCaptureState } from "@traceframe/storage/policy";
 import { runtime } from "@traceframe/storage/runtime";
 
 /**
@@ -46,10 +48,22 @@ function writeSpool(events: NormalizedEvent[]): void {
   chmodSync(path, 0o600);
 }
 
-/** Stores one observation. The oldest entries are dropped when the cap is reached. */
-export function spool(event: NormalizedEvent): void {
+/**
+ * Stores one observation under the project's current capture policy.
+ *
+ * The policy is applied here, before the write, because the collector cannot
+ * undo content that has already reached disk. A paused or deleted project has
+ * its observation skipped: keeping it would resurrect capture on resume or
+ * re-registration. Unknown policy keeps the metadata and withholds content.
+ * The oldest entries are dropped when the cap is reached.
+ */
+export function spool(event: NormalizedEvent): "stored" | "skipped" {
+  const capture = retryCaptureState(event.projectId);
+  if (capture.state === "paused" || capture.state === "purged") return "skipped";
+  const safe =
+    capture.state === "active" ? sanitizeEvent(event, capture.policy) : withholdContent(event);
   const events = readSpool();
-  events.push(event);
+  events.push(safe);
   let kept = events;
   while (kept.length > MAX_EVENTS) kept = kept.slice(kept.length - MAX_EVENTS);
   let body = kept.map((entry) => JSON.stringify(entry)).join("\n");
@@ -61,6 +75,7 @@ export function spool(event: NormalizedEvent): void {
     }
   }
   writeSpool(kept);
+  return "stored";
 }
 
 /** Sends every spooled observation. Successfully delivered entries are removed. */

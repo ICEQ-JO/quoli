@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { once } from "node:events";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -8,7 +10,12 @@ import { hookStatus, installHooks, uninstallHooks } from "../apps/bridge/src/ins
 import { normalizeHook } from "../apps/bridge/src/normalize";
 import { drainSpool, spool } from "../apps/bridge/src/spool";
 import { claudeHookSamples } from "../fixtures/claude";
-import { eventSchema } from "../packages/schema/src/index";
+import {
+  type CapturePolicy,
+  defaultPolicy,
+  eventSchema,
+  MAX_BODY,
+} from "../packages/schema/src/index";
 import { Store } from "../packages/storage/src/index";
 
 const projectId = "repo_probe";
@@ -194,6 +201,247 @@ test("the retry spool keeps undelivered observations and releases them after del
   } finally {
     if (previous === undefined) delete process.env.TRACEFRAME_DATA_DIR;
     else process.env.TRACEFRAME_DATA_DIR = previous;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// The retry path runs as a real hook subprocess against an unreachable
+// collector port, so these tests exercise process boundaries, not helpers.
+const hookScript = "apps/bridge/src/index.ts";
+
+async function freePort(): Promise<number> {
+  const server = createServer();
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const address = server.address();
+  assert.ok(address && typeof address !== "string");
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+  return address.port;
+}
+
+function runHook(dir: string, input: string, port: number, project = projectId): string {
+  return execFileSync(process.execPath, ["--import", "tsx", hookScript, project], {
+    input,
+    env: {
+      ...process.env,
+      TRACEFRAME_DATA_DIR: dir,
+      TRACEFRAME_COLLECTOR_PORT: String(port),
+    },
+    encoding: "utf8",
+    maxBuffer: 4 * 1024 * 1024,
+  });
+}
+
+function registerIn(dir: string, policy: CapturePolicy = defaultPolicy, paused = false): void {
+  const store = new Store(join(dir, "traceframe.sqlite"));
+  store.registerProject(projectId, "probe", false, policy);
+  if (paused) store.updateSettings(projectId, { paused: true });
+  store.close();
+}
+
+function spooled(dir: string): unknown[] {
+  const path = join(dir, "bridge-spool.jsonl");
+  if (!existsSync(path)) return [];
+  return readFileSync(path, "utf8")
+    .split("\n")
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line) as unknown);
+}
+
+function sample(event: string, extra: Record<string, unknown> = {}) {
+  const found = claudeHookSamples().find((item) => item.hook_event_name === event);
+  assert.ok(found);
+  return { ...found, ...extra };
+}
+
+test("an offline retry applies the default policy before writing content", async () => {
+  const port = await freePort();
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-policy-"));
+  try {
+    registerIn(dir);
+    const canary = "traceframe-policy-canary";
+    assert.equal(
+      runHook(
+        dir,
+        JSON.stringify(sample("UserPromptSubmit", { prompt: `prompt ${canary}` })),
+        port,
+      ),
+      "",
+    );
+    runHook(
+      dir,
+      JSON.stringify(
+        sample("PreToolUse", { tool_name: "Bash", tool_input: { command: `echo ${canary}` } }),
+      ),
+      port,
+    );
+    runHook(
+      dir,
+      JSON.stringify(
+        sample("PostToolUse", {
+          tool_name: "Bash",
+          tool_response: { nested: { value: canary } },
+        }),
+      ),
+      port,
+    );
+    const raw = readFileSync(join(dir, "bridge-spool.jsonl"), "utf8");
+    assert.equal(raw.includes(canary), false);
+    const events = spooled(dir).map((event) => eventSchema.parse(event));
+    assert.equal(events.length, 3);
+    for (const event of events) {
+      if ("content" in event.payload) {
+        assert.equal(event.payload.content.text, null);
+        assert.equal(event.payload.content.state, "disabled");
+      }
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("explicitly permitted content is retried after an offline failure", async () => {
+  const port = await freePort();
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-allowed-"));
+  try {
+    registerIn(dir, { ...defaultPolicy, prompt: true, tool: true, code: true });
+    const canary = "traceframe-allowed-canary";
+    runHook(dir, JSON.stringify(sample("UserPromptSubmit", { prompt: `prompt ${canary}` })), port);
+    runHook(
+      dir,
+      JSON.stringify(
+        sample("PostToolUse", {
+          tool_name: "Bash",
+          tool_response: { nested: { value: canary } },
+        }),
+      ),
+      port,
+    );
+    const raw = readFileSync(join(dir, "bridge-spool.jsonl"), "utf8");
+    assert.ok(raw.includes(canary));
+    const events = spooled(dir).map((event) => eventSchema.parse(event));
+    assert.equal(events.length, 2);
+    for (const event of events) {
+      if ("content" in event.payload) assert.equal(event.payload.content.state, "present");
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("nested tool output requires both tool and code consent", async () => {
+  const port = await freePort();
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-nested-"));
+  try {
+    registerIn(dir, { ...defaultPolicy, tool: true });
+    const canary = "traceframe-nested-canary";
+    runHook(
+      dir,
+      JSON.stringify(
+        sample("PostToolUse", {
+          tool_name: "Bash",
+          tool_response: { nested: { value: canary } },
+        }),
+      ),
+      port,
+    );
+    const raw = readFileSync(join(dir, "bridge-spool.jsonl"), "utf8");
+    assert.equal(raw.includes(canary), false);
+    const [event] = spooled(dir).map((item) => eventSchema.parse(item));
+    assert.equal(event.payload.kind, "tool_result");
+    if (event.payload.kind === "tool_result") {
+      assert.equal(event.payload.content.text, null);
+      assert.equal(event.payload.content.state, "disabled");
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("an excluded path drops its content and recorded path from the retry", async () => {
+  const port = await freePort();
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-excluded-"));
+  try {
+    registerIn(dir, { ...defaultPolicy, prompt: true, tool: true, code: true });
+    const canary = "traceframe-excluded-canary";
+    runHook(
+      dir,
+      JSON.stringify(
+        sample("PreToolUse", {
+          tool_name: "Read",
+          tool_input: { file_path: "/synthetic/.env", pattern: canary },
+        }),
+      ),
+      port,
+    );
+    const raw = readFileSync(join(dir, "bridge-spool.jsonl"), "utf8");
+    assert.equal(raw.includes(canary), false);
+    const [event] = spooled(dir).map((item) => eventSchema.parse(item));
+    assert.equal(event.payload.kind, "tool_call");
+    if (event.payload.kind === "tool_call") {
+      assert.equal(event.payload.path, null);
+      assert.equal(event.payload.content.text, null);
+      assert.equal(event.payload.content.state, "disabled");
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a paused project does not write a retry", async () => {
+  const port = await freePort();
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-paused-"));
+  try {
+    registerIn(dir, defaultPolicy, true);
+    const canary = "traceframe-paused-canary";
+    runHook(dir, JSON.stringify(sample("UserPromptSubmit", { prompt: `prompt ${canary}` })), port);
+    assert.equal(existsSync(join(dir, "bridge-spool.jsonl")), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("an unreadable policy withholds content but keeps visible metadata", async () => {
+  const port = await freePort();
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-unknown-"));
+  try {
+    const canary = "traceframe-unknown-canary";
+    assert.equal(
+      runHook(
+        dir,
+        JSON.stringify(sample("UserPromptSubmit", { prompt: `prompt ${canary}` })),
+        port,
+      ),
+      "",
+    );
+    const raw = readFileSync(join(dir, "bridge-spool.jsonl"), "utf8");
+    assert.equal(raw.includes(canary), false);
+    const [event] = spooled(dir).map((item) => eventSchema.parse(item));
+    assert.equal(event.payload.kind, "prompt");
+    if (event.payload.kind === "prompt") {
+      assert.equal(event.payload.content.text, null);
+      assert.equal(event.payload.content.state, "unavailable");
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("malformed and oversized hook input is dropped without capture or output", async () => {
+  const port = await freePort();
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-input-"));
+  try {
+    assert.equal(runHook(dir, "not json", port), "");
+    assert.equal(
+      runHook(
+        dir,
+        JSON.stringify(sample("UserPromptSubmit", { prompt: "x".repeat(MAX_BODY) })),
+        port,
+      ),
+      "",
+    );
+    assert.equal(existsSync(join(dir, "bridge-spool.jsonl")), false);
+  } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });

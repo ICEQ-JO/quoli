@@ -1,5 +1,11 @@
 import { Buffer } from "node:buffer";
-import { type CapturePolicy, type Content, eventSchema, type NormalizedEvent } from "./index";
+import {
+  type CapturePolicy,
+  type Content,
+  eventSchema,
+  MAX_FIELD,
+  type NormalizedEvent,
+} from "./index";
 
 // Bounded inputs only. This is risk reduction, not a complete secret detector.
 export function redact(text: string): string {
@@ -48,6 +54,26 @@ export function isExcluded(path: string, policy: CapturePolicy): boolean {
     (part) => part === ".." || policy.excludedPaths.some((p) => part.includes(p.toLowerCase())),
   );
 }
+/** A deny-all policy for one decision: retry content when no trusted policy is available. */
+const denyAllPolicy: CapturePolicy = {
+  version: 1,
+  prompt: false,
+  tool: false,
+  code: false,
+  maxFieldBytes: MAX_FIELD,
+  excludedPaths: [],
+};
+
+/**
+ * Removes every captured field and records the content as `unavailable`, so a
+ * reader can tell "policy said no" from "the policy could not be read".
+ */
+export function withholdContent(raw: NormalizedEvent): NormalizedEvent {
+  const event = sanitizeEvent(raw, denyAllPolicy);
+  if ("content" in event.payload) event.payload.content.state = "unavailable";
+  return eventSchema.parse(event);
+}
+
 export function sanitizeEvent(raw: NormalizedEvent, policy: CapturePolicy): NormalizedEvent {
   const event = eventSchema.parse(raw);
   if (event.sourceLocator !== null) event.sourceLocator = redact(event.sourceLocator);

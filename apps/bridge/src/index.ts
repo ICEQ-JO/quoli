@@ -1,5 +1,5 @@
 import type { NormalizedEvent } from "@traceframe/schema";
-import { eventSchema } from "@traceframe/schema";
+import { eventSchema, MAX_BODY } from "@traceframe/schema";
 import { credential, runtime } from "@traceframe/storage/runtime";
 import { hookStatus, installHooks, uninstallHooks } from "./install";
 import { type HookPayload, normalizeHook } from "./normalize";
@@ -30,14 +30,21 @@ async function deliver(event: NormalizedEvent): Promise<boolean> {
   }
 }
 
-async function readStdin(): Promise<string> {
+async function readStdin(): Promise<string | null> {
   const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) chunks.push(Buffer.from(chunk));
-  return Buffer.concat(chunks).toString("utf8");
+  let size = 0;
+  for await (const chunk of process.stdin) {
+    size += chunk.length;
+    // Keep draining so the agent's write returns, but only retain the bound.
+    if (size <= MAX_BODY) chunks.push(Buffer.from(chunk));
+  }
+  // Oversized input is dropped before parsing rather than decoded in full.
+  return size > MAX_BODY ? null : Buffer.concat(chunks).toString("utf8");
 }
 
 export async function runHook(projectId: string): Promise<number> {
   const raw = await readStdin();
+  if (raw === null) return 0;
   let payload: HookPayload;
   try {
     payload = JSON.parse(raw) as HookPayload;
