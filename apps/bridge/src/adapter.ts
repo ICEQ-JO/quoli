@@ -6,6 +6,7 @@ import {
   CLAUDE_ADAPTER_ID,
   CLAUDE_RECORDED_SOURCE_VERSION,
 } from "./normalize";
+import { openCodeAdapter } from "./opencode";
 
 /**
  * The Claude Code hook adapter, described through the shared registration
@@ -56,5 +57,5 @@ export const claudeAdapter = defineAdapter({
   deliveryId,
 });
 
-/** Adapters this build can install. A second harness registers here when it ships. */
-export const adapters = [claudeAdapter] as const;
+/** Product adapters this build can install. */
+export const adapters = [claudeAdapter, openCodeAdapter] as const;

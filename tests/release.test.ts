@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { once } from "node:events";
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -16,6 +17,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
+import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { chromium, expect } from "@playwright/test";
 
@@ -45,7 +47,7 @@ test("relocated local release installs, captures, restarts and uninstalls withou
     collectorPort = await freePort();
   const env = {
     ...process.env,
-    PATH: "/usr/bin:/bin",
+    PATH: `${bin}:/usr/bin:/bin`,
     QUOLI_INSTALL_DIR: app,
     QUOLI_BIN_DIR: bin,
     XDG_CONFIG_HOME: join(base, "config"),
@@ -188,6 +190,43 @@ test("relocated local release installs, captures, restarts and uninstalls withou
         (item: { id: string }) => item.id === "fixture-hook",
       ),
     );
+    writeFileSync(join(bin, "opencode"), "#!/bin/sh\nprintf 'opencode v2.0.32\\n'\n");
+    chmodSync(join(bin, "opencode"), 0o755);
+    assert.match(await cli("connect", "--agent", "opencode"), /OpenCode plugin written/);
+    const pluginPath = join(repo, ".opencode/plugins/quoli.js");
+    const pluginSource = readFileSync(pluginPath, "utf8");
+    assert.ok(pluginSource.includes("quoli-opencode-v1.mjs"));
+    assert.equal(pluginSource.includes("tsx"), false);
+    const { default: plugin } = await import(pathToFileURL(pluginPath).href);
+    const cleanup = plugin.setup({
+      app: { version: "2.0.32" },
+      location: { directory: repo },
+      event: {
+        async *subscribe() {
+          yield {
+            id: "evt_release_opencode",
+            type: "session.created",
+            created: Date.now(),
+            location: { directory: repo },
+            durable: { aggregateID: "ses_release_opencode", seq: 1, version: 1 },
+            data: { sessionID: "ses_release_opencode" },
+          };
+        },
+      },
+    });
+    try {
+      let captured = false;
+      for (let n = 0; n < 100; n++) {
+        captured = (await api(`/v1/projects/${project}/sessions`)).some(
+          (item: { id: string }) => item.id === "ses_release_opencode",
+        );
+        if (captured) break;
+        await delay(100);
+      }
+      assert.ok(captured, "Relocated OpenCode worker did not deliver its synthetic session");
+    } finally {
+      await cleanup();
+    }
     await cli("stop");
     await cli("stop");
     assert.match(await cli("status"), /stopped/);
@@ -199,6 +238,8 @@ test("relocated local release installs, captures, restarts and uninstalls withou
     assert.ok(evidenceBytes > 0);
     await assert.rejects(cli("uninstall"), /referenced by installed Quoli hooks/);
     await cli("hooks", "uninstall", repo);
+    await assert.rejects(cli("uninstall"), /OpenCode plugin/);
+    await cli("hooks", "opencode", "uninstall", repo);
     await cli("uninstall");
     installed = false;
     assert.equal(existsSync(join(bin, "quoli")), false);

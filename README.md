@@ -10,6 +10,8 @@ The local MVP is available: **a session review workspace** with a persistent tim
 
 Live Claude Code collection is implemented as a passive [hook bridge](docs/hook-bridge.md) and a narrow [reported usage receiver](docs/telemetry-receiver.md), verified against Claude Code 2.1.306 in the [runtime report](docs/claude-code-runtime-report.md). The [setup guide](docs/local-setup.md) connects and removes the integration, and the [pilot checklist](docs/pilot-release.md) records what the local MVP guarantees and what it does not.
 
+OpenCode **2.0.32** activity is available through an optional [project plugin](docs/opencode-adapter.md): `pnpm connect /path/to/repo --agent opencode`. It records selected public events locally. Live plugin/session creation is verified; prompts, tools and usage have source-shaped synthetic validation. Restart OpenCode after installation.
+
 ## Install a local CLI
 
 `pnpm release:local` builds a standalone local Linux archive. Run `node dist/quoli/cli.mjs install` once, then run `quoli connect --capture-code` inside your repository. Capture and the production dashboard run in the background, managed with `quoli start`, `quoli stop` and `quoli status`. Node 24.16+ within Node 24 and Git are required; the installed runtime needs neither pnpm nor this checkout. Nothing is published to a registry. See [CLI installation and lifecycle](docs/cli.md).
@@ -18,7 +20,7 @@ Live Claude Code collection is implemented as a passive [hook bridge](docs/hook-
 
 From this source checkout, start `pnpm dev`, then run `pnpm connect /path/to/repo --capture-code` in another terminal. Quoli automatically samples file versions, branch/HEAD changes and bounded commit IDs while running, regardless of the agent or editor used. Open the project's **Repository history** to review captured diffs. Code capture is explicit; metadata-only is the default. Untracked capture needs separate consent.
 
-The [automatic-history guide](docs/automatic-history.md) explains setup and sampling limits. This repository layer does not identify authorship or collect Codex/Pi/OpenCode session internals; detailed Claude activity remains an optional integration. No package or installer has been published. Internal `TRACEFRAME_*` configuration and storage paths remain compatible with earlier local data.
+The [automatic-history guide](docs/automatic-history.md) explains setup and sampling limits. This repository layer does not identify authorship or collect Codex/Pi/OpenCode session internals; detailed Claude and OpenCode activity use separate optional integrations. No package or installer has been published. Internal `TRACEFRAME_*` configuration and storage paths remain compatible with earlier local data.
 
 ## Run the demo
 

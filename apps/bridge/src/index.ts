@@ -5,6 +5,8 @@ import { drainSpool, spool, spoolDepth } from "@traceframe/storage/spool";
 import { adapters } from "./adapter";
 import { hookStatus, installHooks, uninstallHooks } from "./install";
 import { type HookPayload, normalizeHook } from "./normalize";
+import { OPENCODE_VERSION } from "./opencode";
+import { openCodeStatus, uninstallOpenCode } from "./opencode-install";
 
 /**
  * The passive hook bridge.
@@ -74,6 +76,17 @@ const COMMANDS = ["drain", "install", "uninstall", "status"];
 
 async function main() {
   const [first, ...args] = process.argv.slice(2);
+  if (first === "opencode") {
+    const [action, root = process.cwd()] = args;
+    if (args.length > 2 || !["status", "uninstall"].includes(action))
+      throw new Error("Use hooks opencode status|uninstall [repository].");
+    if (action === "uninstall") uninstallOpenCode(root);
+    const status = openCodeStatus(root);
+    console.log(
+      `OpenCode ${OPENCODE_VERSION}: plugin ${status.installed ? `installed for project ${status.projectId}` : "not installed"}.`,
+    );
+    return;
+  }
   const command = COMMANDS.includes(first) ? first : "";
   if (command === "drain") {
     await runDrain();
@@ -103,7 +116,7 @@ async function main() {
       return;
     }
     const status = hookStatus(root);
-    // shortcut: install state comes from the Claude hook installer, the only adapter that ships.
+    // This existing command reports Claude hooks; OpenCode has a separate plugin status command.
     const [adapter] = adapters;
     console.log(
       `Adapter ${adapter.id} v${adapter.adapterVersion} supports ${adapter.harness} ${adapter.sourceVersions.join(", ")}; hooks are ${
@@ -124,6 +137,13 @@ async function main() {
 
 if (process.argv[1]?.endsWith("index.ts") || process.argv[1]?.endsWith("quoli-hook-v1.mjs")) {
   main().catch(() => {
+    if (process.argv[2] === "opencode") {
+      console.error(
+        "OpenCode integration command could not finish; check the project path and plugin ownership.",
+      );
+      process.exitCode = 1;
+      return;
+    }
     // The bridge never fails the agent: no output, no non-zero exit.
     process.exitCode = 0;
   });

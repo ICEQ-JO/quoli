@@ -30,6 +30,14 @@ This additionally installs only Quoli's own hooks in `.claude/settings.json`, pr
 
 Add `--telemetry` with `--agent claude` to print optional usage-export configuration. Existing destinations are reported and never replaced; no global settings are modified. Keep the printed local credential private. The [usage receiver](telemetry-receiver.md) documents the variables and source-level privacy gates. Reported usage requires the collector's project routing configuration as documented there.
 
+## Optional OpenCode activity
+
+```sh
+pnpm connect /path/to/project --agent opencode
+```
+
+This installs Quoli's project plugin for OpenCode **2.0.32**; restart OpenCode afterward. Prompt/tool text remains disabled until enabled in Settings. See the [adapter reference](opencode-adapter.md) for supported events, validation limits and removal without deleting evidence. Other versions fail closed. No provider request or global setting change is needed.
+
 ## Check, pause, remove
 
 ```sh
@@ -39,6 +47,6 @@ pnpm connect /path/to/project --undo PROJECT_ID
 pnpm settings resume PROJECT_ID
 ```
 
-Check reports registration, observer status and any installed Claude hooks. Disable pauses new capture and keeps retained evidence. Undo verifies that the project matches the registered root, removes its own installed Claude hooks if present, and deletes that project's retained evidence and observer registration. Source files, other hooks and global tool settings remain untouched. Deletion is not secure physical erasure and does not remove backups or agent-owned transcripts.
+Check reports registration, observer status, Claude hooks and the OpenCode plugin. Disable pauses new capture and keeps retained evidence. Undo verifies that the project matches the registered root, removes its own installed Claude hooks/OpenCode plugin if present, and deletes that project's retained evidence and observer registration. Source files, other hooks and global tool settings remain untouched. Deletion is not secure physical erasure and does not remove backups or agent-owned transcripts.
 
-Quoli does not install a background service or a published global CLI. Port conflicts are reported instead of killing other software. The private data directory must be outside the observed repository. If capture is unavailable or blocked, inspect the repository-history status and Settings. Linux is the tested capture platform; macOS remains unverified.
+Source-checkout setup does not install the managed background runtime; the unpublished local CLI supports it. Port conflicts are reported instead of killing other software. The private data directory must be outside the observed repository. If capture is unavailable or blocked, inspect the repository-history status and Settings. Linux is the tested capture platform; macOS remains unverified.

@@ -2,7 +2,7 @@
 
 An evidence source is registered as data: what it is, which source versions were actually verified, which source events it maps to which observations, what it can and cannot report, how its delivery identity is derived, and how it is installed. The contract is static. There is deliberately no dynamic plugin loader.
 
-This is the V08 definition ([QUO-44](https://linear.app/quolii/issue/QUO-44/v08-define-adapter-registration-capabilities-and-conformance-fixtures)); it does not add a second product adapter.
+The V08 definition ([QUO-44](https://linear.app/quolii/issue/QUO-44/v08-define-adapter-registration-capabilities-and-conformance-fixtures)) now registers Claude Code and the version-gated [OpenCode adapter](opencode-adapter.md) ([QUO-47](https://linear.app/quolii/issue/QUO-47)).
 
 ## Where it lives
 
@@ -10,6 +10,7 @@ This is the V08 definition ([QUO-44](https://linear.app/quolii/issue/QUO-44/v08-
 | --- | --- |
 | Contract, `defineAdapter`, version check | `packages/schema/src/adapter.ts` (`@traceframe/schema/adapter`) |
 | Claude Code hook registration | `apps/bridge/src/adapter.ts` |
+| OpenCode public-event registration | `apps/bridge/src/opencode.ts` |
 | Synthetic second registration (test only) | `fixtures/adapters.ts` |
 | Shared conformance suite | `tests/adapter-conformance.test.ts` |
 
@@ -66,7 +67,6 @@ prints the registered adapter, its adapter version, the source versions it suppo
 
 ## Not delivered
 
-- No dynamic adapter loader and no speculative support claims; a second adapter registers in code when it ships.
-- Only one product adapter exists. The synthetic registration in `fixtures/adapters.ts` proves the suite is contract-driven; nothing installs it.
-- Source-version gating is not enforced at capture (see above).
-- OpenCode, Codex and Pi adapters remain their own issues.
+- No dynamic adapter loader. Claude Code and OpenCode register statically; the synthetic registration is test-only.
+- Claude source-version gating is not enforced at capture (see above). OpenCode gates runtime and selected event versions; its reference records live-validation limits.
+- Codex and Pi remain their own issues.

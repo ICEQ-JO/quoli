@@ -11,7 +11,7 @@ import {
 } from "node:fs";
 import { dirname } from "node:path";
 import { type CapturePolicy, eventSchema, type NormalizedEvent } from "@traceframe/schema";
-import { sanitizeEvent, withholdContent } from "@traceframe/schema/privacy";
+import { isExcluded, redact, sanitizeEvent, withholdContent } from "@traceframe/schema/privacy";
 import { retryCaptureState } from "./policy";
 import { runtime } from "./runtime";
 
@@ -36,6 +36,8 @@ type Entry = {
   /** Project lifecycle generation; null for an entry written before fencing. */
   epoch: number | null;
   event: NormalizedEvent;
+  /** Source-linked tool result path, subject to code consent like the event's path. */
+  resultPath?: string | null;
 };
 
 export function spoolPath(): string {
@@ -102,10 +104,19 @@ function parseEntry(line: string): Entry | null {
     }
     const event = eventSchema.safeParse(parsed.event);
     if (!event.success) return null;
+    if (
+      parsed.resultPath !== undefined &&
+      parsed.resultPath !== null &&
+      (typeof parsed.resultPath !== "string" || parsed.resultPath.length > 1024)
+    )
+      return null;
     return {
       spooledAt: typeof parsed.spooledAt === "string" ? parsed.spooledAt : null,
       epoch: typeof parsed.epoch === "number" ? parsed.epoch : null,
       event: event.data,
+      ...(typeof parsed.resultPath === "string" && parsed.resultPath.length <= 1024
+        ? { resultPath: parsed.resultPath }
+        : {}),
     };
   } catch {
     // A damaged line is dropped rather than blocking the rest of the spool.
@@ -159,25 +170,31 @@ function expired(entry: Entry, retentionDays: number | null, now: number): boole
   return entry.spooledAt < new Date(now - retentionDays * 86_400_000).toISOString();
 }
 
-/**
- * Stores one observation under the project's current capture policy.
- *
- * The policy is applied here, before the write, because the collector cannot
- * undo content that has already reached disk. A paused or deleted project has
- * its observation skipped: keeping it would resurrect capture on resume or
- * re-registration. Unknown policy keeps the metadata and withholds content.
- * A busy spool is a bounded capture loss rather than a blocked agent.
- */
-export function spool(event: NormalizedEvent): "stored" | "skipped" {
+function sanitizeEntry(entry: Entry, policy: CapturePolicy): Entry {
+  const event = sanitizeEvent(entry.event, policy);
+  let resultPath = entry.resultPath;
+  if (typeof resultPath === "string") {
+    if (!policy.code || resultPath.length > 1024 || isExcluded(resultPath, policy)) {
+      resultPath = null;
+      if (event.payload.kind === "tool_result")
+        event.payload.content = { ...event.payload.content, text: null, state: "disabled" };
+    } else resultPath = redact(resultPath);
+  }
+  return { ...entry, event, ...(entry.resultPath === undefined ? {} : { resultPath }) };
+}
+
+/** Stores a retry under current capture policy; unknown policy withholds content. */
+export function spool(event: NormalizedEvent, resultPath?: string | null): "stored" | "skipped" {
   const capture = retryCaptureState(event.projectId);
   if (capture.state === "paused" || capture.state === "purged") return "skipped";
-  const safe =
-    capture.state === "active" ? sanitizeEvent(event, capture.policy) : withholdContent(event);
-  const entry: Entry = {
+  const safe = capture.state === "active" ? event : withholdContent(event);
+  let entry: Entry = {
     spooledAt: new Date().toISOString(),
     epoch: capture.state === "active" ? capture.epoch : null,
     event: safe,
+    ...(capture.state === "active" && typeof resultPath === "string" ? { resultPath } : {}),
   };
+  if (capture.state === "active") entry = sanitizeEntry(entry, capture.policy);
   return withSpoolLock("skipped" as const, () => {
     writeEntries(spoolPath(), trim([...readEntries(spoolPath()), entry]));
     return "stored" as const;
@@ -227,9 +244,9 @@ export async function drainSpool(
       continue;
     }
     // Policy may have tightened since the entry was written.
-    const event = sanitizeEvent(entry.event, capture.policy);
-    if (await send(event)) sent++;
-    else remaining.push({ ...entry, event });
+    const safe = sanitizeEntry(entry, capture.policy);
+    if (await send(safe.event)) sent++;
+    else remaining.push(safe);
   }
   withSpoolLock<null>(null, () => {
     writeEntries(spoolPath(), trim([...readEntries(spoolPath()), ...remaining]));
@@ -264,9 +281,9 @@ export function cleanupProjectSpool(
           removed++;
           continue;
         }
-        const event = sanitizeEvent(entry.event, policy);
-        if (JSON.stringify(event) !== JSON.stringify(entry.event)) rewritten++;
-        kept.push({ ...entry, event });
+        const safe = sanitizeEntry(entry, policy);
+        if (JSON.stringify(safe) !== JSON.stringify(entry)) rewritten++;
+        kept.push(safe);
       }
       return kept;
     };

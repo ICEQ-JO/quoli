@@ -14,11 +14,12 @@ quoli install                      Install this unpacked release for your user
 quoli connect [repository]          Connect once and start background capture
   --capture-code                   Opt into redacted file versions and diffs
   --include-untracked              Separately opt into untracked files
-  --agent claude                   Optionally install Claude activity hooks
+  --agent claude|opencode          Optionally install supported agent capture
 quoli start | stop | restart        Manage the local background runtime
 quoli status                       Show managed identity and listener health
 quoli open                         Print the local dashboard address
 quoli hooks uninstall [repository]  Remove Quoli hooks without deleting evidence
+quoli hooks opencode status|uninstall [repository]  Inspect/remove the OpenCode plugin
 quoli settings ...                 Capture policy, pause, retention and deletion
 quoli autostart enable|disable|status  Optional Linux user-login startup
 quoli uninstall                    Remove the installed app; preserve evidence
@@ -69,7 +70,7 @@ async function main() {
     return;
   }
   if (command === "hooks") {
-    if (!["uninstall", "status", "drain"].includes(args[0]))
+    if (!["uninstall", "status", "drain", "opencode"].includes(args[0]))
       throw new Error("Use quoli hooks uninstall|status [repository], or quoli hooks drain.");
     await run("quoli-hook-v1.mjs", args);
     return;

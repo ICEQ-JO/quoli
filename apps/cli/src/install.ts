@@ -103,7 +103,7 @@ export async function uninstallRelease(config: CliConfig) {
       for (const row of db.prepare("SELECT root FROM repositories").all()) {
         if (usesPackagedRuntime(String(row.root), config.releaseRoot))
           throw new Error(
-            "This runtime is referenced by installed Quoli hooks. Run quoli hooks uninstall /path/to/project first; evidence is preserved.",
+            "This runtime is referenced by installed Quoli hooks or an OpenCode plugin. Remove the integration first; evidence is preserved.",
           );
       }
     } finally {
