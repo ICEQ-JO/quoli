@@ -68,6 +68,9 @@ Commit: `66b01ff` (`fix(storage): fence and prune retries across project lifecyc
 | Full unit/integration suite | `pnpm test` | 133 pass, 0 fail, 4 skipped (release/e2e suites requiring `QUOLI_RELEASE_TEST` or browsers) |
 | Type check | `pnpm typecheck` | pass |
 | Lint | `pnpm lint` | no errors; 3 pre-existing warnings outside this diff |
+| Packaged release | `pnpm release:local` then `pnpm test:release` | 4 pass, 0 fail (19 s relocated install/capture/restart/uninstall, startup guards, supervisor crash recovery, install guards) |
+
+The packaged release was built from this branch, so it also exercises the QUO-39 hook bundle with the moved spool module.
 
 Environment: Node 24.16.0, pnpm 11.12.0, isolated worktree at `~/Dev/quoli-night-lifecycle`, synthetic fixtures only.
 
