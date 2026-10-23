@@ -47,7 +47,7 @@ Environment: Node 24.16.0, pnpm 11.12.0, isolated worktree at `~/Dev/quoli-night
 
 ## QUO-40 — fence and remove retries during project lifecycle changes
 
-Commit: `66b01ff` (`fix(storage): fence and prune retries across project lifecycle`), author and committer ICEQ-JO. Stacked draft [#62](https://github.com/ICEQ-JO/quoli/pull/62) against the QUO-39 branch. The Linear dependency on QUO-39 stays open: an unmerged draft is not a completed prerequisite.
+Commit: `66b01ff` (`fix(storage): fence and prune retries across project lifecycle`), author and committer ICEQ-JO. Follow-ups: `51013d0` and `b15bc61` (validation record), `6b98c34` (a spool cleanup failure no longer fails an already-committed lifecycle action). Stacked draft [#62](https://github.com/ICEQ-JO/quoli/pull/62) against the QUO-39 branch. The Linear dependency on QUO-39 stays open: an unmerged draft is not a completed prerequisite.
 
 ### Demonstrated behavior
 
