@@ -8,7 +8,6 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { hookStatus, installHooks, uninstallHooks } from "../apps/bridge/src/install";
 import { normalizeHook } from "../apps/bridge/src/normalize";
-import { drainSpool, spool } from "../apps/bridge/src/spool";
 import { claudeHookSamples } from "../fixtures/claude";
 import {
   type CapturePolicy,
@@ -17,6 +16,7 @@ import {
   MAX_BODY,
 } from "../packages/schema/src/index";
 import { Store } from "../packages/storage/src/index";
+import { drainSpool, spool } from "../packages/storage/src/spool";
 
 const projectId = "repo_probe";
 
@@ -183,6 +183,7 @@ test("the retry spool keeps undelivered observations and releases them after del
   const dir = mkdtempSync(join(tmpdir(), "traceframe-spool-"));
   const previous = process.env.TRACEFRAME_DATA_DIR;
   process.env.TRACEFRAME_DATA_DIR = dir;
+  registerIn(dir);
   try {
     const sample = claudeHookSamples().find((payload) => payload.hook_event_name === "PreToolUse");
     assert.ok(sample);
@@ -245,7 +246,7 @@ function spooled(dir: string): unknown[] {
   return readFileSync(path, "utf8")
     .split("\n")
     .filter((line) => line.trim())
-    .map((line) => JSON.parse(line) as unknown);
+    .map((line) => (JSON.parse(line) as { event: unknown }).event);
 }
 
 function sample(event: string, extra: Record<string, unknown> = {}) {

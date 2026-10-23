@@ -1,9 +1,9 @@
 import type { NormalizedEvent } from "@traceframe/schema";
 import { eventSchema, MAX_BODY } from "@traceframe/schema";
 import { credential, runtime } from "@traceframe/storage/runtime";
+import { drainSpool, spool, spoolDepth } from "@traceframe/storage/spool";
 import { hookStatus, installHooks, uninstallHooks } from "./install";
 import { type HookPayload, normalizeHook } from "./normalize";
-import { drainSpool, spool, spoolDepth } from "./spool";
 
 /**
  * The passive hook bridge.
@@ -64,7 +64,9 @@ export async function runHook(projectId: string): Promise<number> {
 
 export async function runDrain(): Promise<void> {
   const result = await drainSpool(deliver);
-  console.log(`Bridge spool: ${result.sent} delivered, ${result.remaining} kept for later.`);
+  console.log(
+    `Bridge spool: ${result.sent} delivered, ${result.remaining} kept for later, ${result.dropped} dropped.`,
+  );
 }
 
 const COMMANDS = ["drain", "install", "uninstall", "status"];

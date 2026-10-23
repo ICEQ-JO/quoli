@@ -4,27 +4,27 @@ Open **Settings** in the workspace sidebar, or use the `pnpm settings` CLI. Thes
 
 ## Capture policy
 
-Three independent controls decide what the collector may persist: prompts, tool output and code. The collector applies changes **before** new database content is written, so the next accepted observation is sanitized under the new policy. History already retained is not rewritten; delete it explicitly if you want it gone.
+Three independent controls decide what the collector may persist: prompts, tool output and code. The collector applies changes **before** new database content is written, so the next accepted observation is sanitized under the new policy. Changing the policy also re-sanitizes that project's pending retries, so content a control now disallows does not survive in the spool. History already retained is not rewritten; delete it explicitly if you want it gone.
 
 Tool output may contain code in any nested position, so tool and code consent are both required before any content is stored. Enabling code capture therefore enables tool capture. Excluded paths (`node_modules`, `.git`, `.env`, …) stay configured regardless of the toggles.
 
 The bridge has a durable retry spool. Before an undelivered observation is written, the bridge reads the project's current policy and capture state from the local store in read-only mode and applies the same sanitization the collector would: content classes the policy disables are stored as metadata with no text, and excluded paths lose both their path and content. When the policy cannot be read (store not created yet, unreadable database, unregistered project) the observation is kept as metadata with an `unavailable` content state instead of text. A paused or deleted project is not spooled at all, so resuming or re-registering cannot resurrect observations captured while capture was stopped.
 
-Known limits: a retry written earlier under a more permissive policy is not rewritten when the policy tightens; the collector revalidates it on delivery, and the V03 lifecycle increment coordinates spool cleanup with purge. Deletion still does not remove retry entries written before the deletion; `docs/issues/vision/v03.md` tracks that repair. Collector-side sanitization does not undo earlier spool writes. These controls describe local database and retry behavior, not complete spool or cloud deletion guarantees.
+Known limits: a retry is re-sanitized under the current policy when the policy changes and again when it is drained, but a write racing that change can still hold content until the drain. The spool lock bounds concurrent hook, drain and cleanup writes; a hook that cannot take the lock within a short wait drops its retry rather than blocking the agent, which is bounded, visible capture loss. Deletion is not secure physical erasure and does not reach backups or harness-owned transcripts. These controls describe local database and retry behavior, not complete spool or cloud deletion guarantees.
 
 ## Capture state
 
-Pausing stops new observations for the project. Retained evidence stays readable, and resuming continues with the current policy. A paused project rejects ingestion instead of silently dropping data.
+Pausing stops new observations for the project. Retained evidence stays readable, and resuming continues with the current policy. A paused project rejects ingestion instead of silently dropping data; pending retries for it are held and delivered after resume.
 
 ## Retention
 
-A retention window removes observations and repository captures older than the window. It is applied when the window changes and when new observations arrive. Derived views are rebuilt from what remains, so removed evidence never keeps a factual claim alive: a deleted result simply stops existing, and the relationships, checks, usage and change map are recomputed from the retained record.
+A retention window removes observations and repository captures older than the window. It is applied when the window changes and when new observations arrive. Derived views are rebuilt from what remains, so removed evidence never keeps a factual claim alive: a deleted result simply stops existing, and the relationships, checks, usage and change map are recomputed from the retained record. Pending retries follow the same window: an expired retry is removed on the next cleanup or drain.
 
 In Settings, selecting a new window stages the change. **Apply retention** explains that expired evidence is deleted immediately and cannot be recovered; **Cancel retention change** restores the last confirmed value. Policy and pause controls save immediately and report success or failure.
 
 ## Deletion
 
-Deleting a project removes its observations, repository captures, artifacts and registration, truncates the local write-ahead log and stops capture and storage for it. A tombstone then rejects stale producers and in-flight retries for that project. Re-registering the project explicitly is an owner action that clears the tombstone and resumes capture.
+Deleting a project removes its observations, repository captures, artifacts, registration and pending retries, truncates the local write-ahead log and stops capture and storage for it. A tombstone then rejects stale producers and in-flight retries for that project. Re-registering the project explicitly is an owner action that clears the tombstone and resumes capture under a new registration generation; a retry written under the old generation is dropped at the next drain instead of reappearing.
 
 After a successful dashboard deletion, a terminal result shows the actual removed counts and offers a return to Sessions; stale policy and retention controls are no longer shown.
 
@@ -55,4 +55,4 @@ Storage usage counts observations, captures and artifacts with their encoded siz
 
 ## Validation
 
-`tests/controls.test.ts` covers policy-before-persistence, paused capture, retention with dependent evidence, deletion that blocks stale producers, idempotent deletion after an interruption and the cleared write-ahead log. `tests/bridge.test.ts` runs the real hook subprocess against an unreachable collector and covers default-policy silence, explicitly permitted capture, nested code requiring both tool and code consent, excluded paths, paused projects, an unreadable policy and malformed or oversized stdin. The browser suite covers the settings view, the pause/resume control, the retention window and the deletion wording, including the statement that capture and storage stop.
+`tests/controls.test.ts` covers policy-before-persistence, paused capture, retention with dependent evidence, deletion that blocks stale producers, idempotent deletion after an interruption and the cleared write-ahead log. `tests/bridge.test.ts` runs the real hook subprocess against an unreachable collector and covers default-policy silence, explicitly permitted capture, nested code requiring both tool and code consent, excluded paths, paused projects, an unreadable policy and malformed or oversized stdin. `tests/retry-lifecycle.test.ts` covers project-scoped spool cleanup through the real settings and purge endpoints, generation fencing after re-registration, legacy entries, an interrupted drain, retention expiry and concurrent hook appends during a purge. The browser suite covers the settings view, the pause/resume control, the retention window and the deletion wording, including the statement that capture and storage stop.

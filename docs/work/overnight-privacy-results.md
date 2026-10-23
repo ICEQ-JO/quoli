@@ -6,10 +6,10 @@
 
 | Increment | Linear | Branch | Pull request | Status |
 | --- | --- | --- | --- | --- |
-| V02 — policy before retry persistence | [QUO-39](https://linear.app/quolii/issue/QUO-39/v02-apply-project-capture-policy-before-retry-persistence) | `feat/quo-39-retry-capture-policy` | [#59](https://github.com/ICEQ-JO/quoli/pull/59) | Implemented, in review; not merged |
-| V03 — fence and remove retries | [QUO-40](https://linear.app/quolii/issue/QUO-40/v03-fence-and-remove-retries-during-project-lifecycle-changes) | `feat/quo-40-retry-lifecycle` | — | Not started |
+| V02 — policy before retry persistence | [QUO-39](https://linear.app/quolii/issue/QUO-39/v02-apply-project-capture-policy-before-retry-persistence) | `feat/quo-39-retry-capture-policy` | [#59](https://github.com/ICEQ-JO/quoli/pull/59) | Merged as `2f5d8df` |
+| V03 — fence and remove retries | [QUO-40](https://linear.app/quolii/issue/QUO-40/v03-fence-and-remove-retries-during-project-lifecycle-changes) | `feat/quo-40-retry-lifecycle` | [#62](https://github.com/ICEQ-JO/quoli/pull/62) | Merged in #62 |
 
-Both branches are based on [#58](https://github.com/ICEQ-JO/quoli/pull/58) `docs/vision-backlog-scaffold`, which is still open and unmerged. PR #59 therefore targets that branch, not `main`.
+All three PRs are merged into `main` in order: [#58](https://github.com/ICEQ-JO/quoli/pull/58) (`eb3c8f4`), #59 (`2f5d8df`) and #62 (this PR).
 
 ## QUO-39 — apply project capture policy before retry persistence
 
@@ -40,12 +40,50 @@ Environment: Node 24.16.0, pnpm 11.12.0, isolated worktree at `~/Dev/quoli-night
 
 ### Unsupported and residual cases
 
-- A retry written under a permissive policy is not rewritten when the policy tightens later; the collector re-sanitizes on delivery. Purge does not remove earlier retry entries. [QUO-40](https://linear.app/quolii/issue/QUO-40/v03-fence-and-remove-retries-during-project-lifecycle-changes) covers both.
-- The policy read and the spool write are not atomic with an owner settings change. A tightening in that window is caught by collector revalidation, but text can remain in the spool until the next drain.
-- Concurrent hook processes still share the existing read-modify-write JSONL spool race. Not changed by this increment.
+- A retry written under a permissive policy is not rewritten by this increment when the policy tightens later; the collector re-sanitizes on delivery. Purge does not remove earlier retry entries here. [QUO-40](https://linear.app/quolii/issue/QUO-40/v03-fence-and-remove-retries-during-project-lifecycle-changes) fixes both in the stacked draft #62.
+- The policy read and the spool write are not atomic with an owner settings change. A tightening in that window is caught by collector revalidation and by #62's cleanup and drain revalidation, but text can remain in the spool until then.
+- Concurrent hook processes still share the existing read-modify-write JSONL spool race in this increment. #62 adds a lock.
 - No live Claude Code session was recaptured; the runtime report's 2.1.306 observations predate this change.
+
+## QUO-40 — fence and remove retries during project lifecycle changes
+
+Commit: `66b01ff` (`fix(storage): fence and prune retries across project lifecycle`), author and committer ICEQ-JO. Follow-ups: `51013d0` and `b15bc61` (validation record), `6b98c34` (a spool cleanup failure no longer fails an already-committed lifecycle action), `63ddd59` (damaged entries are dropped instead of stalling drain). Merged as [#62](https://github.com/ICEQ-JO/quoli/pull/62) after [#59](https://github.com/ICEQ-JO/quoli/pull/59); the QUO-39 dependency is satisfied.
+
+### Demonstrated behavior
+
+- Each spool entry records the project lifecycle `epoch`. The purge endpoint removes that project's live and interrupted-drain entries; unrelated project entries remain.
+- A purge without spool cleanup (simulating a stale writer) is still fenced: after re-registration, drain drops the old-generation entry. A pre-fencing bare event is dropped too.
+- Cleanup covers an interrupted drain's rotated file and is idempotent on repeat.
+- A policy reduction through the real settings endpoint scrubs that project's pending prompt content to `disabled` with no text; another project's identical content stays.
+- A retention window removes expired pending entries through the same endpoint.
+- Eight concurrent hook subprocesses plus a purge keep the other project's four entries intact; drain delivers none for the purged project.
+- Drain revalidates policy, pause state, retention and epoch before each send, and reports delivered, kept and dropped counts.
+- A damaged or malformed spool line is dropped without blocking delivery of the valid entries.
+- A purge that commits while a drain is sending the first project's entry still fences the queued entry of the deleted project.
+
+### Checks
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Focused lifecycle tests | `node --import tsx --test tests/retry-lifecycle.test.ts` | 8 pass, 0 fail |
+| Focused bridge tests | `node --import tsx --test tests/bridge.test.ts` | 15 pass, 0 fail |
+| Full unit/integration suite | `pnpm test` | 135 pass, 0 fail, 4 skipped (release/e2e suites requiring `QUOLI_RELEASE_TEST` or browsers) |
+| Type check | `pnpm typecheck` | pass |
+| Lint | `pnpm lint` | no errors; 3 pre-existing warnings outside this diff |
+| Packaged release | `pnpm release:local` then `pnpm test:release` | 4 pass, 0 fail (19 s relocated install/capture/restart/uninstall, startup guards, supervisor crash recovery, install guards) |
+
+The packaged release was built from this branch, so it also exercises the QUO-39 hook bundle with the moved spool module.
+
+Environment: Node 24.16.0, pnpm 11.12.0, isolated worktree at `~/Dev/quoli-night-lifecycle`, synthetic fixtures only.
+
+### Unsupported and residual cases
+
+- Delivery is at-least-once: a crash during drain or two concurrent drains can re-deliver an entry. The collector deduplicates by delivery ID, so evidence is not duplicated.
+- Spool cleanup is best-effort under lock contention (100 ms). A purge that cannot take the lock leaves entries, but the new generation fences them at the next drain. A cleanup failure increments the collector health counter and does not fail the already-committed lifecycle action; the purge API reports database counts only.
+- The lock is a local file lock for one machine, not a distributed one.
+- No live Claude Code session was recaptured.
 
 ## Blockers and next safe action
 
-- No external blocker forced a stop. Merging is not authorized; owner review of #59 remains.
-- Next safe action: review #59, then let [QUO-40](https://linear.app/quolii/issue/QUO-40/v03-fence-and-remove-retries-during-project-lifecycle-changes) build on it for purge/retention-aware spool cleanup and generation fencing.
+- Owner authorized the merge on 2026-10-23. #58, #59 and #62 were merged into `main` in that order; QUO-39 and QUO-40 are Done in Linear.
+- Next safe action: start the next roadmap increment from the merged `main`. No privacy repair from this packet remains open.
