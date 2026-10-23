@@ -45,3 +45,7 @@ All work is in Quolii Linear, all PRs name a pillar/gate and linked issue, agent
 ## Planning validation
 
 Local issue bodies are checked for required fields, complete/acyclic prerequisites and valid relative links. Published identifiers and blocking relations are read back from Quolii and recorded in the index. Application tests are not claimed for this documentation-only change. A synthetic temporary check confirmed the pre-spool policy/purge gap; it is a repair issue, not a completed fix.
+
+## Two-agent overnight handoffs
+
+Use [Agent 1: privacy/lifecycle](../handoffs/agent-1-privacy.md) for QUO-39, then a dependency-aware QUO-40 draft. Use [Agent 2: CI/cloud contract](../handoffs/agent-2-ci-cloud-contract.md) for separate QUO-41 and QUO-19 increments. The packets define isolated checkouts, non-overlapping ownership, checks, PR bases, stop conditions and morning reports. They authorize neither merges nor production deployment.
