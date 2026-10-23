@@ -5,8 +5,9 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
 import { demoEvents, demoPolicy } from "../fixtures/demo";
-import { relationships, usage } from "../packages/analysis/src/index";
+import { activity, relationships, usage } from "../packages/analysis/src/index";
 import {
+  activityViewSchema,
   batchSchema,
   defaultPolicy,
   eventSchema,
@@ -217,6 +218,132 @@ test("usage is nullable, deduplicated by request, and never mixes counter sample
   assert.equal(usage([...main, cumulative]).input, null);
   assert.equal(usage(stored().filter((e) => e.sessionId === "session-interrupted")).output, null);
   assert.equal(usage([]).input, null);
+});
+test("activity projects explicit concurrent child turns and retained gaps without time inference", () => {
+  const root = eventSchema.parse({
+    ...v2Event("root", "root-delivery"),
+    sessionId: "root-session",
+    activity: {
+      turnId: "root-turn",
+      parentSessionId: null,
+      parentTurnId: null,
+      childSessionId: "child-a",
+      childTurnId: "child-turn",
+    },
+  });
+  const rootB = eventSchema.parse({
+    ...v2Event("root-b", "root-b-delivery"),
+    sessionId: "root-session",
+    activity: {
+      turnId: "root-turn",
+      parentSessionId: null,
+      parentTurnId: null,
+      childSessionId: "child-b",
+      childTurnId: "child-turn",
+    },
+  });
+  const childA = eventSchema.parse({
+    ...v2Event("child-a", "child-a-delivery"),
+    sessionId: "child-a",
+    activity: {
+      turnId: "child-turn",
+      parentSessionId: "root-session",
+      parentTurnId: "root-turn",
+      childSessionId: null,
+      childTurnId: null,
+    },
+  });
+  const childB = eventSchema.parse({
+    ...v2Event("child-b", "child-b-delivery"),
+    sessionId: "child-b",
+    activity: {
+      turnId: "child-turn",
+      parentSessionId: "root-session",
+      parentTurnId: "root-turn",
+      childSessionId: null,
+      childTurnId: null,
+    },
+  });
+  const orphan = eventSchema.parse({
+    ...v2Event("orphan", "orphan-delivery"),
+    sessionId: "orphan-session",
+    activity: {
+      turnId: "orphan-turn",
+      parentSessionId: "missing-session",
+      parentTurnId: "missing-turn",
+      childSessionId: null,
+      childTurnId: null,
+    },
+  });
+  const end = eventSchema.parse({
+    ...v2Event("child-a-end", "child-a-end-delivery"),
+    sessionId: "child-a",
+    toolId: null,
+    tool: null,
+    activity: {
+      turnId: null,
+      parentSessionId: null,
+      parentTurnId: null,
+      childSessionId: null,
+      childTurnId: null,
+    },
+    payload: { kind: "session_end", reason: "completed" },
+  });
+  const records = [root, rootB, childA, childB, orphan, end].map((event, index) => ({
+    ...event,
+    sequence: index + 1,
+    receivedAt: "2026-10-23T10:00:00.000Z",
+  }));
+  const projected = activity([
+    records[2],
+    records[0],
+    records[4],
+    records[1],
+    records[3],
+    records[5],
+  ]);
+  activityViewSchema.parse(projected);
+  assert.equal(projected.turns.length, 4);
+  assert.deepEqual(
+    projected.subagents.map((link) => link.child.sessionId).sort(),
+    ["child-a", "child-a", "child-b", "child-b", "orphan-session"].sort(),
+  );
+  assert.equal(projected.turns.find((turn) => turn.sessionId === "child-a")?.ended, true);
+  assert.ok(
+    projected.gaps.some(
+      (gap) => gap.kind === "missing_parent" && gap.sessionId === "orphan-session",
+    ),
+  );
+  assert.ok(
+    projected.gaps.some((gap) => gap.kind === "missing_end" && gap.sessionId === "child-b"),
+  );
+  assert.ok(projected.subagents.every((link) => link.rule === "explicit-activity-identities/v1"));
+  const rootTurn = projected.turns.find((turn) => turn.sessionId === "root-session");
+  assert.deepEqual(rootTurn?.declarations, [
+    { kind: "plan", eventId: "root", state: "present" },
+    { kind: "plan", eventId: "root-b", state: "present" },
+  ]);
+  // Declarations keep their state and evidence, never the captured text.
+  assert.equal(JSON.stringify(projected).includes("example-v2-secret"), false);
+  assert.deepEqual(activity(records), projected);
+});
+test("a spawned child with no retained evidence stays a gap", () => {
+  const root = eventSchema.parse({
+    ...v2Event("root-c", "root-c-delivery"),
+    sessionId: "root-c",
+    activity: {
+      turnId: "root-c-turn",
+      parentSessionId: null,
+      parentTurnId: null,
+      childSessionId: "missing-child",
+      childTurnId: "missing-child-turn",
+    },
+  });
+  const projected = activity([{ ...root, sequence: 1, receivedAt: "2026-10-23T10:00:00.000Z" }]);
+  activityViewSchema.parse(projected);
+  assert.ok(
+    projected.gaps.some((gap) => gap.kind === "missing_child" && gap.sessionId === "root-c"),
+  );
 });
 test("tool evidence joins require matching project, session and explicit ID", () => {
   const rows = stored();

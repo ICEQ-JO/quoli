@@ -307,3 +307,78 @@ export const browserQuerySchema = z
     query: eventQuerySchema,
   })
   .strict();
+
+/** Explicit activity projections; retained event bodies remain the source of truth. */
+const activityRefSchema = z.object({ sessionId: safeId, turnId: safeId.nullable() }).strict();
+
+export const activityDeclarationSchema = z
+  .object({
+    kind: z.enum(["plan", "decision", "approval", "correction"]),
+    eventId: safeId,
+    state: z.enum([
+      "present",
+      "disabled",
+      "redacted",
+      "truncated",
+      "unavailable",
+      "unsupported",
+      "malformed",
+    ]),
+  })
+  .strict();
+export type ActivityDeclaration = z.infer<typeof activityDeclarationSchema>;
+
+export const activityTurnSchema = z
+  .object({
+    id: safeId,
+    projectId: safeId,
+    sessionId: safeId,
+    turnId: safeId,
+    eventIds: z.array(safeId).min(1),
+    declarations: z.array(activityDeclarationSchema),
+    ended: z.boolean(),
+    evidenceIds: z.array(safeId).min(1),
+    rule: z.string().min(1).max(100),
+    uncertainty: z.string().min(1).max(1000),
+  })
+  .strict();
+export type ActivityTurn = z.infer<typeof activityTurnSchema>;
+
+export const subagentLinkSchema = z
+  .object({
+    id: safeId,
+    relation: z.enum(["parent", "spawned"]),
+    projectId: safeId,
+    parent: activityRefSchema,
+    child: activityRefSchema,
+    evidenceIds: z.array(safeId).min(1),
+    rule: z.string().min(1).max(100),
+    uncertainty: z.string().min(1).max(1000),
+  })
+  .strict();
+export type SubagentLink = z.infer<typeof subagentLinkSchema>;
+
+export const activityGapSchema = z
+  .object({
+    id: safeId,
+    kind: z.enum(["missing_parent", "missing_child", "missing_end"]),
+    projectId: safeId,
+    sessionId: safeId,
+    turnId: safeId.nullable(),
+    evidenceIds: z.array(safeId).min(1),
+    rule: z.string().min(1).max(100),
+    uncertainty: z.string().min(1).max(1000),
+  })
+  .strict();
+export type ActivityGap = z.infer<typeof activityGapSchema>;
+
+export const activityViewSchema = z
+  .object({
+    turns: z.array(activityTurnSchema),
+    subagents: z.array(subagentLinkSchema),
+    gaps: z.array(activityGapSchema),
+    rule: z.string().min(1).max(100),
+    uncertainty: z.string().min(1).max(1000),
+  })
+  .strict();
+export type ActivityView = z.infer<typeof activityViewSchema>;

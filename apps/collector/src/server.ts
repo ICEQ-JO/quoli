@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { reconcile, relationships, usage, verification } from "@traceframe/analysis";
+import { activity, reconcile, relationships, usage, verification } from "@traceframe/analysis";
 import { batchSchema, eventQuerySchema, MAX_BODY, safeId } from "@traceframe/schema";
 import { settingsUpdateSchema } from "@traceframe/schema/lifecycle";
 import { Store } from "@traceframe/storage";
@@ -355,6 +355,7 @@ export function startCollector(
           send(200, {
             usage: usageView,
             relationships: relationships(events),
+            activity: activity(events),
             verification: verification(events),
             reconciliation: reconcile(events, usageView),
             kindCounts: Object.fromEntries(

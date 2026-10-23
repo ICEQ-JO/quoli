@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  ActivityView,
   EventPage,
   EventQuery,
   Project,
@@ -38,6 +39,7 @@ import {
 type Summary = {
   usage: UsageView;
   relationships: Relationship[];
+  activity: ActivityView;
   verification: VerificationView;
   reconciliation: ReconciliationView;
   kindCounts: Record<string, number>;

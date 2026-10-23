@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Relationship, StoredEvent, UsageView } from "@traceframe/schema";
 
+export * from "./activity";
 export * from "./checks";
 export * from "./map";
 export * from "./reconcile";
