@@ -134,7 +134,9 @@ export function EvidenceInspector({
               <span className={`basis ${r.basis}`}>
                 {r.basis === "recorded"
                   ? "Recorded · explicit ID match"
-                  : "Derived · explicit ID match"}
+                  : r.basis === "inferred"
+                    ? "Inferred relationship"
+                    : "Derived relationship"}
               </span>
               <div className="evidence-route">
                 <code>{r.subjectId}</code>
@@ -147,9 +149,11 @@ export function EvidenceInspector({
                 type="button"
                 onClick={() => onFollow(r.subjectId === event.id ? r.objectId : r.subjectId)}
               >
-                {r.subjectId === event.id
-                  ? "Open matching tool result"
-                  : "Open matching tool request"}
+                {r.rule === "same-session-tool-id/v1"
+                  ? r.subjectId === event.id
+                    ? "Open matching tool result"
+                    : "Open matching tool request"
+                  : "Open related observation"}
                 <Icon name="arrow" size={16} />
               </button>
               <p>{r.uncertainty}</p>

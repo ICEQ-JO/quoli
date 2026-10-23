@@ -1,31 +1,31 @@
 ---
-name: Traceframe
+name: Quoli
 description: A session-first local evidence workspace with readable review documents and source-linked triage.
 colors:
-  bg: 'light-dark(#ffffff, #171719)'
-  surface: 'light-dark(#ffffff, #1c1c1f)'
-  sidebar: 'light-dark(#f6f6f7, #111113)'
-  ink: 'light-dark(#242428, #ededf0)'
-  muted: 'light-dark(#62626c, #aaaab5)'
-  subtle: 'light-dark(#6b6b76, #a1a1ad)'
-  line: 'light-dark(#e7e7eb, #323237)'
-  line-soft: 'light-dark(#ededf0, #2a2a2f)'
-  accent: 'light-dark(#6653c2, #b1a5ff)'
-  accent-dark: 'light-dark(#5745b0, #c5bcff)'
-  selected: 'light-dark(#f0edf9, #2b273a)'
+  bg: 'light-dark(#f9faf8, #141717)'
+  surface: 'light-dark(#ffffff, #1b1f1e)'
+  sidebar: 'light-dark(#f0f3ef, #101412)'
+  ink: 'light-dark(#202a24, #f0f3f1)'
+  muted: 'light-dark(#59655d, #a8b2ac)'
+  subtle: 'light-dark(#59655d, #a8b2ac)'
+  line: 'light-dark(#d6ded6, #343e38)'
+  line-soft: 'light-dark(#e6ebe4, #29332c)'
+  accent: 'light-dark(#355b3c, #b9d5b5)'
+  accent-dark: 'light-dark(#294a30, #cce3c6)'
+  selected: 'light-dark(#e6eee2, #28372b)'
   warning: 'light-dark(#855a18, #dfbd7d)'
   warning-bg: 'light-dark(#fff8ed, #2c271f)'
   negative: 'light-dark(#a33d49, #efa2aa)'
   negative-bg: 'light-dark(#fff2f2, #302124)'
-  primary-fill: 'light-dark(#6653c2, #7360ce)'
-  primary-border: 'light-dark(#6653c2, #8c79e2)'
-  primary-hover: 'light-dark(#5745b0, #6752bd)'
+  primary-fill: 'light-dark(#355b3c, #355b3c)'
+  primary-border: 'light-dark(#355b3c, #698966)'
+  primary-hover: 'light-dark(#294a30, #2d4e33)'
   primary-text: '#ffffff'
-  nav-selected: 'light-dark(#e9e8ed, #29292e)'
-  nav-hover: 'light-dark(#ebebef, #202023)'
-  recorded: 'light-dark(#57547d, #c2baf2)'
-  derived: 'light-dark(#67529d, #c9b5ed)'
-  derived-bg: 'light-dark(#f3eff9, #2a2533)'
+  nav-selected: 'light-dark(#e1e9dd, #29362b)'
+  nav-hover: 'light-dark(#e8ede5, #202922)'
+  recorded: 'light-dark(#355b3c, #b9d5b5)'
+  derived: 'light-dark(#526a77, #afc9d2)'
+  derived-bg: 'light-dark(#eaf0f3, #25333a)'
   capture-end: 'light-dark(#387859, #8bc5a3)'
   diff-add-bg: 'light-dark(#eff7f2, #202e26)'
   diff-delete-bg: 'light-dark(#fff2f2, #332326)'
@@ -149,29 +149,37 @@ components:
     typography: '{typography.source-code}'
 ---
 
-# Design System: Traceframe
+# Design System: Quoli
 
 ## Overview
 
 **Creative North Star: "The session workbench"**
 
-Traceframe starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained violet selection support that hierarchy; a palette change alone does not define the workflow.
+Quoli starts with sessions, opens a readable document, and reveals exact source evidence when requested. A grouped work list, a document with properties, and a split review queue serve different tasks. Compact neutral chrome and restrained fern selection support that hierarchy; a palette change alone does not define the workflow.
 
-This records the shipped founder-approved direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and dark, light, and mobile screenshots, not a new visual proposal.
+Landing and application now share the precise evidence desk direction: neutral planes, fern interaction and explicit source limits. Workspace/discovery, investigation and lifecycle surfaces are implemented under #52–#54; final full-suite QA and independent material review are recorded in the [whole-product experience rebuild](../../docs/work/product-experience.md).
+
+The workspace sections record the implemented direction in `../../docs/design/session-workspace.md`, informed by `../../docs/design/product-ui-research.md`. It supersedes the spacious municipal dashboard and the earlier compact restyle as design authority. The root layout's `founder-compact-workbench` contract describes this session-first implementation. This is a revisable scan of built CSS/components and production dark, light and mobile captures. Earlier workspace references remain useful structural context; they do not establish acceptance of this increment.
 
 **Key Characteristics:**
 - Sessions first; global destinations stay stable.
 - Readable requests and recorded work precede raw source detail.
-- Neutral dark/light surfaces, local Geist, restrained violet emphasis.
+- Neutral dark/light surfaces, local Geist, restrained fern emphasis.
 - Explicit source, uncertainty, capture state, and unavailable-data language.
 
 ## Colors
 
+### Landing-specific tokens
+
+The `/landing` surface uses scoped `--q-*` properties from `app/components/landing/landing.css`; it does not replace the workspace palette below. Dark is the default and light is an explicit override. These pairs are dark / light: `bg` #141717 / #f9faf8, `surface` #1b1f1e / #ffffff, `raised` #222725 / #eef2ed, `ink` #f0f3f1 / #202a24, `muted` #a8b2ac / #59655d, `line` #343e38 / #d6ded6, `accent` #b9d5b5 / #355b3c, `button` #c6e1c1 / #2f5138, `button-ink` #172b1c / #ffffff, `add` #243b2d / #e6f1e6, `remove` #382b2c / #f8eaea, `negative` #e3adaf / #95434d and `warning` #dec49b / #805b24. Fern green identifies actions and selected evidence; literal labels and diff signs carry meaning alongside color. CSS is the source of truth for these scoped tokens; frontmatter above describes the current workspace. Some specialist source/diff surfaces retain literal neutral pairs rather than root variables.
+
+### Workspace palette
+
 Frontmatter preserves the shipped `light-dark(light, dark)` values. Dark is the default; the root `data-theme` attribute sets `color-scheme` so the theme control changes actual paint. Theme is persisted locally. Keep paired values together rather than treating one theme as the token source.
 
 ### Primary
-- **Restrained Violet** (`accent`, `accent-dark`): links, active session tabs, focus, and source actions. Primary filled buttons have distinct `primary-fill`, `primary-border`, and `primary-hover` values with white text; the pale dark-theme link accent is not their fill.
-- **Selection Wash** (`selected`): selected evidence and queue items, plus recorded-basis backgrounds. Primary navigation selection is neutral (`nav-selected`), with a neutral hover (`nav-hover`).
+- **Restrained Fern** (`accent`, `accent-dark`): links, active session tabs, focus, and source actions. Primary filled buttons have distinct `primary-fill`, `primary-border`, and `primary-hover` values with white text; the pale dark-theme link accent is not their fill.
+- **Selection Wash** (`selected`): selected evidence and queue items, plus recorded-basis backgrounds. Primary navigation selection uses the fern-neutral wash (`nav-selected`), with a quiet hover (`nav-hover`). These frontmatter names also describe extracted literal component values, not additional CSS variable declarations.
 
 ### Secondary
 - **Recorded / Derived** (`recorded`, `derived`, `derived-bg`): explicit provenance badges. Derived links and snapshot comparisons retain their basis wording.
@@ -191,6 +199,12 @@ Frontmatter preserves the shipped `light-dark(light, dark)` values. Dark is the 
 
 ## Typography
 
+### Landing type
+
+The landing uses locally bundled Geist Variable with sans-serif fallback, body 15px/1.6. Display type is `clamp(42px, 4.4vw, 64px)`, weight 520, line-height 1.09, tracking −0.038em; section headings are `clamp(30px, 3vw, 42px)`, weight 500, line-height 1.2 and tracking −0.03em. Hero supporting text is 16px/1.75, capability reading text 14px/1.85, and example metadata 10–12px. Code uses SFMono-Regular, Consolas, Liberation Mono and monospace at 12px/1.9. At 1100px the hero title is 60px; at 760px it becomes `clamp(35px, 7.8vw, 54px)` and supporting text 15px.
+
+### Workspace type
+
 Geist Variable is bundled locally through `@fontsource-variable/geist`, with Segoe UI and sans-serif fallbacks. Code, paths, IDs, and timestamps use the frontmatter monospace stack. No external font fetch is required.
 
 The hierarchy is compact but readable: page headings use `headline`, session titles use `session-title`, document section headings use `section-title`, and developer requests use the larger, relaxed `request` role. Request text preserves line breaks within (72ch); explanatory document text uses (13px / 1.8), usually within (75ch). Sequence titles and queue titles use (13px, weight 500). Property labels are (11px); values are (12px). Counts use tabular numerals where implemented.
@@ -201,7 +215,13 @@ Activity titles use (14px, weight 500), previews (13px), and tool previews/sourc
 
 ## Layout
 
-The shell has a fixed sidebar (228px), toolbar (minimum 52px), and main workspace capped at (1640px), padded (24px 28px). The review maximum becomes (1600px) on wide screens. Stable navigation is Sessions, Needs review, and Project overview; the recent-session duplicate list is no longer the shell model.
+### Landing layout
+
+The precise evidence desk places the review example near the offer. Content caps at 1180px with 48px side margins; the sticky header caps at 1360px with 32px margins and a 76px minimum height. Hero copy uses two columns, the example a 31% context rail, capabilities three ruled columns, and privacy/setup two columns. At 1100px, content margins become 32px and hero copy stacks. At 760px, margins become 20px, the header becomes 64px, anchor navigation hides, and the example/capabilities/privacy/setup stack. Theme and workspace access remain visible. Context properties use three columns; code scrolls within its panel. At 360px margins reduce to 14px. Anchor targets have 94px scroll clearance. See [the landing reference](../../docs/design/landing-page.md) for screenshots and full surface behavior.
+
+### Workspace layout
+
+The shell has a fixed sidebar (228px), toolbar (minimum 52px), and main workspace capped at (1640px), padded (24px 28px). The review maximum becomes (1600px) on wide screens. Stable navigation is Sessions, Needs review, Settings, and Project overview; the recent-session duplicate list is no longer the shell model.
 
 Sessions uses one view toolbar, a grouped flat table, and rules rather than cards. Desktop columns allocate title/state/observations/gaps/date (44/20/12/7/17 percent); session buttons have minimum height (48px). Search, capture-state filter, and Display grouping/order controls belong to this list.
 
@@ -218,6 +238,9 @@ Responsive behavior follows the final cascade:
 
 ## Elevation & Depth
 
+Landing depth uses rules and neutral tonal planes. Its 9px example panel has `0 24px 60px #00000018`; code has 5px corners and buttons 6px. The privacy symbol is circular. The example's 500ms clipping/8px reveal runs only under `prefers-reduced-motion: no-preference`; primary button backgrounds transition over 160ms ease-out.
+
+
 Flat planes, fine rules, text hierarchy, and restrained selected fills carry most depth. Registers and review sections have no resting card shadow. Source inspection and temporary disclosures provide the exceptions: Display options use `0 8px 24px #00000024`; the source dialog retains `0 24px 70px #13224633`, with backdrop `#14203a66`. The inherited help disclosure uses `0 10px 30px #19294d1a`. Diff-layout selection now uses a flat neutral fill with no shadow.
 
 Buttons and rows use (160ms ease-out) background/border transitions where defined. With motion permitted, Review arrives through a small clipping reveal (180ms ease-out); reduced-motion disables animations and transitions. Do not add decorative motion to captured evidence.
@@ -230,9 +253,14 @@ Payloads wrap safely and scroll inside bounded regions; diff code preserves whit
 
 ## Components
 
+### Landing interactions and boundaries
+
+The header links to anchors and `/`; the example opens a specific local sample. Three evidence tabs share a labeled panel with roving tab stops, Arrow Left/Right, Home/End and a keyboard-reachable panel. A skip link and 2px accent focus ring with 5px offset support keyboard navigation. Theme updates document and landing attributes and persists the shared historical `traceframe-theme` local key; unavailable storage is tolerated. Copy writes the two demo commands, shows **Copied** or manual-copy guidance, and resets after four seconds. No displayed command is executed. Keep the synthetic label, source context, reported-check limitations, unknown full-suite coverage, capture bounds and separate code/untracked consent. The following patterns describe the implemented application; final validation is recorded in the linked workspace reference.
+
+
 ### Navigation and theme
 
-Neutral current-route fill and `aria-current` distinguish stable destinations; session tabs use an accent underline and `aria-selected`. Keyboard arrows move among tabs. The header includes theme and refresh controls; theme changes the root attribute, not only the control label. Local project/source context remains separate from collector connection status.
+Fern-neutral current-route fill and `aria-current` distinguish stable destinations; session tabs use an accent underline and `aria-selected`. Keyboard arrows move among tabs. The header includes theme and refresh controls; theme changes the root attribute, not only the control label. Local project/source context remains separate from collector connection status.
 
 ### Buttons and fields
 
@@ -246,21 +274,35 @@ Grouped headings distinguish **No end recorded** and **End recorded**, each with
 
 ### Session document and properties
 
-Review presents Developer request, Repository changes, Recorded work, and Unresolved evidence. Requests are captured prose, not generated summaries. Missing requests, absent captures, unknown dirty state, unpaired results, and bounded pagination remain explicit. Tools are paired only through an unambiguous explicit-ID relationship; unmatched results remain separate. Source actions expose the exact retained observation. Capture count alone does not establish a code change.
+Review presents Developer request, Repository changes, Recorded work, Verification evidence, Source reconciliation and Unresolved evidence. Requests are captured prose, not generated summaries. Missing requests, absent captures, unknown dirty state, unpaired results, and bounded pagination remain explicit. Tools are paired only through an unambiguous explicit-ID relationship; unmatched results remain separate. Source actions expose the exact retained observation. Capture count alone does not establish a code change.
 
 The property rail holds source, capture state, repository, UTC date, ID, observation count, code policy, and reported usage. Unknown values stay unknown. Failed session metadata replaces the document with a clear unavailable state and retry/navigation actions. Exact inspection stays beside Review; below (1100px), native modal focus, Escape dismissal, and restoration preserve the same source selection across breakpoint changes.
 
 ### Needs review queue
 
-Each item shows a human-readable captured gap, session context, and uncertainty. Selection has a quiet violet wash; hover uses the neutral soft surface. Desktop preserves the queue beside detail; mobile uses list/detail with a return action. Detail leads with the recorded fact and limitation, then supporting source/provenance; raw JSON is disclosed on demand. Counts and paging describe loaded evidence. Partial failures remain incomplete with retry controls. There is no persisted resolve, snooze, or all-clear state.
+Each item shows a human-readable captured gap, session context, and uncertainty. Selection has a quiet fern wash; hover uses the neutral soft surface. Desktop preserves the queue beside detail; mobile uses list/detail with a return action. Detail leads with the recorded fact and limitation, then supporting source/provenance; raw JSON is disclosed on demand. Counts and paging describe loaded evidence. Partial failures remain incomplete with retry controls. There is no persisted resolve, snooze, or all-clear state.
 
-### Activity, Changes, Usage, and Coverage
+### Connection, overview and recovery
 
-Activity retains search over the retained session, explicit filter states, source/receipt ordering, keyboard traversal, pagination, and optional exact inspection. Recorded and derived badges always include wording. Source views retain copy feedback, unavailable-content labels, relationships, source provenance, and normalized-record disclosures.
+Sessions and Overview share a native connection disclosure, open by default for an empty available project. It offers source checkout / installed CLI commands and an unchecked file-content consent box. Commands are copied, never executed; untracked consent remains separate. Copy status and manual-copy fallback clear after four seconds or option changes. The two-column 22px-padded guide stacks at 799px with 16px padding. Session search has a named clear action.
+
+Overview shows a ruled ledger of retained session/observation/gap counts bounded to 50 sessions, three recent rows, a recorded-gap queue and a review-path explanation. Failed summaries retain em dashes and offer Retry summaries. Gap links open Activity filtered to gaps. Collector unavailability, failed session summaries and unavailable metadata have literal recovery text; retained views remain usable where possible. Summary data is scoped to project/session so stale counts do not paint a newly selected session.
+
+### Settings and lifecycle
+
+Settings caps at 1100px with a sticky 160px section nav, 48px gap, and ruled Capture policy / Capture state / Retention / Storage / Delete evidence sections. At 900px the nav becomes a wrapping in-flow row and anchors gain 115px clearance. Policy and pause/resume save immediately with saving/saved/error status; failed writes show last confirmed values. Code consent also enables tool-output consent. Existing exclusions are counted, not edited here. Untracked-file consent is not exposed as a settings toggle.
+
+Retention selection stages a change; Apply retention or Cancel is explicit. The warning explains immediate irreversible expiry, or inability to restore deleted evidence when keeping everything. Deletion requires a second explicit action after explaining scope. Busy actions disable controls. Completion shows actual removed observations/captures/artifacts, stopped project storage/capture, and a return action; source files, transcripts and external backups remain outside deletion. Settings load failure offers retry and back navigation.
+
+### Activity, Changes, Map, Usage, and Coverage
+
+Activity retains search over the retained session, explicit filter states, source/receipt ordering, keyboard traversal, pagination, and optional exact inspection. Recorded and derived badges always include wording. Source views retain copy feedback, unavailable-content labels, relationships, source provenance, and normalized-record disclosures. Only the tool-ID rule labels its route as matching tool request/result; other relationships use Open related observation and keep recorded/derived/inferred basis wording.
 
 Changes retains before/after capture selectors, dirty/missing-baseline context, searchable status-labeled paths, unified/split controls, source links, explicit signs/line numbers, newline markers, and bounded paging. Unknown sides and inferred renames retain their basis/limitations. Selected code uses an inert, keyboard-scrollable region; no restore or replay action exists.
 
-Usage retains category counts, labeled composition, formula, and supporting observations; unknown counts are never zero-filled. Coverage explains the evidence limits. Neither view creates a correctness verdict, productivity score, file cost allocation, or live-agent claim.
+Map offers Retry map and an Open captured changes fallback on failure; bounded nodes and edges retain their provenance and uncertainty. Source reconciliation is collapsed behind Inspect joined sources and reported totals; unavailable verification/join counts remain em dashes, with Refresh guidance rather than zero.
+
+Usage retains category counts, labeled composition, formula, and supporting observations; unknown counts are never zero-filled. Coverage distinguishes repository-only observation, fixtures and available session sources; retained records do not establish current integration connectivity. Missing session, policy or capture counts remain unavailable. Neither view creates a correctness verdict, productivity score, file cost allocation, or live-agent claim.
 
 ## Do's and Don'ts
 
@@ -269,7 +311,7 @@ Usage retains category counts, labeled composition, formula, and supporting obse
 - **Do** preserve readable captured requests, source actions, explicit uncertainty, and unknown values.
 - **Do** implement both actual root themes with the paired token values.
 - **Do** preserve mobile capture status, keyboard focus, source selection, and recovery from unavailable metadata.
-- **Do** keep local Geist, neutral rules, compact controls, and restrained violet emphasis.
+- **Do** keep local Geist, neutral rules, compact controls, and restrained fern emphasis.
 
 ### Don't:
 - **Don't** restore the municipal dashboard, cobalt selection system, or default overview as current authority.

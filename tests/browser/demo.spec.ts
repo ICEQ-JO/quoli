@@ -544,14 +544,14 @@ test("activity opens details on demand and theme choice survives reload", async 
   expect(new URL(page.url()).searchParams.has("event")).toBe(false);
   await page.getByRole("button", { name: "Switch to light theme" }).click();
   await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "light");
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(249, 250, 248)");
   await page.reload();
   await expect(page.getByRole("button", { name: "Switch to dark theme" })).toBeVisible();
   await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "light");
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(249, 250, 248)");
   await page.getByRole("button", { name: "Switch to dark theme" }).click();
   await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "dark");
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(23, 23, 25)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(20, 23, 23)");
 });
 
 test("session review keeps source inspection in context, supports breakpoint changes and opens code", async ({
@@ -720,6 +720,7 @@ test("project settings control capture and retention and state what deletion rem
   await page.getByRole("button", { name: "Resume capture" }).click();
   await expect(page.getByText("running", { exact: true })).toBeVisible();
   await page.getByRole("combobox", { name: "Keep evidence for" }).selectOption("30");
+  await page.getByRole("button", { name: "Apply retention", exact: true }).click();
   await expect(
     page.locator(".settings-section-heading").filter({ hasText: "30 days" }),
   ).toBeVisible();
@@ -731,15 +732,32 @@ test("project settings control capture and retention and state what deletion rem
 });
 
 test("deleting a project stops capture and reports what was removed", async ({ page }) => {
-  await page.goto("/");
-  await page
-    .getByRole("navigation", { name: "Workspace", exact: true })
-    .getByRole("button", { name: "Settings", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Delete retained evidence" }).click();
-  await page.getByRole("button", { name: "Delete this project's evidence" }).click();
-  await expect(page.getByText("Project evidence deleted")).toBeVisible();
-  await expect(page.getByText(/Capture and storage for this project are stopped/)).toBeVisible();
+  // Delete an isolated project so later journeys can still open the shared sample.
+  const root = mkdtempSync(join(tmpdir(), "quoli-delete-browser-"));
+  try {
+    execFileSync("git", ["init", "--quiet", root]);
+    writeFileSync(join(root, "example.ts"), "export const value = 1;\n");
+    execFileSync("git", ["-C", root, "add", "example.ts"]);
+    const cli = (...args: string[]) =>
+      execFileSync(process.execPath, ["--import", "tsx", "scripts/repository.ts", ...args], {
+        env: { ...process.env, TRACEFRAME_DATA_DIR: process.env.TRACEFRAME_E2E_DATA_DIR },
+        encoding: "utf8",
+        timeout: 30000,
+      });
+    const project = cli("register", root, "--name", "Deletion fixture", "--capture-code").match(
+      /repo_[a-f0-9]{32}/,
+    )?.[0];
+    expect(project).toBeTruthy();
+    cli("snapshot", project ?? "");
+    await page.goto(`/?project=${project}&view=settings`);
+    await page.getByRole("button", { name: "Delete retained evidence" }).click();
+    await page.getByRole("button", { name: "Delete this project's evidence" }).click();
+    await expect(page.getByText("Project evidence deleted")).toBeVisible();
+    await expect(page.getByText(/Capture and storage for this project are stopped/)).toBeVisible();
+    await expect(page.getByText(/1 observations, 1 repository captures/)).toBeVisible();
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test("connect once observes repository edits and commits without an agent integration", async ({

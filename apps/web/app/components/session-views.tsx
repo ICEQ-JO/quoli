@@ -126,16 +126,22 @@ export function UsagePanel({
 export function CoveragePanel({
   session,
   project,
-  snapshotCount = 0,
+  snapshotCount = null,
 }: {
   session: Session | undefined;
   project?: Project;
-  snapshotCount?: number;
+  snapshotCount?: number | null;
 }) {
   const rows = [
     [
       "Session boundaries",
-      session?.ended ? "End recorded" : "End unavailable",
+      !session
+        ? "Capture state unavailable"
+        : session.kind === "repository"
+          ? "Repository observation"
+          : session.ended
+            ? "End recorded"
+            : "No end recorded",
       "An end event does not mean every tool result was captured.",
     ],
     [
@@ -145,24 +151,40 @@ export function CoveragePanel({
     ],
     [
       "File changes",
-      snapshotCount ? `${snapshotCount} snapshots captured` : "No snapshots captured",
+      snapshotCount === null
+        ? "Capture count unavailable"
+        : snapshotCount
+          ? `${snapshotCount} snapshots captured`
+          : "No snapshots captured",
       "Referenced paths are not captured diffs or evidence of exclusive authorship.",
     ],
     [
       "Agent integration",
-      project?.synthetic ? "Synthetic sources only" : "No live agent connected",
-      "No real agent is connected. Live Claude Code capture remains upcoming.",
+      !project
+        ? "Source unavailable"
+        : project.synthetic
+          ? "Synthetic sources only"
+          : session?.kind === "repository"
+            ? "Repository-only observation"
+            : "Available session sources",
+      project?.synthetic
+        ? "Authored fixtures; no real agent is connected to this sample."
+        : session?.kind === "repository"
+          ? "Repository history is independent of agent hooks. It does not identify the author of an edit."
+          : "Detailed Claude Code activity requires an explicit integration. Retained records do not establish whether an integration is currently connected.",
     ],
     [
       "Content policy",
-      project?.synthetic
-        ? "Synthetic content enabled"
-        : project?.policy.code
-          ? "Code capture enabled"
-          : "Code capture disabled",
+      !project
+        ? "Policy unavailable"
+        : project.synthetic
+          ? "Synthetic content enabled"
+          : project?.policy.code
+            ? "Code capture enabled"
+            : "Code capture disabled",
       project?.synthetic
         ? "This fixed demo project retains authored fixtures."
-        : "Repository registration controls code and untracked capture. Prompt and tool-output capture remain disabled for manual reviews.",
+        : "Capture policy applies to new observations. Code and untracked files require explicit consent; paused or disabled capture can leave gaps in retained evidence.",
     ],
     [
       "Privacy",

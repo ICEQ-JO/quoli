@@ -2,12 +2,11 @@
 
 import type { Session } from "@traceframe/schema";
 import { number } from "@traceframe/ui";
-import { useEffect, useState } from "react";
+import { ConnectionGuide } from "./connection-guide";
 import { Icon } from "./ui-icon";
+import { sourceDate, useWorkspaceSummaries } from "./workspace-data";
 
-type Counts = { kindCounts: Record<string, number> };
 type Props = {
-  view: "Overview" | "Sessions";
   sessions: Session[];
   project: string;
   projectName: string;
@@ -19,17 +18,8 @@ type Props = {
   onGaps: (id: string) => void;
   onLibrary: () => void;
 };
-function sourceDate(value: string | null) {
-  if (!value) return "Source date unavailable";
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(value));
-}
+
 export function WorkspaceHome({
-  view,
   sessions,
   project,
   projectName,
@@ -41,165 +31,57 @@ export function WorkspaceHome({
   onGaps,
   onLibrary,
 }: Props) {
-  const [summaries, setSummaries] = useState<Record<string, Counts>>({});
-  const [countsLoading, setCountsLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
-  const [retry, setRetry] = useState(0);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: explicit refresh and retry reload retained summaries.
-  useEffect(() => {
-    const abort = new AbortController();
-    setCountsLoading(true);
-    setFailed(false);
-    setSummaries({});
-    Promise.all(
-      sessions.map(async (s) => {
-        const response = await fetch(
-          `/api/data?${new URLSearchParams({ resource: "summary", project, session: s.id })}`,
-          { signal: abort.signal, cache: "no-store" },
-        );
-        if (!response.ok) throw new Error("Session summaries unavailable");
-        return [s.id, await response.json()] as const;
-      }),
-    )
-      .then((entries) => {
-        if (!abort.signal.aborted) setSummaries(Object.fromEntries(entries));
-      })
-      .catch(() => {
-        if (!abort.signal.aborted) setFailed(true);
-      })
-      .finally(() => {
-        if (!abort.signal.aborted) setCountsLoading(false);
-      });
-    return () => abort.abort();
-  }, [project, sessions, refresh, retry]);
-  const countsReady = !loading && !countsLoading && !failed && !unavailable;
-  const gapTotal = countsReady
-    ? sessions.reduce((sum, s) => sum + (summaries[s.id]?.kindCounts.gap ?? 0), 0)
+  const evidence = useWorkspaceSummaries(project, sessions, refresh);
+  const ready = !loading && !unavailable && !evidence.loading && !evidence.failed;
+  const gapTotal = ready
+    ? sessions.reduce(
+        (sum, session) => sum + (evidence.summaries[session.id]?.kindCounts.gap ?? 0),
+        0,
+      )
     : null;
-  const filtered = sessions.filter(
-    (s) =>
-      s.title.toLowerCase().includes(search.trim().toLowerCase()) &&
-      (status === "all" || (status === "ended" ? s.ended : !s.ended)),
-  );
-  const rows = view === "Overview" ? sessions.slice(0, 3) : filtered;
-  const gaps = countsReady
-    ? sessions.filter((s) => (summaries[s.id]?.kindCounts.gap ?? 0) > 0)
+  const gaps = ready
+    ? sessions.filter((session) => (evidence.summaries[session.id]?.kindCounts.gap ?? 0) > 0)
     : [];
   return (
     <>
-      <div className="home-heading">
+      <header className="home-heading">
         <div>
-          <h1>{view === "Overview" ? "Workspace overview" : "Sessions"}</h1>
-          <p>
-            {view === "Overview"
-              ? "A clear view of your agent’s work. Evidence first."
-              : "Find a session. Follow the activity. Inspect the evidence."}
-          </p>
+          <h1>Workspace overview</h1>
+          <p>{projectName} · Your local work, with the evidence to take a closer look.</p>
         </div>
         <span className="workspace-badge">
           <span />
           {synthetic ? "Synthetic workspace" : "Local workspace"}
         </span>
-      </div>
-      {view === "Overview" ? (
-        <>
-          <section className="workspace-ledger" aria-label="Retained workspace counts">
-            <div>
-              <Icon name="sessions" />
-              <strong>{loading || unavailable ? "—" : sessions.length}</strong>
-              <span>sessions</span>
-            </div>
-            <div>
-              <Icon name="activity" />
-              <strong>
-                {loading || unavailable ? "—" : number(sessions.reduce((n, s) => n + s.count, 0))}
-              </strong>
-              <span>observations</span>
-            </div>
-            <div className="ledger-gap">
-              <Icon name="alert" />
-              <strong>{number(gapTotal)}</strong>
-              <span>recorded capture gaps</span>
-            </div>
-            <span className="ledger-caption">Derived from retained history</span>
-          </section>
-          <div className="preview-banner">
-            <div className="preview-banner-icon">
-              <Icon name="branch" size={22} />
-            </div>
-            <div>
-              <strong>
-                {synthetic
-                  ? "Your review workspace, ready to explore."
-                  : "Your repository, observed locally."}
-              </strong>
-              <p>
-                {synthetic
-                  ? "These sessions are authored examples. Open one to trace requests, results, and the evidence in between."
-                  : "Open a review to inspect available repository captures. Code and untracked files are captured only with explicit consent."}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="button primary"
-              disabled={!sessions.length}
-              onClick={() => sessions[0] && onSession(sessions[0].id)}
-            >
-              {synthetic ? "Explore a session" : "Open a review"}
-              <Icon name="arrow-right" size={16} />
-            </button>
-          </div>
-        </>
-      ) : (
-        <div className="library-controls">
-          <div className="search-field">
-            <Icon name="search" />
-            <input
-              aria-label="Search sessions"
-              placeholder="Search sessions…"
-              value={search}
-              maxLength={200}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button
-                type="button"
-                className="icon-button"
-                aria-label="Clear session search"
-                onClick={() => setSearch("")}
-              >
-                <Icon name="close" size={15} />
-              </button>
-            )}
-          </div>
-          <select
-            aria-label="Session capture state"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="all">All capture states</option>
-            <option value="ended">End recorded</option>
-            <option value="open">End not recorded</option>
-          </select>
-          <span>
-            {filtered.length} of {sessions.length} sessions
-          </span>
+      </header>
+      <section className="workspace-ledger" aria-label="Retained workspace counts">
+        <div>
+          <Icon name="sessions" />
+          <strong>{loading || unavailable ? "—" : sessions.length}</strong>
+          <span>sessions</span>
         </div>
-      )}
-      <div className={view === "Overview" ? "overview-columns" : "library-layout"}>
+        <div>
+          <Icon name="activity" />
+          <strong>
+            {loading || unavailable ? "—" : number(sessions.reduce((n, s) => n + s.count, 0))}
+          </strong>
+          <span>observations</span>
+        </div>
+        <div className="ledger-gap">
+          <Icon name="alert" />
+          <strong>{number(gapTotal)}</strong>
+          <span>recorded capture gaps</span>
+        </div>
+        <span className="ledger-caption">Derived from retained history · up to 50 sessions</span>
+      </section>
+      <ConnectionGuide empty={!loading && !unavailable && sessions.length === 0} />
+      <div className="overview-columns">
         <section className="session-register" aria-label="Session register">
           <div className="register-heading">
-            <h2>{view === "Overview" ? "Recent sessions" : "All sessions"}</h2>
-            {view === "Overview" ? (
-              <button type="button" className="text-button" onClick={onLibrary}>
-                View all
-                <Icon name="arrow-right" size={15} />
-              </button>
-            ) : (
-              <span>Source dates · UTC</span>
-            )}
+            <h2>Recent sessions</h2>
+            <button type="button" className="text-button" onClick={onLibrary}>
+              View all <Icon name="arrow-right" size={15} />
+            </button>
           </div>
           <div className="register-columns">
             <span>Session</span>
@@ -207,37 +89,48 @@ export function WorkspaceHome({
             <span>Observations</span>
             <span />
           </div>
-          {loading && !sessions.length ? (
+          {loading ? (
             <div className="home-loading" role="status">
-              Loading your local sessions…
+              Loading local sessions…
               <div className="skeleton-line" />
               <div className="skeleton-line" />
             </div>
-          ) : rows.length ? (
-            rows.map((s) => (
+          ) : unavailable ? (
+            <div className="activity-empty">
+              <Icon name="alert" size={24} />
+              <h2>Sessions unavailable</h2>
+              <p>Local metadata couldn’t load. Use Retry above to reconnect.</p>
+            </div>
+          ) : sessions.length ? (
+            sessions.slice(0, 3).map((session) => (
               <button
                 className="register-row"
                 type="button"
-                key={s.id}
-                onClick={() => onSession(s.id)}
+                key={session.id}
+                onClick={() => onSession(session.id)}
               >
                 <span className="register-session-icon">
-                  <Icon name="session" size={20} />
+                  <Icon name={session.kind === "repository" ? "branch" : "session"} size={20} />
                 </span>
                 <span className="register-session">
-                  <strong>{s.title}</strong>
+                  <strong>{session.title}</strong>
                   <span>
                     <span className="fixture-tag">{synthetic ? "Fixture" : "Local"}</span>
-                    <span>{sourceDate(s.startedAt)}</span>
-                    <span className="register-project">{projectName}</span>
+                    <span>{sourceDate(session.startedAt)}</span>
                   </span>
                 </span>
-                <span className={`capture-pill ${s.ended ? "" : "warning"}`}>
+                <span
+                  className={`capture-pill ${!session.ended && session.kind !== "repository" ? "warning" : ""}`}
+                >
                   <i />
-                  {s.ended ? "End recorded" : "End not recorded"}
+                  {session.kind === "repository"
+                    ? "Repository observation"
+                    : session.ended
+                      ? "End recorded"
+                      : "No end recorded"}
                 </span>
                 <span className="register-count">
-                  {s.count}
+                  {session.count}
                   <small>observations</small>
                 </span>
                 <Icon name="arrow" size={16} />
@@ -245,133 +138,79 @@ export function WorkspaceHome({
             ))
           ) : (
             <div className="activity-empty">
-              <Icon name="search" size={26} />
-              <h2>
-                {sessions.length
-                  ? "No sessions match"
-                  : unavailable
-                    ? "Sessions unavailable"
-                    : "No retained sessions"}
-              </h2>
+              <Icon name="branch" size={24} />
+              <h2>No retained sessions</h2>
               <p>
-                {sessions.length
-                  ? "Try a different title or capture state."
-                  : unavailable
-                    ? "Local session metadata couldn’t load. Use Retry above to reconnect."
-                    : "Refresh after collecting local evidence. This preview does not connect a live agent."}
+                Connect a repository above to begin. Repository history works without agent hooks.
               </p>
-              {sessions.length > 0 && (
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => {
-                    setSearch("");
-                    setStatus("all");
-                  }}
-                >
-                  Clear session filters
-                </button>
-              )}
             </div>
           )}
           <div className="register-footer">
             <Icon name="lock" size={14} />
-            <span>Stored locally · No live agent connected</span>
+            <span>Stored locally · Available evidence only</span>
           </div>
         </section>
-        {view === "Overview" && (
-          <aside className="review-queue" aria-label="Capture gap review queue">
-            <div className="queue-heading">
-              <Icon name="alert" size={18} />
-              <h2>Take a closer look</h2>
-              <span>{number(gapTotal)}</span>
+        <aside className="review-queue" aria-label="Capture gap review queue">
+          <div className="queue-heading">
+            <Icon name="alert" size={18} />
+            <h2>Take a closer look</h2>
+            <span>{number(gapTotal)}</span>
+          </div>
+          <p>Recorded gaps worth inspecting before drawing a conclusion.</p>
+          {unavailable ? (
+            <p className="queue-loading">
+              Workspace evidence unavailable. Use Retry above to reconnect.
+            </p>
+          ) : evidence.failed ? (
+            <div className="summary-error" role="alert">
+              <p>Capture gap summaries couldn’t load.</p>
+              <button className="button" type="button" onClick={evidence.retry}>
+                Retry summaries
+              </button>
             </div>
-            <p>Recorded gaps worth inspecting before drawing a conclusion.</p>
-            {unavailable ? (
-              <p className="queue-loading">
-                Workspace evidence unavailable. Use Retry above to reconnect.
-              </p>
-            ) : failed ? (
-              <div className="summary-error" role="alert">
-                <p>Capture gap summaries couldn’t load.</p>
-                <button className="button" type="button" onClick={() => setRetry((v) => v + 1)}>
-                  Retry summaries
-                </button>
-              </div>
-            ) : !countsReady ? (
-              <div className="queue-loading" role="status">
-                Loading capture gaps…
-              </div>
-            ) : gaps.length ? (
-              gaps.map((s) => (
-                <button
-                  className="queue-item"
-                  key={s.id}
-                  type="button"
-                  onClick={() => onGaps(s.id)}
-                >
-                  <span>
-                    <strong>{s.title}</strong>
-                    <small>
-                      {summaries[s.id]?.kindCounts.gap} recorded{" "}
-                      {summaries[s.id]?.kindCounts.gap === 1 ? "gap" : "gaps"}
-                    </small>
-                  </span>
-                  <Icon name="arrow" size={16} />
-                </button>
-              ))
-            ) : (
-              <p className="queue-loading">
-                No explicit gaps recorded. Capture may still be incomplete.
-              </p>
-            )}
-            <div className="queue-footnote">
-              <Icon name="info" size={15} />
-              <span>
-                A gap describes available capture, not whether the agent’s work was correct.
-              </span>
+          ) : !ready ? (
+            <div className="queue-loading" role="status">
+              Loading capture gaps…
             </div>
-          </aside>
-        )}
+          ) : gaps.length ? (
+            gaps.map((session) => (
+              <button
+                className="queue-item"
+                key={session.id}
+                type="button"
+                onClick={() => onGaps(session.id)}
+              >
+                <span>
+                  <strong>{session.title}</strong>
+                  <small>
+                    {evidence.summaries[session.id]?.kindCounts.gap} recorded{" "}
+                    {evidence.summaries[session.id]?.kindCounts.gap === 1 ? "gap" : "gaps"}
+                  </small>
+                </span>
+                <Icon name="arrow" size={16} />
+              </button>
+            ))
+          ) : (
+            <p className="queue-loading">
+              No explicit gaps recorded. Capture may still be incomplete.
+            </p>
+          )}
+          <div className="queue-footnote">
+            <Icon name="info" size={15} />
+            <span>A gap describes available capture, not whether the work was correct.</span>
+          </div>
+        </aside>
       </div>
-      {view === "Overview" && (
-        <section className="review-guide" aria-label="How to review a session">
-          <div>
-            <Icon name="trace" size={23} />
-            <h2>From activity to understanding.</h2>
-            <p>Three perspectives on the same evidence.</p>
-          </div>
-          <ol>
-            <li>
-              <span className="guide-route">
-                <Icon name="activity" />
-              </span>
-              <div>
-                <strong>Follow the activity</strong>
-                <p>Prompts, tool requests, and reported results in one retained history.</p>
-              </div>
-            </li>
-            <li>
-              <span className="guide-route">
-                <Icon name="link" />
-              </span>
-              <div>
-                <strong>Inspect the source</strong>
-                <p>Open a payload and follow links established by explicit tool IDs.</p>
-              </div>
-            </li>
-            <li>
-              <span className="guide-route">
-                <Icon name="shield" />
-              </span>
-              <div>
-                <strong>Keep uncertainty visible</strong>
-                <p>Check usage and coverage. Missing evidence stays unknown.</p>
-              </div>
-            </li>
-          </ol>
-        </section>
-      )}
+      <section className="workspace-review-path" aria-label="How to review a session">
+        <h2>From the request to the source.</h2>
+        <p>
+          Open a session to read its captured request and available work. Compare file versions in
+          Changes. Follow any source link to inspect the retained observation and its provenance.
+        </p>
+        <button type="button" className="text-button" onClick={onLibrary}>
+          Choose a session <Icon name="arrow-right" size={15} />
+        </button>
+      </section>
     </>
   );
 }

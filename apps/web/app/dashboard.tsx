@@ -73,15 +73,17 @@ async function readPage(
   query: EventQuery,
   signal?: AbortSignal,
 ): Promise<EventPage> {
+  if (signal?.aborted) throw new DOMException("Superseded search", "AbortError");
   // Search text stays in a bounded POST body, never in the URL or access-log path.
   const response = await fetch("/api/data", {
     method: "POST",
     cache: "no-store",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project, session, query }),
-    signal,
+    signal: AbortSignal.timeout(8000),
   });
   const data = await response.json();
+  if (signal?.aborted) throw new DOMException("Superseded search", "AbortError");
   if (!response.ok) throw new Error(data.error ?? "Could not search this session.");
   return data;
 }
@@ -97,7 +99,7 @@ export default function Dashboard() {
     [ready, setReady] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]),
     [sessions, setSessions] = useState<Session[]>([]),
-    [summary, setSummary] = useState<Summary | null>(null);
+    [summaryState, setSummary] = useState<{ scope: string; data: Summary } | null>(null);
   const [page, setPage] = useState<EventPage>({ events: [], nextCursor: null, total: 0 }),
     [selected, setSelected] = useState<StoredEvent | null>(null);
   const [search, setSearch] = useState(""),
@@ -111,6 +113,7 @@ export default function Dashboard() {
     [online, setOnline] = useState(false),
     [refresh, setRefresh] = useState(0);
   const [metadataFailed, setMetadataFailed] = useState(false);
+  const [summaryFailed, setSummaryFailed] = useState(false);
   const [metadataLoading, setMetadataLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(""),
     [copyErrorId, setCopyErrorId] = useState("");
@@ -122,6 +125,7 @@ export default function Dashboard() {
     rowRefs = useRef(new Map<string, HTMLButtonElement>()),
     copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { project, session, view, event: eventId } = location;
+  const summary = summaryState?.scope === `${project}:${session}` ? summaryState.data : null;
   const isWorkspace =
     view === "Overview" || view === "Sessions" || view === "Review queue" || view === "Settings";
   useEffect(() => {
@@ -235,12 +239,15 @@ export default function Dashboard() {
     if (!ready || isWorkspace) return;
     const abort = new AbortController();
     setSummary(null);
+    setSummaryFailed(false);
     read<Summary>({ resource: "summary", project, session }, abort.signal)
       .then((data) => {
-        if (!abort.signal.aborted) setSummary(data);
+        if (!abort.signal.aborted) setSummary({ scope: `${project}:${session}`, data });
       })
-      .catch((e) => {
-        if (!abort.signal.aborted) setError(e.message);
+      .catch(() => {
+        if (!abort.signal.aborted) {
+          setSummaryFailed(true);
+        }
       });
     return () => abort.abort();
   }, [ready, project, session, refresh, isWorkspace]);
@@ -350,7 +357,7 @@ export default function Dashboard() {
     )
       dialog.current?.showModal();
   }
-  function chooseSession(id: string) {
+  function chooseSession(id: string, target: View = "Session review") {
     pageEpoch.current++;
     setSearch("");
     setDebouncedSearch("");
@@ -366,7 +373,7 @@ export default function Dashboard() {
       before: "",
       after: "",
       file: "",
-      view: "Session review",
+      view: target,
     });
   }
   async function more() {
@@ -439,7 +446,7 @@ export default function Dashboard() {
       onFollow={openEvidence}
     />
   );
-  const count = current?.count ?? 0;
+  const count = current?.count ?? null;
   const tabs = (target: View) => navigate({ ...location, view: target });
   // Read local navigation before mounting evidence views. This prevents requests
   // for the fallback project/view and avoids briefly showing the wrong workspace.
@@ -452,7 +459,7 @@ export default function Dashboard() {
   return (
     <div className="review-app" data-theme={theme}>
       <a className="skip-link" href="#session-content">
-        Skip to session
+        Skip to workspace
       </a>
       <aside className="app-sidebar">
         <a className="app-brand" href="/" aria-label="Quoli home">
@@ -495,7 +502,11 @@ export default function Dashboard() {
         <nav className="primary-nav" aria-label="Workspace">
           <button
             type="button"
-            aria-current={view !== "Overview" && view !== "Review queue" ? "page" : undefined}
+            aria-current={
+              view !== "Overview" && view !== "Review queue" && view !== "Settings"
+                ? "page"
+                : undefined
+            }
             onClick={() => navigate({ ...location, view: "Sessions", event: "" })}
           >
             <Icon name="sessions" />
@@ -579,7 +590,11 @@ export default function Dashboard() {
             </button>
             <span className={`collector-state ${online ? "online" : ""}`}>
               <i />
-              {online ? "Collector connected" : "Connecting…"}
+              {online
+                ? "Collector connected"
+                : metadataFailed
+                  ? "Collector unavailable"
+                  : "Connecting…"}
             </span>
             <button
               className="button subtle"
@@ -658,7 +673,6 @@ export default function Dashboard() {
               )}
               {view === "Overview" && (
                 <WorkspaceHome
-                  view="Overview"
                   sessions={sessions}
                   project={project}
                   projectName={projectName}
@@ -669,7 +683,7 @@ export default function Dashboard() {
                   onSession={chooseSession}
                   onLibrary={() => navigate({ ...location, view: "Sessions", event: "" })}
                   onGaps={(id) => {
-                    chooseSession(id);
+                    chooseSession(id, "Timeline");
                     setKind("gap");
                   }}
                 />
@@ -736,7 +750,7 @@ export default function Dashboard() {
                   disabled={!summary || !gaps}
                 >
                   <Icon name="alert" size={17} />
-                  Review gaps<span>{gaps}</span>
+                  Review gaps<span>{summary ? gaps : "—"}</span>
                 </button>
               </div>
               <div className={`session-facts ${view === "Session review" ? "brief-facts" : ""}`}>
@@ -760,7 +774,9 @@ export default function Dashboard() {
                   <div>
                     {synthetic
                       ? "These sessions are authored fixtures. No coding agent is connected."
-                      : "These are local repository observations. No coding agent is connected."}{" "}
+                      : current?.kind === "repository"
+                        ? "These are local repository observations, independent of agent sessions."
+                        : "These are retained session observations. Available activity depends on the sources enabled during capture."}{" "}
                     Recorded commands are never executed. Referenced file paths alone do not prove a
                     change or its author.
                   </div>
@@ -785,7 +801,22 @@ export default function Dashboard() {
                       navigate(initialLocation);
                     }}
                   >
-                    Open demo session
+                    Back to sessions
+                  </button>
+                </div>
+              )}
+              {summaryFailed && (
+                <div className="error-notice" role="alert">
+                  <Icon name="alert" size={18} />
+                  <div>
+                    <strong>Session summary unavailable</strong>
+                    <p>
+                      Counts, reported usage and verification summaries could not load. Other
+                      retained evidence is still available.
+                    </p>
+                  </div>
+                  <button type="button" className="button" onClick={() => setRefresh((n) => n + 1)}>
+                    Retry summary
                   </button>
                 </div>
               )}
@@ -821,7 +852,7 @@ export default function Dashboard() {
                             : v === "Reported usage"
                               ? "Usage"
                               : "Coverage"}
-                    {v === "Timeline" && <span>{count}</span>}
+                    {v === "Timeline" && <span>{number(count)}</span>}
                   </button>
                 ))}
               </div>
@@ -910,7 +941,7 @@ export default function Dashboard() {
                             }}
                           >
                             {f.label}
-                            {f.key === "gap" && gaps > 0 && <span>{gaps}</span>}
+                            {f.key === "gap" && gaps > 0 && <span>{summary ? gaps : "—"}</span>}
                           </button>
                         ))}
                       </fieldset>
@@ -1114,14 +1145,16 @@ export default function Dashboard() {
                     <UsagePanel usage={summary.usage} onEvidence={openEvidence} />
                   ) : (
                     <div className="view-loading" role="status">
-                      Loading reported usage…
+                      {summaryFailed
+                        ? "Reported usage unavailable. Use Retry summary above to reload the local evidence."
+                        : "Loading reported usage…"}
                     </div>
                   ))}
                 {view === "Capture coverage" && (
                   <CoveragePanel
                     session={current}
                     project={currentProject}
-                    snapshotCount={summary?.kindCounts.repository_snapshot ?? 0}
+                    snapshotCount={summary ? (summary.kindCounts.repository_snapshot ?? 0) : null}
                   />
                 )}
               </div>

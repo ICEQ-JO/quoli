@@ -18,13 +18,17 @@ Pausing stops new observations for the project. Retained evidence stays readable
 
 A retention window removes observations and repository captures older than the window. It is applied when the window changes and when new observations arrive. Derived views are rebuilt from what remains, so removed evidence never keeps a factual claim alive: a deleted result simply stops existing, and the relationships, checks, usage and change map are recomputed from the retained record.
 
+In Settings, selecting a new window stages the change. **Apply retention** explains that expired evidence is deleted immediately and cannot be recovered; **Cancel retention change** restores the last confirmed value. Policy and pause controls save immediately and report success or failure.
+
 ## Deletion
 
 Deleting a project removes its observations, repository captures, artifacts and registration, truncates the local write-ahead log and stops capture and storage for it. A tombstone then rejects stale producers and in-flight retries for that project. Re-registering the project explicitly is an owner action that clears the tombstone and resumes capture.
 
+After a successful dashboard deletion, a terminal result shows the actual removed counts and offers a return to Sessions; stale policy and retention controls are no longer shown.
+
 Deletion is idempotent: an interrupted or repeated deletion reports the same result and removes nothing twice.
 
-Deletion is **not** secure physical erasure. Freed database pages, external backups, your source repository, the agent's own transcripts and anything outside Traceframe are untouched. The settings view states exactly this before you confirm.
+Deletion is **not** secure physical erasure. Freed database pages, external backups, your source repository, the agent's own transcripts and anything outside Quoli are untouched. The settings view states exactly this before you confirm.
 
 ## Commands
 

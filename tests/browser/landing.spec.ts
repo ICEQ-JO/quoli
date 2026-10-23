@@ -1,105 +1,106 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Quoli Landing Page", () => {
-  test("landing page renders hero headline, flight recorder rig, and quickstart snippet", async ({
+test.describe("Quoli product introduction", () => {
+  test("explains the offer and opens a real local sample review", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto("/landing");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Your agent moved fast.See what changed.",
+    );
+    await expect(page.getByText("Synthetic example", { exact: true })).toBeVisible();
+    await page.getByRole("link", { name: "Open the local sample" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Developer request", exact: true }),
+    ).toBeVisible();
+    await expect(page.locator(".session-document")).toContainText("cache");
+    expect(errors).toEqual([]);
+  });
+
+  test("example preserves the distinction between changes, process results, and unknowns", async ({
     page,
   }) => {
     await page.goto("/landing");
-
-    // Headline and subtext
-    await expect(
-      page.getByRole("heading", {
-        name: "Stop guessing what your coding agent touched. See the receipts.",
-      }),
-    ).toBeVisible();
-
-    // Flight recorder hero plate
-    await expect(page.locator(".flight-recorder-wrap")).toBeVisible();
-    await expect(page.locator(".meta-tag")).toContainText("INSTRUMENT TF-01");
-    await expect(page.locator(".iso-svg.flight-svg")).toBeVisible();
-
-    // Quickstart snippet
-    await expect(page.locator(".terminal-cmd")).toContainText(
-      "pnpm connect /path/to/repo --capture-code",
+    await expect(page.getByRole("region", { name: "Illustrative captured diff" })).toContainText(
+      "cache.entries ?? []",
     );
+    const changes = page.getByRole("tab", { name: "File changes", exact: true });
+    await changes.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.getByRole("tab", { name: "Recorded checks", exact: true })).toBeFocused();
+    await expect(page.getByRole("tabpanel")).toContainText(
+      "does not prove the whole application works",
+    );
+    await page.keyboard.press("End");
+    await expect(page.getByRole("tab", { name: "Missing evidence", exact: true })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(page.getByRole("tabpanel")).toContainText("Was the full suite run?");
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("tabpanel")).toBeFocused();
+    await page.getByRole("tab", { name: "File changes", exact: true }).click();
+    await expect(changes).toHaveAttribute("aria-selected", "true");
   });
 
-  test("interactive flight recorder steps through agent audit stages and updates telemetry", async ({
+  test("theme persists between marketing and workspace", async ({ page }) => {
+    await page.goto("/landing");
+    await page.getByRole("button", { name: "Switch to light mode" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await page.reload();
+    await expect(page.locator(".landing-root")).toHaveAttribute("data-theme", "light");
+    await page.getByRole("link", { name: "Open workspace" }).first().click();
+    await expect(page.getByRole("button", { name: "Switch to dark theme" })).toBeVisible();
+  });
+
+  test("setup copy confirms success only after writing and offers recovery on denial", async ({
     page,
+    context,
   }) => {
-    await page.goto("/landing");
-
-    // Step 1 initial state
-    await expect(page.locator(".meta-status-pill")).toContainText("CLAIMED ONLY");
-
-    // Click Step 2: Tool Execution
-    await page.getByRole("tab", { name: /02 \/\/ DISPATCH/i }).click();
-    await expect(page.locator(".meta-status-pill")).toContainText("UNVERIFIED MUTATION");
-    await expect(page.locator(".hud-val").first()).toContainText("0x3bc4..e71");
-
-    // Click Step 3: Assertion Audit
-    await page.getByRole("tab", { name: /03 \/\/ CHECK/i }).click();
-    await expect(page.locator(".meta-status-pill")).toContainText("INDEPENDENT TEST PASS");
-
-    // Click Step 4: Sealed Ledger
-    await page.getByRole("tab", { name: /04 \/\/ COMMIT/i }).click();
-    await expect(page.locator(".meta-status-pill")).toContainText("GROUND TRUTH RECORDED");
-    await expect(page.locator(".meta-status-pill")).toHaveAttribute("data-level", "verified");
-  });
-
-  test("theme toggle toggles data-theme between dark and light", async ({ page }) => {
-    await page.goto("/landing");
-
-    const root = page.locator(".landing-root");
-    await expect(root).toHaveAttribute("data-theme", "dark");
-
-    // Click theme toggle
-    await page.getByRole("button", { name: /switch to light mode/i }).click();
-    await expect(root).toHaveAttribute("data-theme", "light");
-
-    // Click back to dark mode
-    await page.getByRole("button", { name: /switch to dark mode/i }).click();
-    await expect(root).toHaveAttribute("data-theme", "dark");
-  });
-
-  test("workbench feature explorer switches tabs cleanly", async ({ page }) => {
-    await page.goto("/landing");
-
-    // Default tab is Session Review
-    await expect(
-      page.getByRole("heading", { name: "The Developer Request & Execution Receipt" }),
-    ).toBeVisible();
-
-    // Click Bounded Diffs tab
-    await page.getByRole("tab", { name: /Bounded Diffs/i }).click();
-    await expect(
-      page.getByRole("heading", { name: "Explicit Before/After Code Snapshots" }),
-    ).toBeVisible();
-    await expect(page.locator(".diff-path")).toContainText(
-      "packages/storage/src/migrations/004_indexes.sql",
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/landing#start");
+    const copy = page.getByRole("button", { name: "Copy demo commands" });
+    await copy.click();
+    await expect(copy).toContainText("Copied");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      "pnpm install --frozen-lockfile\npnpm demo",
     );
-
-    // Click Needs Review tab
-    await page.getByRole("tab", { name: /Needs Review/i }).click();
-    await expect(
-      page.getByRole("heading", { name: "Capture Gaps & Unverified Claims" }),
-    ).toBeVisible();
-    await expect(page.locator(".queue-badge.alert")).toBeVisible();
-  });
-
-  test("mobile viewport (390px) fits without horizontal overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/landing");
-
-    await expect(
-      page.getByRole("heading", {
-        name: "Stop guessing what your coding agent touched. See the receipts.",
-      }),
-    ).toBeVisible();
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth,
+    await page.evaluate(() => {
+      Object.defineProperty(navigator.clipboard, "writeText", {
+        value: () => Promise.reject(new Error("Denied")),
+      });
+    });
+    await copy.click();
+    await expect(page.getByRole("status")).toContainText(
+      "Couldn’t copy. Select the commands above",
     );
-    expect(hasHorizontalOverflow).toBe(false);
+    await expect(copy).toContainText("Copy");
   });
+
+  for (const width of [320, 390, 768, 1440]) {
+    test(`complete landing and example fit at ${width}px with reduced motion`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/landing");
+      await page.keyboard.press("Tab");
+      await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
+      expect(
+        await page
+          .locator(".q-example")
+          .evaluate((element) => getComputedStyle(element).animationName),
+      ).toBe("none");
+      for (const name of ["File changes", "Recorded checks", "Missing evidence"]) {
+        await page.getByRole("tab", { name, exact: true }).click();
+        await expect(page.getByRole("tabpanel")).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true,
+        );
+      }
+      await page.getByRole("link", { name: "Get started locally" }).click();
+      await expect(page.getByRole("button", { name: "Copy demo commands" })).toBeInViewport();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+    });
+  }
 });
