@@ -30,7 +30,7 @@ Nothing outside that project file is touched. Your global `~/.claude/settings.js
 | `PostToolUseFailure` | `tool_result` | The reported failure, including an interrupted call. |
 | `SessionEnd` | `session_end` | The session is closed. |
 
-Facts the source does not report stay unknown: the hook payload carries **no timestamp**, so observations are ordered by receipt, and it carries **no numeric exit code**, so the exit code of a command stays null. A failing command is recorded as a reported failure, not as a number.
+The bridge emits the shared v2 envelope, marking the source version `unreported` because hook payloads do not contain it, then naming the adapter identity, raw tool name/category and explicit unsupported declaration/activity fields. Facts the source does not report stay unknown: the hook payload carries **no timestamp**, so observations are ordered by receipt, and it carries **no numeric exit code**, so the exit code of a command stays null. A failing command is recorded as a reported failure, not as a number.
 
 A `Stop` event is not collected: it carries the assistant's final text for the turn, which the privacy policy may not allow.
 

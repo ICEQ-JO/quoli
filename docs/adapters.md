@@ -54,7 +54,7 @@ The conformance suite normalizes every recorded hook fixture and asserts the obs
 
 `adapterSupportsSourceVersion` returns `{ supported: true }` only for a listed version. Anything else returns an explicit `{ supported: false, reason: "unsupported_source_version", supportedVersions }`; there is no best-effort guess.
 
-Today the check is a contract helper, not a capture gate: the Claude hook payload does not report the Claude version, so the bridge cannot evaluate it. The collector already rejects an unsupported event schema version with a `400`. Per-source version gating needs the version carried on the event, which the v2 envelope and the Claude/OpenCode adapter issues deliver.
+The Claude bridge emits v2 evidence with source version `unreported`, its adapter identity, raw tool name/category, null activity identities and explicit unsupported declaration capabilities. The hook payload itself does not report the Claude version, so the registration's `2.1.306` support record applies only to the verified fixture contract; it is never copied into a live event or used as a runtime source-version gate. A future capture gate needs a version reported by the source rather than guessing from the locally installed CLI.
 
 ## Installed versus supported state
 

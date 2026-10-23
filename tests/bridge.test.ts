@@ -29,11 +29,24 @@ test("hook payloads normalize into observations with the observed identities", (
   for (const event of events) eventSchema.parse(event);
   const prompt = events.find((event) => event.payload.kind === "prompt");
   assert.ok(prompt);
+  assert.equal(prompt.schemaVersion, 2);
+  if (prompt.schemaVersion === 2) {
+    assert.equal(prompt.sourceVersion, "unreported");
+    assert.equal(prompt.adapterId, "claude-code-hook");
+    assert.equal(prompt.fieldCapabilities.plan, "unsupported");
+    assert.deepEqual(prompt.declared, {
+      plan: null,
+      decision: null,
+      approval: null,
+      correction: null,
+    });
+  }
   assert.equal(prompt.promptId, "22222222-2222-4222-8222-222222222222");
   assert.equal(prompt.sourceTime, null);
   const call = events.find((event) => event.payload.kind === "tool_call");
   assert.ok(call);
   assert.equal(call.toolId, "toolu_synthetic_aaaaaaaaaaaa");
+  if (call.schemaVersion === 2) assert.deepEqual(call.tool, { rawName: "Bash", category: "Bash" });
   const result = events.find(
     (event) => event.payload.kind === "tool_result" && event.payload.status === "success",
   );

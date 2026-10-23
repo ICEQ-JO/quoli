@@ -12,6 +12,9 @@ import { redact } from "@traceframe/schema/privacy";
 
 export const BRIDGE_PRODUCER = "claude-hook-bridge-v1";
 export const BRIDGE_VERSION = "0.1.0";
+export const CLAUDE_ADAPTER_ID = "claude-code-hook";
+export const CLAUDE_RECORDED_SOURCE_VERSION = "2.1.306";
+export const CLAUDE_SOURCE_VERSION = "unreported";
 
 const MAX_TEXT = 65_536;
 
@@ -70,6 +73,9 @@ const TOOL_NAMES: Record<string, "Read" | "Write" | "Edit" | "Bash" | "Other"> =
 function toolName(name: unknown): "Read" | "Write" | "Edit" | "Bash" | "Other" {
   return typeof name === "string" ? (TOOL_NAMES[name] ?? "Other") : "Other";
 }
+function rawToolName(name: unknown): string {
+  return typeof name === "string" && name.trim() ? name.slice(0, 200) : "Unknown";
+}
 
 function filePath(input: Record<string, unknown> | undefined): string | null {
   const value = input?.file_path;
@@ -88,11 +94,13 @@ export function normalizeHook(
   const promptId = typeof payload.prompt_id === "string" ? payload.prompt_id : null;
   const toolId = typeof payload.tool_use_id === "string" ? payload.tool_use_id : null;
   const base = {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     projectId: context.projectId,
     sessionId,
-    source: "claude_hook" as const,
-    adapterVersion: BRIDGE_VERSION as "0.1.0",
+    source: "claude_hook",
+    sourceVersion: CLAUDE_SOURCE_VERSION,
+    adapterId: CLAUDE_ADAPTER_ID,
+    adapterVersion: BRIDGE_VERSION,
     sourceLocator: [
       "claude_hook",
       payload.hook_event_name ?? "unknown",
@@ -108,7 +116,22 @@ export function normalizeHook(
     // The hook payload reports no time of its own; receipt order is the order.
     sourceTime: null,
     sourceSequence: null,
-    policyVersion: 1 as const,
+    policyVersion: 1,
+    fieldCapabilities: {
+      content: "available" as const,
+      plan: "unsupported" as const,
+      decision: "unsupported" as const,
+      approval: "unsupported" as const,
+      correction: "unsupported" as const,
+    },
+    declared: { plan: null, decision: null, approval: null, correction: null },
+    activity: {
+      turnId: null,
+      parentSessionId: null,
+      parentTurnId: null,
+      childSessionId: null,
+      childTurnId: null,
+    },
   };
   const event = payload.hook_event_name;
   if (event === "SessionStart")
@@ -116,6 +139,7 @@ export function normalizeHook(
       ...base,
       id: id("hook", [sessionId, "SessionStart"]),
       deliveryId: id("deliver", [sessionId, "SessionStart"]),
+      tool: null,
       payload: { kind: "session_start", content: content(null, "unavailable", ["prompt", "code"]) },
     };
   if (event === "SessionEnd")
@@ -123,6 +147,7 @@ export function normalizeHook(
       ...base,
       id: id("hook", [sessionId, "SessionEnd"]),
       deliveryId: id("deliver", [sessionId, "SessionEnd"]),
+      tool: null,
       payload: { kind: "session_end", reason: "completed" },
     };
   if (event === "UserPromptSubmit")
@@ -130,6 +155,7 @@ export function normalizeHook(
       ...base,
       id: id("hook", [sessionId, "UserPromptSubmit", promptId]),
       deliveryId: id("deliver", [sessionId, "UserPromptSubmit", promptId]),
+      tool: null,
       payload: {
         kind: "prompt",
         content: content(text(payload.prompt) ?? null, "present", ["prompt", "code"]),
@@ -141,6 +167,7 @@ export function normalizeHook(
       ...base,
       id: id("hook", [sessionId, "PreToolUse", toolId]),
       deliveryId: id("deliver", [sessionId, "PreToolUse", toolId]),
+      tool: { rawName: rawToolName(payload.tool_name), category: toolName(payload.tool_name) },
       payload: {
         kind: "tool_call",
         toolName: toolName(payload.tool_name),
@@ -154,6 +181,7 @@ export function normalizeHook(
       ...base,
       id: id("hook", [sessionId, "PostToolUse", toolId]),
       deliveryId: id("deliver", [sessionId, "PostToolUse", toolId]),
+      tool: { rawName: rawToolName(payload.tool_name), category: toolName(payload.tool_name) },
       payload: {
         kind: "tool_result",
         toolName: toolName(payload.tool_name),
@@ -168,6 +196,7 @@ export function normalizeHook(
       ...base,
       id: id("hook", [sessionId, "PostToolUseFailure", toolId]),
       deliveryId: id("deliver", [sessionId, "PostToolUseFailure", toolId]),
+      tool: { rawName: rawToolName(payload.tool_name), category: toolName(payload.tool_name) },
       payload: {
         kind: "tool_result",
         toolName: toolName(payload.tool_name),

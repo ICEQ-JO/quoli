@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import { type DeliveryIdentityInput, defineAdapter } from "@traceframe/schema/adapter";
-import { BRIDGE_PRODUCER, BRIDGE_VERSION } from "./normalize";
+import {
+  BRIDGE_PRODUCER,
+  BRIDGE_VERSION,
+  CLAUDE_ADAPTER_ID,
+  CLAUDE_RECORDED_SOURCE_VERSION,
+} from "./normalize";
 
 /**
  * The Claude Code hook adapter, described through the shared registration
@@ -8,8 +13,6 @@ import { BRIDGE_PRODUCER, BRIDGE_VERSION } from "./normalize";
  * reports no timestamp, no numeric exit code and no usage, so those stay
  * explicitly unsupported rather than guessed.
  */
-
-const VERIFIED_CLAUDE_VERSION = "2.1.306";
 
 function deliveryId({ sessionId, event, promptId, toolId }: DeliveryIdentityInput): string {
   const parts: unknown[] = [sessionId, event];
@@ -21,12 +24,12 @@ function deliveryId({ sessionId, event, promptId, toolId }: DeliveryIdentityInpu
 }
 
 export const claudeAdapter = defineAdapter({
-  id: "claude-code-hook",
+  id: CLAUDE_ADAPTER_ID,
   harness: "Claude Code",
   source: "claude_hook",
   producerId: BRIDGE_PRODUCER,
   adapterVersion: BRIDGE_VERSION,
-  sourceVersions: [VERIFIED_CLAUDE_VERSION],
+  sourceVersions: [CLAUDE_RECORDED_SOURCE_VERSION],
   eventMapping: {
     SessionStart: "session_start",
     UserPromptSubmit: "prompt",
