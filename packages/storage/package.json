@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./policy": "./src/policy.ts",
     "./runtime": "./src/runtime.ts"
   },
   "dependencies": {

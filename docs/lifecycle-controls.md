@@ -8,7 +8,9 @@ Three independent controls decide what the collector may persist: prompts, tool 
 
 Tool output may contain code in any nested position, so tool and code consent are both required before any content is stored. Enabling code capture therefore enables tool capture. Excluded paths (`node_modules`, `.git`, `.env`, …) stay configured regardless of the toggles.
 
-The bridge has a durable retry spool. Known gap: failed deliveries can persist normalized content before current project policy is applied, and database purge does not remove that spool. V02/V03 in the [active backlog](issues/vision/README.md) track pre-persistence policy and coordinated lifecycle repairs. Collector-side sanitization does not undo earlier spool writes. These controls currently describe local database behavior, not complete spool or cloud deletion guarantees.
+The bridge has a durable retry spool. Before an undelivered observation is written, the bridge reads the project's current policy and capture state from the local store in read-only mode and applies the same sanitization the collector would: content classes the policy disables are stored as metadata with no text, and excluded paths lose both their path and content. When the policy cannot be read (store not created yet, unreadable database, unregistered project) the observation is kept as metadata with an `unavailable` content state instead of text. A paused or deleted project is not spooled at all, so resuming or re-registering cannot resurrect observations captured while capture was stopped.
+
+Known limits: a retry written earlier under a more permissive policy is not rewritten when the policy tightens; the collector revalidates it on delivery, and the V03 lifecycle increment coordinates spool cleanup with purge. Deletion still does not remove retry entries written before the deletion; `docs/issues/vision/v03.md` tracks that repair. Collector-side sanitization does not undo earlier spool writes. These controls describe local database and retry behavior, not complete spool or cloud deletion guarantees.
 
 ## Capture state
 
@@ -53,4 +55,4 @@ Storage usage counts observations, captures and artifacts with their encoded siz
 
 ## Validation
 
-`tests/controls.test.ts` covers policy-before-persistence, paused capture, retention with dependent evidence, deletion that blocks stale producers, idempotent deletion after an interruption and the cleared write-ahead log. The browser suite covers the settings view, the pause/resume control, the retention window and the deletion wording, including the statement that capture and storage stop.
+`tests/controls.test.ts` covers policy-before-persistence, paused capture, retention with dependent evidence, deletion that blocks stale producers, idempotent deletion after an interruption and the cleared write-ahead log. `tests/bridge.test.ts` runs the real hook subprocess against an unreachable collector and covers default-policy silence, explicitly permitted capture, nested code requiring both tool and code consent, excluded paths, paused projects, an unreadable policy and malformed or oversized stdin. The browser suite covers the settings view, the pause/resume control, the retention window and the deletion wording, including the statement that capture and storage stop.
