@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./policy": "./src/policy.ts",
-    "./runtime": "./src/runtime.ts"
+    "./runtime": "./src/runtime.ts",
+    "./spool": "./src/spool.ts"
   },
   "dependencies": {
     "@traceframe/schema": "workspace:*"

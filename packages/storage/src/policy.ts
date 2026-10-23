@@ -11,7 +11,12 @@ import { runtime } from "./runtime";
  * assumed permission.
  */
 export type RetryCaptureState =
-  | { state: "active"; policy: CapturePolicy }
+  | {
+      state: "active";
+      policy: CapturePolicy;
+      epoch: number;
+      retentionDays: number | null;
+    }
   | { state: "paused" | "purged" | "unknown" };
 
 /**
@@ -33,14 +38,23 @@ export function retryCaptureState(projectId: string): RetryCaptureState {
   try {
     db = new DatabaseSync(file, { readOnly: true });
     db.exec("PRAGMA busy_timeout=250;");
-    const project = db.prepare("SELECT policy FROM projects WHERE id=?").get(projectId);
-    if (!project) return { state: "unknown" };
     const lifecycle = db
-      .prepare("SELECT paused, purged_at FROM project_lifecycle WHERE project_id=?")
+      .prepare(
+        "SELECT paused, purged_at, retention_days, epoch FROM project_lifecycle WHERE project_id=?",
+      )
       .get(projectId);
+    // A purge deletes the project row and leaves a tombstone, so lifecycle
+    // must be read first: a deleted project is purged, never merely unknown.
     if (lifecycle?.purged_at != null) return { state: "purged" };
     if (lifecycle?.paused) return { state: "paused" };
-    return { state: "active", policy: policySchema.parse(JSON.parse(String(project.policy))) };
+    const project = db.prepare("SELECT policy FROM projects WHERE id=?").get(projectId);
+    if (!project) return { state: "unknown" };
+    return {
+      state: "active",
+      policy: policySchema.parse(JSON.parse(String(project.policy))),
+      epoch: lifecycle ? Number(lifecycle.epoch) : 1,
+      retentionDays: lifecycle?.retention_days == null ? null : Number(lifecycle.retention_days),
+    };
   } catch {
     return { state: "unknown" };
   } finally {

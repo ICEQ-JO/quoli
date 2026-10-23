@@ -5,13 +5,13 @@ import { batchSchema, eventQuerySchema, MAX_BODY, safeId } from "@traceframe/sch
 import { settingsUpdateSchema } from "@traceframe/schema/lifecycle";
 import { Store } from "@traceframe/storage";
 import { credential, initializeCredential, runtime } from "@traceframe/storage/runtime";
+import { cleanupProjectSpool, purgeProjectSpool, spoolDepth } from "@traceframe/storage/spool";
 import { demoEvents, demoPolicy } from "../../../fixtures/demo";
 import { demoSnapshots } from "../../../fixtures/repository";
 import { readChanges } from "./changes";
 import { readMap } from "./map";
 import { startRepositoryObserver } from "./observer";
 import { otlpUsageEvents, readOtlpBody } from "./otel";
-import { spooledObservations } from "./spool";
 
 /** The project that reported telemetry belongs to. */
 function telemetryProject(): string | null {
@@ -82,7 +82,7 @@ export function startCollector(
           schemaVersion: 1,
           mode: "local-preview",
           // Observations waiting in the bridge retry spool are capture loss.
-          spooled: spooledObservations(),
+          spooled: spoolDepth(),
           ...health,
         });
         return;
@@ -209,6 +209,9 @@ export function startCollector(
         const update = settingsUpdateSchema.parse(JSON.parse(text));
         store.updateSettings(project, update);
         const settings = store.settings(project);
+        // Pending retries follow the same policy and retention window; content
+        // that just became disallowed must not survive in the spool.
+        cleanupProjectSpool(project, settings.project.policy, settings.retentionDays);
         send(200, {
           projectId: project,
           name: settings.project.name,
@@ -227,6 +230,9 @@ export function startCollector(
       if (req.method === "POST" && purgeMatch) {
         const project = safeId.parse(purgeMatch[1]);
         const result = store.purgeProject(project);
+        // The tombstone fences future retries; the cleanup removes the ones
+        // already waiting, so a re-registration cannot bring them back.
+        purgeProjectSpool(project);
         send(200, { projectId: project, ...result });
         return;
       }
