@@ -23,7 +23,7 @@ These describe today's local implementation; they are not the target cloud speci
 | Run and develop | [Local demo](local-demo.md), [development/API reference](development.md), [CLI installation/lifecycle](cli.md) |
 | Repository capture | [Automatic history](automatic-history.md), [capture](repository-capture.md), [captured changes](captured-changes.md) |
 | Evidence analysis | [Checks](verification-evidence.md), [existing change map](change-map.md), [source reconciliation](source-reconciliation.md), [live linking](live-linking.md) |
-| Claude integration | [Capability matrix](claude-code-capabilities.md), [versioned runtime report](claude-code-runtime-report.md), [hook bridge](hook-bridge.md), [usage receiver](telemetry-receiver.md), [setup](local-setup.md) |
+| Claude integration | [Capability matrix](claude-code-capabilities.md), [versioned runtime report](claude-code-runtime-report.md), [hook bridge](hook-bridge.md), [adapter contract](adapters.md), [usage receiver](telemetry-receiver.md), [setup](local-setup.md) |
 | Controls and validation | [Capture/lifecycle controls and known limits](lifecycle-controls.md), [local pilot record](pilot-release.md) |
 | Current experience | [Session workspace](design/session-workspace.md), [landing](design/landing-page.md), [visual system](../apps/web/DESIGN.md), [product context](../apps/web/PRODUCT.md) |
 

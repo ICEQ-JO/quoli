@@ -50,7 +50,7 @@ retries the spooled observations and removes the ones that arrive. It reports ho
 
 ## Identity and joins
 
-The bridge generates its own event and delivery identities from the session, the event name and the source identifiers, so a repeated delivery of the same hook payload is recognised as a duplicate instead of a second observation. The recorded `prompt_id` and `tool_use_id` are the source identities and are what joins a request to its tool calls and a tool call to its result.
+The bridge generates its own event and delivery identities from the session, the event name and the source identifiers, so a repeated delivery of the same hook payload is recognised as a duplicate instead of a second observation. The recorded `prompt_id` and `tool_use_id` are the source identities and are what joins a request to its tool calls and a tool call to its result. The same rule is declared in the [adapter contract](adapters.md) and pinned by the conformance suite.
 
 ## Honesty rules kept
 

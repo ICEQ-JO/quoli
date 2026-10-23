@@ -2,6 +2,7 @@ import type { NormalizedEvent } from "@traceframe/schema";
 import { eventSchema, MAX_BODY } from "@traceframe/schema";
 import { credential, runtime } from "@traceframe/storage/runtime";
 import { drainSpool, spool, spoolDepth } from "@traceframe/storage/spool";
+import { adapters } from "./adapter";
 import { hookStatus, installHooks, uninstallHooks } from "./install";
 import { type HookPayload, normalizeHook } from "./normalize";
 
@@ -102,10 +103,12 @@ async function main() {
       return;
     }
     const status = hookStatus(root);
+    // shortcut: install state comes from the Claude hook installer, the only adapter that ships.
+    const [adapter] = adapters;
     console.log(
-      status.installed
-        ? `Traceframe hooks are installed for project ${status.projectId}.`
-        : "Traceframe hooks are not installed in this project.",
+      `Adapter ${adapter.id} v${adapter.adapterVersion} supports ${adapter.harness} ${adapter.sourceVersions.join(", ")}; hooks are ${
+        status.installed ? `installed for project ${status.projectId}` : "not installed"
+      }.`,
     );
     console.log(`Bridge spool: ${spoolDepth()} observations waiting for delivery.`);
     return;
