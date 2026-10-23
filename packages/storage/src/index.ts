@@ -7,6 +7,7 @@ import {
   type CapturePolicy,
   defaultPolicy,
   type EventQuery,
+  eventSchema,
   type NormalizedEvent,
   type Project,
   policySchema,
@@ -45,23 +46,30 @@ export class Store {
     if (path !== ":memory:") chmodSync(path, 0o600);
     this.db.exec("PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=3000;");
     try {
-      this.db.exec(readFileSync(new URL("../migrations/001-initial.sql", import.meta.url), "utf8"));
-      this.db.exec(
-        readFileSync(new URL("../migrations/002-repository.sql", import.meta.url), "utf8"),
-      );
-      this.db.exec(
-        readFileSync(new URL("../migrations/003-lifecycle.sql", import.meta.url), "utf8"),
-      );
-      this.db.exec(
-        readFileSync(
-          new URL("../migrations/004-repository-observation.sql", import.meta.url),
-          "utf8",
-        ),
-      );
+      this.migrate();
     } catch (error) {
       if (this.db.isTransaction) this.db.exec("ROLLBACK");
       this.db.close();
       throw error;
+    }
+  }
+  private migrate(): void {
+    const migrations = [
+      "001-initial.sql",
+      "002-repository.sql",
+      "003-lifecycle.sql",
+      "004-repository-observation.sql",
+      "005-event-schema-version.sql",
+    ];
+    for (const [index, migration] of migrations.entries()) {
+      const version = index + 1;
+      const exists = this.db
+        .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='migrations'")
+        .get();
+      const applied =
+        exists && this.db.prepare("SELECT 1 FROM migrations WHERE version=?").get(version);
+      if (!applied)
+        this.db.exec(readFileSync(new URL(`../migrations/${migration}`, import.meta.url), "utf8"));
     }
   }
   registerProject(
@@ -338,8 +346,8 @@ export class Store {
               "SELECT body FROM events WHERE project_id=? AND session_id=? AND json_extract(body,'$.toolId')=? AND json_extract(body,'$.payload.kind')='tool_call' ORDER BY sequence DESC LIMIT 1",
             )
             .get(event.projectId, event.sessionId, event.toolId);
-          const callEvent = call ? (JSON.parse(String(call.body)) as NormalizedEvent) : null;
-          const priorEvent = prior ? (JSON.parse(String(prior.body)) as NormalizedEvent) : null;
+          const callEvent = call ? this.event(call.body) : null;
+          const priorEvent = prior ? this.event(prior.body) : null;
           // Missing/out-of-order calls cannot establish whether a file was excluded.
           // Preserve an earlier omission on retries even if a late call has arrived.
           if (
@@ -368,7 +376,7 @@ export class Store {
           throw new Error("Project storage limit reached");
         this.db
           .prepare(
-            "INSERT INTO events(id,project_id,session_id,source,producer_id,delivery_id,received_at,body) VALUES(?,?,?,?,?,?,?,?)",
+            "INSERT INTO events(id,project_id,session_id,source,producer_id,delivery_id,received_at,schema_version,body) VALUES(?,?,?,?,?,?,?,?,?)",
           )
           .run(
             event.id,
@@ -378,6 +386,7 @@ export class Store {
             event.producerId,
             event.deliveryId,
             new Date().toISOString(),
+            event.schemaVersion,
             body,
           );
         accepted++;
@@ -440,15 +449,21 @@ export class Store {
       )
       .all(...values, limit + 1);
     const hasMore = rows.length > limit;
-    const events: StoredEvent[] = rows.slice(0, limit).map((r) => ({
-      ...JSON.parse(String(r.body)),
-      sequence: Number(r.sequence),
-      receivedAt: String(r.received_at),
-    }));
+    const events = rows.slice(0, limit).map((row) => this.storedEvent(row));
     return { events, total, nextCursor: hasMore ? (events.at(-1)?.sequence ?? null) : null };
   }
   allEvents(project: string, session: string): StoredEvent[] {
     return this.events(project, session, 0, 10000).events;
+  }
+  private event(body: unknown): NormalizedEvent {
+    return eventSchema.parse(JSON.parse(String(body)));
+  }
+  private storedEvent(row: Record<string, unknown>): StoredEvent {
+    return {
+      ...this.event(row.body),
+      sequence: Number(row.sequence),
+      receivedAt: String(row.received_at),
+    };
   }
   sessions(project: string): Session[] {
     const rows = this.db
@@ -690,7 +705,7 @@ export class Store {
         "SELECT body FROM events WHERE project_id=? AND json_extract(body,'$.producerId')='repository-observer-v1' AND json_extract(body,'$.payload.kind')='repository_state' ORDER BY sequence DESC LIMIT 1",
       )
       .get(projectId);
-    return row ? (JSON.parse(String(row.body)) as NormalizedEvent) : null;
+    return row ? this.event(row.body) : null;
   }
   repositoryHistory(projectId: string, sessionId: string) {
     const total = Number(
@@ -705,11 +720,7 @@ export class Store {
         "SELECT body,sequence,received_at FROM events WHERE project_id=? AND session_id=? AND json_extract(body,'$.payload.kind')='repository_state' ORDER BY sequence DESC LIMIT 50",
       )
       .all(projectId, sessionId)
-      .map((row) => ({
-        ...JSON.parse(String(row.body)),
-        sequence: Number(row.sequence),
-        receivedAt: String(row.received_at),
-      }));
+      .map((row) => this.storedEvent(row));
     return { events, total, nextCursor: null };
   }
   snapshots(projectId: string, sessionId: string): StoredSnapshot[] {

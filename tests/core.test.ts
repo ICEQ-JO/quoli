@@ -18,29 +18,12 @@ import { Store } from "../packages/storage/src/index";
 
 const stored = (events = demoEvents()): StoredEvent[] =>
   events.map((e, i) => ({ ...e, sequence: i + 1, receivedAt: "2026-10-22T10:00:00.000Z" }));
-test("versioned contracts reject invented/malformed usage and provenance", () => {
-  assert.equal(batchSchema.parse({ events: demoEvents() }).events.length, 29);
-  assert.throws(() => eventSchema.parse({ ...demoEvents()[0], schemaVersion: 99 }));
-  assert.throws(() => eventSchema.parse({ ...demoEvents()[0], hiddenReasoning: "invented" }));
-  const e = demoEvents().find((e) => e.payload.kind === "usage");
-  assert.throws(() => eventSchema.parse({ ...e, payload: { ...e?.payload, input: -1 } }));
-  assert.throws(() =>
-    relationshipSchema.parse({
-      id: "link",
-      subjectId: "a",
-      objectId: "b",
-      basis: "derived",
-      evidenceIds: [],
-      rule: null,
-      uncertainty: "Unknown",
-    }),
-  );
-});
-test("v2 preserves v1 evidence and records explicit activity capabilities", () => {
-  const v2 = {
+
+function v2Event(id = "v2-tool", deliveryId = "v2-delivery") {
+  return {
     schemaVersion: 2,
-    id: "v2-tool",
-    deliveryId: "v2-delivery",
+    id,
+    deliveryId,
     projectId: "demo-quoli",
     sessionId: "session-v2",
     source: "future_harness",
@@ -93,6 +76,27 @@ test("v2 preserves v1 evidence and records explicit activity capabilities", () =
       path: null,
     },
   };
+}
+test("versioned contracts reject invented/malformed usage and provenance", () => {
+  assert.equal(batchSchema.parse({ events: demoEvents() }).events.length, 29);
+  assert.throws(() => eventSchema.parse({ ...demoEvents()[0], schemaVersion: 99 }));
+  assert.throws(() => eventSchema.parse({ ...demoEvents()[0], hiddenReasoning: "invented" }));
+  const e = demoEvents().find((e) => e.payload.kind === "usage");
+  assert.throws(() => eventSchema.parse({ ...e, payload: { ...e?.payload, input: -1 } }));
+  assert.throws(() =>
+    relationshipSchema.parse({
+      id: "link",
+      subjectId: "a",
+      objectId: "b",
+      basis: "derived",
+      evidenceIds: [],
+      rule: null,
+      uncertainty: "Unknown",
+    }),
+  );
+});
+test("v2 preserves v1 evidence and records explicit activity capabilities", () => {
+  const v2 = v2Event();
   const parsed = eventSchema.parse(v2);
   assert.equal(parsed.schemaVersion, 2);
   if (parsed.schemaVersion === 2) {
@@ -333,6 +337,102 @@ test("failed migrations roll back DDL and release the database lock", () => {
     db.close();
     const recovered = new Store(path);
     recovered.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+test("a v1 store upgrades without rewriting history and then accepts v2 evidence", () => {
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-v1-upgrade-"));
+  const path = join(dir, "evidence.sqlite");
+  const legacy = demoEvents()[0];
+  const legacyV2 = eventSchema.parse(v2Event("v2-legacy", "delivery-v2-legacy"));
+  const receivedAt = "2026-10-23T10:00:00.000Z";
+  try {
+    const v1 = new DatabaseSync(path);
+    for (const version of [
+      "001-initial.sql",
+      "002-repository.sql",
+      "003-lifecycle.sql",
+      "004-repository-observation.sql",
+    ])
+      v1.exec(
+        readFileSync(new URL(`../packages/storage/migrations/${version}`, import.meta.url), "utf8"),
+      );
+    v1.prepare("INSERT INTO projects VALUES(?,?,?,?)").run(
+      "demo-quoli",
+      "quoli",
+      0,
+      JSON.stringify(demoPolicy),
+    );
+    v1.prepare(
+      "INSERT INTO events(id,project_id,session_id,source,producer_id,delivery_id,received_at,body) VALUES(?,?,?,?,?,?,?,?)",
+    ).run(
+      legacy.id,
+      legacy.projectId,
+      legacy.sessionId,
+      legacy.source,
+      legacy.producerId,
+      legacy.deliveryId,
+      receivedAt,
+      JSON.stringify(legacy),
+    );
+    // v2 evidence can already exist: the v2 contract merged before this migration.
+    v1.prepare(
+      "INSERT INTO events(id,project_id,session_id,source,producer_id,delivery_id,received_at,body) VALUES(?,?,?,?,?,?,?,?)",
+    ).run(
+      legacyV2.id,
+      legacyV2.projectId,
+      legacyV2.sessionId,
+      legacyV2.source,
+      legacyV2.producerId,
+      legacyV2.deliveryId,
+      receivedAt,
+      JSON.stringify(legacyV2),
+    );
+    v1.exec("CREATE TABLE event_schema_version(blocked TEXT)");
+    v1.close();
+
+    assert.throws(() => new Store(path));
+    const failed = new DatabaseSync(path);
+    assert.equal(
+      failed
+        .prepare("PRAGMA table_info(events)")
+        .all()
+        .some((row) => row.name === "schema_version"),
+      false,
+    );
+    assert.equal(
+      String(failed.prepare("SELECT body FROM events").get()?.body),
+      JSON.stringify(legacy),
+    );
+    failed.exec("DROP TABLE event_schema_version");
+    failed.close();
+
+    let upgraded = new Store(path);
+    assert.deepEqual(upgraded.allEvents("demo-quoli", legacy.sessionId), [
+      { ...legacy, sequence: 1, receivedAt },
+    ]);
+    assert.deepEqual(upgraded.allEvents("demo-quoli", legacyV2.sessionId), [
+      { ...legacyV2, sequence: 2, receivedAt },
+    ]);
+    assert.equal(
+      upgraded.append([eventSchema.parse(v2Event("v2-after-upgrade", "delivery-v2-after"))])
+        .accepted,
+      1,
+    );
+    upgraded.close();
+
+    upgraded = new Store(path);
+    assert.deepEqual(
+      upgraded
+        .allEvents("demo-quoli", "session-v2")
+        .map((event) => [event.id, event.schemaVersion]),
+      [
+        ["v2-legacy", 2],
+        ["v2-after-upgrade", 2],
+      ],
+    );
+    upgraded.close();
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
