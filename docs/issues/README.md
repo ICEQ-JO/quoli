@@ -1,6 +1,6 @@
 # Ordered issue backlog
 
-The 19 original MVP issues are published on GitHub; the optional experiment remains a local draft. Ongoing implementation work is tracked in Linear. IDs 001–020 are stable plan references, distinct from both the historical GitHub issue numbers and current Linear issue identifiers. Update the Linear issue and these references when scope changes. All published work is medium-sized (M): a bounded, demonstrable capability. Oversized work is split and tiny related tasks are grouped. Follow the listed prerequisites; issue order is a recommended topological delivery order.
+The 19 original MVP issues are published on GitHub; the optional experiment remains a local draft. Ongoing implementation work is tracked only in the Quolii Linear workspace. IDs 001–020 are stable plan references, distinct from both the historical GitHub issue numbers and current Linear issue identifiers. Update the Quolii Linear issue and these references when scope changes. All published work is medium-sized (M): a bounded, demonstrable capability. Oversized work is split and tiny related tasks are grouped. Follow the listed prerequisites; issue order is a recommended topological delivery order.
 
 Every core issue inherits the [architecture](../architecture.md), [MVP scope](../implementation-plan.md), and [capability gate](../claude-code-capabilities.md). In particular: events are primary; unsupported data is null; capture is incomplete; captured content is inert; no automatic command replay or outbound session upload.
 

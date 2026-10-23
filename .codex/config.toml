@@ -1,0 +1,4 @@
+# Enable Linear only for this repository. The OAuth connection is selected in
+# Codex plugin settings and must be the Quolii workspace, never Documentu-ai.
+[plugins."linear@openai-curated-remote"]
+enabled = true

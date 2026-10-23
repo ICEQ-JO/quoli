@@ -12,7 +12,7 @@ Inspected `~/Dev/quoli` on 2026-10-22, including hidden directory entries, repos
 
 ## Authorized repository setup
 
-Following the owner's subsequent instruction, the workspace is connected to [ICEQ-JO/quoli](https://github.com/ICEQ-JO/quoli), with an initial README commit on `main`. The reference documents and contributor agreements are delivered on a feature branch through a pull request. Git author and committer are `ICEQ-JO`, using the account's GitHub no-reply email. The 19 medium-sized MVP issues are published and linked in the backlog; the optional experiment remains deferred. GitHub was the initial work tracker; ongoing work is now tracked in Linear, with GitHub retained for the repository and pull requests.
+Following the owner's subsequent instruction, the workspace is connected to [ICEQ-JO/quoli](https://github.com/ICEQ-JO/quoli), with an initial README commit on `main`. The reference documents and contributor agreements are delivered on a feature branch through a pull request. Git author and committer are `ICEQ-JO`, using the account's GitHub no-reply email. The 19 medium-sized MVP issues are published and linked in the backlog; the optional experiment remains deferred. GitHub was the initial work tracker; ongoing work is now tracked only in the Quolii Linear workspace, with GitHub retained for the repository and pull requests.
 
 Documentation can be challenged and revised with rationale. The owner's explicit direction takes precedence over stale recommendations. No product implementation, service installation or live agent configuration is included in this setup.
 

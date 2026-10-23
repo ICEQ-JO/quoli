@@ -8,7 +8,7 @@ The owner's target product direction is [docs/vision.md](docs/vision.md): a payi
 
 ## Work tracking
 
-- Use Linear for work tracking. GitHub remains the repository, pull-request and code-review host.
+- Use only the **Quolii** Linear workspace for work tracking. Do not create, read, update, or link Quoli work in the Documentu-ai Linear workspace. GitHub remains the repository, pull-request and code-review host.
 - Before starting a feature or substantive task, create or select a concrete, medium-sized Linear issue. Split oversized work into demonstrable increments and group tiny related tasks into one useful increment.
 - Include user value, scope, non-goals, dependencies, acceptance criteria, test plan, privacy/security considerations and relative size M. Link prerequisite Linear issues when available.
 - Keep issue status and acceptance criteria current. Deferred ideas may remain local drafts until their scope is approved.
