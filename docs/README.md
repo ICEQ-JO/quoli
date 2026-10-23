@@ -7,6 +7,7 @@ Quoli's target is a **hosted dashboard connected to coding agents running locall
 - [Product vision](vision.md): the owner-approved destination and truth/privacy boundaries.
 - [Target architecture](architecture.md): connector → cloud ingestion/storage/projections → hosted dashboard; reuse/rebuild boundaries.
 - [Decisions](decisions.md): the cloud direction and what still needs deciding.
+- [Hosted pilot decisions](hosted-pilot.md): buyer, price, platforms, retention and launch success criteria for the first paid pilot.
 - [Delivery roadmap](work/vision-roadmap.md): phases, initial batch and agent coordination.
 - [Active issue index](issues/vision/README.md): complete implementation scopes and Quolii Linear links.
 - [Current implementation](implementation-progress.md): what runs today, with evidence and limitations.

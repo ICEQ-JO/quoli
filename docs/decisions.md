@@ -10,9 +10,9 @@ Rationale: the owner wants a SaaS product that works across locally running agen
 
 Consequences: add tenant isolation, separate capture/upload consent, secure device identity, durable sync, cloud lifecycle/operations and hosted query/dashboard issues. Retain useful local storage/capture/diff code. Product approval does not authorize automatic upload of existing private data.
 
-## Implementation decisions still open
+## Hosted pilot decisions
 
-Track hosting/region, auth/payment providers, initial paid buyer, pricing/limits/trial, supported OS versions, retention defaults and initial policy rules in V01/C01 and follow-on issues. Do not mistake proposed vendors, code layouts or dates for owner-approved implementation. Enterprise SSO, more languages, optional model summaries and self-hosting remain later gated increments.
+[Hosted pilot](hosted-pilot.md) records the owner's choices for the first paid buyer, the USD 19 per-seat monthly Pilot plan, connector platforms (Linux x64 and macOS 14+, Windows excluded), the 90-day cloud retention default and the launch success criteria. Trial and plan limits, cancellation/refund, hosting region and data residency, auth/payment vendors and initial policy rules remain open; the record names the owner and follow-on issue for each. Do not mistake proposed vendors, code layouts or dates for owner-approved implementation. Enterprise SSO, more languages, optional model summaries and self-hosting remain later gated increments.
 
 ## Documentation cleanup
 

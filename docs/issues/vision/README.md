@@ -13,7 +13,7 @@ V01–V45 retain useful earlier scopes, updated for hosted delivery. C01–C19 i
 - V02: repair capture-policy enforcement before retry persistence (urgent).
 - V03: retry deletion/generation fencing follows V02 (urgent).
 - V05: automated CI baseline; C01: hosted sync/data/security contract.
-- V01: remaining buyer/pricing/platform/retention decisions.
+- V01: buyer, price, platforms and retention recorded in [hosted pilot decisions](../../hosted-pilot.md); trial/plan limits and cancellation/refund still open.
 - Then V06 → V07/V08, plus C02 → C03/C04/C08. Never upload private data as a development shortcut.
 
 ## Full issue index
