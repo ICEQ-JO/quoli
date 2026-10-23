@@ -284,6 +284,50 @@ test("a damaged spool line is dropped without blocking delivery", async () => {
   }
 });
 
+test("a purge during a drain fences the entry that has not been sent yet", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "traceframe-drain-purge-"));
+  const previous = process.env.TRACEFRAME_DATA_DIR;
+  process.env.TRACEFRAME_DATA_DIR = dir;
+  const store = new Store(join(dir, "traceframe.sqlite"));
+  store.registerProject("alpha", "Alpha", false, openPolicy);
+  store.registerProject("beta", "Beta", false, openPolicy);
+  try {
+    // beta is drained first and holds the send; alpha is still queued when the
+    // purge commits, so its revalidation must see the purged state.
+    spool(promptEvent("beta"));
+    spool(promptEvent("alpha"));
+    let started!: () => void;
+    const startedSending = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const delivered: string[] = [];
+    const drain = drainSpool(async (event) => {
+      started();
+      await gate;
+      delivered.push(event.projectId);
+      return true;
+    });
+    await startedSending;
+    store.purgeProject("alpha");
+    purgeProjectSpool("alpha");
+    release();
+    const result = await drain;
+    assert.deepEqual(delivered, ["beta"]);
+    assert.equal(result.sent, 1);
+    assert.equal(result.dropped, 1);
+    assert.equal(entries(dir).length, 0);
+  } finally {
+    store.close();
+    if (previous === undefined) delete process.env.TRACEFRAME_DATA_DIR;
+    else process.env.TRACEFRAME_DATA_DIR = previous;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("concurrent hook appends and a purge preserve the other project", async () => {
   const dir = mkdtempSync(join(tmpdir(), "traceframe-concurrent-"));
   const previous = process.env.TRACEFRAME_DATA_DIR;
