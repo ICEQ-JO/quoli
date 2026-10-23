@@ -8,14 +8,14 @@ The owner's target product direction is [docs/vision.md](docs/vision.md): a payi
 
 ## Work tracking
 
-- Use GitHub Issues in `ICEQ-JO/quoli` for work tracking. Do not use Linear unless the owner explicitly changes this rule.
-- Before starting a feature or substantive task, create or select a concrete, medium-sized GitHub issue. Split oversized work into demonstrable increments and group tiny related tasks into one useful increment.
-- Include user value, scope, non-goals, dependencies, acceptance criteria, test plan, privacy/security considerations and relative size M. Link prerequisite GitHub issues when available.
+- Use Linear for work tracking. GitHub remains the repository, pull-request and code-review host.
+- Before starting a feature or substantive task, create or select a concrete, medium-sized Linear issue. Split oversized work into demonstrable increments and group tiny related tasks into one useful increment.
+- Include user value, scope, non-goals, dependencies, acceptance criteria, test plan, privacy/security considerations and relative size M. Link prerequisite Linear issues when available.
 - Keep issue status and acceptance criteria current. Deferred ideas may remain local drafts until their scope is approved.
 
 ## Branches, pull requests and identity
 
-- Work on a branch and create a pull request when finishing an issue or feature. Link its issue with `Closes #N` only when the PR actually satisfies that issue.
+- Work on a branch and create a pull request when finishing a Linear issue or feature. Reference the Linear issue in the PR description; use `Closes #N` only for an actual GitHub issue that the PR satisfies.
 - Do not push completed feature work directly to `main`. The owner's explicitly requested initial repository bootstrap is the one-time exception.
 - Use `ICEQ-JO` as both Git author and committer name, with the verified account's GitHub no-reply email (`151853839+ICEQ-JO@users.noreply.github.com`), for commits created by agents. Do not add agent co-author trailers or rewrite unrelated existing authorship.
 - Push and perform any authorized merges through the authenticated `ICEQ-JO` account. Verify the active account before writing to GitHub; if unavailable, stop that external action and report it. Do not impersonate this account with other credentials.
@@ -41,6 +41,7 @@ The owner's target product direction is [docs/vision.md](docs/vision.md): a payi
 
 - Always load and follow the `ponytail` skill before coding work: prefer the smallest complete, validated change.
 - Always load and follow the `ponytail-review` skill before reviewing a change, commit, or pull request.
+- Always load and follow the `impeccable` skill for design or UI work.
 
 ## Supporting agents
 

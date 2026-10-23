@@ -1,6 +1,6 @@
 # Ordered issue backlog
 
-The 19 MVP issues are published on GitHub; the optional experiment remains a local draft. IDs 001–020 are stable plan references, distinct from GitHub issue numbers. GitHub issue bodies track ongoing implementation; update these references when scope changes. All published work is medium-sized (M): a bounded, demonstrable capability. Oversized work is split and tiny related tasks are grouped. Follow the listed prerequisites; issue order is a recommended topological delivery order.
+The 19 original MVP issues are published on GitHub; the optional experiment remains a local draft. Ongoing implementation work is tracked in Linear. IDs 001–020 are stable plan references, distinct from both the historical GitHub issue numbers and current Linear issue identifiers. Update the Linear issue and these references when scope changes. All published work is medium-sized (M): a bounded, demonstrable capability. Oversized work is split and tiny related tasks are grouped. Follow the listed prerequisites; issue order is a recommended topological delivery order.
 
 Every core issue inherits the [architecture](../architecture.md), [MVP scope](../implementation-plan.md), and [capability gate](../claude-code-capabilities.md). In particular: events are primary; unsupported data is null; capture is incomplete; captured content is inert; no automatic command replay or outbound session upload.
 
@@ -33,7 +33,7 @@ Every core issue inherits the [architecture](../architecture.md), [MVP scope](..
 
 ## Implementation checkpoint
 
-The MVP is implemented: the [synthetic local preview](../local-demo.md), the recorded [verification evidence](../verification-evidence.md), the bounded [change map](../change-map.md), the local [capture controls](../lifecycle-controls.md), the [Claude Code runtime report](../claude-code-runtime-report.md) for the tested version, the passive [hook bridge](../hook-bridge.md), the narrow [reported usage receiver](../telemetry-receiver.md), the [source reconciliation](../source-reconciliation.md), the [live linking guide](../live-linking.md), the [local setup guide](../local-setup.md) and the [pilot checklist](../pilot-release.md). GitHub issue checklists and the implementation PRs record the exact completed criteria. A feature must not be inferred to exist merely because it appears in this index.
+The MVP is implemented: the [synthetic local preview](../local-demo.md), the recorded [verification evidence](../verification-evidence.md), the bounded [change map](../change-map.md), the local [capture controls](../lifecycle-controls.md), the [Claude Code runtime report](../claude-code-runtime-report.md) for the tested version, the passive [hook bridge](../hook-bridge.md), the narrow [reported usage receiver](../telemetry-receiver.md), the [source reconciliation](../source-reconciliation.md), the [live linking guide](../live-linking.md), the [local setup guide](../local-setup.md) and the [pilot checklist](../pilot-release.md). Historical GitHub issue checklists and the implementation PRs record the exact completed criteria. A feature must not be inferred to exist merely because it appears in this index.
 
 ## Dependency rationale
 

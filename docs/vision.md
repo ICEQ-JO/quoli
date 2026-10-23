@@ -4,6 +4,8 @@ Owner direction recorded: 2026-10-23. Status: **target direction, not delivered 
 
 This page is the north star for product work. It describes what Quoli is trying to become for paying customers. It does not replace the [implementation checkpoint](implementation-progress.md), which records what actually runs today. If this page and the implementation disagree, the implementation is the truth about today; this page is the truth about where we are going.
 
+**Owner commitment:** Quoli is now being pursued as a potential SaaS startup, not merely as a hobby project. Prioritize a credible paid pilot, customer value, security and operational readiness. This records product intent; it does not claim incorporation, funding, customers or delivered SaaS capabilities.
+
 ## One sentence
 
 Quoli should be the privacy-preserving, cross-agent evidence and understanding workspace that shows a developer what an AI coding agent did, what changed, what it cost, what it used, and what remains unverified — with diagrams that explain changes instead of only listing them.
