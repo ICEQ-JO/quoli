@@ -2,6 +2,8 @@
 
 Status: target design approved in direction, implementation outstanding. The [vision](vision.md) defines outcomes and truth/privacy boundaries. The [checkpoint](implementation-progress.md) describes today's local software. This page does not imply the cloud exists.
 
+The proposed [hosted sync contract](cloud/sync-contract.md) and [threat model](cloud/threat-model.md) make the target consent, tenant, receipt and lifecycle boundaries reviewable. They are C01 proposals, not delivered endpoints, vendor selections or security certification.
+
 ## Target data flow
 
 ```text
