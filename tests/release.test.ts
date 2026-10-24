@@ -89,7 +89,10 @@ test("relocated local release installs, captures, restarts and uninstalls withou
     assert.match(await cli("install"), /Installed/);
     installed = true;
     assert.ok(existsSync(join(app, "web/apps/web/server.js")));
-    assert.match(await cli("--version"), /0.1.0-local/);
+    assert.equal(
+      (await cli("--version")).trim(),
+      JSON.parse(readFileSync(resolve("dist/quoli/release.json"), "utf8")).version,
+    );
     // This command runs from the target repository; the user needs no source cwd or pnpm.
     assert.match(
       await cli("connect", "--capture-code", "--name", "Release fixture"),
