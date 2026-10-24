@@ -27,11 +27,11 @@ Requests send the token in the `Authorization` header only, accept GitHub's JSON
 
 ## Sanitized local cache
 
-`packages/repository/src/github-cache.ts` stores one JSON entry per repository, resolved commit and path under `<data dir>/github-cache/` (private directory `0700`, files `0600`, atomic rename). Each entry records its identity, sanitized content, `source: "github_rest"` and fetch time. The cache key is the commit, not the requested branch, so a moved ref cannot serve stale content.
+`packages/repository/src/remote-cache.ts` stores one JSON entry per provider, repository, resolved commit and path under `<data dir>/github-cache/` (private directory `0700`, files `0600`, atomic rename). Each entry records its identity, sanitized content and fetch time. GitLab uses the same cache module with a `gitlab` provider identity and its own directory. The cache key is the commit, not the requested branch, so a moved ref cannot serve stale content.
 
 - Content is sanitized by the capture policy before it is written. Excluded paths (the default policy excludes `.env`, `.git`, `node_modules`, `credentials`, `secrets`) are never requested or cached.
 - Reading a cached entry re-applies the current policy, so opening the same file later without `--capture-code` cannot return cached code.
-- `quoli github disconnect` removes all cached entries with the credential. `clearRepository(owner/name)` removes one repository's entries for project deletion or a future repository-scoped cleanup.
+- `quoli github disconnect` removes all cached entries with the credential. `clearRepository(provider, owner/name)` removes one repository's entries for project deletion or a future repository-scoped cleanup.
 - Oversized and binary content is never persisted.
 
 ## Limits

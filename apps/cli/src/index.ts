@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { autostart, loginLifecycle } from "./autostart";
 import { childEnvironment, cliConfig, connectArguments, requireNode } from "./config";
 import { githubCommand } from "./github";
+import { gitlabCommand } from "./gitlab";
 import { installRelease, uninstallRelease } from "./install";
 import { serviceStatus, startService, stopService } from "./lifecycle";
 import { recoverUpdate, rollbackRelease, updateRelease } from "./update";
@@ -27,6 +28,9 @@ quoli hooks pi status|uninstall [repository]        Inspect/remove the Pi extens
 quoli github connect --client-id ID  Connect a read-only GitHub App; token stays in the OS keychain
 quoli github status | disconnect     Inspect or remove the local GitHub credential
 quoli github review OWNER/REPO --pull N  List changed paths; add --path FILE to open one
+quoli gitlab connect [--base-url URL]   Connect a read-only GitLab token read from stdin
+quoli gitlab status | disconnect     Inspect or remove the local GitLab credential
+quoli gitlab review GROUP/PROJECT --merge-request N  List changed paths; add --path FILE
 quoli settings ...                 Capture policy, pause, retention and deletion
 quoli autostart enable|disable|status  Optional Linux user-login startup
 quoli update ARCHIVE KEY VERSION    Verify and install an explicitly trusted newer release
@@ -61,7 +65,9 @@ async function main() {
     return;
   }
   if (
-    !["connect", "settings", "hooks", "github", "autostart", "update"].includes(command) &&
+    !["connect", "settings", "hooks", "github", "gitlab", "autostart", "update"].includes(
+      command,
+    ) &&
     args.length
   )
     throw new Error("Unexpected command arguments. Run quoli help.");
@@ -113,6 +119,10 @@ async function main() {
   }
   if (command === "github") {
     await githubCommand(args);
+    return;
+  }
+  if (command === "gitlab") {
+    await gitlabCommand(args);
     return;
   }
   if (command === "settings") {

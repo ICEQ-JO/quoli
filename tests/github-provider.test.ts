@@ -8,8 +8,8 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { githubCommand } from "../apps/cli/src/github";
 import { GithubError } from "../packages/repository/src/github";
-import { githubCache } from "../packages/repository/src/github-cache";
 import { GithubReadError, githubReads } from "../packages/repository/src/github-provider";
+import { remoteCache } from "../packages/repository/src/remote-cache";
 import { defaultPolicy } from "../packages/schema/src";
 import {
   repositoryBlobResultSchema,
@@ -161,7 +161,7 @@ function send(
 
 function tempCache() {
   const directory = mkdtempSync(join(tmpdir(), "quoli-github-cache-"));
-  return { directory, cache: githubCache(directory) };
+  return { directory, cache: remoteCache(directory) };
 }
 
 function reads(
@@ -291,7 +291,12 @@ test("excluded paths are not read or cached", async () => {
     0,
   );
   assert.equal(
-    cache.cache.read({ repositoryId: "acme/app", commit: SHA_B, path: "src/.env" }),
+    cache.cache.read({
+      provider: "github",
+      repositoryId: "acme/app",
+      commit: SHA_B,
+      path: "src/.env",
+    }),
     null,
   );
   await fake.close();
@@ -309,7 +314,12 @@ test("oversized blobs are not persisted", async () => {
   assert.equal(large.state, "truncated");
   assert.equal(large.content?.text, null);
   assert.equal(
-    cache.cache.read({ repositoryId: "acme/app", commit: SHA_B, path: "src/large.txt" }),
+    cache.cache.read({
+      provider: "github",
+      repositoryId: "acme/app",
+      commit: SHA_B,
+      path: "src/large.txt",
+    }),
     null,
   );
   await fake.close();
@@ -384,19 +394,31 @@ test("comparison maps rate limits and missing refs", async () => {
 test("cache clearing is scoped by repository and complete on request", () => {
   const cache = tempCache();
   cache.cache.write(
-    { repositoryId: "acme/app", commit: SHA_B, path: "src/a.ts" },
+    { provider: "github", repositoryId: "acme/app", commit: SHA_B, path: "src/a.ts" },
     { text: "a", state: "present", originalBytes: 1, categories: ["code"] },
   );
   cache.cache.write(
-    { repositoryId: "acme/other", commit: SHA_B, path: "src/a.ts" },
+    { provider: "gitlab", repositoryId: "acme/other", commit: SHA_B, path: "src/a.ts" },
     { text: "b", state: "present", originalBytes: 1, categories: ["code"] },
   );
-  assert.equal(cache.cache.clearRepository("acme/app"), 1);
+  assert.equal(cache.cache.clearRepository("github", "acme/app"), 1);
   assert.equal(
-    cache.cache.read({ repositoryId: "acme/app", commit: SHA_B, path: "src/a.ts" }),
+    cache.cache.read({
+      provider: "github",
+      repositoryId: "acme/app",
+      commit: SHA_B,
+      path: "src/a.ts",
+    }),
     null,
   );
-  assert.ok(cache.cache.read({ repositoryId: "acme/other", commit: SHA_B, path: "src/a.ts" }));
+  assert.ok(
+    cache.cache.read({
+      provider: "gitlab",
+      repositoryId: "acme/other",
+      commit: SHA_B,
+      path: "src/a.ts",
+    }),
+  );
   writeFileSync(join(cache.directory, "unreadable.json"), "not json");
   assert.equal(cache.cache.clear(), 2);
   rmSync(cache.directory, { recursive: true, force: true });

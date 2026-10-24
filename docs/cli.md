@@ -79,7 +79,25 @@ quoli github review OWNER/REPO --pull NUMBER
 quoli github review OWNER/REPO --pull NUMBER --path src/app.ts --capture-code
 ```
 
-Review resolves the pull request, lists bounded changed paths (`--max-entries`, `--max-bytes`), reports truncation/omission and rate limits, and opens one sanitized file with `--path`. Code text requires `--capture-code`; excluded paths are never requested. Sanitized content is cached by repository, commit and path under the private data directory, and re-checked against the current policy when read. The web File changes view still compares local snapshots only; see the [bounded reads reference](github-reads.md) for the remaining scope.
+Review resolves the pull request, lists bounded changed paths (`--max-entries`, `--max-bytes`), reports truncation/omission and rate limits, and opens one sanitized file with `--path`. Code text requires `--capture-code`; excluded paths are never requested. Sanitized content is cached by provider, repository, commit and path under the private data directory, and re-checked against the current policy when read. The web File changes view still compares local snapshots only; see the [bounded reads reference](github-reads.md) for the remaining scope.
+
+## Connect read-only GitLab access
+
+```sh
+quoli gitlab connect                    # paste a read_api token on stdin, then Ctrl-D
+quoli gitlab connect --base-url https://gitlab.example.com
+quoli gitlab status
+quoli gitlab disconnect
+```
+
+Connect verifies `GET /api/v4/user` and `/personal_access_tokens/self` before storing anything. The token must have `read_api` and no other scope; an expired, revoked, inactive or write-capable token is refused. It is stored only in one Linux Secret Service item (`service quoli`, `account gitlab`); a missing/refused keychain fails closed. There is no refresh, so an expired token is a reconnect. `disconnect` removes the credential and cached GitLab review files. Self-managed URLs are accepted but not certified; see the [GitLab reference](gitlab-reads.md).
+
+```sh
+quoli gitlab review GROUP/PROJECT --merge-request NUMBER
+quoli gitlab review GROUP/PROJECT --merge-request NUMBER --path src/app.ts --capture-code
+```
+
+Review resolves the merge request's base/head commits, lists bounded changed paths (both sides of a rename), reports `compare_timeout` as truncation and opens one sanitized file with `--path`. Code text requires `--capture-code`; excluded paths are never requested. Content is cached under the same private data directory with the provider in the key. Remote-review UI remains held with D01; the delivered surface is the CLI.
 
 ## Remove the application without deleting evidence
 
@@ -89,6 +107,7 @@ quoli stop
 quoli hooks uninstall /path/to/project  # if Claude hooks were installed
 quoli hooks opencode uninstall /path/to/project  # if the OpenCode plugin was installed
 quoli github disconnect  # if a GitHub credential was stored
+quoli gitlab disconnect  # if a GitLab credential was stored
 quoli uninstall
 ```
 

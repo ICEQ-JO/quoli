@@ -27,6 +27,7 @@ export type Keychain = {
 
 const SERVICE = "quoli";
 const ACCOUNT = "github";
+const LABELS: Record<string, string> = { github: "GitHub", gitlab: "GitLab" };
 
 function secretTool(service: string, account: string): Keychain {
   const run = (args: string[], input?: string) => {
@@ -48,7 +49,15 @@ function secretTool(service: string, account: string): Keychain {
     },
     write(secret) {
       const result = run(
-        ["store", "--label", "Quoli GitHub connection", "service", service, "account", account],
+        [
+          "store",
+          "--label",
+          `Quoli ${LABELS[account] ?? account} connection`,
+          "service",
+          service,
+          "account",
+          account,
+        ],
         secret,
       );
       if (result.status !== 0) throw new KeychainUnavailable();

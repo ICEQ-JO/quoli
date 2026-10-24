@@ -10,7 +10,8 @@ import {
   repositoryRevisionSchema,
 } from "@traceframe/schema/repository";
 import { GITHUB_ENDPOINTS, type GithubEndpoints, GithubError } from "./github";
-import type { GithubCache } from "./github-cache";
+import type { RemoteCache } from "./remote-cache";
+import { decodeProviderContent, disabledContent } from "./remote-content";
 
 /**
  * Read-only GitHub REST reads for branches, commits, pull requests, trees,
@@ -40,7 +41,7 @@ export type GithubReadRequest = {
 
 export type GithubReadOptions = {
   token: string;
-  cache: GithubCache;
+  cache: RemoteCache;
   policy: CapturePolicy;
   endpoints?: GithubEndpoints;
   fetchImpl?: typeof fetch;
@@ -124,26 +125,6 @@ function retryDelay(headers: Headers, now: number): number | null {
 function nextPage(headers: Headers): boolean {
   const link = headers.get("link");
   return link?.includes('rel="next"') ?? false;
-}
-
-function disabledContent(): Content {
-  return { text: null, state: "disabled", originalBytes: null, categories: ["code"] };
-}
-
-function decode(bytes: Buffer, policy: CapturePolicy): Content {
-  if (bytes.includes(0))
-    return { text: null, state: "unsupported", originalBytes: bytes.length, categories: ["code"] };
-  let text: string;
-  try {
-    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  } catch {
-    return { text: null, state: "malformed", originalBytes: bytes.length, categories: ["code"] };
-  }
-  return sanitizeContent(
-    { text, state: "present", originalBytes: bytes.length, categories: ["code"] },
-    policy,
-    ["code"],
-  );
 }
 
 export function githubReads(options: GithubReadOptions): GithubReads {
@@ -328,6 +309,7 @@ export function githubReads(options: GithubReadOptions): GithubReads {
         const commit = revision.resolvedCommit;
         if (!commit) throw new GithubReadError("missing");
         const cached = options.cache.read({
+          provider: "github",
           repositoryId: request.repository.repositoryId,
           commit,
           path: request.path,
@@ -405,11 +387,16 @@ export function githubReads(options: GithubReadOptions): GithubReads {
               },
             };
           }
-          content = decode(bytes, options.policy);
+          content = decodeProviderContent(bytes, options.policy);
         }
         if (content.text !== null)
           options.cache.write(
-            { repositoryId: request.repository.repositoryId, commit, path: request.path },
+            {
+              provider: "github",
+              repositoryId: request.repository.repositoryId,
+              commit,
+              path: request.path,
+            },
             content,
           );
         return {
