@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { autostart, loginLifecycle } from "./autostart";
 import { childEnvironment, cliConfig, connectArguments, requireNode } from "./config";
+import { githubCommand } from "./github";
 import { installRelease, uninstallRelease } from "./install";
 import { serviceStatus, startService, stopService } from "./lifecycle";
 import { recoverUpdate, rollbackRelease, updateRelease } from "./update";
@@ -23,6 +24,8 @@ quoli hooks uninstall [repository]  Remove Quoli hooks without deleting evidence
 quoli hooks codex status|uninstall [repository]     Inspect/remove the Codex hooks
 quoli hooks opencode status|uninstall [repository]  Inspect/remove the OpenCode plugin
 quoli hooks pi status|uninstall [repository]        Inspect/remove the Pi extension
+quoli github connect --client-id ID  Connect a read-only GitHub App; token stays in the OS keychain
+quoli github status | disconnect     Inspect or remove the local GitHub credential
 quoli settings ...                 Capture policy, pause, retention and deletion
 quoli autostart enable|disable|status  Optional Linux user-login startup
 quoli update ARCHIVE KEY VERSION    Verify and install an explicitly trusted newer release
@@ -56,7 +59,10 @@ async function main() {
     console.log(JSON.parse(readFileSync(join(root, "release.json"), "utf8")).version);
     return;
   }
-  if (!["connect", "settings", "hooks", "autostart", "update"].includes(command) && args.length)
+  if (
+    !["connect", "settings", "hooks", "github", "autostart", "update"].includes(command) &&
+    args.length
+  )
     throw new Error("Unexpected command arguments. Run quoli help.");
   if (command === "install") {
     console.log(
@@ -102,6 +108,10 @@ async function main() {
         "Use quoli hooks uninstall|status [repository], quoli hooks codex|opencode|pi status|uninstall [repository], or quoli hooks drain.",
       );
     await run("quoli-hook-v1.mjs", args);
+    return;
+  }
+  if (command === "github") {
+    await githubCommand(args);
     return;
   }
   if (command === "settings") {
