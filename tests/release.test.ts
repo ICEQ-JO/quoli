@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
+import { generateKeyPairSync } from "node:crypto";
 import { once } from "node:events";
 import {
   chmodSync,
@@ -20,6 +21,9 @@ import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { chromium, expect } from "@playwright/test";
+
+import { artifactDigest, signManifest } from "../apps/cli/src/release";
+import { releaseManifestSchema } from "../packages/schema/src/release";
 
 const exec = promisify(execFile);
 async function freePort() {
@@ -376,5 +380,47 @@ test("local install refuses unrelated destination files", {
     assert.equal(existsSync(f.env.QUOLI_INSTALL_DIR), false);
   } finally {
     await f.close();
+  }
+});
+
+test("standalone release verifier works before extraction without pnpm or source imports", {
+  skip: process.env.QUOLI_RELEASE_TEST !== "1",
+  timeout: 30000,
+}, async () => {
+  const dir = mkdtempSync(join(tmpdir(), "quoli-verify-package-"));
+  try {
+    const archive = join(dir, "quoli-0.1.0-linux-x64.tar.gz"),
+      keyFile = join(dir, "trusted.pem");
+    const pair = generateKeyPairSync("ed25519");
+    writeFileSync(archive, "Inert synthetic archive, never extracted or executed");
+    writeFileSync(keyFile, pair.publicKey.export({ type: "spki", format: "pem" }));
+    signManifest(
+      archive,
+      releaseManifestSchema.parse({
+        format: 1,
+        product: "quoli",
+        version: "0.1.0",
+        platform: "linux",
+        arch: "x64",
+        node: ">=24.16.0 <25",
+        source: { commit: "a".repeat(40), tag: "v0.1.0", epoch: 1792800000, clean: true },
+        toolchain: { node: "24.16.0", pnpm: "11.12.0", lockSha256: "b".repeat(64) },
+        archive: { name: "quoli-0.1.0-linux-x64.tar.gz", ...(await artifactDigest(archive)) },
+      }),
+      pair.privateKey,
+    );
+    const args = [resolve("dist/verify-release.mjs"), archive, keyFile, "0.1.0"];
+    const env = { PATH: "/usr/bin:/bin" };
+    assert.match(
+      (await exec(process.execPath, args, { cwd: dir, env })).stdout,
+      /Verified Quoli 0.1.0/,
+    );
+    writeFileSync(archive, "Tampered inert synthetic bytes");
+    await assert.rejects(
+      exec(process.execPath, args, { cwd: dir, env }),
+      /Release verification failed/,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
