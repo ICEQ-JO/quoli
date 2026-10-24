@@ -3,6 +3,8 @@ import { eventSchema, MAX_BODY } from "@traceframe/schema";
 import { credential, runtime } from "@traceframe/storage/runtime";
 import { drainSpool, spool, spoolDepth } from "@traceframe/storage/spool";
 import { adapters } from "./adapter";
+import { CODEX_VERSION, normalizeCodex } from "./codex";
+import { codexHookStatus, uninstallCodexHooks } from "./codex-install";
 import { hookStatus, installHooks, uninstallHooks } from "./install";
 import { type HookPayload, normalizeHook } from "./normalize";
 import { OPENCODE_VERSION } from "./opencode";
@@ -11,9 +13,10 @@ import { openCodeStatus, uninstallOpenCode } from "./opencode-install";
 /**
  * The passive hook bridge.
  *
- * Claude Code calls it with the hook JSON on stdin. It normalizes the payload,
- * delivers it to the local collector and never influences the agent: it always
- * exits 0 and never writes to stdout, because stdout is read as a hook decision.
+ * Claude Code and Codex call it with the hook JSON on stdin. It normalizes the
+ * payload, delivers it to the local collector and never influences the agent: it
+ * always exits 0 and never writes to stdout, because stdout is read as a hook
+ * decision.
  */
 
 async function deliver(event: NormalizedEvent): Promise<boolean> {
@@ -45,7 +48,7 @@ async function readStdin(): Promise<string | null> {
   return size > MAX_BODY ? null : Buffer.concat(chunks).toString("utf8");
 }
 
-export async function runHook(projectId: string): Promise<number> {
+export async function runHook(projectId: string, harness = "claude"): Promise<number> {
   const raw = await readStdin();
   if (raw === null) return 0;
   let payload: HookPayload;
@@ -56,7 +59,10 @@ export async function runHook(projectId: string): Promise<number> {
   }
   const sessionId = typeof payload.session_id === "string" ? payload.session_id : null;
   if (!sessionId) return 0;
-  const event = normalizeHook(payload, { projectId, sessionId });
+  const event =
+    harness === "codex"
+      ? normalizeCodex(payload, { projectId, sessionId })
+      : normalizeHook(payload, { projectId, sessionId });
   if (!event) return 0;
   const parsed = eventSchema.safeParse(event);
   if (!parsed.success) return 0;
@@ -87,6 +93,19 @@ async function main() {
     );
     return;
   }
+  if (first === "codex") {
+    const [action, root = process.cwd()] = args;
+    if (args.length > 2 || !["status", "uninstall"].includes(action))
+      throw new Error("Use hooks codex status|uninstall [repository].");
+    if (action === "uninstall") uninstallCodexHooks(root);
+    const status = codexHookStatus(root);
+    console.log(
+      `Codex ${CODEX_VERSION}: hooks ${status.installed ? `installed for project ${status.projectId}` : "not installed"}.`,
+    );
+    if (status.installed)
+      console.log("Codex runs them only after you review and trust them with /hooks.");
+    return;
+  }
   const command = COMMANDS.includes(first) ? first : "";
   if (command === "drain") {
     await runDrain();
@@ -110,13 +129,14 @@ async function main() {
     }
     if (command === "uninstall") {
       const result = uninstallHooks(root);
+      const codex = uninstallCodexHooks(root);
       console.log(
-        `Traceframe hooks removed from ${root}. ${result.preservedGroups} existing hook groups were left untouched.`,
+        `Traceframe hooks removed from ${root}. ${result.preservedGroups + codex.preservedGroups} existing hook groups were left untouched.`,
       );
       return;
     }
     const status = hookStatus(root);
-    // This existing command reports Claude hooks; OpenCode has a separate plugin status command.
+    // This existing command reports Claude hooks; Codex and OpenCode have separate status commands.
     const [adapter] = adapters;
     console.log(
       `Adapter ${adapter.id} v${adapter.adapterVersion} supports ${adapter.harness} ${adapter.sourceVersions.join(", ")}; hooks are ${
@@ -132,7 +152,13 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  await runHook(projectId);
+  const harness = command ? "claude" : (args[0] ?? "claude");
+  if (harness !== "claude" && harness !== "codex") {
+    console.error("Unknown harness; hooks capture Claude Code or Codex payloads.");
+    process.exitCode = 1;
+    return;
+  }
+  await runHook(projectId, harness);
 }
 
 if (process.argv[1]?.endsWith("index.ts") || process.argv[1]?.endsWith("quoli-hook-v1.mjs")) {
@@ -141,6 +167,11 @@ if (process.argv[1]?.endsWith("index.ts") || process.argv[1]?.endsWith("quoli-ho
       console.error(
         "OpenCode integration command could not finish; check the project path and plugin ownership.",
       );
+      process.exitCode = 1;
+      return;
+    }
+    if (process.argv[2] === "codex") {
+      console.error("Codex hook command could not finish; check the project path and hook file.");
       process.exitCode = 1;
       return;
     }

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { type DeliveryIdentityInput, defineAdapter } from "@traceframe/schema/adapter";
+import { codexAdapter } from "./codex";
 import {
   BRIDGE_PRODUCER,
   BRIDGE_VERSION,
@@ -58,4 +59,4 @@ export const claudeAdapter = defineAdapter({
 });
 
 /** Product adapters this build can install. */
-export const adapters = [claudeAdapter, openCodeAdapter] as const;
+export const adapters = [claudeAdapter, codexAdapter, openCodeAdapter] as const;

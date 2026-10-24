@@ -26,9 +26,17 @@ Without `--capture-code`, the project is metadata-only: code diffs and unstaged 
 pnpm connect /path/to/project --agent claude --capture-code
 ```
 
-This additionally installs only Quoli's own hooks in `.claude/settings.json`, preserving other settings and hooks. Prompt/tool content remains disabled until explicitly enabled in Settings. The adapter was previously verified against Claude Code 2.1.306; see the [runtime report](claude-code-runtime-report.md). Codex, Pi and OpenCode activity integrations are not installed by this command.
+This additionally installs only Quoli's own hooks in `.claude/settings.json`, preserving other settings and hooks. Prompt/tool content remains disabled until explicitly enabled in Settings. The adapter was previously verified against Claude Code 2.1.306; see the [runtime report](claude-code-runtime-report.md). Codex and OpenCode activity integrations are not installed by this command.
 
 Add `--telemetry` with `--agent claude` to print optional usage-export configuration. Existing destinations are reported and never replaced; no global settings are modified. Keep the printed local credential private. The [usage receiver](telemetry-receiver.md) documents the variables and source-level privacy gates. Reported usage requires the collector's project routing configuration as documented there.
+
+## Optional Codex activity
+
+```sh
+pnpm connect /path/to/project --agent codex
+```
+
+This requires Codex CLI **0.163.0**, writes only Quoli's hook groups to `.codex/hooks.json` and preserves the rest of the file. Codex does not run project hooks until you review and trust them with `/hooks`; until then no activity is captured. Other versions fail closed. See the [Codex adapter](codex-adapter.md) for collected events, omissions and removal.
 
 ## Optional OpenCode activity
 
@@ -47,6 +55,6 @@ pnpm connect /path/to/project --undo PROJECT_ID
 pnpm settings resume PROJECT_ID
 ```
 
-Check reports registration, observer status, Claude hooks and the OpenCode plugin. Disable pauses new capture and keeps retained evidence. Undo verifies that the project matches the registered root, removes its own installed Claude hooks/OpenCode plugin if present, and deletes that project's retained evidence and observer registration. Source files, other hooks and global tool settings remain untouched. Deletion is not secure physical erasure and does not remove backups or agent-owned transcripts.
+Check reports registration, observer status, Claude hooks, Codex hooks and the OpenCode plugin. Disable pauses new capture and keeps retained evidence. Undo verifies that the project matches the registered root, removes its own installed Claude hooks, Codex hooks and OpenCode plugin if present, and deletes that project's retained evidence and observer registration. Source files, other hooks and global tool settings remain untouched. Deletion is not secure physical erasure and does not remove backups or agent-owned transcripts.
 
 Source-checkout setup does not install the managed background runtime; the unpublished local CLI supports it. Port conflicts are reported instead of killing other software. The private data directory must be outside the observed repository. If capture is unavailable or blocked, inspect the repository-history status and Settings. Linux is the tested capture platform; macOS remains unverified.

@@ -45,7 +45,7 @@ function id(prefix: string, parts: unknown[]): string {
  * Bounds and redacts content before it leaves the bridge. The collector
  * sanitizes again under the policy that is active at delivery time.
  */
-function text(value: unknown): string | null {
+export function boundedText(value: unknown): string | null {
   if (typeof value === "string") return redact(value).slice(0, MAX_TEXT);
   if (value === null || value === undefined) return null;
   try {
@@ -55,7 +55,7 @@ function text(value: unknown): string | null {
   }
 }
 
-function content(
+export function hookContent(
   value: string | null,
   state: Content["state"],
   categories: Content["categories"],
@@ -140,7 +140,10 @@ export function normalizeHook(
       id: id("hook", [sessionId, "SessionStart"]),
       deliveryId: id("deliver", [sessionId, "SessionStart"]),
       tool: null,
-      payload: { kind: "session_start", content: content(null, "unavailable", ["prompt", "code"]) },
+      payload: {
+        kind: "session_start",
+        content: hookContent(null, "unavailable", ["prompt", "code"]),
+      },
     };
   if (event === "SessionEnd")
     return {
@@ -158,7 +161,7 @@ export function normalizeHook(
       tool: null,
       payload: {
         kind: "prompt",
-        content: content(text(payload.prompt) ?? null, "present", ["prompt", "code"]),
+        content: hookContent(boundedText(payload.prompt) ?? null, "present", ["prompt", "code"]),
       },
     };
   if (event === "PreToolUse") {
@@ -171,7 +174,10 @@ export function normalizeHook(
       payload: {
         kind: "tool_call",
         toolName: toolName(payload.tool_name),
-        content: content(text(command ?? payload.tool_input) ?? null, "present", ["tool", "code"]),
+        content: hookContent(boundedText(command ?? payload.tool_input) ?? null, "present", [
+          "tool",
+          "code",
+        ]),
         path: filePath(payload.tool_input),
       },
     };
@@ -185,7 +191,10 @@ export function normalizeHook(
       payload: {
         kind: "tool_result",
         toolName: toolName(payload.tool_name),
-        content: content(text(payload.tool_response) ?? null, "present", ["tool", "code"]),
+        content: hookContent(boundedText(payload.tool_response) ?? null, "present", [
+          "tool",
+          "code",
+        ]),
         // The runtime reports no numeric exit code for a successful command.
         exitCode: null,
         status: "success",
@@ -200,7 +209,7 @@ export function normalizeHook(
       payload: {
         kind: "tool_result",
         toolName: toolName(payload.tool_name),
-        content: content(text(payload.error) ?? null, "present", ["tool", "code"]),
+        content: hookContent(boundedText(payload.error) ?? null, "present", ["tool", "code"]),
         // Only an error string reports the exit status; the code itself is unknown.
         exitCode: null,
         status: payload.is_interrupt === true ? "interrupted" : "failure",

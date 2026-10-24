@@ -89,6 +89,10 @@ export type DeliveryIdentityInput = {
   event: string;
   promptId: string | null;
   toolId: string | null;
+  /** Sources that identify a request rather than a prompt (optional). */
+  requestId?: string | null;
+  /** Subagent identity for sources that scope children inside one session. */
+  childSessionId?: string | null;
 };
 
 export type AdapterDescriptor = AdapterRegistration & {
