@@ -12,7 +12,7 @@ Live Claude Code collection is implemented as a passive [hook bridge](docs/hook-
 
 OpenCode **2.0.32** activity is available through an optional [project plugin](docs/opencode-adapter.md): `pnpm connect /path/to/repo --agent opencode`. It records selected public events locally. Live plugin/session creation is verified; prompts, tools and usage have source-shaped synthetic validation. Restart OpenCode after installation.
 
-Codex CLI **0.163.0** activity is available through optional [lifecycle hooks](docs/codex-adapter.md): `pnpm connect /path/to/repo --agent codex`. Quoli writes only its own entries in `.codex/hooks.json`; Codex captures nothing until you review and trust them with `/hooks`. One offline synthetic turn verified start, prompt and end capture; tool and subagent payloads have documented-shape synthetic validation.
+Codex CLI **0.163.0** activity is available through optional [lifecycle hooks](docs/codex-adapter.md): `pnpm connect /path/to/repo --agent codex`. Quoli writes only its own entries in `.codex/hooks.json`; Codex captures nothing until you review and trust them with `/hooks`. Offline synthetic turns verified start, prompt, end, a real shell tool call and a real subagent start; only `SubagentStop` has documented-shape synthetic validation.
 
 ## Install a local CLI
 

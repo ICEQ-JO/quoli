@@ -25,14 +25,16 @@ Environment: Linux x64, Node 22.22.3 (project engine is 24.16; pre-existing loca
 | `pnpm test` | 212 pass, 5 skipped, 7 fail — all 7 failures reproduce on `main` without these changes (`tests/update.test.ts`, `tests/release-signing.test.ts`) |
 | `git diff --check` | Clean |
 | Offline Codex turn | Codex 0.163.0 fired `SessionStart` → `UserPromptSubmit` → `SessionEnd`; the bridge produced `session_start` (source `startup`), `prompt` (turn UUID as request ID) and `session_end` in the retry spool with source `codex_hook` |
+| Offline Codex tool call | A stub provider's `exec` call ran `printf`; hooks fired `PreToolUse` and `PostToolUse` with `tool_name` `Bash`, `tool_input.command`, a string `tool_response` and an `exec-`-prefixed `tool_use_id` |
+| Offline Codex subagent | A stub `collaboration.spawn_agent` call fired `PreToolUse`/`PostToolUse` (`tool_name` `collaborationspawn_agent`) and `SubagentStart` with the parent `session_id`, an `agent_id` and the subagent's own `turn_id`; `SubagentStop` did not arrive before the parent ended |
 
-The offline turn used a local OpenAI-compatible stub provider and `--dangerously-bypass-hook-trust` in a disposable project, so it exercised hook discovery, payload shape and the bridge without a model request, credential or private session. Two intermittent failures appeared in one parallel full-suite run (`lifecycle`, `opencode`) and passed in isolation on both branches; they are not attributed to this change. Temporary artifacts were removed.
+The offline turns used a local OpenAI-compatible stub provider and `--dangerously-bypass-hook-trust` in a disposable project, so they exercised hook discovery, payload shape and the bridge without a model request, credential or private session. The tool/subagent probes also corrected the activity mapping: the earlier code treated a subagent's `turn_id` as the parent turn, which the observed payload disproved. Two intermittent failures appeared in one parallel full-suite run (`lifecycle`, `opencode`) and passed in isolation on both branches; they are not attributed to this change. Temporary artifacts were removed.
 
 ## Limits and review findings resolved
 
 - Codex trust is a real user step: writing `.codex/hooks.json` produces no evidence until `/hooks` trust and a trusted project `.codex/` layer. `[features] hooks = false` makes the file inert. Documented in setup, status and the reference.
 - `PostToolUse` reports neither a success flag nor an exit code, so results record `status: "unknown"` and `exitCode: null` rather than assuming success.
 - `SessionEnd` only ever reports `reason: "other"`; completion is inferred, matching the existing Claude mapping. The reference states this is the weakest claim in the adapter.
-- Codex has no separate child session ID, so `agent_id` occupies the child-session slot with the parent session/turn recorded as the parent. Tool calls inside a subagent still arrive with the parent session and are not attributed to the child.
+- Codex has no separate child session ID, so `agent_id` occupies the child-session slot and the subagent's own `turn_id` fills the child-turn slot. `SubagentStart`/`SubagentStop` declare only the spawned child, because declaring the parent session as well would link a session to itself. Tool calls inside a subagent arrive with the parent session and carry the agent id only in their locator, so they are not attributed to the child.
 - No usage, source timestamps, plan/decision/approval/correction fields, extension inventory, transcript replay or complete-capture claim.
-- Not verified: tool and subagent hook payloads during a real tool call or spawn, interactive `/hooks` trust, hook timeouts, and macOS.
+- Not verified: a real `SubagentStop` payload, interactive `/hooks` trust, hook timeouts, and macOS.

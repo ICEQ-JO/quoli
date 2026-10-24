@@ -5,10 +5,10 @@
 // stub provider, so no account, network call or paid API was used. Identifiers,
 // paths and text below are replaced with fixed placeholders.
 //
-// PreToolUse, PostToolUse, SubagentStart and SubagentStop are still
-// documented-shape only: that run did not call a tool or spawn a subagent. They
-// follow the official event tables and are marked as such in the adapter
-// reference; a tool/subagent capture is still owed.
+// PreToolUse, PostToolUse and SubagentStart were observed the same way in later
+// runs: one real tool call (tool name "Bash", `tool_use_id` prefixed `exec-`, a
+// string `tool_response`) and one real `spawn_agent` call. SubagentStop is still
+// documented-shape: the parent session ended before the child reported a stop.
 
 export const codexProbe = {
   version: "0.163.0",
@@ -16,8 +16,15 @@ export const codexProbe = {
   /** Where the documented contract lives. */
   contract: "https://learn.chatgpt.com/docs/hooks",
   /** Which events were exercised against the real CLI. */
-  observedEvents: ["SessionStart", "UserPromptSubmit", "SessionEnd"] as const,
-  documentedOnlyEvents: ["PreToolUse", "PostToolUse", "SubagentStart", "SubagentStop"] as const,
+  observedEvents: [
+    "SessionStart",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "SubagentStart",
+    "SessionEnd",
+  ] as const,
+  documentedOnlyEvents: ["SubagentStop"] as const,
   observedAt: "2026-10-24",
   /** How the payloads below were produced. */
   basis: "observed-and-documented-shape" as const,
@@ -50,6 +57,9 @@ export type CodexHookSample = {
 // Codex reports UUID-shaped session and turn identifiers.
 const session = "018f1a2b-3c4d-7e5f-8a9b-0c1d2e3f4a5b";
 const turn = "018f1a2b-9c8d-7e6f-8a1b-2c3d4e5f6a7b";
+// A subagent reports its own turn inside the parent session and no parent turn.
+const subagentTurn = "018f1a2b-9c8d-7e6f-8a1b-0000000000aa";
+const agent = "018f1a2b-0000-7b1c-8d2e-3f4051627384";
 
 export function codexHookSamples(): CodexHookSample[] {
   return [
@@ -81,8 +91,8 @@ export function codexHookSamples(): CodexHookSample[] {
       permission_mode: "default",
       turn_id: turn,
       tool_name: "Bash",
-      tool_use_id: "call_synthetic_aaaaaaaaaaaa",
-      tool_input: { command: "echo quoli-codex-probe-ok", description: "Print probe marker" },
+      tool_use_id: "exec-018f1a2b-0001-7a2b-8c3d-4e5f60718293",
+      tool_input: { command: "printf quoli-codex-probe-ok" },
     },
     {
       session_id: session,
@@ -93,9 +103,9 @@ export function codexHookSamples(): CodexHookSample[] {
       permission_mode: "default",
       turn_id: turn,
       tool_name: "Bash",
-      tool_use_id: "call_synthetic_aaaaaaaaaaaa",
-      tool_input: { command: "echo quoli-codex-probe-ok", description: "Print probe marker" },
-      tool_response: "quoli-codex-probe-ok\n",
+      tool_use_id: "exec-018f1a2b-0001-7a2b-8c3d-4e5f60718293",
+      tool_input: { command: "printf quoli-codex-probe-ok" },
+      tool_response: "quoli-codex-probe-ok",
     },
     {
       session_id: session,
@@ -105,11 +115,9 @@ export function codexHookSamples(): CodexHookSample[] {
       model: "gpt-5.1-codex",
       permission_mode: "default",
       turn_id: turn,
-      tool_name: "apply_patch",
+      tool_name: "collaborationspawn_agent",
       tool_use_id: "call_synthetic_bbbbbbbbbbbb",
-      tool_input: {
-        command: "*** Begin Patch\n*** Add File: probe.txt\n+probe\n*** End Patch\n",
-      },
+      tool_input: { task_name: "probe", message: "say ok" },
     },
     {
       session_id: session,
@@ -118,9 +126,9 @@ export function codexHookSamples(): CodexHookSample[] {
       hook_event_name: "SubagentStart",
       model: "gpt-5.1-codex",
       permission_mode: "default",
-      turn_id: turn,
-      agent_id: "agent_synthetic_1111",
-      agent_type: "explorer",
+      turn_id: subagentTurn,
+      agent_id: agent,
+      agent_type: "default",
     },
     {
       session_id: session,
@@ -129,12 +137,10 @@ export function codexHookSamples(): CodexHookSample[] {
       hook_event_name: "SubagentStop",
       model: "gpt-5.1-codex",
       permission_mode: "default",
-      turn_id: turn,
-      agent_id: "agent_synthetic_1111",
-      agent_type: "explorer",
+      turn_id: subagentTurn,
+      agent_id: agent,
+      agent_type: "default",
       agent_transcript_path: null,
-      stop_hook_active: false,
-      last_assistant_message: null,
     },
     {
       session_id: session,

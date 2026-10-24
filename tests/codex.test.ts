@@ -123,21 +123,44 @@ test("delivery identity is stable per source event and survives repeated prompts
   );
 });
 
-test("a subagent keeps its scope without inventing a child session", () => {
+test("a subagent declares its spawned child and never invents a parent turn", () => {
   const sample = codexHookSamples().find((payload) => payload.hook_event_name === "SubagentStart");
   assert.ok(sample);
   const event = normalizeCodex(sample, { projectId, sessionId: sample.session_id });
   assert.ok(event);
   const observed = v2(event);
   assert.equal(observed.sessionId, sample.session_id);
+  // Codex reports the subagent's own turn inside the parent session and no
+  // parent turn, so only the spawned child is declared: no self-link.
   assert.deepEqual(observed.activity, {
+    turnId: null,
+    parentSessionId: null,
+    parentTurnId: null,
+    childSessionId: sample.agent_id,
+    childTurnId: sample.turn_id,
+  });
+  assert.equal(observed.sourceLocator, `codex_hook:SubagentStart:default:${sample.agent_id}`);
+  // A subagent's own tool call keeps the agent id, its only child marker.
+  const childTool = normalizeCodex(
+    {
+      ...sample,
+      hook_event_name: "PreToolUse",
+      tool_name: "Bash",
+      tool_use_id: "exec-018f1a2b-0002-7a2b-8c3d-4e5f60718293",
+      tool_input: { command: "true" },
+    },
+    { projectId, sessionId: sample.session_id },
+  );
+  assert.ok(childTool);
+  const childObserved = v2(childTool);
+  assert.equal(childObserved.sourceLocator, `codex_hook:PreToolUse:default:${sample.agent_id}`);
+  assert.deepEqual(childObserved.activity, {
     turnId: sample.turn_id,
-    parentSessionId: sample.session_id,
-    parentTurnId: sample.turn_id,
-    childSessionId: "agent_synthetic_1111",
+    parentSessionId: null,
+    parentTurnId: null,
+    childSessionId: null,
     childTurnId: null,
   });
-  assert.equal(observed.sourceLocator, "codex_hook:SubagentStart:explorer");
 });
 
 test("content is redacted before it leaves the bridge", () => {

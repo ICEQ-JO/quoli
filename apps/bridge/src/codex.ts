@@ -122,7 +122,8 @@ export function normalizeCodex(
     adapterId: codexAdapter.id,
     adapterVersion: codexAdapter.adapterVersion,
     producerId: codexAdapter.producerId,
-    sourceLocator: ["codex_hook", event, agentType ?? source].filter(Boolean).join(":"),
+    // The agent id is the only marker a subagent's own tool calls carry.
+    sourceLocator: ["codex_hook", event, agentType ?? source, agentId].filter(Boolean).join(":"),
     promptId: null as string | null,
     toolId: null as string | null,
     requestId: turnId,
@@ -130,12 +131,15 @@ export function normalizeCodex(
     sourceSequence: null,
     policyVersion: 1,
     tool: null as { rawName: string; category: ToolCategory } | null,
+    // Codex sends the parent session with the subagent's own turn. The parent
+    // turn is not reported, and this session already owns the event, so only the
+    // spawned child is declared to avoid a self-link.
     activity: {
-      turnId,
-      parentSessionId: subagent ? sessionId : null,
-      parentTurnId: subagent ? turnId : null,
+      turnId: subagent ? null : turnId,
+      parentSessionId: null,
+      parentTurnId: null,
       childSessionId: subagent ? agentId : null,
-      childTurnId: null,
+      childTurnId: subagent ? turnId : null,
     },
     fieldCapabilities: {
       content: "available" as const,
