@@ -1,5 +1,4 @@
 import { execFile } from "node:child_process";
-import { createHash } from "node:crypto";
 import {
   chmodSync,
   cpSync,
@@ -7,7 +6,6 @@ import {
   lstatSync,
   mkdirSync,
   readdirSync,
-  readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -15,16 +13,39 @@ import {
 import { join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import { build } from "esbuild";
+import { artifactDigest, signingKey, signManifest } from "../apps/cli/src/release";
+import { releaseManifestSchema } from "../packages/schema/src/release";
+import { releaseArchive } from "./release-archive";
+import { releaseSource } from "./release-source";
 
 const exec = promisify(execFile);
 const root = resolve(import.meta.dirname, "..");
 const destination = join(root, "dist/quoli");
 const releaseBuild = ".next-release";
-const version = "0.1.0-local";
+const signed = process.argv.includes("--signed");
+if (process.argv.slice(2).some((arg) => arg !== "--signed"))
+  throw new Error("Use release:local or release:signed.");
+const keyFile = process.env.QUOLI_SIGNING_KEY_FILE;
+delete process.env.QUOLI_SIGNING_KEY_FILE;
+const provenance = releaseSource(root, signed);
+const { version, source, toolchain } = provenance;
+const key = signed ? signingKey(keyFile ?? "", root) : null;
+const buildEnvironment: NodeJS.ProcessEnv = signed
+  ? {
+      PATH: process.env.PATH,
+      HOME: process.env.HOME,
+      PNPM_HOME: process.env.PNPM_HOME,
+      LC_ALL: "C",
+      TZ: "UTC",
+    }
+  : { ...process.env };
+delete buildEnvironment.QUOLI_SIGNING_KEY_FILE;
+delete buildEnvironment.QUOLI_BUILD_ID;
+if (signed) buildEnvironment.QUOLI_BUILD_ID = source.commit;
 await exec("pnpm", ["build"], {
   cwd: root,
   env: {
-    ...process.env,
+    ...buildEnvironment,
     QUOLI_STANDALONE: "1",
     TRACEFRAME_NEXT_DIR: releaseBuild,
     NEXT_TELEMETRY_DISABLED: "1",
@@ -83,7 +104,10 @@ writeFileSync(
       platform: process.platform,
       arch: process.arch,
       node: ">=24.16.0 <25",
-      builtAt: new Date().toISOString(),
+      builtAt: new Date(source.epoch * 1000).toISOString(),
+      channel: signed ? "signed" : "local-unsigned",
+      source,
+      toolchain,
     },
     null,
     2,
@@ -94,6 +118,16 @@ writeFileSync(
   "Quoli local release\nRequires Node 24.16+ within Node 24, Git and Linux.\nInstall: node cli.mjs install\nThen: quoli connect /path/to/repo --capture-code\nNo registry publication or remote installer is implied.\nUse quoli help for lifecycle and login-startup commands.\n",
 );
 
+await build({
+  absWorkingDir: root,
+  entryPoints: ["scripts/verify-release.ts"],
+  outfile: join(root, "dist/verify-release.mjs"),
+  bundle: true,
+  platform: "node",
+  format: "esm",
+  target: "node24",
+  sourcemap: false,
+});
 let files = 0;
 function inspect(directory: string) {
   for (const entry of readdirSync(directory)) {
@@ -111,7 +145,30 @@ function inspect(directory: string) {
 }
 inspect(destination);
 const archive = join(root, `dist/quoli-${version}-${process.platform}-${process.arch}.tar.gz`);
-await exec("tar", ["-czf", archive, "-C", join(root, "dist"), "quoli"], { maxBuffer: 1024 * 1024 });
-const checksum = createHash("sha256").update(readFileSync(archive)).digest("hex");
+if (signed && JSON.stringify(releaseSource(root, true)) !== JSON.stringify(provenance))
+  throw new Error("Release inputs changed during the build.");
+for (const sidecar of [".manifest.json", ".sig", ".sha256"])
+  rmSync(`${archive}${sidecar}`, { force: true });
+await releaseArchive(destination, archive, source.epoch);
+const { sha256: checksum, bytes } = await artifactDigest(archive);
 writeFileSync(`${archive}.sha256`, `${checksum}  ${archive.split("/").at(-1)}\n`);
-console.log(`Built ${relative(root, archive)} (${files} files). SHA-256: ${checksum}`);
+if (key) {
+  signManifest(
+    archive,
+    releaseManifestSchema.parse({
+      format: 1,
+      product: "quoli",
+      version,
+      platform: process.platform,
+      arch: process.arch,
+      node: ">=24.16.0 <25",
+      source,
+      toolchain,
+      archive: { name: archive.split("/").at(-1), bytes, sha256: checksum },
+    }),
+    key,
+  );
+}
+console.log(
+  `Built ${relative(root, archive)} (${files} files; ${signed ? "signed" : "local unsigned"}). SHA-256: ${checksum}`,
+);

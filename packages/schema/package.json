@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./release": "./src/release.ts",
     "./adapter": "./src/adapter.ts",
     "./privacy": "./src/privacy.ts",
     "./repository": "./src/repository.ts",
