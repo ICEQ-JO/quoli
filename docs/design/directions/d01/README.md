@@ -93,7 +93,7 @@ These are three complete visual worlds, not three colour skins. Each shows the s
 - **Chosen:** **D — The Evidence Field** (owner-supplied black/Inter/Instrument Serif direction, applied to the landing in QUO-83).
 - **Rejected:** A — The Surveyor's Field Book; B — The Phosphor Terminal; C — The One-Bit Desktop. Each was a complete world and none is being implemented.
 - **Rationale:** The owner preferred the supplied reference. It carries the clean black/serif contrast the owner asked for; the fabricated stats and stock video were replaced with the product pipeline and a synthetic evidence field.
-- **Trade-off accepted:** D is less category-breaking than A or B and uses glass/gradient pills. It is dark-only for the landing; workspace light/dark is unchanged.
+- **Trade-off accepted:** D is less category-breaking than A or B and uses glass/gradient pills. It is dark-only for the landing; workspace light/dark remains supported; QUO-84 adopts the identity through B — Document first.
 - **Date:** 2026-10-23.
 
 The earlier A/B/C boards remain in [index.html](index.html) as the record of what was rejected. They are not a second live direction.
@@ -116,3 +116,7 @@ Screenshots captured at 1440px from the static artifact:
 - [Full page](shots/d01-full.png), [mobile](shots/d01-mobile.png)
 
 The screenshots are design evidence, not a claim that any direction is implemented.
+
+## Workspace adoption
+
+On 2026-10-24 the owner approved workspace composition **B — Document first**, within D, for QUO-84. This B is a layout probe, not the rejected phosphor-terminal direction B above. [Approved comp, ingredient inventory and implementation evidence](../../workspace-evidence-field.md). The delivered workspace uses neutral black/white planes rather than landing-style glass, with existing evidence controls and both themes.

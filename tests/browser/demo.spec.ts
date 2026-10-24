@@ -544,14 +544,14 @@ test("activity opens details on demand and theme choice survives reload", async 
   expect(new URL(page.url()).searchParams.has("event")).toBe(false);
   await page.getByRole("button", { name: "Switch to light theme" }).click();
   await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "light");
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(249, 250, 248)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await page.reload();
   await expect(page.getByRole("button", { name: "Switch to dark theme" })).toBeVisible();
   await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "light");
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(249, 250, 248)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await page.getByRole("button", { name: "Switch to dark theme" }).click();
   await expect(page.locator(".review-app")).toHaveAttribute("data-theme", "dark");
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(20, 23, 23)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(0, 0, 0)");
 });
 
 test("session review keeps source inspection in context, supports breakpoint changes and opens code", async ({
