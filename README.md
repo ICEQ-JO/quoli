@@ -14,6 +14,8 @@ OpenCode **2.0.32** activity is available through an optional [project plugin](d
 
 Codex CLI **0.163.0** activity is available through optional [lifecycle hooks](docs/codex-adapter.md): `pnpm connect /path/to/repo --agent codex`. Quoli writes only its own entries in `.codex/hooks.json`; Codex captures nothing until you review and trust them with `/hooks`. Offline synthetic turns verified start, prompt, end, a real shell tool call and a real subagent start; only `SubagentStop` has documented-shape synthetic validation.
 
+Pi **0.75.3** activity is available through a reversible [project extension](docs/pi-adapter.md): `pnpm connect /path/to/repo --agent pi`. Verified offline against a real Pi session: start, prompt, tool call/result, reported token usage and session end.
+
 ## Install a local CLI
 
 `pnpm release:local` builds a standalone local Linux archive. Run `node dist/quoli/cli.mjs install` once, then run `quoli connect --capture-code` inside your repository. Capture and the production dashboard run in the background, managed with `quoli start`, `quoli stop` and `quoli status`. Node 24.16+ within Node 24 and Git are required; the installed runtime needs neither pnpm nor this checkout. Nothing is published to a registry. See [CLI installation and lifecycle](docs/cli.md).

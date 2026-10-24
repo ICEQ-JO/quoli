@@ -18,7 +18,7 @@ The connection command enables automatic observation in private local configurat
 
 `--capture-code` explicitly permits bounded, best-effort-redacted code versions. Without it, capture is metadata-only: file bodies and unstaged content edits are unavailable. `--include-untracked` separately permits untracked-file capture. Ignored/excluded paths are omitted. Existing project consent is never silently broadened by reconnecting: use Settings to change it.
 
-For optional Claude session activity, add `--agent claude` during connection; see [setup](local-setup.md). Codex 0.163.0 and OpenCode 2.0.32 have their own adapters ([Codex](codex-adapter.md), [OpenCode](opencode-adapter.md)); Pi remains planned and requires its own supported contract and fixtures, not a Claude-shaped guess.
+For optional Claude session activity, add `--agent claude` during connection; see [setup](local-setup.md). Codex 0.163.0, OpenCode 2.0.32 and Pi 0.75.3 have their own adapters ([Codex](codex-adapter.md), [OpenCode](opencode-adapter.md), [Pi](pi-adapter.md)), each with its own verified contract and fixtures rather than a Claude-shaped guess.
 
 ## What is recorded
 

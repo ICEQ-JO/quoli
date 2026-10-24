@@ -15,13 +15,14 @@ quoli install                      Install this unpacked release for your user
 quoli connect [repository]          Connect once and start background capture
   --capture-code                   Opt into redacted file versions and diffs
   --include-untracked              Separately opt into untracked files
-  --agent claude|codex|opencode    Optionally install supported agent capture
+  --agent claude|codex|opencode|pi Optionally install supported agent capture
 quoli start | stop | restart        Manage the local background runtime
 quoli status                       Show managed identity and listener health
 quoli open                         Print the local dashboard address
 quoli hooks uninstall [repository]  Remove Quoli hooks without deleting evidence
 quoli hooks codex status|uninstall [repository]     Inspect/remove the Codex hooks
 quoli hooks opencode status|uninstall [repository]  Inspect/remove the OpenCode plugin
+quoli hooks pi status|uninstall [repository]        Inspect/remove the Pi extension
 quoli settings ...                 Capture policy, pause, retention and deletion
 quoli autostart enable|disable|status  Optional Linux user-login startup
 quoli update ARCHIVE KEY VERSION    Verify and install an explicitly trusted newer release
@@ -96,9 +97,9 @@ async function main() {
     return;
   }
   if (command === "hooks") {
-    if (!["uninstall", "status", "drain", "opencode", "codex"].includes(args[0]))
+    if (!["uninstall", "status", "drain", "opencode", "codex", "pi"].includes(args[0]))
       throw new Error(
-        "Use quoli hooks uninstall|status [repository], quoli hooks codex|opencode status|uninstall [repository], or quoli hooks drain.",
+        "Use quoli hooks uninstall|status [repository], quoli hooks codex|opencode|pi status|uninstall [repository], or quoli hooks drain.",
       );
     await run("quoli-hook-v1.mjs", args);
     return;

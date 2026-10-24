@@ -23,7 +23,7 @@ cd /path/to/your/repository
 quoli connect --capture-code
 ```
 
-This registers the repository and starts the production collector/dashboard in the background. Closing the terminal does not stop the managed instance. Without `--capture-code`, capture remains metadata-only; untracked files require `--include-untracked`. No agent hooks are installed unless explicitly requested with `--agent claude`, `--agent codex` or `--agent opencode`. The [Codex adapter](codex-adapter.md) supports 0.163.0 and needs `/hooks` trust before it captures; the [OpenCode adapter](opencode-adapter.md) supports 2.0.32 and needs a project restart.
+This registers the repository and starts the production collector/dashboard in the background. Closing the terminal does not stop the managed instance. Without `--capture-code`, capture remains metadata-only; untracked files require `--include-untracked`. No agent hooks are installed unless explicitly requested with `--agent claude`, `--agent codex`, `--agent opencode` or `--agent pi`. The [Codex adapter](codex-adapter.md) supports 0.163.0 and needs `/hooks` trust before it captures; the [OpenCode adapter](opencode-adapter.md) supports 2.0.32 and needs a project restart; the [Pi adapter](pi-adapter.md) supports 0.75.3 and needs a new Pi session.
 
 Open http://127.0.0.1:3140 and select the repository's daily history. Existing `TRACEFRAME_DATA_DIR`, `TRACEFRAME_WEB_PORT` and `TRACEFRAME_COLLECTOR_PORT` overrides remain supported; use matching configuration for lifecycle and connect commands. The default evidence store remains the earlier `traceframe/demo` private directory for compatibility. Projects do not need package.json, a Node dependency or a Quoli file in their working tree for repository observation.
 

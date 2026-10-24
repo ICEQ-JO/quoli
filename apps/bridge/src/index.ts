@@ -9,11 +9,14 @@ import { hookStatus, installHooks, uninstallHooks } from "./install";
 import { type HookPayload, normalizeHook } from "./normalize";
 import { OPENCODE_VERSION } from "./opencode";
 import { openCodeStatus, uninstallOpenCode } from "./opencode-install";
+import { normalizePi, PI_VERSION } from "./pi";
+import { piStatus, uninstallPi } from "./pi-install";
 
 /**
  * The passive hook bridge.
  *
- * Claude Code and Codex call it with the hook JSON on stdin. It normalizes the
+ * Claude Code and Codex call it with the hook JSON on stdin; Quoli's generated
+ * Pi extension pipes an extracted envelope the same way. It normalizes the
  * payload, delivers it to the local collector and never influences the agent: it
  * always exits 0 and never writes to stdout, because stdout is read as a hook
  * decision.
@@ -58,11 +61,13 @@ export async function runHook(projectId: string, harness = "claude"): Promise<nu
     return 0;
   }
   const sessionId = typeof payload.session_id === "string" ? payload.session_id : null;
-  if (!sessionId) return 0;
+  if (!sessionId && harness !== "pi") return 0;
   const event =
-    harness === "codex"
-      ? normalizeCodex(payload, { projectId, sessionId })
-      : normalizeHook(payload, { projectId, sessionId });
+    harness === "pi"
+      ? normalizePi(payload, projectId)
+      : harness === "codex"
+        ? normalizeCodex(payload, { projectId, sessionId: sessionId as string })
+        : normalizeHook(payload, { projectId, sessionId: sessionId as string });
   if (!event) return 0;
   const parsed = eventSchema.safeParse(event);
   if (!parsed.success) return 0;
@@ -90,6 +95,17 @@ async function main() {
     const status = openCodeStatus(root);
     console.log(
       `OpenCode ${OPENCODE_VERSION}: plugin ${status.installed ? `installed for project ${status.projectId}` : "not installed"}.`,
+    );
+    return;
+  }
+  if (first === "pi") {
+    const [action, root = process.cwd()] = args;
+    if (args.length > 2 || !["status", "uninstall"].includes(action))
+      throw new Error("Use hooks pi status|uninstall [repository].");
+    if (action === "uninstall") uninstallPi(root);
+    const status = piStatus(root);
+    console.log(
+      `Pi ${PI_VERSION}: extension ${status.installed ? `installed for project ${status.projectId}` : "not installed"}.`,
     );
     return;
   }
@@ -136,7 +152,7 @@ async function main() {
       return;
     }
     const status = hookStatus(root);
-    // This existing command reports Claude hooks; Codex and OpenCode have separate status commands.
+    // This existing command reports Claude hooks; Codex, OpenCode and Pi have separate status commands.
     const [adapter] = adapters;
     console.log(
       `Adapter ${adapter.id} v${adapter.adapterVersion} supports ${adapter.harness} ${adapter.sourceVersions.join(", ")}; hooks are ${
@@ -153,8 +169,8 @@ async function main() {
     return;
   }
   const harness = command ? "claude" : (args[0] ?? "claude");
-  if (harness !== "claude" && harness !== "codex") {
-    console.error("Unknown harness; hooks capture Claude Code or Codex payloads.");
+  if (harness !== "claude" && harness !== "codex" && harness !== "pi") {
+    console.error("Unknown harness; hooks capture Claude Code, Codex or Pi payloads.");
     process.exitCode = 1;
     return;
   }
@@ -172,6 +188,13 @@ if (process.argv[1]?.endsWith("index.ts") || process.argv[1]?.endsWith("quoli-ho
     }
     if (process.argv[2] === "codex") {
       console.error("Codex hook command could not finish; check the project path and hook file.");
+      process.exitCode = 1;
+      return;
+    }
+    if (process.argv[2] === "pi") {
+      console.error(
+        "Pi integration command could not finish; check the project path and extension file.",
+      );
       process.exitCode = 1;
       return;
     }

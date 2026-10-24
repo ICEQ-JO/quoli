@@ -38,6 +38,14 @@ pnpm connect /path/to/project --agent codex
 
 This requires Codex CLI **0.163.0**, writes only Quoli's hook groups to `.codex/hooks.json` and preserves the rest of the file. Codex does not run project hooks until you review and trust them with `/hooks`; until then no activity is captured. Other versions fail closed. See the [Codex adapter](codex-adapter.md) for collected events, omissions and removal.
 
+Pi uses a project extension instead of hooks:
+
+```sh
+pnpm connect /path/to/project --agent pi
+```
+
+This requires Pi **0.75.3** and writes only `.pi/extensions/quoli.ts`; other extensions are untouched and `--undo` removes only Quoli's file. Other versions fail closed at setup, and the extension refuses to capture if it loads under a different version. Start a new Pi session afterwards. See the [Pi adapter](pi-adapter.md).
+
 ## Optional OpenCode activity
 
 ```sh
