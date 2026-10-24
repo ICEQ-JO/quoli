@@ -4,6 +4,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { CODEX_VERSION, codexSourceVersion } from "../apps/bridge/src/codex";
+import {
+  codexHookStatus,
+  installCodexHooks,
+  uninstallCodexHooks,
+} from "../apps/bridge/src/codex-install";
 import { hookStatus, installHooks, uninstallHooks } from "../apps/bridge/src/install";
 import { OPENCODE_VERSION } from "../apps/bridge/src/opencode";
 import {
@@ -31,14 +37,15 @@ const connectCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli connect" : "pnpm 
 const settingsCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli settings" : "pnpm settings";
 const usage = `Quoli repository connection
 
-${connectCommand} /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude|opencode] [--telemetry]
+${connectCommand} /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude|codex|opencode] [--telemetry]
 ${connectCommand} --check /path/to/project
 ${connectCommand} --disable /path/to/project
 ${connectCommand} --undo /path/to/project PROJECT_ID
 
 Connect enables automatic repository observation while Quoli is running.
 It works with any coding agent or editor. --agent claude additionally installs
-the supported Claude Code hooks; --agent opencode installs the OpenCode ${OPENCODE_VERSION} plugin. Undo removes Quoli's integrations and the
+the supported Claude Code hooks; --agent codex installs the Codex ${CODEX_VERSION} hooks (Codex
+requires you to review and trust them with /hooks); --agent opencode installs the OpenCode ${OPENCODE_VERSION} plugin. Undo removes Quoli's integrations and the
 retained evidence of the project. Nothing else in your configuration changes.`;
 
 type TelemetryConflict = { key: string; value: string; source: string };
@@ -109,7 +116,7 @@ async function main() {
   if (
     positionals.length > (values.undo ? 2 : 1) ||
     [values.check, values.undo, values.disable].filter(Boolean).length > 1 ||
-    !["repository", "claude", "opencode"].includes(values.agent ?? "") ||
+    !["repository", "claude", "codex", "opencode"].includes(values.agent ?? "") ||
     (values.telemetry && values.agent !== "claude")
   )
     throw new Error("Unsupported connection options");
@@ -125,6 +132,15 @@ async function main() {
     console.log(`Project: ${root}`);
     console.log(`Claude Code: ${claude ?? "not found on PATH"}`);
     console.log(`Git: ${git ?? "not found on PATH"}`);
+    if (values.agent === "codex" && !values.check && !values.undo && !values.disable) {
+      const version = codexSourceVersion(commandVersion("codex", ["--version"]));
+      if (version !== CODEX_VERSION) {
+        console.error(
+          `Codex ${CODEX_VERSION} is required; found ${version ?? "no supported version"}. No hooks were installed.`,
+        );
+        throw new Error("Unsupported Codex version");
+      }
+    }
     if (values.agent === "opencode" && !values.check && !values.undo && !values.disable) {
       const version = commandVersion("opencode", ["--version"]);
       if (version?.replace(/^opencode v?/, "") !== OPENCODE_VERSION) {
@@ -147,15 +163,19 @@ async function main() {
       if (findRegisteredProject(store, root) !== projectId)
         throw new Error("Project root mismatch");
       const hook = hookStatus(root);
+      const codex = codexHookStatus(root);
       const openCode = openCodeStatus(root);
       if (hook.installed && hook.projectId !== projectId) throw new Error("Hook project mismatch");
+      if (codex.installed && codex.projectId !== projectId)
+        throw new Error("Codex hook project mismatch");
       if (openCode.installed && openCode.projectId !== projectId)
         throw new Error("OpenCode project mismatch");
       const removed = hook.installed ? uninstallHooks(root) : { removed: [] };
+      const removedCodex = codex.installed ? uninstallCodexHooks(root) : { removed: [] };
       uninstallOpenCode(root);
       const result = store.purgeProject(projectId);
       console.log(
-        `Removed ${removed.removed.length} hook events and ${result.removed.events} retained observations for ${projectId}.`,
+        `Removed ${removed.removed.length + removedCodex.removed.length} hook events and ${result.removed.events} retained observations for ${projectId}.`,
       );
       console.log(
         "Your other hooks, status line and telemetry settings were not touched. The source repository and its files are unchanged.",
@@ -166,6 +186,10 @@ async function main() {
     const registered = findRegisteredProject(store, root);
     if (values.check) {
       const openCode = openCodeStatus(root);
+      const codex = codexHookStatus(root);
+      console.log(
+        `Codex hooks: ${codex.installed ? `installed for project ${codex.projectId}` : "not installed"}; supports ${CODEX_VERSION}.`,
+      );
       console.log(
         `OpenCode plugin: ${openCode.installed ? `installed for project ${openCode.projectId}` : "not installed"}; supports ${OPENCODE_VERSION}.`,
       );
@@ -235,6 +259,11 @@ async function main() {
       const installed = installHooks(root, projectId);
       console.log(`Hook entries written to ${installed.path}.`);
       console.log(`Existing hook groups left untouched: ${installed.preservedGroups}.`);
+    } else if (values.agent === "codex") {
+      const installed = installCodexHooks(root, projectId);
+      console.log(`Codex hook entries written to ${installed.path}.`);
+      console.log(`Existing hook groups left untouched: ${installed.preservedGroups}.`);
+      console.log("Codex still requires you to review and trust these hooks with /hooks.");
     } else if (values.agent === "opencode") {
       console.log(
         `OpenCode plugin written to ${installOpenCode(root, projectId).path}. Restart OpenCode for this project.`,

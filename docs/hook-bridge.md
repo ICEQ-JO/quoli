@@ -2,6 +2,8 @@
 
 The bridge collects documented Claude Code hook events from a project you explicitly register and stores them as ordinary Traceframe observations. It is **passive**: it never blocks the agent, never runs a recorded command and never influences what Claude does.
 
+The same process also receives Codex lifecycle hooks; the harness is named on the command line (`… PROJECT_ID codex`) so a payload is never normalized as the wrong agent. See the [Codex adapter](codex-adapter.md) for its events, trust requirement and limits.
+
 ## Install and remove
 
 ```sh

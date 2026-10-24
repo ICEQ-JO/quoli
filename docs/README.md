@@ -15,6 +15,7 @@ Quoli's target is a **hosted dashboard connected to coding agents running locall
 
 Work tracking uses only **Quolii** at `linear.app/quolii`; GitHub hosts code and PRs. Follow [repository agreements](../AGENTS.md). The original MVP's GitHub issues are historical records, not the current work queue.
 
+- [Codex activity adapter](codex-adapter.md): 0.163.0 lifecycle hooks, `/hooks` trust, omissions and validation limits.
 - [OpenCode activity adapter](opencode-adapter.md): version-gated local public events, setup and validation limits.
 
 ## Current local runtime references
@@ -26,7 +27,7 @@ These describe today's local implementation; they are not the target cloud speci
 | Run and develop | [Local demo](local-demo.md), [development/API reference](development.md), [CLI installation/lifecycle](cli.md), [signed release artifacts](releases.md), [verified updates/rollback](verified-updates.md) |
 | Repository capture | [Automatic history](automatic-history.md), [capture](repository-capture.md), [captured changes](captured-changes.md) |
 | Evidence analysis | [Checks](verification-evidence.md), [existing change map](change-map.md), [evidence-scene contract and Story projection](evidence-scenes.md), [list-price cost estimates](cost-estimates.md), [source reconciliation](source-reconciliation.md), [live linking](live-linking.md) |
-| Claude integration | [Capability matrix](claude-code-capabilities.md), [versioned runtime report](claude-code-runtime-report.md), [hook bridge](hook-bridge.md), [adapter contract](adapters.md), [usage receiver](telemetry-receiver.md), [setup](local-setup.md) |
+| Agent integration | [Capability matrix](claude-code-capabilities.md), [Claude runtime report](claude-code-runtime-report.md), [hook bridge](hook-bridge.md), [adapter contract](adapters.md), [usage receiver](telemetry-receiver.md), [setup](local-setup.md), [Codex adapter](codex-adapter.md), [OpenCode adapter](opencode-adapter.md) |
 | Controls and validation | [Capture/lifecycle controls and known limits](lifecycle-controls.md), [local pilot record](pilot-release.md), [capacity measurements](work/quo-62-capacity.md) |
 | Current experience | [Session workspace](design/session-workspace.md), [landing](design/landing-page.md), [visual system](../apps/web/DESIGN.md), [product context](../apps/web/PRODUCT.md) |
 
