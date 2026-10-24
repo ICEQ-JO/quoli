@@ -1,10 +1,10 @@
 # Versioned release artifacts
 
-[QUO-64](https://linear.app/quolii/issue/QUO-64) advances the commercial distribution/CI gate. The builder preserves the current standalone web/collector/CLI/bridge bundle and privacy scan. It does not publish a GitHub release, create a production tag, select an owner signing identity, install an update or enable capture.
+[QUO-64](https://linear.app/quolii/issue/QUO-64) advances the commercial distribution/CI gate. The builder preserves the current standalone web/collector/CLI/bridge bundle and privacy scan. It does not publish a GitHub release, create a production tag, select an owner signing identity or enable capture. Verified update/rollback is the separate [QUO-65 command](verified-updates.md).
 
 ## Version and build inputs
 
-Root `package.json.version` is the release version source, currently `0.1.0`, using stable `X.Y.Z` versions. `pnpm release:local` produces `0.1.0-local` and remains explicitly unsigned. Runtime `release.json` format 1 stays compatible and gains channel/source/toolchain provenance. Signed artifacts use the stable version and require a clean checkout at a matching `vX.Y.Z` tag, Linux x64, Node 24.16.0, pnpm 11.12.0 and the committed lockfile. Current release contents support Linux only; macOS certification is QUO-66.
+Root `package.json.version` is the release version source, currently `0.1.0`, using stable `X.Y.Z` versions. `pnpm release:local` produces `0.1.0-local` and remains explicitly unsigned. Runtime `release.json` format 1 stays compatible and gains channel/source/toolchain provenance and the highest shipped `storageVersion`. New signed manifests also carry that optional field; the updater requires it. Signed artifacts use the stable version and require a clean checkout at a matching `vX.Y.Z` tag, Linux x64, Node 24.16.0, pnpm 11.12.0 and the committed lockfile. Current release contents support Linux only; macOS certification is QUO-66.
 
 Before a signed build, install the locked dependencies in a disposable clean checkout. No environment files may be present at the root or web application in the production dotenv locations (`.env`, `.env.local`, `.env.production`, `.env.production.local`). The signed build command receives only PATH, HOME and PNPM_HOME plus fixed build options/locale/timezone; pnpm adds its own lifecycle metadata. The signing key path is removed from child environments. This is input control on a trusted host, not a sandbox or proof that a compromised compiler/dependency cannot read a local key.
 
@@ -37,7 +37,7 @@ node /trusted/location/verify-release.mjs   quoli-X.Y.Z-linux-x64.tar.gz /truste
 
 From an already trusted source checkout, `pnpm release:verify ARCHIVE TRUSTED_PUBLIC_KEY EXPECTED_VERSION` is equivalent. The verifier checks bounded strict manifest/signature schemas, Ed25519 key/fingerprint/signature, the expected version/name and the archive's byte count/SHA-256 using a bounded streaming read. Missing signatures, a substituted key, altered metadata, altered archive bytes, unsupported identities and oversized/non-regular inputs fail. It neither extracts nor executes archive contents. Verify and consume the same unchanged archive; this standalone command does not lock files for a later extraction.
 
-Only after successful verification should the archive be unpacked and its existing `install` command used. Installation itself retains the existing local behavior: it does not enforce signature verification or implement downgrade prevention/update rollback. Verified update/install integration is QUO-65. The standalone verifier can authenticate an older release if that older expected version is explicitly supplied; it is not an online freshness service.
+For an initial installation, independently verify before safely unpacking and running `install`. To replace an existing installation, use [verified update and compatible rollback](verified-updates.md); the current initial-install command refuses to overwrite existing code. Updates authenticate their private snapshot before extraction and enforce platform, runtime and database compatibility. The standalone verifier can authenticate an older release if that older expected version is explicitly supplied; it is not an online freshness service.
 
 ## Trust and rotation
 

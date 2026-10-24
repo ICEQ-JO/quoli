@@ -38,6 +38,14 @@ function linkExists(path: string) {
 export async function installRelease(config: CliConfig) {
   const paths = installPaths();
   requireRelease(config);
+  if (existsSync(paths.app) && (!ownedInstall(paths.app) || lstatSync(paths.app).isSymbolicLink()))
+    throw new Error(
+      "The install directory is not an owned Quoli installation. Nothing was replaced.",
+    );
+  if (existsSync(paths.app))
+    throw new Error(
+      "Quoli is already installed. Use quoli update with a signed archive, or explicitly uninstall before a local reinstall.",
+    );
   if (
     isWithin(config.dataDir, paths.app) ||
     isWithin(paths.app, config.dataDir) ||
@@ -45,10 +53,6 @@ export async function installRelease(config: CliConfig) {
     isWithin(config.releaseRoot, paths.app)
   )
     throw new Error("Install, release and evidence directories must not overlap.");
-  if (existsSync(paths.app) && (!ownedInstall(paths.app) || lstatSync(paths.app).isSymbolicLink()))
-    throw new Error(
-      "The install directory is not an owned Quoli installation. Nothing was replaced.",
-    );
   const binary = join(paths.bin, "quoli");
   if (
     linkExists(binary) &&
@@ -63,8 +67,7 @@ export async function installRelease(config: CliConfig) {
     throw new Error("A built Quoli release is required.");
   mkdirSync(dirname(paths.app), { recursive: true, mode: 0o700 });
   const stage = `${paths.app}.install-${process.pid}`;
-  const backup = `${paths.app}.previous-${process.pid}`;
-  if (existsSync(stage) || existsSync(backup))
+  if (existsSync(stage))
     throw new Error("An unfinished installation needs inspection before retrying.");
   try {
     cpSync(config.releaseRoot, stage, { recursive: true, verbatimSymlinks: true });
@@ -75,17 +78,11 @@ export async function installRelease(config: CliConfig) {
     );
     chmodSync(stage, 0o700);
     chmodSync(join(stage, "cli.mjs"), 0o755);
-    if (existsSync(paths.app)) renameSync(paths.app, backup);
-    renameSync(stage, paths.app);
     mkdirSync(paths.bin, { recursive: true });
     if (!linkExists(binary)) symlinkSync(join(paths.app, "cli.mjs"), binary);
-    rmSync(backup, { recursive: true, force: true });
+    renameSync(stage, paths.app);
   } catch (error) {
     rmSync(stage, { recursive: true, force: true });
-    if (existsSync(backup)) {
-      rmSync(paths.app, { recursive: true, force: true });
-      renameSync(backup, paths.app);
-    }
     throw error;
   }
   return binary;
@@ -110,6 +107,9 @@ export async function uninstallRelease(config: CliConfig) {
       db.close();
     }
   }
+  const rollback = `${paths.app}.rollback`;
+  if (existsSync(rollback) && (!ownedInstall(rollback) || lstatSync(rollback).isSymbolicLink()))
+    throw new Error("Rollback directory is not owned; nothing was removed.");
   if (existsSync(paths.unit)) throw new Error("Disable/remove login startup before uninstalling.");
   const binary = join(paths.bin, "quoli");
   if (linkExists(binary)) {
@@ -121,4 +121,5 @@ export async function uninstallRelease(config: CliConfig) {
     unlinkSync(binary);
   }
   rmSync(paths.app, { recursive: true });
+  rmSync(rollback, { recursive: true, force: true });
 }

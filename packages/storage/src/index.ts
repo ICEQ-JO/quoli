@@ -23,6 +23,7 @@ import {
   type SnapshotPage,
   type StoredSnapshot,
 } from "@traceframe/schema/repository";
+import { storageMigrations } from "./migrations";
 
 export class StorageLimitError extends Error {
   constructor() {
@@ -61,14 +62,7 @@ export class Store {
     }
   }
   private migrate(): void {
-    const migrations = [
-      "001-initial.sql",
-      "002-repository.sql",
-      "003-lifecycle.sql",
-      "004-repository-observation.sql",
-      "005-event-schema-version.sql",
-    ];
-    for (const [index, migration] of migrations.entries()) {
+    for (const [index, migration] of storageMigrations.entries()) {
       const version = index + 1;
       const exists = this.db
         .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='migrations'")

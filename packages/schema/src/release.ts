@@ -12,6 +12,7 @@ export const releaseManifestSchema = z
     platform: z.literal("linux"),
     arch: z.literal("x64"),
     node: z.literal(">=24.16.0 <25"),
+    storageVersion: z.number().int().min(1).max(10000).optional(),
     source: z
       .object({
         commit: z.string().regex(/^[a-f0-9]{40}$/),
@@ -49,5 +50,15 @@ export const releaseSignatureSchema = z
     algorithm: z.literal("Ed25519"),
     keyId: digest,
     signature: z.string().regex(/^[a-f0-9]{128}$/),
+  })
+  .strict();
+
+export const updateJournalSchema = z
+  .object({
+    owner: z.literal("quoli-update-v1"),
+    operation: z.enum(["update", "rollback"]),
+    pid: z.number().int().positive(),
+    from: z.string().max(100),
+    to: z.string().max(100),
   })
   .strict();

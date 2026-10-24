@@ -15,6 +15,7 @@ import { promisify } from "node:util";
 import { build } from "esbuild";
 import { artifactDigest, signingKey, signManifest } from "../apps/cli/src/release";
 import { releaseManifestSchema } from "../packages/schema/src/release";
+import { STORAGE_VERSION } from "../packages/storage/src/migrations";
 import { releaseArchive } from "./release-archive";
 import { releaseSource } from "./release-source";
 
@@ -104,6 +105,7 @@ writeFileSync(
       platform: process.platform,
       arch: process.arch,
       node: ">=24.16.0 <25",
+      storageVersion: STORAGE_VERSION,
       builtAt: new Date(source.epoch * 1000).toISOString(),
       channel: signed ? "signed" : "local-unsigned",
       source,
@@ -162,6 +164,7 @@ if (key) {
       platform: process.platform,
       arch: process.arch,
       node: ">=24.16.0 <25",
+      storageVersion: STORAGE_VERSION,
       source,
       toolchain,
       archive: { name: archive.split("/").at(-1), bytes, sha256: checksum },
