@@ -57,6 +57,7 @@ for (const [entry, output] of [
   ["scripts/setup.ts", "runtime/connect.mjs"],
   ["scripts/settings.ts", "runtime/settings.mjs"],
   ["apps/bridge/src/index.ts", "runtime/quoli-hook-v1.mjs"],
+  ["apps/bridge/src/opencode-entry.ts", "runtime/quoli-opencode-v1.mjs"],
 ]) {
   await build({
     absWorkingDir: root,

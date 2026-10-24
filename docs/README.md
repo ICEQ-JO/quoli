@@ -15,6 +15,8 @@ Quoli's target is a **hosted dashboard connected to coding agents running locall
 
 Work tracking uses only **Quolii** at `linear.app/quolii`; GitHub hosts code and PRs. Follow [repository agreements](../AGENTS.md). The original MVP's GitHub issues are historical records, not the current work queue.
 
+- [OpenCode activity adapter](opencode-adapter.md): version-gated local public events, setup and validation limits.
+
 ## Current local runtime references
 
 These describe today's local implementation; they are not the target cloud specification.

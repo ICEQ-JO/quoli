@@ -5,6 +5,12 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { hookStatus, installHooks, uninstallHooks } from "../apps/bridge/src/install";
+import { OPENCODE_VERSION } from "../apps/bridge/src/opencode";
+import {
+  installOpenCode,
+  openCodeStatus,
+  uninstallOpenCode,
+} from "../apps/bridge/src/opencode-install";
 import { createGitRunner } from "../packages/repository/src/git";
 import { captureRepository } from "../packages/repository/src/index";
 import { registeredLocation } from "../packages/repository/src/location";
@@ -16,7 +22,7 @@ import { credential, initializeCredential, runtime } from "../packages/storage/s
  * Guided local setup.
  *
  * Repository-only connection writes private local registration and observation
- * consent. Explicit Claude mode additionally installs project hooks and can
+ * consent. Explicit agent modes install project hooks/plugins; Claude can also
  * print optional telemetry variables. It never rewrites a global setting, never replaces an
  * existing telemetry destination and never hides a conflict.
  */
@@ -25,14 +31,14 @@ const connectCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli connect" : "pnpm 
 const settingsCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli settings" : "pnpm settings";
 const usage = `Quoli repository connection
 
-${connectCommand} /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude] [--telemetry]
+${connectCommand} /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude|opencode] [--telemetry]
 ${connectCommand} --check /path/to/project
 ${connectCommand} --disable /path/to/project
 ${connectCommand} --undo /path/to/project PROJECT_ID
 
 Connect enables automatic repository observation while Quoli is running.
 It works with any coding agent or editor. --agent claude additionally installs
-the supported Claude Code hooks; other activity adapters are not connected. Undo removes the hook entries and the
+the supported Claude Code hooks; --agent opencode installs the OpenCode ${OPENCODE_VERSION} plugin. Undo removes Quoli's integrations and the
 retained evidence of the project. Nothing else in your configuration changes.`;
 
 type TelemetryConflict = { key: string; value: string; source: string };
@@ -103,7 +109,7 @@ async function main() {
   if (
     positionals.length > (values.undo ? 2 : 1) ||
     [values.check, values.undo, values.disable].filter(Boolean).length > 1 ||
-    !["repository", "claude"].includes(values.agent ?? "") ||
+    !["repository", "claude", "opencode"].includes(values.agent ?? "") ||
     (values.telemetry && values.agent !== "claude")
   )
     throw new Error("Unsupported connection options");
@@ -119,6 +125,13 @@ async function main() {
     console.log(`Project: ${root}`);
     console.log(`Claude Code: ${claude ?? "not found on PATH"}`);
     console.log(`Git: ${git ?? "not found on PATH"}`);
+    if (values.agent === "opencode" && !values.check && !values.undo && !values.disable) {
+      const version = commandVersion("opencode", ["--version"]);
+      if (version?.replace(/^opencode v?/, "") !== OPENCODE_VERSION) {
+        console.error(`OpenCode ${OPENCODE_VERSION} is required; no plugin was installed.`);
+        throw new Error("Unsupported OpenCode version");
+      }
+    }
     if (values.disable) {
       const projectId = findRegisteredProject(store, root);
       if (!projectId) throw new Error("The project is not registered with Quoli");
@@ -134,8 +147,12 @@ async function main() {
       if (findRegisteredProject(store, root) !== projectId)
         throw new Error("Project root mismatch");
       const hook = hookStatus(root);
+      const openCode = openCodeStatus(root);
       if (hook.installed && hook.projectId !== projectId) throw new Error("Hook project mismatch");
+      if (openCode.installed && openCode.projectId !== projectId)
+        throw new Error("OpenCode project mismatch");
       const removed = hook.installed ? uninstallHooks(root) : { removed: [] };
+      uninstallOpenCode(root);
       const result = store.purgeProject(projectId);
       console.log(
         `Removed ${removed.removed.length} hook events and ${result.removed.events} retained observations for ${projectId}.`,
@@ -148,6 +165,10 @@ async function main() {
     const status = hookStatus(root);
     const registered = findRegisteredProject(store, root);
     if (values.check) {
+      const openCode = openCodeStatus(root);
+      console.log(
+        `OpenCode plugin: ${openCode.installed ? `installed for project ${openCode.projectId}` : "not installed"}; supports ${OPENCODE_VERSION}.`,
+      );
       console.log(
         status.installed
           ? `Hooks: installed for project ${status.projectId}.`
@@ -214,6 +235,10 @@ async function main() {
       const installed = installHooks(root, projectId);
       console.log(`Hook entries written to ${installed.path}.`);
       console.log(`Existing hook groups left untouched: ${installed.preservedGroups}.`);
+    } else if (values.agent === "opencode") {
+      console.log(
+        `OpenCode plugin written to ${installOpenCode(root, projectId).path}. Restart OpenCode for this project.`,
+      );
     } else {
       console.log(
         "No agent hooks installed. Claude Code, Codex, Pi, OpenCode and editors can all change this repository; detailed activity is not collected by repository observation.",

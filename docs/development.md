@@ -34,7 +34,7 @@ pnpm demo
 
 `pnpm settings` controls capture policy, pause state, retention and project deletion. See [capture controls](lifecycle-controls.md).
 
-`pnpm bridge install PROJECT_PATH PROJECT_ID` adds the passive Claude Code hook entries to that project's `.claude/settings.json` and `pnpm bridge uninstall PROJECT_PATH` removes only those entries. `pnpm bridge drain` retries observations that are waiting in the local retry spool. See the [hook bridge](hook-bridge.md).
+`pnpm bridge install PROJECT_PATH PROJECT_ID` adds the passive Claude Code hook entries to that project's `.claude/settings.json` and `pnpm bridge uninstall PROJECT_PATH` removes only those entries. `pnpm bridge drain` retries observations that are waiting in the local retry spool. See the [hook bridge](hook-bridge.md). OpenCode 2.0.32 uses `pnpm connect PROJECT_PATH --agent opencode`; `pnpm bridge opencode status|uninstall PROJECT_PATH` inspects/removes its project plugin. See the [OpenCode adapter](opencode-adapter.md) for mappings, privacy and validation limits.
 
 `pnpm privacy:preview` shows how metadata-only policy filters a synthetic prompt. `pnpm privacy:preview --synthetic-content` displays explicitly enabled fixture content. Never pipe personal sessions into this command.
 

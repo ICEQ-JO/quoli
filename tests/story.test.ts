@@ -71,6 +71,14 @@ test("interleaved activity keeps attribution and rebuilding is deterministic", (
     ordered.scene.nodes.some((node) => node.label === "file.read"),
     false,
   );
+  assert.deepEqual(
+    ordered.scene.nodes.filter((node) => node.kind === "turn").map((node) => node.ref),
+    ["root-turn"],
+  );
+  assert.equal(
+    ordered.claims.some((claim) => claim.kind === "unknown_rationale"),
+    false,
+  );
   assert.equal(
     ordered.scene.nodes.some((node) => node.status === "parent"),
     false,
@@ -134,10 +142,21 @@ test("conflicting results are reported, not resolved", () => {
     result.claims.some((entry) => entry.text.includes("passed") && entry.kind === "conflict"),
     false,
   );
+  const successLabels = conflictingStoryEvents().map((event) =>
+    event.payload.kind === "tool_result"
+      ? { ...event, payload: { ...event.payload, status: "success" as const } }
+      : event,
+  );
+  const differingExits = build({ events: successLabels });
+  assert.equal(
+    differingExits.scene.nodes.find((node) => node.kind === "tool")?.status,
+    "conflicting",
+  );
+  assert.ok(differingExits.claims.some((claim) => claim.kind === "conflict"));
 });
 
 test("missing evidence stays visible: no baseline, unresolved child, deleted evidence", () => {
-  const noBaseline = build({ beforeId: null, files: [] });
+  const noBaseline = build({ beforeId: null });
   assert.equal(noBaseline.scene.window.baselineMissing, true);
   assert.equal(
     noBaseline.scene.nodes.some((node) => node.kind === "file"),
@@ -148,6 +167,11 @@ test("missing evidence stays visible: no baseline, unresolved child, deleted evi
     false,
   );
   assert.match(noBaseline.scene.uncertainty, /No baseline capture/);
+  const noAfter = build({ afterId: null });
+  assert.equal(
+    noAfter.scene.nodes.some((node) => node.kind === "file"),
+    false,
+  );
 
   const parentOnly = build({
     events: storyEvents().filter((event) => event.sessionId === "story-root"),
@@ -179,6 +203,39 @@ test("missing evidence stays visible: no baseline, unresolved child, deleted evi
     false,
   );
   assert.ok(rebuilt.claims.some((claim) => claim.kind === "unknown_rationale"));
+});
+
+test("an unavailable comparison does not claim a file changed, and recorded source gaps stay visible", () => {
+  const result = build({
+    files: [
+      { ...storyFiles[0], status: "unavailable", uncertainty: "File content was not fetched." },
+    ],
+  });
+  assert.ok(
+    result.scene.nodes.some((node) => node.kind === "file" && node.status === "unavailable"),
+  );
+  const files = result.claims.find((claim) => claim.kind === "files");
+  assert.ok(files);
+  assert.doesNotMatch(files.text + files.uncertainty, /differs|content differs/);
+
+  const source = storyEvents()[0];
+  const gap = {
+    ...source,
+    id: "recorded-capture-gap",
+    payload: { kind: "gap" as const, reason: "capture_disabled" as const },
+  };
+  const gaps = build({ events: [...storyEvents(), gap] });
+  assert.ok(
+    gaps.scene.nodes.some(
+      (node) =>
+        node.kind === "gap" &&
+        node.status === "capture_disabled" &&
+        node.evidenceIds.includes(gap.id),
+    ),
+  );
+  assert.ok(
+    gaps.claims.some((claim) => claim.kind === "gap" && claim.evidenceIds.includes(gap.id)),
+  );
 });
 
 test("claims stay capped and a story needs retained observations", () => {

@@ -23,7 +23,7 @@ cd /path/to/your/repository
 quoli connect --capture-code
 ```
 
-This registers the repository and starts the production collector/dashboard in the background. Closing the terminal does not stop the managed instance. Without `--capture-code`, capture remains metadata-only; untracked files require `--include-untracked`. No agent hooks are installed unless explicitly requested with `--agent claude`.
+This registers the repository and starts the production collector/dashboard in the background. Closing the terminal does not stop the managed instance. Without `--capture-code`, capture remains metadata-only; untracked files require `--include-untracked`. No agent hooks are installed unless explicitly requested with `--agent claude` or `--agent opencode`. The [OpenCode adapter](opencode-adapter.md) supports 2.0.32 and needs a project restart.
 
 Open http://127.0.0.1:3140 and select the repository's daily history. Existing `TRACEFRAME_DATA_DIR`, `TRACEFRAME_WEB_PORT` and `TRACEFRAME_COLLECTOR_PORT` overrides remain supported; use matching configuration for lifecycle and connect commands. The default evidence store remains the earlier `traceframe/demo` private directory for compatibility. Projects do not need package.json, a Node dependency or a Quoli file in their working tree for repository observation.
 
@@ -69,10 +69,11 @@ Unit execution and environment quoting follow the official [systemd.service](htt
 ```sh
 quoli autostart disable  # if configured
 quoli stop
-quoli hooks uninstall /path/to/project  # only if this runtime installed Claude hooks
+quoli hooks uninstall /path/to/project  # if Claude hooks were installed
+quoli hooks opencode uninstall /path/to/project  # if the OpenCode plugin was installed
 quoli uninstall
 ```
 
-Uninstall refuses a running/unverified instance and a configured login unit. It also refuses removal while registered repositories still reference this runtime's own packaged hooks, so it cannot silently strand those hook commands. Hook removal changes only Quoli-owned hook entries and preserves retained evidence and other agent configuration. Uninstall removes owned application files and the launcher; it does not remove the SQLite store, registered-project consent, credentials, source repositories, agent transcripts or external backups. Reinstalling with the same data directory can resume previously opted-in observation.
+Uninstall refuses a running/unverified instance and a configured login unit. It also refuses removal while registered repositories still reference this runtime's own packaged hooks or OpenCode plugin, so it cannot silently strand those hook commands. Hook removal changes only Quoli-owned hook entries and preserves retained evidence and other agent configuration. Uninstall removes owned application files and the launcher; it does not remove the SQLite store, registered-project consent, credentials, source repositories, agent transcripts or external backups. Reinstalling with the same data directory can resume previously opted-in observation.
 
 Use the existing explicit project-deletion controls separately when deletion is intended. A published installer, broader platform certification, update distribution, code signing and new agent adapters remain later work.

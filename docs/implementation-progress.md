@@ -13,24 +13,25 @@ Updated for planning: 2026-10-23. This page distinguishes existing local code an
 | File/check change map | `packages/schema/src/map.ts`, analysis/map and web map; [reference](change-map.md) | Not the full proposed scene language or syntax-aware impact view |
 | Evidence-scene contract and change-map compatibility | `packages/schema/src/scene.ts`, `packages/analysis/src/scene.ts`; [contract](evidence-scenes.md) | Definition and legacy conversion only; no scene view, and no producer emits symbol, hunk or cost nodes yet |
 | Cited Story projection over activity, checks and captured changes | `packages/schema/src/story.ts`, `packages/analysis/src/story.ts`; [Story](evidence-scenes.md#story-projection) | One scene per session with synthetic tests only; no collector route or view, no symbol/hunk nodes, no model-authored prose |
-| Claude hook bridge, narrow reported usage and reconciliation | `apps/bridge`, collector OTLP parser; [versioned runtime report](claude-code-runtime-report.md), [hooks](hook-bridge.md), [receiver](telemetry-receiver.md), [reconciliation](source-reconciliation.md) | Runtime report covers Claude Code 2.1.306 on Linux; current/new versions require verification; no other detailed harness adapter delivered |
+| Claude hook bridge, narrow reported usage and reconciliation | `apps/bridge`, collector OTLP parser; [versioned runtime report](claude-code-runtime-report.md), [hooks](hook-bridge.md), [receiver](telemetry-receiver.md), [reconciliation](source-reconciliation.md) | Runtime report covers Claude Code 2.1.306 on Linux; current/new versions require verification; OpenCode is a separate adapter below |
+| OpenCode 2.0.32 public-event adapter | `apps/bridge/src/opencode*.ts`; [reference](opencode-adapter.md), [validation record](work/quo-47-opencode-adapter.md), [QUO-47](https://linear.app/quolii/issue/QUO-47) | Local version-gated capture; synthetic prompt/tool/usage validation and live plugin/session-create smoke only; no live-provider or macOS certification |
 | Versioned list-price cost estimates | `packages/schema/src/cost.ts`, `packages/analysis/src/cost.ts`; [reference](cost-estimates.md), [work record](work/quo-52-model-prices.md) | Synthetic catalog only; no verified production prices, cost view, live FX or billing ledger; cumulative-only usage stays unpriced |
-| Static adapter registration and conformance fixtures | `packages/schema/src/adapter.ts`, `apps/bridge/src/adapter.ts`; [adapter contract](adapters.md) | Declarative, one product adapter; the hook payload reports no source version, so per-version gating is not enforced at capture |
-| Capture settings, pause, retention and database purge | [controls](lifecycle-controls.md), schema/privacy and storage lifecycle | Known retry spool policy/purge gap; see below |
+| Static adapter registration and conformance fixtures | `packages/schema/src/adapter.ts`, `apps/bridge/src/adapter.ts`; [adapter contract](adapters.md) | Two static product adapters; OpenCode enforces its runtime version, while Claude hooks do not report one |
+| Capture settings, pause, retention and database purge | [controls](lifecycle-controls.md), schema/privacy and storage lifecycle | Policy/epoch-aware retries and project cleanup; [repair record](work/overnight-privacy-results.md), plus OpenCode result-path revalidation |
 | Installable local production CLI and managed runtime | `apps/cli`, release builder; [CLI](cli.md), [work record](work/cli-background.md) | Unpublished Linux local build; not a signed cloud connector distribution |
 | Local fixture/release/browser validation records | [pilot record](pilot-release.md), test suite and dated design/work evidence | Not cloud-security certification; fresh-machine/platform results require explicit evidence |
 
 Historical implementation branches and PR references describe how local work was built. The original MVP stack was merged; old per-feature branch names are not current implementation status. New work follows Quolii Linear and the active [backlog](issues/vision/README.md).
 
-## Confirmed planning-time defects
+## Retry privacy and lifecycle repairs
 
-The bridge normalizes/redacts content but does not consult current project capture settings before failed delivery is written to `bridge-spool.jsonl`. Database purge does not remove that spool. A synthetic temporary check confirmed disabled prompt content remained in the spool and remained after purge; it invoked normalization/spooling directly and did not collect a private session. V02/V03 track repairs. No fix is claimed by this documentation change.
+The planning assessment found that retry persistence bypassed capture policy and database purge left retry data behind. QUO-39/QUO-40 repaired policy-before-write, epoch fencing, project-scoped cleanup and drain revalidation; see the [verified repair record](work/overnight-privacy-results.md). QUO-47 adds result-path context so later path exclusions also scrub OpenCode retry output. These checks use synthetic evidence; they do not certify complete capture or physical erasure.
 
 See the [source-informed assessment](work/vision-repository-assessment.md) for evidence, boundaries and capacity checks still needed.
 
 ## Not delivered
 
-Cloud accounts/workspaces, device pairing, consented synchronization, cloud evidence/artifact storage, tenant isolation, hosted queries/dashboard operation, cloud deletion/backup recovery, GitHub remote observations, OpenCode/Codex/Pi adapters, the cost view and billing ledger, extension inventory/invocation views, full evidence scenes/syntax-aware diffs, paid entitlements, signed updates and architecture/debt enforcement remain implementation work. Their presence in the vision or Linear does not mean they run.
+Cloud accounts/workspaces, device pairing, consented synchronization, cloud evidence/artifact storage, tenant isolation, hosted queries/dashboard operation, cloud deletion/backup recovery, GitHub remote observations, Codex/Pi adapters, the cost view and billing ledger, extension inventory/invocation views, full evidence scenes/syntax-aware diffs, paid entitlements, signed updates and architecture/debt enforcement remain implementation work. Their presence in the vision or Linear does not mean they run.
 
 ## Supporting-agent work
 

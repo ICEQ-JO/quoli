@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import type { StoredEvent, SubagentLink } from "@traceframe/schema";
-import type { CheckObservation } from "@traceframe/schema/checks";
 import type { Scene, SceneEdge, SceneNode } from "@traceframe/schema/scene";
 import {
   MAX_STORY_CLAIMS,
@@ -38,6 +37,7 @@ type GapLike = {
   evidenceIds: string[];
   rule: string;
   uncertainty: string;
+  basis?: SceneNode["basis"];
 };
 
 type ToolRecord = {
@@ -52,6 +52,10 @@ const GAP_LABELS: Record<string, string> = {
   missing_child: "Child activity not retained",
   missing_end: "Session end not retained",
   missing_rationale: "Decision not recorded",
+  missing_result: "Tool result not retained",
+  capture_disabled: "Capture disabled",
+  late_arrival: "Late observation recorded",
+  unsupported_source: "Unsupported source",
 };
 
 function hash(prefix: string, parts: unknown[]): string {
@@ -109,10 +113,19 @@ export function story(input: {
   // sessions; only this session's rows become nodes and checks.
   const view = activity(input.events.filter((event) => event.projectId === input.projectId));
   const checks = verification(rows);
+  const checkStates = new Map<string, Set<string>>();
+  for (const check of checks.checks) {
+    const states = checkStates.get(check.callId) ?? new Set<string>();
+    states.add(check.state);
+    checkStates.set(check.callId, states);
+  }
   const beforeId = input.beforeId ?? null;
   const afterId = input.afterId ?? rows[rows.length - 1].id;
   const suppliedFiles = (input.files ?? []).filter((file) => file.status !== "unchanged");
-  const files = suppliedFiles.filter((file) => file.evidenceIds.length > 0);
+  const files =
+    beforeId !== null && input.afterId != null
+      ? suppliedFiles.filter((file) => file.evidenceIds.length > 0)
+      : [];
   let omittedNodes = (input.omittedFiles ?? 0) + (suppliedFiles.length - files.length);
   let omittedDeclarations = 0;
   let missingRationaleTurns = 0;
@@ -126,9 +139,9 @@ export function story(input: {
       (low, id) => Math.min(low, sequence.get(id) ?? Number.MAX_SAFE_INTEGER),
       Number.MAX_SAFE_INTEGER,
     );
-  const turns = [...view.turns].sort(
-    (a, b) => turnOrder(a.eventIds) - turnOrder(b.eventIds) || a.id.localeCompare(b.id),
-  );
+  const turns = view.turns
+    .filter((turn) => turn.sessionId === input.sessionId)
+    .sort((a, b) => turnOrder(a.eventIds) - turnOrder(b.eventIds) || a.id.localeCompare(b.id));
   const turnNodeByTurn = new Map<string, string>();
 
   const claim = (
@@ -173,10 +186,17 @@ export function story(input: {
 
   const pushTool = (call: StoredEvent, results: StoredEvent[]): ToolRecord => {
     const statuses = [...new Set(results.map(resultStatus))];
+    const exitCodes = new Set(
+      results.flatMap((event) =>
+        event.payload.kind === "tool_result" && event.payload.exitCode !== null
+          ? [event.payload.exitCode]
+          : [],
+      ),
+    );
     const status =
       results.length === 0
         ? "no_result"
-        : statuses.length > 1
+        : statuses.length > 1 || exitCodes.size > 1 || (checkStates.get(call.id)?.size ?? 0) > 1
           ? "conflicting"
           : (statuses[0] ?? "unknown");
     const node: SceneNode = {
@@ -196,6 +216,17 @@ export function story(input: {
             : "A reported tool result does not establish what the tool changed or that the change is correct.",
     };
     nodes.push(node);
+    if (status === "conflicting")
+      seeds.push(
+        claim(
+          "conflict",
+          [call.id],
+          "Two or more recorded results disagree for the same tool call; neither is reported as the outcome.",
+          [call.id, ...results.map((result) => result.id)],
+          "The retained observations conflict. Choosing one would invent certainty the evidence does not have.",
+          [node.id],
+        ),
+      );
     return { call, results, nodeId: node.id, status };
   };
 
@@ -206,7 +237,7 @@ export function story(input: {
       label: GAP_LABELS[gap.kind] ?? "Observation not retained",
       status: gap.kind,
       ref: gap.id,
-      basis: "derived",
+      basis: gap.basis ?? "derived",
       rule: gap.rule,
       evidenceIds: gap.evidenceIds.slice(0, 50),
       uncertainty: gap.uncertainty,
@@ -448,6 +479,27 @@ export function story(input: {
   }
 
   for (const event of rows) {
+    if (event.payload.kind === "gap") {
+      const nodeId = pushGap({
+        id: event.id,
+        kind: event.payload.reason,
+        evidenceIds: [event.id],
+        rule: STORY_RULE,
+        basis: "recorded",
+        uncertainty: "The source reported a capture gap. Missing activity is not reconstructed.",
+      });
+      seeds.push(
+        claim(
+          "gap",
+          [event.id],
+          `The source reported a ${event.payload.reason.replaceAll("_", " ")} gap.`,
+          [event.id],
+          "A reported gap does not establish what the missing activity contained.",
+          [nodeId],
+          "recorded",
+        ),
+      );
+    }
     if (attributed.has(event.id) || event.payload.kind !== "prompt") continue;
     const nodeId = pushPrompt(event);
     seeds.push(
@@ -493,7 +545,7 @@ export function story(input: {
       evidenceIds: file.evidenceIds.slice(0, 50),
       uncertainty:
         file.uncertainty ??
-        "The path differs between two captured snapshots. The comparison does not establish authorship, intent or feature correctness.",
+        "The comparison records this path's status. It does not establish authorship, intent or feature correctness.",
     });
   }
   if (files.length > 0)
@@ -501,9 +553,9 @@ export function story(input: {
       claim(
         "files",
         [input.sessionId],
-        `${files.length} captured path${files.length === 1 ? " differs" : "s differ"} between the two retained captures.`,
+        `${files.length} path observation${files.length === 1 ? " was" : "s were"} retained from the supplied comparison.`,
         files.flatMap((file) => file.evidenceIds),
-        "A captured comparison shows that content differs. It does not establish who changed it or whether the change is correct.",
+        "Comparison observations may be unavailable or uncertain. They do not establish who changed a path or whether a change is correct.",
         files.map((file) => hash("n-file", [file.id])),
       ),
     );
@@ -535,23 +587,6 @@ export function story(input: {
         checks.checks.map((check) => checkNodes.get(check.id) ?? ""),
       ),
     );
-  const byCall = new Map<string, CheckObservation[]>();
-  for (const check of checks.checks)
-    byCall.set(check.callId, [...(byCall.get(check.callId) ?? []), check]);
-  for (const group of byCall.values()) {
-    if (group.length < 2 || new Set(group.map((check) => check.state)).size < 2) continue;
-    seeds.push(
-      claim(
-        "conflict",
-        [group[0].callId],
-        "Two or more recorded results disagree for the same tool call; neither is reported as the outcome.",
-        group.flatMap((check) => check.evidenceIds),
-        "The retained observations conflict. Choosing one would invent certainty the evidence does not have.",
-        group.flatMap((check) => checkNodes.get(check.id) ?? []),
-      ),
-    );
-  }
-
   const cappedNodes = nodes.slice(0, STORY_SCENE_CAPS.nodes);
   const kept = new Set(cappedNodes.map((node) => node.id));
   const cappedEdges = edges
