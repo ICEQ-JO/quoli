@@ -1,6 +1,6 @@
 # Implementation checkpoint
 
-Updated for planning: 2026-10-23. This page distinguishes existing local code and recorded validation from the [target hosted product](vision.md). It does not certify a cloud release.
+Updated for planning: 2026-10-24. This page distinguishes existing local code and recorded validation from the [target hosted product](vision.md). It does not certify a cloud release.
 
 ## Delivered local foundation
 
@@ -9,6 +9,7 @@ Updated for planning: 2026-10-23. This page distinguishes existing local code an
 | Local collector, SQLite history, normalized evidence and synthetic sessions | `apps/collector`, `packages/schema`, `packages/storage`; [development reference](development.md), [demo](local-demo.md); historical [PR #22](https://github.com/ICEQ-JO/quoli/pull/22) | Local, not tenant-scoped hosted ingestion |
 | Local capacity and navigable session pages | [QUO-62 measurements](work/quo-62-capacity.md), `pnpm benchmark:capacity` | Synthetic local load only; 50-session pages, 10,000 events / 50 MiB per project; no hosted SLA |
 | Session workspace, source inspection, search and gap queue | `apps/web`; [current workspace](design/session-workspace.md), [product experience record](work/product-experience.md) | Existing loopback session/API assumptions require hosted adaptation |
+| Evidence Field workspace design | [QUO-84 adoption](design/workspace-evidence-field.md), owner-approved B — Document first; shared dark/light semantics, local type and contextual source plane | Presentation increment over delivered local workflows; no new hosted, Story, replay or cost functionality |
 | Read-only local repository capture and observed history | `packages/repository`, collector observer; [capture](repository-capture.md), [automatic history](automatic-history.md), [work record](work/automatic-repository-history.md) | No automatic authorship; safe file traversal is Linux-specific |
 | Captured file diffs and recorded checks | `packages/analysis`; [diffs](captured-changes.md), [verification evidence](verification-evidence.md) | Successful command does not establish correctness or coverage |
 | File/check change map | `packages/schema/src/map.ts`, analysis/map and web map; [reference](change-map.md) | Not the full proposed scene language or syntax-aware impact view |

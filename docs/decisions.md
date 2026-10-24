@@ -16,7 +16,7 @@ The owner chose a supplied black/Inter/Instrument Serif landing reference over t
 
 Rationale: the owner preferred the reference's restraint and typographic contrast. The template's fabricated social proof ("4.2M+ workflows", "92% reduction", "180+ teams") and external hero video were rejected; the page uses the product pipeline, a local synthetic visual and explicit "in development" labels instead.
 
-Consequences: the landing is dark-only and scoped with `--q-*` tokens; the workspace keeps Geist/fern until the workspace adoption increment. The landing's anchor navigation hides below 900px and the footer carries the section links. Recorded in [directions/d01](design/directions/d01/README.md) and implemented under QUO-83.
+Consequences: the landing is dark-only and scoped with `--q-*` tokens; the workspace retained Geist/fern until the QUO-84 adoption below. The landing's anchor navigation hides below 900px and the footer carries the section links. Recorded in [directions/d01](design/directions/d01/README.md) and implemented under QUO-83.
 
 ## Hosted pilot decisions
 
@@ -25,3 +25,9 @@ Consequences: the landing is dark-only and scoped with `--q-*` tokens; the works
 ## Documentation cleanup
 
 The original GitHub MVP issues remain historical delivery records. Their duplicated local issue bodies and obsolete empty-repository plan are removed in favor of the [checkpoint](implementation-progress.md), [runtime references](README.md) and [active Linear-backed backlog](issues/vision/README.md). Earlier visual proposal documents are superseded by the implemented session workspace and current visual system; validation evidence is retained.
+
+## 2026-10-24 — Document-first Evidence Field workspace
+
+The owner approved composition **B — Document first** for QUO-84 within direction D. Retain stable global navigation, prioritize the captured request and ruled evidence sections, and open exact source inspection contextually. Carry local Inter and black/white neutral planes across delivered workspace surfaces, with Instrument Serif italic only on session titles and semantic color for evidence states. Light mode remains supported.
+
+Rationale: the document gives review a readable center without another persistent session-list rail. Existing evidence, URLs, capture consent and lifecycle behavior remain authoritative. The generated mock’s Run check, global search and invented provenance are excluded. See [the workspace adoption record](design/workspace-evidence-field.md). This does not complete the hosted product or all of parent QUO-82.
