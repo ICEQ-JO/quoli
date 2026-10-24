@@ -6,6 +6,7 @@
     ".": "./src/index.ts",
     "./policy": "./src/policy.ts",
     "./runtime": "./src/runtime.ts",
+    "./keychain": "./src/keychain.ts",
     "./spool": "./src/spool.ts"
   },
   "dependencies": {

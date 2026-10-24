@@ -64,6 +64,16 @@ These commands explicitly install/remove an owned **systemd user** unit at `~/.c
 
 Unit execution and environment quoting follow the official [systemd.service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html) and [systemd.exec](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html) contracts. Unit generation/escaping is tested. Do not infer login/reboot certification from a foreground lifecycle test; repeat a real login test on the pilot machine before relying on it.
 
+## Connect a read-only GitHub App
+
+```sh
+quoli github connect --client-id CLIENT_ID
+quoli github status
+quoli github disconnect
+```
+
+Device flow authorizes a GitHub App with fine-grained read permissions; `connect` prints the verification address and code, then shows the account, granted permissions, repository selection and expiry. The credential is one Linux Secret Service item (`service quoli`, `account github`), never SQLite or a log. A missing/refused keychain fails closed. `status` distinguishes connected, expired, revoked and unreadable records and rechecks the token with GitHub; `disconnect` removes the local credential only, so revoke the app authorization on GitHub when that is intended. See the [GitHub connection reference](github-connection.md).
+
 ## Remove the application without deleting evidence
 
 ```sh
@@ -71,6 +81,7 @@ quoli autostart disable  # if configured
 quoli stop
 quoli hooks uninstall /path/to/project  # if Claude hooks were installed
 quoli hooks opencode uninstall /path/to/project  # if the OpenCode plugin was installed
+quoli github disconnect  # if a GitHub credential was stored
 quoli uninstall
 ```
 
