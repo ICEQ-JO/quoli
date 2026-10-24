@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
-import { generateKeyPairSync } from "node:crypto";
+import { createHash, generateKeyPairSync } from "node:crypto";
 import { once } from "node:events";
 import {
   chmodSync,
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -16,6 +17,7 @@ import { createServer as createHttpServer } from "node:http";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
@@ -24,6 +26,7 @@ import { chromium, expect } from "@playwright/test";
 
 import { artifactDigest, signManifest } from "../apps/cli/src/release";
 import { releaseManifestSchema } from "../packages/schema/src/release";
+import { releaseArchive } from "../scripts/release-archive";
 
 const exec = promisify(execFile);
 async function freePort() {
@@ -37,7 +40,7 @@ async function freePort() {
   return port;
 }
 
-test("relocated local release installs, captures, restarts and uninstalls without the source checkout", {
+test("relocated release installs, captures, updates, rolls back and uninstalls without the source checkout", {
   skip: process.env.QUOLI_RELEASE_TEST !== "1",
   timeout: 120000,
 }, async () => {
@@ -88,6 +91,7 @@ test("relocated local release installs, captures, restarts and uninstalls withou
     await git("commit", "--quiet", "-m", "Synthetic release baseline");
     assert.match(await cli("install"), /Installed/);
     installed = true;
+    await assert.rejects(cli("install"), /already installed/);
     assert.ok(existsSync(join(app, "web/apps/web/server.js")));
     assert.equal(
       (await cli("--version")).trim(),
@@ -243,6 +247,90 @@ test("relocated local release installs, captures, restarts and uninstalls withou
       );
     const evidenceBytes = statSync(join(data, "traceframe.sqlite")).size;
     assert.ok(evidenceBytes > 0);
+    const updateRoot = join(base, "update/quoli");
+    cpSync(resolve("dist/quoli"), updateRoot, { recursive: true, verbatimSymlinks: true });
+    const oldMetadata = JSON.parse(readFileSync(join(updateRoot, "release.json"), "utf8"));
+    const updateMetadata = {
+      ...oldMetadata,
+      version: "0.2.0",
+      channel: "signed",
+      source: { ...oldMetadata.source, tag: "v0.2.0", clean: true },
+    };
+    writeFileSync(join(updateRoot, "release.json"), JSON.stringify(updateMetadata));
+    const updateArchive = join(base, "quoli-0.2.0-linux-x64.tar.gz");
+    await releaseArchive(updateRoot, updateArchive, updateMetadata.source.epoch);
+    const updatePair = generateKeyPairSync("ed25519");
+    const updateKey = join(base, "ephemeral-update-public.pem");
+    writeFileSync(updateKey, updatePair.publicKey.export({ type: "spki", format: "pem" }));
+    signManifest(
+      updateArchive,
+      releaseManifestSchema.parse({
+        format: 1,
+        product: "quoli",
+        version: "0.2.0",
+        platform: "linux",
+        arch: "x64",
+        node: ">=24.16.0 <25",
+        storageVersion: updateMetadata.storageVersion,
+        source: updateMetadata.source,
+        toolchain: updateMetadata.toolchain,
+        archive: { name: "quoli-0.2.0-linux-x64.tar.gz", ...(await artifactDigest(updateArchive)) },
+      }),
+      updatePair.privateKey,
+    );
+    await cli("start");
+    await assert.rejects(
+      cli("update", updateArchive, updateKey, "0.2.0"),
+      /Stop the managed runtime/,
+    );
+    await cli("stop");
+    const evidenceDigest = () =>
+      createHash("sha256")
+        .update(readFileSync(join(data, "traceframe.sqlite")))
+        .digest("hex");
+    const preserved = evidenceDigest();
+    const validUpdate = readFileSync(updateArchive);
+    writeFileSync(updateArchive, Buffer.concat([validUpdate, Buffer.from("tampered")]));
+    await assert.rejects(cli("update", updateArchive, updateKey, "0.2.0"), /checksum/);
+    assert.equal((await cli("--version")).trim(), oldMetadata.version);
+    assert.equal(evidenceDigest(), preserved);
+    writeFileSync(updateArchive, validUpdate);
+    assert.match(
+      await cli("update", updateArchive, updateKey, "0.2.0"),
+      /Verified update installed/,
+    );
+    assert.equal((await cli("--version")).trim(), "0.2.0");
+    assert.equal(evidenceDigest(), preserved);
+    const retained = new DatabaseSync(join(data, "traceframe.sqlite"), { readOnly: true });
+    const retainedEvents = retained.prepare("SELECT id, body FROM events ORDER BY sequence").all();
+    retained.close();
+    await cli("start");
+    assert.match(await cli("status"), /ready.*authenticated managed instance/);
+    assert.equal(
+      (await api(`/v1/projects/${project}/sessions/${sessions[0].id}/snapshots`)).total,
+      2,
+    );
+    await cli("stop");
+    assert.match(await cli("update", "rollback"), /Previous compatible Quoli release restored/);
+    assert.equal((await cli("--version")).trim(), oldMetadata.version);
+    await cli("start");
+    assert.equal(
+      (await api(`/v1/projects/${project}/sessions/${sessions[0].id}/snapshots`)).total,
+      2,
+    );
+    await cli("stop");
+    const restored = new DatabaseSync(join(data, "traceframe.sqlite"), { readOnly: true });
+    try {
+      for (const event of retainedEvents)
+        assert.equal(
+          restored.prepare("SELECT body FROM events WHERE id=?").get(String(event.id))?.body,
+          event.body,
+        );
+    } finally {
+      restored.close();
+    }
+
+    const bytesBeforeUninstall = statSync(join(data, "traceframe.sqlite")).size;
     await assert.rejects(cli("uninstall"), /referenced by installed Quoli hooks/);
     await cli("hooks", "uninstall", repo);
     await assert.rejects(cli("uninstall"), /OpenCode plugin/);
@@ -251,7 +339,8 @@ test("relocated local release installs, captures, restarts and uninstalls withou
     installed = false;
     assert.equal(existsSync(join(bin, "quoli")), false);
     assert.equal(existsSync(app), false);
-    assert.equal(statSync(join(data, "traceframe.sqlite")).size, evidenceBytes);
+    assert.equal(existsSync(`${app}.rollback`), false);
+    assert.equal(statSync(join(data, "traceframe.sqlite")).size, bytesBeforeUninstall);
   } finally {
     try {
       if (installed) await cli("stop");

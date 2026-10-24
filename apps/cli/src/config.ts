@@ -1,8 +1,9 @@
-import { chmodSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { runtime } from "../../../packages/storage/src/runtime";
+import { assertDataCompatibility } from "./compatibility";
 
 export const RELEASE_FORMAT = 1;
 export function requireNode() {
@@ -68,9 +69,21 @@ export function isWithin(path: string, root: string) {
     parent = canonicalPath(root);
   return value === parent || value.startsWith(parent.endsWith("/") ? parent : `${parent}/`);
 }
+export function assertInstallDataSeparation(config: CliConfig) {
+  const app = installPaths().app;
+  for (const root of [config.releaseRoot, app, `${app}.update`, `${app}.rollback`]) {
+    if (isWithin(config.dataDir, root) || isWithin(root, config.dataDir))
+      throw new Error(
+        "Install, update, rollback and private evidence directories must not overlap.",
+      );
+  }
+}
 export function requireRelease(config: CliConfig) {
-  if (isWithin(config.dataDir, config.releaseRoot) || isWithin(config.releaseRoot, config.dataDir))
-    throw new Error("The runtime installation and private evidence directory must not overlap.");
+  if (existsSync(`${installPaths().app}.update`))
+    throw new Error(
+      "An interrupted update needs quoli update recover from a trusted release before starting or installing.",
+    );
+  assertInstallDataSeparation(config);
   const release = JSON.parse(readFileSync(join(config.releaseRoot, "release.json"), "utf8"));
   if (
     release.format !== 1 ||
@@ -78,6 +91,7 @@ export function requireRelease(config: CliConfig) {
     release.arch !== process.arch
   )
     throw new Error("This Quoli release does not match the current platform/architecture.");
+  assertDataCompatibility(config.releaseRoot, config.dbFile);
 }
 
 export function connectArguments(args: string[], cwd: string) {

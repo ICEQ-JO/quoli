@@ -99,6 +99,12 @@ export async function startService(
     };
     try {
       writeFileSync(config.stateFile, JSON.stringify(state), { flag: "wx", mode: 0o600 });
+      try {
+        requireRelease(config);
+      } catch (error) {
+        removeState(config, state.instance);
+        throw error;
+      }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "EEXIST") continue;
       throw error;

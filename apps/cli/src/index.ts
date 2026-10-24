@@ -7,6 +7,7 @@ import { autostart, loginLifecycle } from "./autostart";
 import { childEnvironment, cliConfig, connectArguments, requireNode } from "./config";
 import { installRelease, uninstallRelease } from "./install";
 import { serviceStatus, startService, stopService } from "./lifecycle";
+import { recoverUpdate, rollbackRelease, updateRelease } from "./update";
 
 const help = `Quoli — local evidence for coding-agent work
 
@@ -22,6 +23,8 @@ quoli hooks uninstall [repository]  Remove Quoli hooks without deleting evidence
 quoli hooks opencode status|uninstall [repository]  Inspect/remove the OpenCode plugin
 quoli settings ...                 Capture policy, pause, retention and deletion
 quoli autostart enable|disable|status  Optional Linux user-login startup
+quoli update ARCHIVE KEY VERSION    Verify and install an explicitly trusted newer release
+quoli update rollback | recover    Restore previous compatible code or recover interruption
 quoli uninstall                    Remove the installed app; preserve evidence
 
 All listeners bind to loopback. Node 24.16+ within Node 24 and Git are required.
@@ -51,12 +54,34 @@ async function main() {
     console.log(JSON.parse(readFileSync(join(root, "release.json"), "utf8")).version);
     return;
   }
-  if (!["connect", "settings", "hooks", "autostart"].includes(command) && args.length)
+  if (!["connect", "settings", "hooks", "autostart", "update"].includes(command) && args.length)
     throw new Error("Unexpected command arguments. Run quoli help.");
   if (command === "install") {
     console.log(
       `Installed ${await installRelease(config)}. Add its bin directory to PATH if needed; no shell profile was edited.`,
     );
+    return;
+  }
+  if (command === "update") {
+    if (args.length === 1 && args[0] === "rollback") {
+      await rollbackRelease(config);
+      console.log(
+        "Previous compatible Quoli release restored. Evidence was preserved; start explicitly when ready.",
+      );
+    } else if (args.length === 1 && args[0] === "recover") {
+      await recoverUpdate(config);
+      console.log(
+        "Quoli update recovery complete. Evidence was preserved; start explicitly when ready.",
+      );
+    } else if (args.length === 3) {
+      await updateRelease(config, args[0], args[1], args[2]);
+      console.log(
+        "Verified update installed; previous code retained for rollback. Evidence was preserved; start explicitly when ready.",
+      );
+    } else
+      throw new Error(
+        "Use quoli update ARCHIVE TRUSTED_PUBLIC_KEY EXPECTED_VERSION, or quoli update rollback|recover.",
+      );
     return;
   }
   if (command === "uninstall") {
