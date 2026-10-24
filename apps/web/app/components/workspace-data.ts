@@ -49,6 +49,7 @@ export function useWorkspaceSummaries(
   refresh: number,
   cursor = 0,
 ) {
+  const scope = JSON.stringify([project, cursor, sessions.map((s) => [s.id, s.count])]);
   const [state, setState] = useState<{
     scope: string;
     summaries: WorkspaceCounts;
@@ -56,28 +57,28 @@ export function useWorkspaceSummaries(
     failed: boolean;
   }>({ scope: "", summaries: {}, loading: true, failed: false });
   const [retry, setRetry] = useState(0);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refresh/retry are explicit projection reloads.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scope tracks session IDs/counts; refresh/retry reload explicitly.
   useEffect(() => {
     const abort = new AbortController();
-    setState({ scope: `${project}:${cursor}`, summaries: {}, loading: true, failed: false });
+    setState({ scope, summaries: {}, loading: true, failed: false });
+    if (!sessions.length) {
+      setState({ scope, summaries: {}, loading: false, failed: false });
+      return () => abort.abort();
+    }
     localRead<WorkspaceCounts>(
       { resource: "session-counts", project, cursor: String(cursor) },
       abort.signal,
     )
       .then((summaries) => {
-        if (!abort.signal.aborted)
-          setState({ scope: `${project}:${cursor}`, summaries, loading: false, failed: false });
+        if (!abort.signal.aborted) setState({ scope, summaries, loading: false, failed: false });
       })
       .catch(() => {
-        if (!abort.signal.aborted)
-          setState({ scope: `${project}:${cursor}`, summaries: {}, loading: false, failed: true });
+        if (!abort.signal.aborted) setState({ scope, summaries: {}, loading: false, failed: true });
       });
     return () => abort.abort();
-  }, [project, refresh, retry, cursor, sessions]);
+  }, [project, refresh, retry, cursor, scope]);
   const visible =
-    state.scope === `${project}:${cursor}`
-      ? state
-      : { summaries: emptySummaries, loading: true, failed: false };
+    state.scope === scope ? state : { summaries: emptySummaries, loading: true, failed: false };
   const incomplete =
     !visible.loading &&
     sessions.some((s) => {
