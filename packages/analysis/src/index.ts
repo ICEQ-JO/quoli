@@ -7,6 +7,7 @@ export * from "./cost";
 export * from "./map";
 export * from "./reconcile";
 export * from "./scene";
+export * from "./story";
 export * from "./usage";
 
 export function relationships(events: StoredEvent[]): Relationship[] {
