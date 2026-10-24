@@ -126,17 +126,24 @@ export async function recoverUpdate(config: CliConfig, ownProcess = false) {
 }
 function begin(from: string, to: string, operation: "update" | "rollback" = "update") {
   const p = paths();
+  const record = updateJournalSchema.parse({
+    owner: "quoli-update-v1",
+    operation,
+    pid: process.pid,
+    from,
+    to,
+  });
   if (existsSync(p.transaction))
     throw new Error(
       "An update transaction exists. Use quoli update recover from a trusted release after its process exits.",
     );
   const reservation = mkdtempSync(`${p.transaction}-reserve-`);
   try {
-    writeFileSync(
-      join(reservation, "transaction.json"),
-      JSON.stringify({ owner: "quoli-update-v1", operation, pid: process.pid, from, to }),
-      { mode: 0o600, flag: "wx", flush: true },
-    );
+    writeFileSync(join(reservation, "transaction.json"), JSON.stringify(record), {
+      mode: 0o600,
+      flag: "wx",
+      flush: true,
+    });
     renameSync(reservation, p.transaction);
   } catch (error) {
     rmSync(reservation, { recursive: true, force: true });

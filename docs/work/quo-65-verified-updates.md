@@ -14,7 +14,7 @@ Vision gate: commercial distribution and data controls. Prerequisites [QUO-43](h
 
 Touched callers: CLI dispatch/help, install/uninstall, managed startup, release builder/schema, ordered storage migration inventory, synthetic update/release tests and operator/implementation references. No UI, adapter, network transport, dependency, owner tool configuration or private store change.
 
-Primary review used Ponytail Review and traced install/start/stop/recovery callers. It resolved the concrete interrupted-cleanup journal case, candidate-owned marker overwrite, install/data/rollback overlap and startup/update reservation race. Parser tests include regular/PAX traversal, symlink-parent and escaping links, duplicates, unsupported hard/device members, invalid checksums, truncation and invalid gzip. No independent security certification is claimed.
+Primary review used Ponytail Review and traced install/start/stop/recovery callers. It resolved the concrete interrupted-cleanup journal case, candidate-owned marker overwrite, install/data/rollback overlap and startup/update reservation race. Parser tests include regular/PAX traversal, symlink-parent and escaping links, duplicates, unsupported hard/device members, invalid checksums, truncation and invalid gzip. A follow-up regression reproduced an excessively long expected version leaving an unreadable blocking journal; transaction records are now validated before reserving any directory. The same input must fail with no update state and unchanged install/evidence. No independent security certification is claimed.
 
 ## Validation
 
