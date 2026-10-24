@@ -5,7 +5,7 @@ Date: 2026-10-25. Local Linux validation only; no live GitHub account, API token
 ## Implemented
 
 - `packages/repository/src/github-provider.ts`: pull-request, ref, tree, blob and comparison reads with commit identity, caller limits, pagination and explicit failure states.
-- `packages/repository/src/github-cache.ts`: sanitized, commit-keyed local cache with scoped clearing.
+- `packages/repository/src/remote-cache.ts`: sanitized, commit-keyed local cache with scoped clearing.
 - `apps/cli/src/github.ts`: `quoli github review OWNER/REPO --pull N [--path FILE] [--capture-code]`, plus cache clearing on disconnect.
 - `tests/github-provider.test.ts`: 15 tests against a local recorded-shape fake GitHub API.
 

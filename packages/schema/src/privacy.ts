@@ -15,7 +15,7 @@ export function redact(text: string): string {
       "[REDACTED PRIVATE KEY]",
     )
     .replace(
-      /\b(?:sk-[a-zA-Z0-9_-]{8,}|gh[pousr]_[a-zA-Z0-9_]{8,}|github_pat_[a-zA-Z0-9_]{8,}|AKIA[A-Z0-9]{16})\b/g,
+      /\b(?:sk-[a-zA-Z0-9_-]{8,}|gh[pousr]_[a-zA-Z0-9_]{8,}|github_pat_[a-zA-Z0-9_]{8,}|glpat-[a-zA-Z0-9_-]{8,}|AKIA[A-Z0-9]{16})\b/g,
       "[REDACTED]",
     )
     .replace(/\b(authorization\s*[:=]\s*(?:bearer\s+)?)[^\s,;"'}]+/gi, "$1[REDACTED]")

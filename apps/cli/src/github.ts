@@ -8,8 +8,8 @@ import {
   GithubError,
   grantedPermissions,
 } from "../../../packages/repository/src/github";
-import { githubCache } from "../../../packages/repository/src/github-cache";
 import { GithubReadError, githubReads } from "../../../packages/repository/src/github-provider";
+import { remoteCache } from "../../../packages/repository/src/remote-cache";
 import { defaultPolicy } from "../../../packages/schema/src";
 import { redact } from "../../../packages/schema/src/privacy";
 import { osKeychain } from "../../../packages/storage/src/keychain";
@@ -122,7 +122,7 @@ export async function githubCommand(
   const [action, ...args] = argv;
   const store = dependencies.store ?? osKeychain();
   const dataDir = dependencies.dataDir ?? runtime().dataDir;
-  const cache = () => githubCache(join(dataDir, "github-cache"));
+  const cache = () => remoteCache(join(dataDir, "github-cache"));
   if (action === "connect") {
     const values = flags(args);
     const clientId = values["--client-id"];
