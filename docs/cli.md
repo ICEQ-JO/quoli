@@ -72,7 +72,14 @@ quoli github status
 quoli github disconnect
 ```
 
-Device flow authorizes a GitHub App with fine-grained read permissions; `connect` prints the verification address and code, then shows the account, granted permissions, repository selection and expiry. The credential is one Linux Secret Service item (`service quoli`, `account github`), never SQLite or a log. A missing/refused keychain fails closed. `status` distinguishes connected, expired, revoked and unreadable records and rechecks the token with GitHub; `disconnect` removes the local credential only, so revoke the app authorization on GitHub when that is intended. See the [GitHub connection reference](github-connection.md).
+Device flow authorizes a GitHub App with fine-grained read permissions; `connect` prints the verification address and code, then shows the account, granted permissions, repository selection and expiry. The credential is one Linux Secret Service item (`service quoli`, `account github`), never SQLite or a log. A missing/refused keychain fails closed. `status` distinguishes connected, expired, revoked and unreadable records and rechecks the token with GitHub; `disconnect` removes the local credential and cached remote review files, so revoke the app authorization on GitHub when that is intended. See the [GitHub connection reference](github-connection.md).
+
+```sh
+quoli github review OWNER/REPO --pull NUMBER
+quoli github review OWNER/REPO --pull NUMBER --path src/app.ts --capture-code
+```
+
+Review resolves the pull request, lists bounded changed paths (`--max-entries`, `--max-bytes`), reports truncation/omission and rate limits, and opens one sanitized file with `--path`. Code text requires `--capture-code`; excluded paths are never requested. Sanitized content is cached by repository, commit and path under the private data directory, and re-checked against the current policy when read. The web File changes view still compares local snapshots only; see the [bounded reads reference](github-reads.md) for the remaining scope.
 
 ## Remove the application without deleting evidence
 
