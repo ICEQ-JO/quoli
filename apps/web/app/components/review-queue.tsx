@@ -7,6 +7,7 @@ import { eventRead, useWorkspaceSummaries } from "./workspace-data";
 export function ReviewQueue({
   project,
   sessions,
+  cursor,
   refresh,
   metadataLoading,
   metadataFailed,
@@ -17,6 +18,7 @@ export function ReviewQueue({
 }: {
   project: string;
   sessions: Session[];
+  cursor: number;
   refresh: number;
   metadataLoading: boolean;
   metadataFailed: boolean;
@@ -25,7 +27,7 @@ export function ReviewQueue({
   onSelect: (session: string, event: string, replace?: boolean) => void;
   onSession: (session: string) => void;
 }) {
-  const summaries = useWorkspaceSummaries(project, sessions, refresh);
+  const summaries = useWorkspaceSummaries(project, sessions, refresh, cursor);
   const [pages, setPages] = useState<Record<string, EventPage>>({}),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(false),
@@ -100,7 +102,7 @@ export function ReviewQueue({
       <header className="index-heading">
         <div>
           <h1>Needs review</h1>
-          <p>Recorded capture gaps across this project's retained sessions.</p>
+          <p>Recorded capture gaps for this page of retained sessions.</p>
         </div>
         <span className="queue-count">{isLoading ? "—" : items.length} loaded</span>
       </header>

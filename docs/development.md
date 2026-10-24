@@ -44,7 +44,7 @@ See [local repository capture](repository-capture.md). `pnpm repository register
 
 ## Dashboard structure
 
-`apps/web/app/dashboard.tsx` owns local navigation and session review state. `review.ts` serializes only validated project/session/view/event/capture/file IDs; the local-cookie connection route preserves this state and drops arbitrary return destinations. `components/workspace-home.tsx` owns overview/library presentation and bounded per-session summary reads. Workspace counts derive from the returned retained-session list (currently capped at 50 by storage); they are not universal collection metrics. Summary failures keep gap counts unknown. Project/session metadata loads independently from the selected session summary so one failed summary does not erase the session list.
+`apps/web/app/dashboard.tsx` owns local navigation and session review state. `review.ts` serializes only validated project/session/view/event/capture/file IDs; the local-cookie connection route preserves this state and drops arbitrary return destinations. `components/workspace-home.tsx` owns overview/library presentation and bounded per-session summary reads. Workspace counts derive from the selected 50-session page; newer/older navigation exposes the retained-session total. These are not universal collection metrics. Summary failures or missing/stale count rows keep gap counts unknown. Project/session metadata loads independently from the selected session summary so one failed summary does not erase the session list.
 
 The root view is Sessions. Opening a work-list row uses `view=session` for the full review document; `view=review` opens the capture-gap inbox. Explicit legacy session URLs still open Activity. Session-content search stays in a bounded POST body, while session-title search stays in local component state. Geist Variable is bundled from the pinned Fontsource package and served locally: runtime typography makes no third-party font requests. [PRODUCT.md](../apps/web/PRODUCT.md) records product truth; [DESIGN.md](../apps/web/DESIGN.md) records the built visual system.
 
@@ -59,7 +59,7 @@ Collector base: `http://127.0.0.1:4318`. All collector routes require `Authoriza
 | `POST /v1/logs` | Narrow OTLP logs receiver (`application/json` only, 8 MiB cap) for reported request usage. Requires the local credential; drops personal attributes; stores request-usage observations only. The project comes from `TRACEFRAME_PROJECT_ID` or the single registered local project. |
 | `POST /v1/ingest` | `application/json`, body `{events: NormalizedEvent[]}`. Strict runtime validation, 1 MiB body/100-event batch limits, then project-policy filtering and one SQLite transaction. Unknown projects and non-synthetic sources for the demo project are rejected. |
 | `GET /v1/projects` | Up to 50 registered projects and their capture policies. |
-| `GET /v1/projects/:project/sessions` | Up to 50 sessions; title comes from retained start content. |
+| `GET /v1/projects/:project/sessions` | Receipt-ordered pages of 50 sessions. Add `?paged=1&cursor=N` for `{sessions,total,nextCursor}`; omit `paged` for the legacy array with `X-Quoli-Session-Total` and optional `X-Quoli-Next-Cursor` headers. Title comes from retained start content. |
 | `GET /v1/projects/:project/sessions/:session/events?cursor=N` | Eight events after receipt sequence N; `{events,nextCursor,total}`. Cursor does not use source timestamps. |
 | `GET …/events?event=ID` | One project/session-scoped evidence observation. |
 | `POST …/events/query` | Strict `{search,kind,order,cursor}` query; session-wide filtering and keyset pagination. Search ≤200 characters; source order uses timestamp and receipt-sequence tie-break. Search stays out of URL/access-log paths. |
@@ -93,4 +93,8 @@ See [captured file review](captured-changes.md) for projection semantics, bounds
 
 ## Workspace projections
 
-`GET /v1/projects/:project/session-counts` returns only grouped event-kind counts for the same 50-session register bound. This authenticated, project-scoped read replaces per-session summary fan-out in work lists. It returns no captured text, source bodies or repository roots. The browser uses `resource=session-counts` through the protected data proxy. Session reading still requests its scoped prompt/tool/gap pages and capture metadata independently. UI startup reads URL state before mounting evidence views, avoiding requests or flashes for a fallback project.
+`GET /v1/projects/:project/session-counts` returns only grouped event-kind counts for the same 50-session register page; `?cursor=N` selects the matching page. This authenticated, project-scoped read replaces per-session summary fan-out in work lists. It returns no captured text, source bodies or repository roots. The browser uses `resource=session-counts` through the protected data proxy. Session reading still requests its scoped prompt/tool/gap pages and capture metadata independently. UI startup reads URL state before mounting evidence views, avoiding requests or flashes for a fallback project.
+
+## Local capacity
+
+Per-project storage still rejects above 10,000 events or 50 MiB of serialized evidence bodies; there is no automatic eviction. Ingestion capacity rejection returns HTTP 507 / `storage_limit` without accepting a partial batch. `/health.capacityRejected` is a process-local rejection count, not durable capture-loss history. Summaries refuse to project an over-bound session as complete. `pnpm benchmark:capacity` measures inert temporary data; see [QUO-62 measurements and limits](work/quo-62-capacity.md).

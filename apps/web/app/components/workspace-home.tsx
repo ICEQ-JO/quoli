@@ -8,6 +8,7 @@ import { sourceDate, useWorkspaceSummaries } from "./workspace-data";
 
 type Props = {
   sessions: Session[];
+  cursor: number;
   project: string;
   projectName: string;
   synthetic: boolean;
@@ -21,6 +22,7 @@ type Props = {
 
 export function WorkspaceHome({
   sessions,
+  cursor,
   project,
   projectName,
   synthetic,
@@ -31,7 +33,7 @@ export function WorkspaceHome({
   onGaps,
   onLibrary,
 }: Props) {
-  const evidence = useWorkspaceSummaries(project, sessions, refresh);
+  const evidence = useWorkspaceSummaries(project, sessions, refresh, cursor);
   const ready = !loading && !unavailable && !evidence.loading && !evidence.failed;
   const gapTotal = ready
     ? sessions.reduce(
@@ -72,7 +74,7 @@ export function WorkspaceHome({
           <strong>{number(gapTotal)}</strong>
           <span>recorded capture gaps</span>
         </div>
-        <span className="ledger-caption">Derived from retained history · up to 50 sessions</span>
+        <span className="ledger-caption">Derived from this page of retained sessions</span>
       </section>
       <ConnectionGuide empty={!loading && !unavailable && sessions.length === 0} />
       <div className="overview-columns">

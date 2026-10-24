@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { startCollector } from "../apps/collector/src/server";
+import { capacityEvents } from "../fixtures/capacity";
 import { Store } from "../packages/storage/src/index";
 import { credential, rotateCredential } from "../packages/storage/src/runtime";
 
@@ -177,5 +178,73 @@ test("collector enforces auth, origins, atomic bounded input, replay and rotatio
     });
     rmSync(dir, { recursive: true, force: true });
     delete process.env.TRACEFRAME_DATA_DIR;
+  }
+});
+
+test("collector paginates older sessions, validates them directly, and reports capacity rejection", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "quoli-capacity-http-"));
+  process.env.TRACEFRAME_DATA_DIR = dir;
+  const store = new Store(join(dir, "db.sqlite"), { maxEvents: 52, maxBytes: 1048576 });
+  store.registerProject("capacity", "Synthetic");
+  const events = capacityEvents(51, "wide");
+  store.append(events);
+  const server = startCollector(0, store);
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  const address = server.address();
+  assert.ok(address && typeof address !== "string");
+  const url = `http://127.0.0.1:${address.port}`;
+  const headers = { Authorization: `Bearer ${credential()}` };
+  try {
+    const first = await (
+      await fetch(`${url}/v1/projects/capacity/sessions?paged=1`, { headers })
+    ).json();
+    const legacy = await fetch(`${url}/v1/projects/capacity/sessions`, { headers });
+    assert.equal(legacy.headers.get("X-Quoli-Session-Total"), "51");
+    assert.equal(legacy.headers.get("X-Quoli-Next-Cursor"), String(first.nextCursor));
+    assert.equal((await legacy.json()).length, 50);
+    assert.equal(first.total, 51);
+    assert.equal(first.sessions.length, 50);
+    const last = await (
+      await fetch(`${url}/v1/projects/capacity/sessions?paged=1&cursor=${first.nextCursor}`, {
+        headers,
+      })
+    ).json();
+    assert.deepEqual(
+      last.sessions.map((s: { id: string }) => s.id),
+      ["root"],
+    );
+    assert.equal(last.nextCursor, null);
+    for (const resource of ["summary", "events", "snapshots", "repository-history"]) {
+      assert.equal(
+        (await fetch(`${url}/v1/projects/capacity/sessions/root/${resource}`, { headers })).status,
+        200,
+      );
+    }
+    assert.equal(
+      (await fetch(`${url}/v1/projects/capacity/sessions?cursor=-1`, { headers })).status,
+      400,
+    );
+    assert.equal(
+      (await fetch(`${url}/v1/projects/capacity/session-counts?cursor=1.5`, { headers })).status,
+      400,
+    );
+    const response = await fetch(`${url}/v1/ingest`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        events: events
+          .slice(0, 2)
+          .map((e, i) => ({ ...e, id: `overflow-${i}`, deliveryId: `overflow-${i}` })),
+      }),
+    });
+    assert.equal(response.status, 507);
+    assert.equal((await response.json()).code, "storage_limit");
+    assert.equal(store.usage("capacity").events, 51);
+    assert.equal((await (await fetch(`${url}/health`, { headers })).json()).capacityRejected, 1);
+  } finally {
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
+    rmSync(dir, { recursive: true, force: true });
   }
 });

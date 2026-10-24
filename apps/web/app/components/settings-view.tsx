@@ -303,6 +303,10 @@ export function SettingsView({ project, projectName, refresh, onSessions }: Prop
               <h2>Storage</h2>
               <span>{number(settings.usage.bytes)} bytes</span>
             </div>
+            <p>
+              Local project limit: 10,000 retained events and 50 MiB of evidence bodies. Rejected
+              batches are not included in these totals; pending retries remain in the bridge spool.
+            </p>
             <dl className="settings-usage">
               <div>
                 <dt>Observations</dt>

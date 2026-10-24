@@ -43,7 +43,12 @@ export async function eventRead(
 }
 type WorkspaceCounts = Record<string, { kindCounts: Record<string, number> }>;
 const emptySummaries: WorkspaceCounts = {};
-export function useWorkspaceSummaries(project: string, _sessions: Session[], refresh: number) {
+export function useWorkspaceSummaries(
+  project: string,
+  sessions: Session[],
+  refresh: number,
+  cursor = 0,
+) {
   const [state, setState] = useState<{
     scope: string;
     summaries: WorkspaceCounts;
@@ -54,22 +59,35 @@ export function useWorkspaceSummaries(project: string, _sessions: Session[], ref
   // biome-ignore lint/correctness/useExhaustiveDependencies: refresh/retry are explicit projection reloads.
   useEffect(() => {
     const abort = new AbortController();
-    setState({ scope: project, summaries: {}, loading: true, failed: false });
-    localRead<WorkspaceCounts>({ resource: "session-counts", project }, abort.signal)
+    setState({ scope: `${project}:${cursor}`, summaries: {}, loading: true, failed: false });
+    localRead<WorkspaceCounts>(
+      { resource: "session-counts", project, cursor: String(cursor) },
+      abort.signal,
+    )
       .then((summaries) => {
         if (!abort.signal.aborted)
-          setState({ scope: project, summaries, loading: false, failed: false });
+          setState({ scope: `${project}:${cursor}`, summaries, loading: false, failed: false });
       })
       .catch(() => {
         if (!abort.signal.aborted)
-          setState({ scope: project, summaries: {}, loading: false, failed: true });
+          setState({ scope: `${project}:${cursor}`, summaries: {}, loading: false, failed: true });
       });
     return () => abort.abort();
-  }, [project, refresh, retry]);
-  return {
-    ...(state.scope === project
+  }, [project, refresh, retry, cursor, sessions]);
+  const visible =
+    state.scope === `${project}:${cursor}`
       ? state
-      : { summaries: emptySummaries, loading: true, failed: false }),
+      : { summaries: emptySummaries, loading: true, failed: false };
+  const incomplete =
+    !visible.loading &&
+    sessions.some((s) => {
+      const counts = visible.summaries[s.id]?.kindCounts;
+      return !counts || Object.values(counts).reduce((sum, count) => sum + count, 0) !== s.count;
+    });
+  return {
+    ...visible,
+    summaries: incomplete ? emptySummaries : visible.summaries,
+    failed: visible.failed || incomplete,
     retry: () => setRetry((n) => n + 1),
   };
 }
