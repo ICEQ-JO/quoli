@@ -26,6 +26,7 @@ quoli hooks opencode status|uninstall [repository]  Inspect/remove the OpenCode 
 quoli hooks pi status|uninstall [repository]        Inspect/remove the Pi extension
 quoli github connect --client-id ID  Connect a read-only GitHub App; token stays in the OS keychain
 quoli github status | disconnect     Inspect or remove the local GitHub credential
+quoli github review OWNER/REPO --pull N  List changed paths; add --path FILE to open one
 quoli settings ...                 Capture policy, pause, retention and deletion
 quoli autostart enable|disable|status  Optional Linux user-login startup
 quoli update ARCHIVE KEY VERSION    Verify and install an explicitly trusted newer release
