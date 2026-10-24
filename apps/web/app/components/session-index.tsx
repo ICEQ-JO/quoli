@@ -8,6 +8,7 @@ export function SessionIndex({
   project,
   projectName,
   sessions,
+  cursor,
   synthetic,
   refresh,
   loading,
@@ -20,6 +21,7 @@ export function SessionIndex({
   project: string;
   projectName: string;
   sessions: Session[];
+  cursor: number;
   synthetic: boolean;
   refresh: number;
   loading: boolean;
@@ -29,7 +31,7 @@ export function SessionIndex({
   onSession: (id: string) => void;
   onQueue: () => void;
 }) {
-  const evidence = useWorkspaceSummaries(project, sessions, refresh);
+  const evidence = useWorkspaceSummaries(project, sessions, refresh, cursor);
   const rows = sessions
     .filter(
       (s) =>
@@ -150,7 +152,7 @@ export function SessionIndex({
           ? "Loading sessions…"
           : unavailable
             ? "Session metadata unavailable. Retry the local connection above."
-            : `${rows.length} of ${sessions.length} retained sessions`}
+            : `${rows.length} of ${sessions.length} sessions on this page`}
         <span>Source dates · UTC</span>
       </div>
       {!loading && !rows.length && (
@@ -251,7 +253,6 @@ export function SessionIndex({
       <footer className="index-footnote">
         <Icon name="lock" size={13} />
         Local evidence. An end event does not establish feature correctness.
-        {sessions.length >= 50 && <span>Session register limited to 50 records.</span>}
       </footer>
     </section>
   );

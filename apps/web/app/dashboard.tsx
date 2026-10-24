@@ -7,6 +7,7 @@ import type {
   Project,
   Relationship,
   Session,
+  SessionPage,
   StoredEvent,
   UsageView,
 } from "@traceframe/schema";
@@ -102,6 +103,13 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]),
     [sessions, setSessions] = useState<Session[]>([]),
     [summaryState, setSummary] = useState<{ scope: string; data: Summary } | null>(null);
+  const [sessionCursors, setSessionCursors] = useState([0]);
+  const sessionCursor = sessionCursors.at(-1) ?? 0;
+  const [sessionPage, setSessionPage] = useState<SessionPage>({
+    sessions: [],
+    total: 0,
+    nextCursor: null,
+  });
   const [page, setPage] = useState<EventPage>({ events: [], nextCursor: null, total: 0 }),
     [selected, setSelected] = useState<StoredEvent | null>(null);
   const [search, setSearch] = useState(""),
@@ -188,20 +196,26 @@ export default function Dashboard() {
     const abort = new AbortController();
     setSummary(null);
     setMetadataLoading(true);
+    setSessions([]);
     setMetadataFailed(false);
     read<Project[]>({ resource: "projects" }, abort.signal)
       .then(async (p) => {
-        if (abort.signal.aborted) return [];
+        if (abort.signal.aborted) return null;
         setProjects(p);
         if (project === initialLocation.project && !p.some((item) => item.id === project) && p[0]) {
           navigate({ ...initialLocation, project: p[0].id, session: "" });
-          return [];
+          return null;
         }
-        return read<Session[]>({ resource: "sessions", project }, abort.signal);
+        return read<SessionPage>(
+          { resource: "sessions", project, cursor: String(sessionCursor), paged: "1" },
+          abort.signal,
+        );
       })
       .then((s) => {
         if (abort.signal.aborted) return;
-        setSessions(s);
+        if (!s) return;
+        setSessions(s.sessions);
+        setSessionPage(s);
         setOnline(true);
       })
       .catch((e) => {
@@ -215,15 +229,21 @@ export default function Dashboard() {
         if (!abort.signal.aborted) setMetadataLoading(false);
       });
     return () => abort.abort();
-  }, [ready, project, refresh, navigate]);
+  }, [ready, project, refresh, navigate, sessionCursor]);
   useEffect(() => {
     if (!ready || !projects.some((item) => item.id === project && !item.synthetic)) return;
     const abort = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
     async function poll() {
       try {
-        const next = await read<Session[]>({ resource: "sessions", project }, abort.signal);
-        if (!abort.signal.aborted) setSessions(next);
+        const next = await read<SessionPage>(
+          { resource: "sessions", project, cursor: String(sessionCursor), paged: "1" },
+          abort.signal,
+        );
+        if (!abort.signal.aborted) {
+          setSessions(next.sessions);
+          setSessionPage(next);
+        }
       } catch {
         /* Keep the current register visible during a background refresh failure. */
       } finally {
@@ -235,7 +255,7 @@ export default function Dashboard() {
       abort.abort();
       clearTimeout(timer);
     };
-  }, [ready, project, projects]);
+  }, [ready, project, projects, sessionCursor]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: refresh explicitly reloads the session projection.
   useEffect(() => {
     if (!ready || isWorkspace) return;
@@ -480,6 +500,8 @@ export default function Dashboard() {
                 value={project}
                 onChange={(e) => {
                   setSessions([]);
+                  setSessionCursors([0]);
+                  setSessionPage({ sessions: [], total: 0, nextCursor: null });
                   setSummary(null);
                   setWorkspaceFilters({
                     search: "",
@@ -628,11 +650,42 @@ export default function Dashboard() {
                   </button>
                 </div>
               )}
+              {view !== "Settings" && (sessionPage.total > 50 || sessionCursor > 0) && (
+                <nav className="work-list-status session-pagination" aria-label="Session pages">
+                  <p role="status">
+                    {metadataLoading
+                      ? "Loading session page…"
+                      : metadataFailed
+                        ? "Session page unavailable. Retry the local connection above."
+                        : `${sessions.length} of ${sessionPage.total} retained sessions on this page. Counts, filters and review queue cover this page only.`}
+                  </p>
+                  <button
+                    className="button"
+                    type="button"
+                    disabled={metadataLoading || sessionCursors.length === 1}
+                    onClick={() => setSessionCursors((c) => c.slice(0, -1))}
+                  >
+                    Newer sessions
+                  </button>
+                  <button
+                    className="button"
+                    type="button"
+                    disabled={metadataLoading || metadataFailed || sessionPage.nextCursor === null}
+                    onClick={() => {
+                      if (sessionPage.nextCursor !== null)
+                        setSessionCursors((c) => [...c, sessionPage.nextCursor as number]);
+                    }}
+                  >
+                    Older sessions
+                  </button>
+                </nav>
+              )}
               {view === "Sessions" && (
                 <SessionIndex
                   key={project}
                   project={project}
                   projectName={projectName}
+                  cursor={sessionCursor}
                   sessions={sessions}
                   synthetic={synthetic}
                   refresh={refresh}
@@ -648,6 +701,7 @@ export default function Dashboard() {
                 <ReviewQueue
                   key={project}
                   project={project}
+                  cursor={sessionCursor}
                   sessions={sessions}
                   refresh={refresh}
                   metadataLoading={metadataLoading}
@@ -675,6 +729,7 @@ export default function Dashboard() {
               )}
               {view === "Overview" && (
                 <WorkspaceHome
+                  cursor={sessionCursor}
                   sessions={sessions}
                   project={project}
                   projectName={projectName}

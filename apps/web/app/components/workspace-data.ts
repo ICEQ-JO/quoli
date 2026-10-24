@@ -43,7 +43,13 @@ export async function eventRead(
 }
 type WorkspaceCounts = Record<string, { kindCounts: Record<string, number> }>;
 const emptySummaries: WorkspaceCounts = {};
-export function useWorkspaceSummaries(project: string, _sessions: Session[], refresh: number) {
+export function useWorkspaceSummaries(
+  project: string,
+  sessions: Session[],
+  refresh: number,
+  cursor = 0,
+) {
+  const scope = JSON.stringify([project, cursor, sessions.map((s) => [s.id, s.count])]);
   const [state, setState] = useState<{
     scope: string;
     summaries: WorkspaceCounts;
@@ -51,25 +57,38 @@ export function useWorkspaceSummaries(project: string, _sessions: Session[], ref
     failed: boolean;
   }>({ scope: "", summaries: {}, loading: true, failed: false });
   const [retry, setRetry] = useState(0);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refresh/retry are explicit projection reloads.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scope tracks session IDs/counts; refresh/retry reload explicitly.
   useEffect(() => {
     const abort = new AbortController();
-    setState({ scope: project, summaries: {}, loading: true, failed: false });
-    localRead<WorkspaceCounts>({ resource: "session-counts", project }, abort.signal)
+    setState({ scope, summaries: {}, loading: true, failed: false });
+    if (!sessions.length) {
+      setState({ scope, summaries: {}, loading: false, failed: false });
+      return () => abort.abort();
+    }
+    localRead<WorkspaceCounts>(
+      { resource: "session-counts", project, cursor: String(cursor) },
+      abort.signal,
+    )
       .then((summaries) => {
-        if (!abort.signal.aborted)
-          setState({ scope: project, summaries, loading: false, failed: false });
+        if (!abort.signal.aborted) setState({ scope, summaries, loading: false, failed: false });
       })
       .catch(() => {
-        if (!abort.signal.aborted)
-          setState({ scope: project, summaries: {}, loading: false, failed: true });
+        if (!abort.signal.aborted) setState({ scope, summaries: {}, loading: false, failed: true });
       });
     return () => abort.abort();
-  }, [project, refresh, retry]);
+  }, [project, refresh, retry, cursor, scope]);
+  const visible =
+    state.scope === scope ? state : { summaries: emptySummaries, loading: true, failed: false };
+  const incomplete =
+    !visible.loading &&
+    sessions.some((s) => {
+      const counts = visible.summaries[s.id]?.kindCounts;
+      return !counts || Object.values(counts).reduce((sum, count) => sum + count, 0) !== s.count;
+    });
   return {
-    ...(state.scope === project
-      ? state
-      : { summaries: emptySummaries, loading: true, failed: false }),
+    ...visible,
+    summaries: incomplete ? emptySummaries : visible.summaries,
+    failed: visible.failed || incomplete,
     retry: () => setRetry((n) => n + 1),
   };
 }

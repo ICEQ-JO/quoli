@@ -12,6 +12,7 @@ import {
   type Project,
   policySchema,
   type Session,
+  type SessionPage,
   type StoredEvent,
 } from "@traceframe/schema";
 import { isExcluded, redact, sanitizeContent, sanitizeEvent } from "@traceframe/schema/privacy";
@@ -22,6 +23,12 @@ import {
   type SnapshotPage,
   type StoredSnapshot,
 } from "@traceframe/schema/repository";
+
+export class StorageLimitError extends Error {
+  constructor() {
+    super("Project storage limit reached");
+  }
+}
 
 export class Store {
   private db: DatabaseSync;
@@ -315,6 +322,7 @@ export class Store {
   append(input: NormalizedEvent[]): { accepted: number; duplicates: number } {
     const events = batchSchema.parse({ events: input }).events;
     let accepted = 0;
+    const quotas = new Map<string, { count: number; bytes: number }>();
     const ownTransaction = !this.db.isTransaction;
     if (ownTransaction) this.db.exec("BEGIN IMMEDIATE");
     try {
@@ -364,16 +372,19 @@ export class Store {
           if (prior.body !== body) throw new Error("Delivery identity conflict");
           continue;
         }
-        const quota = this.db
-          .prepare(
-            "SELECT count(*) AS count,coalesce(sum(length(CAST(body AS BLOB))),0) AS bytes FROM events WHERE project_id=?",
-          )
-          .get(raw.projectId);
-        if (
-          Number(quota?.count) >= this.limits.maxEvents ||
-          this.projectBytes(raw.projectId) + Buffer.byteLength(body) > this.limits.maxBytes
-        )
-          throw new Error("Project storage limit reached");
+        let quota = quotas.get(raw.projectId);
+        if (!quota) {
+          const count = Number(
+            this.db
+              .prepare("SELECT count(*) AS count FROM events WHERE project_id=?")
+              .get(raw.projectId)?.count ?? 0,
+          );
+          quota = { count, bytes: this.projectBytes(raw.projectId) };
+          quotas.set(raw.projectId, quota);
+        }
+        const bytes = Buffer.byteLength(body);
+        if (quota.count >= this.limits.maxEvents || quota.bytes + bytes > this.limits.maxBytes)
+          throw new StorageLimitError();
         this.db
           .prepare(
             "INSERT INTO events(id,project_id,session_id,source,producer_id,delivery_id,received_at,schema_version,body) VALUES(?,?,?,?,?,?,?,?,?)",
@@ -389,6 +400,8 @@ export class Store {
             event.schemaVersion,
             body,
           );
+        quota.count++;
+        quota.bytes += bytes;
         accepted++;
       }
       if (ownTransaction) this.db.exec("COMMIT");
@@ -453,7 +466,9 @@ export class Store {
     return { events, total, nextCursor: hasMore ? (events.at(-1)?.sequence ?? null) : null };
   }
   allEvents(project: string, session: string): StoredEvent[] {
-    return this.events(project, session, 0, 10000).events;
+    const page = this.events(project, session, 0, 10000);
+    if (page.nextCursor !== null) throw new Error("Session exceeds projection limit");
+    return page.events;
   }
   private event(body: unknown): NormalizedEvent {
     return eventSchema.parse(JSON.parse(String(body)));
@@ -465,41 +480,75 @@ export class Store {
       receivedAt: String(row.received_at),
     };
   }
+  hasSession(project: string, session: string): boolean {
+    return Boolean(
+      this.db
+        .prepare("SELECT 1 FROM events WHERE project_id=? AND session_id=? LIMIT 1")
+        .get(project, session),
+    );
+  }
   sessions(project: string): Session[] {
+    return this.sessionPage(project).sessions;
+  }
+  sessionPage(project: string, cursor = 0): SessionPage {
+    if (!Number.isSafeInteger(cursor) || cursor < 0) throw new Error("Invalid session cursor");
     const rows = this.db
-      .prepare(
-        "SELECT session_id,count(*) AS count,min(sequence) AS first FROM events WHERE project_id=? GROUP BY session_id ORDER BY first DESC LIMIT 50",
-      )
-      .all(project);
-    return rows.map((r) => {
-      const events = this.allEvents(project, String(r.session_id));
-      const start = events.find((e) => e.payload.kind === "session_start");
-      const repository = events.some((e) => e.producerId === "repository-observer-v1");
+      .prepare(`SELECT session_id,count(*) AS count,min(sequence) AS first,
+      max(producer_id='repository-observer-v1') AS repository,
+      max(json_extract(body,'$.payload.kind')='repository_snapshot') AS snapshot,
+      max(json_extract(body,'$.payload.kind')='session_end') AS ended,
+      min(CASE WHEN json_extract(body,'$.payload.kind')='session_start' THEN sequence END) AS start
+      FROM events WHERE project_id=? GROUP BY session_id
+      HAVING (?=0 OR min(sequence)<?) ORDER BY first DESC LIMIT 51`)
+      .all(project, cursor, cursor);
+    const sessions = rows.slice(0, 50).map((r): Session => {
+      const startRow =
+        r.start === null
+          ? null
+          : this.db.prepare("SELECT body FROM events WHERE sequence=?").get(r.start);
+      const start = startRow ? this.event(startRow.body) : null;
+      const first = r.repository
+        ? this.db
+            .prepare(
+              "SELECT json_extract(body,'$.sourceTime') AS time FROM events WHERE sequence=?",
+            )
+            .get(r.first)
+        : null;
       return {
         id: String(r.session_id),
-        title: repository
+        title: r.repository
           ? `Repository history · ${String(r.session_id).slice(-10)}`
           : start?.payload.kind === "session_start"
             ? (start.payload.content.text ?? "Content capture disabled")
-            : events.some((e) => e.payload.kind === "repository_snapshot")
+            : r.snapshot
               ? "Repository review"
               : "Session start unavailable",
-        startedAt: start?.sourceTime ?? (repository ? (events[0]?.sourceTime ?? null) : null),
+        startedAt: start?.sourceTime ?? (first?.time as string | null) ?? null,
         count: Number(r.count),
-        ended: events.some((e) => e.payload.kind === "session_end"),
-        ...(repository ? { kind: "repository" as const } : {}),
+        ended: Boolean(r.ended),
+        ...(r.repository ? { kind: "repository" as const } : {}),
       };
     });
+    const total = Number(
+      this.db
+        .prepare("SELECT count(DISTINCT session_id) AS total FROM events WHERE project_id=?")
+        .get(project)?.total ?? 0,
+    );
+    return { sessions, total, nextCursor: rows.length > 50 ? Number(rows[49].first) : null };
   }
-  sessionCounts(project: string): Record<string, { kindCounts: Record<string, number> }> {
+  sessionCounts(
+    project: string,
+    cursor = 0,
+  ): Record<string, { kindCounts: Record<string, number> }> {
+    if (!Number.isSafeInteger(cursor) || cursor < 0) throw new Error("Invalid session cursor");
     const rows = this.db
       .prepare(`WITH recent AS (
       SELECT session_id,min(sequence) AS first FROM events WHERE project_id=?
-      GROUP BY session_id ORDER BY first DESC LIMIT 50
+      GROUP BY session_id HAVING (?=0 OR min(sequence)<?) ORDER BY first DESC LIMIT 50
     ) SELECT e.session_id,json_extract(e.body,'$.payload.kind') AS kind,count(*) AS count
       FROM events e JOIN recent r ON e.session_id=r.session_id
       WHERE e.project_id=? GROUP BY e.session_id,kind`)
-      .all(project, project);
+      .all(project, cursor, cursor, project);
     const counts = new Map<string, { kindCounts: Record<string, number> }>();
     for (const row of rows) {
       const id = String(row.session_id),
@@ -611,8 +660,7 @@ export class Store {
       )
         throw new Error("Capture consent changed before persistence");
       const used = this.projectBytes(projectId);
-      if (used + Buffer.byteLength(body) > this.limits.maxBytes)
-        throw new Error("Project storage limit reached");
+      if (used + Buffer.byteLength(body) > this.limits.maxBytes) throw new StorageLimitError();
       this.db
         .prepare("INSERT INTO snapshots(id,project_id,session_id,event_id,body) VALUES(?,?,?,?,?)")
         .run(clean.id, projectId, sessionId, eventId, body);
@@ -799,7 +847,7 @@ export class Store {
     if (ownTransaction) this.db.exec("BEGIN IMMEDIATE");
     try {
       if (this.projectBytes(projectId) + Buffer.byteLength(body) > this.limits.maxBytes)
-        throw new Error("Project storage limit reached");
+        throw new StorageLimitError();
       this.db.prepare("INSERT INTO artifacts VALUES(?,?,?)").run(id, projectId, body);
       if (ownTransaction) this.db.exec("COMMIT");
     } catch (error) {

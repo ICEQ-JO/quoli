@@ -27,7 +27,7 @@ These describe today's local implementation; they are not the target cloud speci
 | Repository capture | [Automatic history](automatic-history.md), [capture](repository-capture.md), [captured changes](captured-changes.md) |
 | Evidence analysis | [Checks](verification-evidence.md), [existing change map](change-map.md), [evidence-scene contract and Story projection](evidence-scenes.md), [list-price cost estimates](cost-estimates.md), [source reconciliation](source-reconciliation.md), [live linking](live-linking.md) |
 | Claude integration | [Capability matrix](claude-code-capabilities.md), [versioned runtime report](claude-code-runtime-report.md), [hook bridge](hook-bridge.md), [adapter contract](adapters.md), [usage receiver](telemetry-receiver.md), [setup](local-setup.md) |
-| Controls and validation | [Capture/lifecycle controls and known limits](lifecycle-controls.md), [local pilot record](pilot-release.md) |
+| Controls and validation | [Capture/lifecycle controls and known limits](lifecycle-controls.md), [local pilot record](pilot-release.md), [capacity measurements](work/quo-62-capacity.md) |
 | Current experience | [Session workspace](design/session-workspace.md), [landing](design/landing-page.md), [visual system](../apps/web/DESIGN.md), [product context](../apps/web/PRODUCT.md) |
 
 Historical validation and screenshots remain available in `docs/design` and completed local work records in `docs/work`. Their dated results do not certify the new cloud product. Redundant original issue bodies, the empty-repository plan and obsolete design proposals have been consolidated; see [cleanup decisions](decisions.md).

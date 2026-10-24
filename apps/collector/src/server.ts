@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { activity, reconcile, relationships, usage, verification } from "@traceframe/analysis";
 import { batchSchema, eventQuerySchema, MAX_BODY, safeId } from "@traceframe/schema";
 import { settingsUpdateSchema } from "@traceframe/schema/lifecycle";
-import { Store } from "@traceframe/storage";
+import { StorageLimitError, Store } from "@traceframe/storage";
 import { credential, initializeCredential, runtime } from "@traceframe/storage/runtime";
 import { cleanupProjectSpool, purgeProjectSpool, spoolDepth } from "@traceframe/storage/spool";
 import { demoEvents, demoPolicy } from "../../../fixtures/demo";
@@ -26,7 +26,7 @@ export function startCollector(
 ) {
   initializeCredential();
   const observer = startRepositoryObserver(store, runtime().dataDir);
-  const health = { rejected: 0, storageErrors: 0 };
+  const health = { rejected: 0, storageErrors: 0, capacityRejected: 0 };
   let windowStart = Date.now(),
     requests = 0;
   const server = createServer(async (req, res) => {
@@ -143,9 +143,12 @@ export function startCollector(
         }
         try {
           store.append(events);
-        } catch {
+        } catch (error) {
           health.storageErrors++;
-          send(409, { error: "Reported usage was not persisted" });
+          if (error instanceof StorageLimitError) health.capacityRejected++;
+          send(error instanceof StorageLimitError ? 507 : 409, {
+            error: "Reported usage was not persisted",
+          });
           return;
         }
         send(200, {});
@@ -174,7 +177,12 @@ export function startCollector(
           send(404, { error: "Unknown project" });
           return;
         }
-        send(200, store.sessionCounts(project));
+        const cursor = Number(url.searchParams.get("cursor") ?? 0);
+        if (!Number.isSafeInteger(cursor) || cursor < 0) {
+          send(400, { error: "Invalid session cursor" });
+          return;
+        }
+        send(200, store.sessionCounts(project, cursor));
         return;
       }
       const settingsMatch = /^\/v1\/projects\/([^/]+)\/settings$/.exec(url.pathname);
@@ -254,10 +262,7 @@ export function startCollector(
       if (req.method === "POST" && changesMatch) {
         const project = safeId.parse(changesMatch[1]),
           session = safeId.parse(changesMatch[2]);
-        if (
-          !store.project(project) ||
-          !store.sessions(project).some((item) => item.id === session)
-        ) {
+        if (!store.project(project) || !store.hasSession(project, session)) {
           send(404, { error: "Unknown project or session" });
           return;
         }
@@ -275,10 +280,7 @@ export function startCollector(
       if (req.method === "POST" && mapMatch) {
         const project = safeId.parse(mapMatch[1]),
           session = safeId.parse(mapMatch[2]);
-        if (
-          !store.project(project) ||
-          !store.sessions(project).some((item) => item.id === session)
-        ) {
+        if (!store.project(project) || !store.hasSession(project, session)) {
           send(404, { error: "Unknown project or session" });
           return;
         }
@@ -298,7 +300,7 @@ export function startCollector(
       if (req.method === "POST" && queryMatch) {
         const project = safeId.parse(queryMatch[1]),
           session = safeId.parse(queryMatch[2]);
-        if (!store.project(project) || !store.sessions(project).some((s) => s.id === session)) {
+        if (!store.project(project) || !store.hasSession(project, session)) {
           send(404, { error: "Unknown project or session" });
           return;
         }
@@ -323,11 +325,21 @@ export function startCollector(
           return;
         }
         if (!match[2]) {
-          send(200, store.sessions(project));
+          const cursor = Number(url.searchParams.get("cursor") ?? 0);
+          if (!Number.isSafeInteger(cursor) || cursor < 0) {
+            send(400, { error: "Invalid session cursor" });
+            return;
+          }
+          const page = store.sessionPage(project, cursor);
+          res.setHeader("X-Quoli-Session-Total", String(page.total));
+          if (page.nextCursor !== null)
+            res.setHeader("X-Quoli-Next-Cursor", String(page.nextCursor));
+          // Preserve the original array route; the dashboard requests the explicit page contract.
+          send(200, url.searchParams.get("paged") === "1" ? page : page.sessions);
           return;
         }
         const session = safeId.parse(match[2]);
-        if (!store.sessions(project).some((s) => s.id === session)) {
+        if (!store.hasSession(project, session)) {
           send(404, { error: "Unknown session" });
           return;
         }
@@ -391,7 +403,15 @@ export function startCollector(
       send(404, { error: "Unknown endpoint" });
     } catch (error) {
       // Never serialize exception messages: schema errors can contain captured content.
-      if (error instanceof SyntaxError || (error as { name?: string }).name === "ZodError") {
+      if (error instanceof StorageLimitError) {
+        health.storageErrors++;
+        health.capacityRejected++;
+        send(507, {
+          error:
+            "Project storage limit reached. No batch persisted; review retention or deletion in Settings. Deletion is irreversible.",
+          code: "storage_limit",
+        });
+      } else if (error instanceof SyntaxError || (error as { name?: string }).name === "ZodError") {
         health.rejected++;
         send(400, { error: "Malformed request" });
       } else {

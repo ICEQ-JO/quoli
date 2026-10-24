@@ -284,6 +284,8 @@ export type Session = {
   ended: boolean;
   kind?: "agent" | "repository";
 };
+/** Receipt-ordered register page; totals count retained sessions, not capture completeness. */
+export type SessionPage = { sessions: Session[]; total: number; nextCursor: number | null };
 export type UsageView = {
   input: number | null;
   output: number | null;

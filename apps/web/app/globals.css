@@ -5620,3 +5620,12 @@ h1 {
     align-self: flex-start;
   }
 }
+
+.session-pagination {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.session-pagination p {
+  flex: 1 1 280px;
+  margin: 0;
+}

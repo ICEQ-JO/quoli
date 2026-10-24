@@ -65,3 +65,73 @@ test("overview uses bounded body-free counts and recovers from unavailable count
   await page.getByRole("button", { name: "Retry summaries" }).click();
   await expect(page.locator(".ledger-gap strong")).toHaveText("4");
 });
+
+test("session pages declare partial totals, recover errors and open older evidence", async ({
+  page,
+}) => {
+  let failOlder = true;
+  let missingCounts = true;
+  const recent = Array.from({ length: 50 }, (_, i) => ({
+    id: `recent-${i}`,
+    title: `Synthetic session ${i}`,
+    count: 1,
+    ended: false,
+    startedAt: null,
+  }));
+  const older = {
+    id: "session-cache",
+    title: "Older retained session",
+    count: 20,
+    ended: true,
+    startedAt: null,
+  };
+  await page.route("**/api/data?resource=sessions&**", async (route) => {
+    const cursor = new URL(route.request().url()).searchParams.get("cursor");
+    if (cursor !== "0" && failOlder)
+      return route.fulfill({
+        status: 503,
+        json: { error: "Session page unavailable. Retry to reconnect." },
+      });
+    await route.fulfill({
+      json: {
+        sessions: cursor === "0" ? recent : [older],
+        total: 51,
+        nextCursor: cursor === "0" ? 100 : null,
+      },
+    });
+  });
+  await page.route("**/api/data?resource=session-counts*", (route) =>
+    route.fulfill({
+      json: missingCounts
+        ? {}
+        : Object.fromEntries(
+            [...recent, older].map((s) => [s.id, { kindCounts: { prompt: s.count } }]),
+          ),
+    }),
+  );
+  await page.goto("/");
+  const pages = page.getByRole("navigation", { name: "Session pages" });
+  await expect(pages).toContainText("50 of 51 retained sessions");
+  await expect(pages).toContainText("cover this page only");
+  await expect(pages.getByRole("button", { name: "Newer sessions" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Needs review —" })).toBeVisible();
+  missingCounts = false;
+  await page.getByRole("button", { name: "Retry counts" }).click();
+  await expect(page.getByRole("button", { name: "Needs review 0", exact: true })).toBeVisible();
+  await page.screenshot({ path: "/tmp/quoli62-pages-desktop.png" });
+  await pages.getByRole("button", { name: "Older sessions" }).click();
+  await expect(page.locator(".error-notice")).toContainText("Session page unavailable");
+  failOlder = false;
+  await page.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(pages).toContainText("1 of 51 retained sessions");
+  await expect(pages.getByRole("button", { name: "Older sessions" })).toBeDisabled();
+  await page.setViewportSize({ width: 375, height: 844 });
+  await expect(page.getByRole("button", { name: "Older retained session" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: "/tmp/quoli62-pages-mobile.png" });
+  await page.getByRole("button", { name: "Older retained session" }).click();
+  await expect(page.locator(".brief-layout")).toBeVisible();
+  await page.getByRole("button", { name: "All sessions", exact: true }).click();
+  await pages.getByRole("button", { name: "Newer sessions" }).click();
+  await expect(pages).toContainText("50 of 51 retained sessions");
+});

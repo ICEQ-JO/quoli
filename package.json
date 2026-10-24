@@ -24,6 +24,7 @@
     "format": "biome check --write .",
     "test": "node --import tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
+    "benchmark:capacity": "node --import tsx scripts/capacity.ts",
     "smoke": "node --import tsx scripts/smoke.ts",
     "build": "pnpm --filter @traceframe/web build"
   },

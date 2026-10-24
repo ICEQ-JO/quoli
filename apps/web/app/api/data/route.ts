@@ -43,6 +43,12 @@ export async function GET(request: NextRequest) {
           ? "/v1/projects"
           : `/v1/projects/${project}/sessions`;
     if (resource === "session-counts") path = `/v1/projects/${project}/session-counts`;
+    if (resource === "sessions" || resource === "session-counts") {
+      const cursor = q.get("cursor") ?? "0";
+      if (!/^\d{1,10}$/.test(cursor))
+        return NextResponse.json({ error: "Invalid session cursor" }, { status: 400 });
+      path += `?cursor=${cursor}${resource === "sessions" && q.get("paged") === "1" ? "&paged=1" : ""}`;
+    }
     if (resource === "observation") path = `/v1/projects/${project}/observation`;
     if (resource === "summary") path += `/${session}/summary`;
     if (resource === "repository-history") path += `/${session}/repository-history`;
