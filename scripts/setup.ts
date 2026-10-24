@@ -17,6 +17,8 @@ import {
   openCodeStatus,
   uninstallOpenCode,
 } from "../apps/bridge/src/opencode-install";
+import { PI_VERSION, piSourceVersion } from "../apps/bridge/src/pi";
+import { installPi, piStatus, uninstallPi } from "../apps/bridge/src/pi-install";
 import { createGitRunner } from "../packages/repository/src/git";
 import { captureRepository } from "../packages/repository/src/index";
 import { registeredLocation } from "../packages/repository/src/location";
@@ -37,7 +39,7 @@ const connectCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli connect" : "pnpm 
 const settingsCommand = process.env.QUOLI_RUNTIME_ROOT ? "quoli settings" : "pnpm settings";
 const usage = `Quoli repository connection
 
-${connectCommand} /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude|codex|opencode] [--telemetry]
+${connectCommand} /path/to/project [--name "Project"] [--capture-code] [--include-untracked] [--agent claude|codex|opencode|pi] [--telemetry]
 ${connectCommand} --check /path/to/project
 ${connectCommand} --disable /path/to/project
 ${connectCommand} --undo /path/to/project PROJECT_ID
@@ -45,7 +47,8 @@ ${connectCommand} --undo /path/to/project PROJECT_ID
 Connect enables automatic repository observation while Quoli is running.
 It works with any coding agent or editor. --agent claude additionally installs
 the supported Claude Code hooks; --agent codex installs the Codex ${CODEX_VERSION} hooks (Codex
-requires you to review and trust them with /hooks); --agent opencode installs the OpenCode ${OPENCODE_VERSION} plugin. Undo removes Quoli's integrations and the
+requires you to review and trust them with /hooks); --agent opencode installs the OpenCode ${OPENCODE_VERSION} plugin; --agent pi installs the Pi ${PI_VERSION}
+extension. Undo removes Quoli's integrations and the
 retained evidence of the project. Nothing else in your configuration changes.`;
 
 type TelemetryConflict = { key: string; value: string; source: string };
@@ -116,7 +119,7 @@ async function main() {
   if (
     positionals.length > (values.undo ? 2 : 1) ||
     [values.check, values.undo, values.disable].filter(Boolean).length > 1 ||
-    !["repository", "claude", "codex", "opencode"].includes(values.agent ?? "") ||
+    !["repository", "claude", "codex", "opencode", "pi"].includes(values.agent ?? "") ||
     (values.telemetry && values.agent !== "claude")
   )
     throw new Error("Unsupported connection options");
@@ -148,6 +151,15 @@ async function main() {
         throw new Error("Unsupported OpenCode version");
       }
     }
+    if (values.agent === "pi" && !values.check && !values.undo && !values.disable) {
+      const version = piSourceVersion(commandVersion("pi", ["--version"]));
+      if (version !== PI_VERSION) {
+        console.error(
+          `Pi ${PI_VERSION} is required; found ${version ?? "no supported version"}. No extension was installed.`,
+        );
+        throw new Error("Unsupported Pi version");
+      }
+    }
     if (values.disable) {
       const projectId = findRegisteredProject(store, root);
       if (!projectId) throw new Error("The project is not registered with Quoli");
@@ -165,14 +177,17 @@ async function main() {
       const hook = hookStatus(root);
       const codex = codexHookStatus(root);
       const openCode = openCodeStatus(root);
+      const pi = piStatus(root);
       if (hook.installed && hook.projectId !== projectId) throw new Error("Hook project mismatch");
       if (codex.installed && codex.projectId !== projectId)
         throw new Error("Codex hook project mismatch");
       if (openCode.installed && openCode.projectId !== projectId)
         throw new Error("OpenCode project mismatch");
+      if (pi.installed && pi.projectId !== projectId) throw new Error("Pi project mismatch");
       const removed = hook.installed ? uninstallHooks(root) : { removed: [] };
       const removedCodex = codex.installed ? uninstallCodexHooks(root) : { removed: [] };
       uninstallOpenCode(root);
+      uninstallPi(root);
       const result = store.purgeProject(projectId);
       console.log(
         `Removed ${removed.removed.length + removedCodex.removed.length} hook events and ${result.removed.events} retained observations for ${projectId}.`,
@@ -186,12 +201,16 @@ async function main() {
     const registered = findRegisteredProject(store, root);
     if (values.check) {
       const openCode = openCodeStatus(root);
+      const pi = piStatus(root);
       const codex = codexHookStatus(root);
       console.log(
         `Codex hooks: ${codex.installed ? `installed for project ${codex.projectId}` : "not installed"}; supports ${CODEX_VERSION}.`,
       );
       console.log(
         `OpenCode plugin: ${openCode.installed ? `installed for project ${openCode.projectId}` : "not installed"}; supports ${OPENCODE_VERSION}.`,
+      );
+      console.log(
+        `Pi extension: ${pi.installed ? `installed for project ${pi.projectId}` : "not installed"}; supports ${PI_VERSION}.`,
       );
       console.log(
         status.installed
@@ -267,6 +286,10 @@ async function main() {
     } else if (values.agent === "opencode") {
       console.log(
         `OpenCode plugin written to ${installOpenCode(root, projectId).path}. Restart OpenCode for this project.`,
+      );
+    } else if (values.agent === "pi") {
+      console.log(
+        `Pi extension written to ${installPi(root, projectId).path}. Start a new Pi session for this project.`,
       );
     } else {
       console.log(

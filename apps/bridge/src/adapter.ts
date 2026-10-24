@@ -8,6 +8,7 @@ import {
   CLAUDE_RECORDED_SOURCE_VERSION,
 } from "./normalize";
 import { openCodeAdapter } from "./opencode";
+import { piAdapter } from "./pi";
 
 /**
  * The Claude Code hook adapter, described through the shared registration
@@ -59,4 +60,4 @@ export const claudeAdapter = defineAdapter({
 });
 
 /** Product adapters this build can install. */
-export const adapters = [claudeAdapter, codexAdapter, openCodeAdapter] as const;
+export const adapters = [claudeAdapter, codexAdapter, openCodeAdapter, piAdapter] as const;

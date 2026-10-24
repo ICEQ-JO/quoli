@@ -11,6 +11,7 @@ import {
   writeHookFile,
 } from "./hook-file";
 import { openCodeUsesRuntime } from "./opencode-install";
+import { piUsesRuntime } from "./pi-install";
 
 /**
  * Reversible Claude Code hook installation.
@@ -38,6 +39,7 @@ const readSettings = (root: string): HookFile => readHookFile(settingsPath(root)
 /** Detect this packaged runtime's generated hooks before removing its files. */
 export function usesPackagedRuntime(root: string, releaseRoot: string): boolean {
   if (openCodeUsesRuntime(root, releaseRoot)) return true;
+  if (piUsesRuntime(root, releaseRoot)) return true;
   return usesRuntime(readSettings(root), releaseRoot);
 }
 

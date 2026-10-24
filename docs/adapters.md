@@ -2,7 +2,7 @@
 
 An evidence source is registered as data: what it is, which source versions were actually verified, which source events it maps to which observations, what it can and cannot report, how its delivery identity is derived, and how it is installed. The contract is static. There is deliberately no dynamic plugin loader.
 
-The V08 definition ([QUO-44](https://linear.app/quolii/issue/QUO-44/v08-define-adapter-registration-capabilities-and-conformance-fixtures)) registers Claude Code, the [Codex adapter](codex-adapter.md) ([QUO-72](https://linear.app/quolii/issue/QUO-72)) and the version-gated [OpenCode adapter](opencode-adapter.md) ([QUO-47](https://linear.app/quolii/issue/QUO-47)).
+The V08 definition ([QUO-44](https://linear.app/quolii/issue/QUO-44/v08-define-adapter-registration-capabilities-and-conformance-fixtures)) registers Claude Code, the [Codex adapter](codex-adapter.md) ([QUO-72](https://linear.app/quolii/issue/QUO-72)), the version-gated [OpenCode adapter](opencode-adapter.md) ([QUO-47](https://linear.app/quolii/issue/QUO-47)) and the version-gated [Pi adapter](pi-adapter.md) ([QUO-73](https://linear.app/quolii/issue/QUO-73)).
 
 ## Where it lives
 
@@ -13,6 +13,7 @@ The V08 definition ([QUO-44](https://linear.app/quolii/issue/QUO-44/v08-define-a
 | Codex hook registration | `apps/bridge/src/codex.ts`, `apps/bridge/src/codex-install.ts` |
 | Shared JSON hook-file merging | `apps/bridge/src/hook-file.ts` |
 | OpenCode public-event registration | `apps/bridge/src/opencode.ts` |
+| Pi lifecycle-extension registration | `apps/bridge/src/pi.ts`, `apps/bridge/src/pi-install.ts` |
 | Synthetic second registration (test only) | `fixtures/adapters.ts` |
 | Shared conformance suite | `tests/adapter-conformance.test.ts` |
 
@@ -68,6 +69,21 @@ The conformance suite normalizes every recorded hook fixture and asserts the obs
 
 Codex does not report a source version in the hook payload, so live events carry `unreported`; unlike Claude, setup also gates on the installed CLI version before writing anything. The [Codex reference](codex-adapter.md) records the exact event facts, the subagent scope caveat and the validation limits.
 
+## Pi extension registration
+
+| Field | Value |
+| --- | --- |
+| `id` / `harness` / `source` | `pi-extension` / Pi / `pi_extension` |
+| `adapterVersion` | `0.1.0` |
+| `sourceVersions` | `0.75.3` (the extension contract this adapter targets) |
+| Mapping | `session_start`→`session_start`, `user_message`→`prompt`, `tool_call`→`tool_call`, `tool_result`→`tool_result`, `assistant_message`→`usage`, `session_end`→`session_end` |
+| Not mapped | Streaming message deltas, tool interception events, context/provider payloads, compaction, tree navigation, model selection, user bash |
+| Capabilities | content `prompt`/`tool`/`code`; identifiers `session`/`tool`/`request`; usage reported; source time reported; declared plan/decision/approval/correction unsupported |
+| Failures | Tool status reported (Pi's `isError`); numeric exit code unsupported; no adapter-emitted gaps |
+| Install | Reversible project extension in `.pi/extensions/quoli.ts`; version-gated at setup and at extension load |
+
+Pi reports the CLI version to the extension (`VERSION`), so the generated module also refuses to capture when it loads under an unverified version. The [Pi reference](pi-adapter.md) records the observed events, the stale-context quirk and the validation limits.
+
 ## Version handling
 
 `adapterSupportsSourceVersion` returns `{ supported: true }` only for a listed version. Anything else returns an explicit `{ supported: false, reason: "unsupported_source_version", supportedVersions }`; there is no best-effort guess.
@@ -85,5 +101,5 @@ prints the registered adapter, its adapter version, the source versions it suppo
 ## Not delivered
 
 - No dynamic adapter loader. Claude Code and OpenCode register statically; the synthetic registration is test-only.
-- Claude source-version gating is not enforced at capture (see above). OpenCode gates runtime and selected event versions; Codex gates the installed CLI at setup only; their references record live-validation limits.
-- Pi remains its own issue.
+- Claude source-version gating is not enforced at capture (see above). OpenCode and Pi gate runtime and setup versions; Codex gates the installed CLI at setup only; their references record live-validation limits.
+- Pi does not report parent/child sessions, turn identifiers or exit codes, so those stay absent rather than inferred.
