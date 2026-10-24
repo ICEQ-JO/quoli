@@ -211,6 +211,14 @@ test("signed source requires clean matching version tag and rejects ignored envi
     assert.throws(() => releaseSource(f.checkout, true), /tag/);
     git("tag", "v0.1.0");
     assert.equal(releaseSource(f.checkout, true).version, "0.1.0");
+    const priorGitDir = process.env.GIT_DIR;
+    try {
+      process.env.GIT_DIR = join(f.dir, "unrelated-git-context");
+      assert.equal(releaseSource(f.checkout, true).version, "0.1.0");
+    } finally {
+      if (priorGitDir === undefined) delete process.env.GIT_DIR;
+      else process.env.GIT_DIR = priorGitDir;
+    }
     writeFileSync(join(f.checkout, ".env"), "SYNTHETIC_UNUSED=fixture\n");
     assert.throws(() => releaseSource(f.checkout, true), /environment/);
     rmSync(join(f.checkout, ".env"));

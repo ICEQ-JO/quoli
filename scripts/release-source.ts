@@ -8,6 +8,12 @@ export function releaseSource(root: string, signed: boolean) {
   const git = (...args: string[]) =>
     execFileSync("git", args, {
       cwd: root,
+      env: {
+        PATH: process.env.PATH,
+        HOME: process.env.HOME,
+        LC_ALL: "C",
+        GIT_NO_REPLACE_OBJECTS: "1",
+      },
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     }).trim();
