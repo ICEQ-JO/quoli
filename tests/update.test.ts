@@ -193,6 +193,12 @@ test("verification, metadata, downgrade, storage and port failures leave the ins
   const f = fixture();
   try {
     await f.pack();
+    await assert.rejects(updateRelease(f.config, f.archive, f.key, `${"9".repeat(101)}.0.0`));
+    assert.equal(
+      existsSync(`${f.app}.update`),
+      false,
+      "invalid version must not create a blocking journal",
+    );
     const valid = readFileSync(f.archive);
     writeFileSync(f.archive, Buffer.concat([valid, Buffer.from("tampered")]));
     await assert.rejects(updateRelease(f.config, f.archive, f.key, "0.2.0"), /checksum/);
