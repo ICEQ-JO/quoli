@@ -99,6 +99,23 @@ quoli gitlab review GROUP/PROJECT --merge-request NUMBER --path src/app.ts --cap
 
 Review resolves the merge request's base/head commits, lists bounded changed paths (both sides of a rename), reports `compare_timeout` as truncation and opens one sanitized file with `--path`. Code text requires `--capture-code`; excluded paths are never requested. Content is cached under the same private data directory with the provider in the key. Remote-review UI remains held with D01; the delivered surface is the CLI.
 
+## Connect read-only Bitbucket Cloud access
+
+```sh
+quoli bitbucket connect --email you@example.com  # paste a read-only API token on stdin, then Ctrl-D
+quoli bitbucket status
+quoli bitbucket disconnect
+```
+
+Bitbucket Cloud API 2.0 authenticates an Atlassian API token with HTTP Basic (`email:token`). Connect verifies `/user` before storing the email and token in one Linux Secret Service item (`service quoli`, `account bitbucket`); a missing/refused keychain fails closed. Create the token at id.atlassian.com with only `read:user:bitbucket`, `read:repository:bitbucket` and `read:pullrequest:bitbucket`. Bitbucket does not expose token scopes or expiry, so read-only use is documented rather than proved and Quoli only sends GET requests; see the [Bitbucket reference](bitbucket-reads.md).
+
+```sh
+quoli bitbucket review WORKSPACE/REPO --pull-request NUMBER
+quoli bitbucket review WORKSPACE/REPO --pull-request NUMBER --path src/app.ts --capture-code
+```
+
+Review resolves the pull request's base/head commits, lists bounded diffstat paths (both sides of a rename), follows up to ten pages and opens one sanitized file with `--path`. Trees use a fixed depth of ten and branch refs resolve branch names only. Code text requires `--capture-code`; excluded paths are never requested. Remote-review UI remains held with D01; the delivered surface is the CLI.
+
 ## Remove the application without deleting evidence
 
 ```sh
@@ -108,6 +125,7 @@ quoli hooks uninstall /path/to/project  # if Claude hooks were installed
 quoli hooks opencode uninstall /path/to/project  # if the OpenCode plugin was installed
 quoli github disconnect  # if a GitHub credential was stored
 quoli gitlab disconnect  # if a GitLab credential was stored
+quoli bitbucket disconnect  # if a Bitbucket credential was stored
 quoli uninstall
 ```
 
