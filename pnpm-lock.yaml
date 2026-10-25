@@ -90,6 +90,9 @@ importers:
       '@traceframe/schema':
         specifier: workspace:*
         version: link:../schema
+      '@vscode/tree-sitter-wasm':
+        specifier: 0.3.1
+        version: 0.3.1
 
   packages/repository:
     dependencies:
@@ -706,6 +709,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@vscode/tree-sitter-wasm@0.3.1':
+    resolution: {integrity: sha512-RJFoomET6FajjG511fmQxeBQfU6M24a0aFZPqpid+ttIxanWf1VGytBG0UmsGjt07qmIPJS8U31D+aecuCucsQ==}
+
   baseline-browser-mapping@2.11.30:
     resolution: {integrity: sha512-YJs6Pz17RMNv8HoyKREtCY38E3BV1nPkWVmIb+XN1uHC1Vqt3KZCH/uJH9ZKRoiKb/icZ6tvehyee6RZNbFfRA==}
     engines: {node: '>=6.0.0'}
@@ -1185,6 +1191,8 @@ snapshots:
 
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
+
+  '@vscode/tree-sitter-wasm@0.3.1': {}
 
   baseline-browser-mapping@2.11.30: {}
 

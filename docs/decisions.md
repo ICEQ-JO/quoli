@@ -31,3 +31,11 @@ The original GitHub MVP issues remain historical delivery records. Their duplica
 The owner approved composition **B — Document first** for QUO-84 within direction D. Retain stable global navigation, prioritize the captured request and ruled evidence sections, and open exact source inspection contextually. Carry local Inter and black/white neutral planes across delivered workspace surfaces, with Instrument Serif italic only on session titles and semantic color for evidence states. Light mode remains supported.
 
 Rationale: the document gives review a readable center without another persistent session-list rail. Existing evidence, URLs, capture consent and lifecycle behavior remain authoritative. The generated mock’s Run check, global search and invented provenance are excluded. See [the workspace adoption record](design/workspace-evidence-field.md). This does not complete the hosted product or all of parent QUO-82.
+
+## 2026-10-26 — Tree-sitter WASM for syntax-aware symbol diffs
+
+The owner approved adding `@vscode/tree-sitter-wasm` (0.3.1, MIT) for QUO-58, resolving the earlier no-new-dependency constraint for this capability. The vision names bounded tree-sitter parsing, and the issue requires verifying it.
+
+Rationale: WASM avoids a native toolchain and platform builds; the runtime and the TypeScript/TSX grammars are copied as assets so the esbuild collector bundle stays small and works without `node_modules`. Parsing is bounded and operates only on sanitized captured text; parse-error files fall back to the file diff.
+
+Consequences: the release now carries `runtime/wasm/` (about 3 MB). The package is a runtime dependency of `@traceframe/analysis`; upgrading tree-sitter requires re-copying matching runtime and grammar assets. No execution, call graph, authorship or semantic-rename claim is added.

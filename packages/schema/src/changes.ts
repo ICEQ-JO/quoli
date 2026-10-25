@@ -65,6 +65,35 @@ export type DiffLine = {
   afterLine: number | null;
   text: string;
 };
+export type SymbolKind = "function" | "class" | "method";
+export type SymbolGroupLine = {
+  kind: DiffLine["kind"];
+  beforeLine: number | null;
+  afterLine: number | null;
+};
+export type SymbolGroup = {
+  id: string;
+  name: string;
+  qualified: string;
+  kind: SymbolKind;
+  status: "added" | "deleted" | "modified";
+  before: { startLine: number; endLine: number } | null;
+  after: { startLine: number; endLine: number } | null;
+  /** Changed lines attributed to the innermost containing symbol. */
+  lines: SymbolGroupLine[];
+  basis: "derived";
+  rule: string;
+  uncertainty: string | null;
+};
+export type SymbolGrouping = {
+  state: "available" | "partial" | "unsupported" | "bounded" | "unavailable";
+  language: "typescript" | "tsx" | "javascript" | "jsx" | null;
+  groups: SymbolGroup[];
+  /** Changed lines outside every named function or class. */
+  unattributed: number;
+  omitted: number;
+  reason: string | null;
+};
 export type ChangeDetail = ComparisonMeta & {
   change: ChangeItem;
   beforeContent: Content | null;
@@ -80,6 +109,7 @@ export type ChangeDetail = ComparisonMeta & {
     deletions: number | null;
     reason: string | null;
   };
+  symbols: SymbolGrouping;
 };
 export const browserChangesSchema = z
   .object({ project: safeId, session: safeId, query: comparisonQuerySchema })

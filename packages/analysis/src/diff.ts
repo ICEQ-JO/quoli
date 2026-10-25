@@ -530,20 +530,8 @@ function bounded(reason: string): LineDiff {
   };
 }
 
-export function diffFile(
-  change: FileChange,
-  options?: { cursor?: number; limit?: number },
-): LineDiff {
-  const cursor =
-    Number.isInteger(options?.cursor) && (options?.cursor as number) >= 0
-      ? (options?.cursor as number)
-      : 0;
-  const requested = options?.limit;
-  const limit =
-    Number.isInteger(requested) && (requested as number) >= 1
-      ? Math.min(requested as number, MAX_PAGE_LINES)
-      : DEFAULT_PAGE_LINES;
-
+/** Every changed line for a file, before any page is taken. */
+export function diffAll(change: FileChange): LineDiff {
   if (change.status === "unavailable")
     return unavailable(
       change.uncertainty ?? "The comparison did not establish this file's content.",
@@ -578,19 +566,40 @@ export function diffFile(
   const ops = diffOps(beforeLines, afterLines);
   if (!ops) return bounded(`The comparison exceeds the ${MAX_DIFF_CELLS}-cell diff budget.`);
 
-  const total = ops.length;
-  const additions = ops.filter((op) => op.kind === "add").length;
-  const deletions = ops.filter((op) => op.kind === "delete").length;
-  const page = ops.slice(cursor, cursor + limit);
-  const nextCursor = cursor + page.length < total ? cursor + page.length : null;
-
   return {
     state: "available",
-    lines: page,
-    nextCursor,
-    total,
-    additions,
-    deletions,
+    lines: ops,
+    nextCursor: null,
+    total: ops.length,
+    additions: ops.filter((op) => op.kind === "add").length,
+    deletions: ops.filter((op) => op.kind === "delete").length,
     reason: null,
   };
+}
+
+/** Takes a bounded page from a complete diff without recomputing it. */
+export function diffPage(diff: LineDiff, options?: { cursor?: number; limit?: number }): LineDiff {
+  const cursor =
+    Number.isInteger(options?.cursor) && (options?.cursor as number) >= 0
+      ? (options?.cursor as number)
+      : 0;
+  const requested = options?.limit;
+  const limit =
+    Number.isInteger(requested) && (requested as number) >= 1
+      ? Math.min(requested as number, MAX_PAGE_LINES)
+      : DEFAULT_PAGE_LINES;
+  if (diff.state !== "available") return diff;
+  const page = diff.lines.slice(cursor, cursor + limit);
+  return {
+    ...diff,
+    lines: page,
+    nextCursor: cursor + page.length < diff.lines.length ? cursor + page.length : null,
+  };
+}
+
+export function diffFile(
+  change: FileChange,
+  options?: { cursor?: number; limit?: number },
+): LineDiff {
+  return diffPage(diffAll(change), options);
 }
