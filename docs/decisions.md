@@ -39,3 +39,11 @@ The owner approved adding `@vscode/tree-sitter-wasm` (0.3.1, MIT) for QUO-58, re
 Rationale: WASM avoids a native toolchain and platform builds; the runtime and the TypeScript/TSX grammars are copied as assets so the esbuild collector bundle stays small and works without `node_modules`. Parsing is bounded and operates only on sanitized captured text; parse-error files fall back to the file diff.
 
 Consequences: the release now carries `runtime/wasm/` (about 3 MB). The package is a runtime dependency of `@traceframe/analysis`; upgrading tree-sitter requires re-copying matching runtime and grammar assets. No execution, call graph, authorship or semantic-rename claim is added.
+
+## 2026-10-26 — Story links by exact path only
+
+QUO-59 adds cited symbols and hunks to the Story projection. The event schema has no change-to-tool id, so a recorded tool call joins a changed path only through exact recorded path equality with the after path or a captured rename source path. The edge is `touched`, never `changed`; its claim and uncertainty state that the association does not establish causation, timing or authorship, and unmatched paths keep an `unknown_attribution` gap.
+
+Rationale: path or time proximity must not become a causal fact. An explicit weak association is more useful and more honest than inventing a tool-to-hunk edge, while the file, symbol and hunk chain stays grounded in the comparison's own ids and both captured evidence sides.
+
+Consequences: a `shortcut:` comment marks the join for replacement when captured changes carry tool ids. The Story still has no collector route or view; V21 renders the projection. Additive `symbols`, `hunks` and `attribution` claim kinds require a Story consumer to accept them.
