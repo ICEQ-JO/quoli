@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { StoredEvent, SubagentLink } from "@traceframe/schema";
+import type { SymbolGroup, SymbolGrouping } from "@traceframe/schema/changes";
 import type { Scene, SceneEdge, SceneNode } from "@traceframe/schema/scene";
 import {
   MAX_STORY_CLAIMS,
@@ -22,9 +23,39 @@ import type { MappableFile } from "./map";
  */
 
 export const STORY_RULE = "session-story/v1";
+export const STORY_LINK_RULE = "story-symbol-hunk-link/v1";
 export const DEFAULT_CLAIM_CAP = 100;
 /** The scene contract's own v1 caps. */
 export const STORY_SCENE_CAPS = { nodes: 500, edges: 1_000 } as const;
+
+export type StoryHunk = {
+  id: string;
+  label: string;
+  status: "added" | "deleted" | "modified";
+  before: { startLine: number; endLine: number } | null;
+  after: { startLine: number; endLine: number } | null;
+  evidenceIds: string[];
+  uncertainty: string;
+};
+
+/** A captured path plus the optional syntax and hunk observations for it. */
+export type StoryFile = MappableFile & {
+  /** The comparison item retained for drill-down; defaults to `id`. */
+  changeId?: string;
+  /** A rename's captured source path, matched exactly for tool-path links. */
+  beforePath?: string | null;
+  symbols?: SymbolGroup[];
+  hunks?: StoryHunk[];
+  syntaxState?: SymbolGrouping["state"];
+  syntaxReason?: string | null;
+};
+
+/** Shows both sides of a rename; otherwise the one captured path. */
+export function storyPath(file: { path: string; beforePath?: string | null }): string {
+  return file.beforePath && file.beforePath !== file.path
+    ? `${file.beforePath} -> ${file.path}`
+    : file.path;
+}
 
 const SCENE_UNCERTAINTY =
   "A story restates retained observations only: declared activity, tool calls and results, subagent identities, captured file changes, recorded checks and known gaps. It does not reproduce prompt or decision text, infer intent or hidden reasoning, establish authorship, coverage or feature correctness, or claim that an absent observation never happened. A check label may repeat the recorded command as inert text.";
@@ -56,6 +87,8 @@ const GAP_LABELS: Record<string, string> = {
   capture_disabled: "Capture disabled",
   late_arrival: "Late observation recorded",
   unsupported_source: "Unsupported source",
+  unknown_attribution: "Change attribution not recorded",
+  syntax_unavailable: "Symbol grouping unavailable",
 };
 
 function hash(prefix: string, parts: unknown[]): string {
@@ -94,7 +127,7 @@ export function story(input: {
   projectId: string;
   sessionId: string;
   events: StoredEvent[];
-  files?: MappableFile[];
+  files?: StoryFile[];
   omittedFiles?: number;
   beforeId?: string | null;
   afterId?: string | null;
@@ -133,6 +166,7 @@ export function story(input: {
   const nodes: SceneNode[] = [];
   const edges: SceneEdge[] = [];
   const seeds: ClaimSeed[] = [];
+  const allToolRecords: ToolRecord[] = [];
 
   const turnOrder = (ids: string[]): number =>
     ids.reduce(
@@ -391,6 +425,7 @@ export function story(input: {
         call.toolId === null ? [] : (resultByCall.get(call.toolId) ?? []),
       );
       toolRecords.push(record);
+      allToolRecords.push(record);
       edges.push({
         id: hash("e-invoked", [turnNode.id, record.nodeId]),
         kind: "invoked",
@@ -520,6 +555,7 @@ export function story(input: {
       call,
       call.toolId === null ? [] : (resultByCall.get(call.toolId) ?? []),
     );
+    allToolRecords.push(record);
     seeds.push(
       claim(
         "tool",
@@ -533,11 +569,22 @@ export function story(input: {
     );
   }
 
+  const fileNodeByChange = new Map<string, string>();
+  const hunkNodeByKey = new Map<string, string>();
+  const symbolNodeIds: string[] = [];
+  const hunkNodeIds: string[] = [];
+  const symbolEvidence: string[] = [];
+  const hunkEvidence: string[] = [];
+  const touchedByFile = new Map<string, number>();
+  const touchedToolIds: string[] = [];
+
   for (const file of files) {
+    const fileNodeId = hash("n-file", [file.id]);
+    fileNodeByChange.set(file.id, fileNodeId);
     nodes.push({
-      id: hash("n-file", [file.id]),
+      id: fileNodeId,
       kind: "file",
-      label: clip(file.path),
+      label: clip(storyPath(file)),
       status: file.status,
       ref: file.id,
       basis: "derived",
@@ -547,7 +594,161 @@ export function story(input: {
         file.uncertainty ??
         "The comparison records this path's status. It does not establish authorship, intent or feature correctness.",
     });
+
+    for (const hunk of file.hunks ?? []) {
+      const hunkNodeId = hash("n-hunk", [file.id, hunk.id]);
+      hunkNodeByKey.set(`${file.id}:${hunk.id}`, hunkNodeId);
+      hunkNodeIds.push(hunkNodeId);
+      hunkEvidence.push(...hunk.evidenceIds);
+      nodes.push({
+        id: hunkNodeId,
+        kind: "hunk",
+        label: clip(hunk.label),
+        status: hunk.status,
+        ref: file.changeId ?? file.id,
+        basis: "derived",
+        rule: STORY_LINK_RULE,
+        evidenceIds: hunk.evidenceIds.slice(0, 50),
+        uncertainty: hunk.uncertainty,
+      });
+      edges.push({
+        id: hash("e-changed-path", [fileNodeId, hunkNodeId]),
+        kind: "changed",
+        from: fileNodeId,
+        to: hunkNodeId,
+        basis: "derived",
+        rule: STORY_LINK_RULE,
+        evidenceIds: hunk.evidenceIds.slice(0, 50),
+        uncertainty:
+          "The comparison observes this path and this line range. The hunk does not establish authorship, intent or runtime effect.",
+      });
+    }
+
+    for (const symbol of file.symbols ?? []) {
+      const symbolNodeId = hash("n-symbol", [file.id, symbol.id]);
+      symbolNodeIds.push(symbolNodeId);
+      symbolEvidence.push(...file.evidenceIds);
+      nodes.push({
+        id: symbolNodeId,
+        kind: "symbol",
+        label: clip(`${clip(storyPath(file), 160)} · ${symbol.qualified}`),
+        status: symbol.status,
+        ref: symbol.id,
+        basis: "derived",
+        rule: STORY_LINK_RULE,
+        evidenceIds: file.evidenceIds.slice(0, 50),
+        uncertainty:
+          symbol.uncertainty ??
+          "A syntax group maps changed lines to a parsed range. It does not establish runtime impact, authorship or a semantic rename.",
+      });
+      for (const hunk of file.hunks ?? []) {
+        const overlaps = symbol.lines.some(
+          (line) =>
+            (line.beforeLine !== null &&
+              hunk.before !== null &&
+              line.beforeLine >= hunk.before.startLine &&
+              line.beforeLine <= hunk.before.endLine) ||
+            (line.afterLine !== null &&
+              hunk.after !== null &&
+              line.afterLine >= hunk.after.startLine &&
+              line.afterLine <= hunk.after.endLine),
+        );
+        if (!overlaps) continue;
+        const hunkNodeId = hunkNodeByKey.get(`${file.id}:${hunk.id}`);
+        if (!hunkNodeId) continue;
+        edges.push({
+          id: hash("e-changed-symbol", [symbolNodeId, hunkNodeId]),
+          kind: "changed",
+          from: symbolNodeId,
+          to: hunkNodeId,
+          basis: "derived",
+          rule: STORY_LINK_RULE,
+          evidenceIds: [...new Set([...file.evidenceIds, ...hunk.evidenceIds])].slice(0, 50),
+          uncertainty:
+            "The changed line is inside the symbol's parsed range. The association does not establish runtime impact, authorship or a semantic rename.",
+        });
+      }
+    }
+
+    if (file.syntaxState && file.syntaxState !== "available") {
+      const reason = file.syntaxReason ?? "Symbol grouping is unavailable.";
+      const gapNode = pushGap({
+        id: hash("gap", ["syntax", file.id, file.syntaxState]),
+        kind: "syntax_unavailable",
+        evidenceIds: file.evidenceIds,
+        rule: STORY_LINK_RULE,
+        uncertainty:
+          `Symbol grouping is ${file.syntaxState}. ${reason} The file-level comparison remains usable.`.slice(
+            0,
+            1000,
+          ),
+      });
+      seeds.push(
+        claim(
+          "gap",
+          ["syntax", file.id, file.syntaxState],
+          `Symbol grouping for this path is ${file.syntaxState}; no symbol claim is made.`,
+          file.evidenceIds,
+          `Symbol grouping is ${file.syntaxState}. ${reason} The file-level comparison remains usable.`.slice(
+            0,
+            1000,
+          ),
+          [gapNode],
+        ),
+      );
+    }
   }
+
+  for (const file of files) {
+    const fileNodeId = fileNodeByChange.get(file.id);
+    if (!fileNodeId) continue;
+    const paths = new Set(
+      [file.path, file.beforePath].filter(
+        (path): path is string => typeof path === "string" && path.length > 0,
+      ),
+    );
+    let touched = 0;
+    for (const record of allToolRecords) {
+      const path = record.call.payload.kind === "tool_call" ? record.call.payload.path : null;
+      if (path === null || path.length === 0 || !paths.has(path)) continue;
+      // shortcut: no change-to-tool id exists yet, so this is an exact-path association only; upgrade when changes carry tool ids.
+      edges.push({
+        id: hash("e-touched", [record.nodeId, fileNodeId]),
+        kind: "touched",
+        from: record.nodeId,
+        to: fileNodeId,
+        basis: "derived",
+        rule: STORY_LINK_RULE,
+        evidenceIds: [record.call.id, ...file.evidenceIds].slice(0, 50),
+        uncertainty:
+          "The tool call recorded this exact path and the comparison observed the path. The association does not establish that the call caused the change, when it happened or who authored the lines.",
+      });
+      touchedToolIds.push(record.nodeId);
+      touched += 1;
+    }
+    touchedByFile.set(file.id, touched);
+    if (touched === 0) {
+      const gapNode = pushGap({
+        id: hash("gap", ["unknown_attribution", file.id]),
+        kind: "unknown_attribution",
+        evidenceIds: file.evidenceIds,
+        rule: STORY_LINK_RULE,
+        uncertainty:
+          "No recorded tool call names this exact path. Path or time proximity is not treated as proof that a tool caused the change.",
+      });
+      seeds.push(
+        claim(
+          "gap",
+          ["unknown_attribution", file.id],
+          "No exact recorded tool path matches this changed path, so the change stays unattributed.",
+          file.evidenceIds,
+          "Path or time proximity is not treated as proof that a tool caused the change. The file-level observation remains.",
+          [gapNode],
+        ),
+      );
+    }
+  }
+
   if (files.length > 0)
     seeds.push(
       claim(
@@ -556,9 +757,48 @@ export function story(input: {
         `${files.length} path observation${files.length === 1 ? " was" : "s were"} retained from the supplied comparison.`,
         files.flatMap((file) => file.evidenceIds),
         "Comparison observations may be unavailable or uncertain. They do not establish who changed a path or whether a change is correct.",
-        files.map((file) => hash("n-file", [file.id])),
+        files.map((file) => fileNodeByChange.get(file.id) ?? ""),
       ),
     );
+  if (symbolNodeIds.length > 0)
+    seeds.push(
+      claim(
+        "symbols",
+        [input.sessionId],
+        `${symbolNodeIds.length} syntax symbol group${symbolNodeIds.length === 1 ? " was" : "s were"} retained from supplied comparisons.`,
+        symbolEvidence,
+        "A syntax group maps changed lines to a parsed range. It does not establish runtime impact, authorship or a semantic rename.",
+        symbolNodeIds,
+      ),
+    );
+  if (hunkNodeIds.length > 0)
+    seeds.push(
+      claim(
+        "hunks",
+        [input.sessionId],
+        `${hunkNodeIds.length} exact changed-line hunk${hunkNodeIds.length === 1 ? " was" : "s were"} retained from supplied comparisons.`,
+        hunkEvidence,
+        "A hunk is an exact captured line comparison. It does not establish who changed the lines, when they changed or why.",
+        hunkNodeIds,
+      ),
+    );
+  if (files.length > 0) {
+    const touched = files.reduce((sum, file) => sum + (touchedByFile.get(file.id) ?? 0), 0);
+    const unmatched = files.filter((file) => (touchedByFile.get(file.id) ?? 0) === 0).length;
+    seeds.push(
+      claim(
+        "attribution",
+        [input.sessionId],
+        `${touched} exact tool-path association${touched === 1 ? " was" : "s were"} retained${unmatched > 0 ? `; ${unmatched} changed path${unmatched === 1 ? " had" : "s had"} no exact recorded match` : ""}.`,
+        [
+          ...allToolRecords.map((record) => record.call.id),
+          ...files.flatMap((file) => file.evidenceIds),
+        ],
+        "A shared path is an association, not proof that the tool caused the change, when it ran or who authored the lines.",
+        [...files.map((file) => fileNodeByChange.get(file.id) ?? ""), ...touchedToolIds],
+      ),
+    );
+  }
 
   const checkNodes = new Map<string, string>();
   for (const check of checks.checks) {

@@ -1,6 +1,6 @@
 # Evidence-scene contract
 
-A scene is a bounded, deterministic projection of retained evidence: the native, versioned form behind the Story, Impact, Cost and Timeline views. This page defines the v1 contract ([QUO-55](https://linear.app/quolii/issue/QUO-55/v19-define-the-versioned-evidence-scene-contract)) and the first Story producer ([QUO-56](https://linear.app/quolii/issue/QUO-56/v20-generate-story-scenes-and-deterministic-cited-narratives)). It adds no scene view.
+A scene is a bounded, deterministic projection of retained evidence: the native, versioned form behind the Story, Impact, Cost and Timeline views. This page defines the v1 contract ([QUO-55](https://linear.app/quolii/issue/QUO-55/v19-define-the-versioned-evidence-scene-contract)) and the Story producers ([QUO-56](https://linear.app/quolii/issue/QUO-56/v20-generate-story-scenes-and-deterministic-cited-narratives), [QUO-59](https://linear.app/quolii/issue/QUO-59/v23-link-symbols-and-hunks-into-cited-story-explanations)). It adds no scene view.
 
 ## Where it lives
 
@@ -10,8 +10,9 @@ A scene is a bounded, deterministic projection of retained evidence: the native,
 | Change-map compatibility bridge | `packages/analysis/src/scene.ts` |
 | Story contract | `packages/schema/src/story.ts` (`@traceframe/schema/story`) |
 | Story projection | `packages/analysis/src/story.ts` |
+| Comparison-to-Story bridge | `packages/analysis/src/story-changes.ts` |
 | Synthetic fixtures | `fixtures/scenes.ts`, `fixtures/story.ts` |
-| Tests | `tests/scene.test.ts`, `tests/story.test.ts` |
+| Tests | `tests/scene.test.ts`, `tests/story.test.ts`, `tests/story-links.test.ts` |
 
 ## Vocabulary
 
@@ -40,7 +41,7 @@ The vocabulary is closed. A producer cannot invent a node or edge kind.
 | `cost_of` | A cost figure belongs to a turn or request. |
 | `used` | A tool used a capability or extension. |
 
-V1 does not constrain which node kinds an edge may connect; that pairing is a producer responsibility until a later contract version narrows it.
+V1 does not constrain which node kinds an edge may connect; that pairing is a producer responsibility until a later contract version narrows it. The Story producer uses `changed` from a `symbol` to a `hunk` to mean the changed lines fall inside the parsed symbol range; it is a containment association, not a causal claim.
 
 ## Every node and edge is cited
 
@@ -71,9 +72,12 @@ The existing [change map](change-map.md) converts through `sceneFromMap`:
 
 ## Story projection
 
-[QUO-56](https://linear.app/quolii/issue/QUO-56/v20-generate-story-scenes-and-deterministic-cited-narratives) adds the first real scene producer: one session's retained evidence becomes one bounded scene plus a short rule-generated narrative. `story()` takes the project's events, the captured file changes the caller compared, and the capture pair ids; it reads no store, filesystem or command.
+[QUO-56](https://linear.app/quolii/issue/QUO-56/v20-generate-story-scenes-and-deterministic-cited-narratives) adds the first real scene producer, and [QUO-59](https://linear.app/quolii/issue/QUO-59/v23-link-symbols-and-hunks-into-cited-story-explanations) adds symbol and hunk linkage. One session's retained evidence becomes one bounded scene plus a short rule-generated narrative. `story()` takes the project's events, the captured file changes the caller compared, and the capture pair ids; it reads no store, filesystem or command. `storyChanges()` turns a complete comparison into the optional symbol and hunk observations without recomputing a partial page.
 
-- **Chain.** Turn, prompt, decision, subagent, tool, file, check and gap nodes, with `prompted`, `declared`, `spawned` and `invoked` edges. The vocabulary is unchanged.
+- **Chain.** Turn, prompt, decision, subagent, tool, file, symbol, hunk, check and gap nodes, with `prompted`, `declared`, `spawned`, `invoked`, `touched` and `changed` edges. The vocabulary is unchanged.
+- **Symbols and hunks.** `storyChanges()` derives symbol groups from the bounded parser in [captured changes](captured-changes.md#symbol-grouping) and one hunk per contiguous run of changed lines. A symbol links to each hunk whose captured range contains one of its changed lines. Symbol and hunk nodes cite both compared captures; the hunk label carries the exact before/after line ranges, and a captured rename shows both paths. A symbol rename remains a deletion plus an addition, and no runtime impact or authorship follows from syntax.
+- **Tool-path attribution.** A `touched` edge joins a recorded tool call to a changed path only when the call's recorded path exactly equals the after path or a captured rename source path. Only the story session's tool calls are considered, but the join itself uses no timestamp, directory proximity or cross-session match. The edge and its claim state that the association does not establish causation, timing or authorship. A changed path with no exact match gets an `unknown_attribution` gap and an `attribution` claim instead of a guessed cause. The projection filters tool calls to the story's session, but it cannot verify that the supplied comparison belongs to that session; the caller owns that scope.
+- **Syntax fallback.** When grouping is `partial`, `unsupported`, `bounded` or `unavailable`, the file stays visible with its exact hunks where the diff is available and a `syntax_unavailable` gap names the state and reason. No symbol node or symbol claim is emitted.
 - **Declared activity.** Only a declared `decision` becomes a `decision` node. Plan, approval and correction declarations have no v1 node kind; they are counted in `omittedNodes` and named in the scene uncertainty instead of being relabelled.
 - **No captured prose.** Prompt and decision text is never reproduced. A check label may repeat the recorded command as inert text, as the change map already does.
 - **Citations.** Every claim carries a rule, at least one evidence id and an uncertainty. Claims are generated only for nodes the scene kept, so a capped node cannot leave an orphan narrative line.
@@ -84,7 +88,7 @@ The existing [change map](change-map.md) converts through `sceneFromMap`:
 - **Recorded gaps.** Source-reported capture-disabled, unsupported-source, missing-result/end and late-arrival gaps retain their evidence and are never filled. Unavailable file observations retain their status without claiming content changed.
 - **Bounds.** The scene keeps the v1 500-node/1,000-edge caps; claims are capped by `caps.claims` with `omittedClaims`.
 
-`tests/story.test.ts` covers a synthetic parent/child session for claim citation, interleaved attribution and determinism, absent rationale, conflicting results, a missing baseline, an unresolved child link, deleted evidence via `unknownSceneEvidence`, the claim cap and the empty-input error. `fixtures/story.ts` holds the synthetic events and captured changes; no private session, credential or real prompt is used.
+`tests/story.test.ts` covers a synthetic parent/child session for claim citation, interleaved attribution and determinism, absent rationale, conflicting results, a missing baseline, an unresolved child link, deleted evidence via `unknownSceneEvidence`, the claim cap and the empty-input error. `tests/story-links.test.ts` covers exact symbol/hunk nodes and citations, separated hunks, added/deleted states, a renamed source path, parent/child path ambiguity, an unmatched path, unsupported syntax, a parse error and the missing-evidence guard. `fixtures/story.ts` holds the synthetic events and captured changes; no private session, credential or real prompt is used.
 
 ## Validation
 
@@ -94,6 +98,7 @@ The existing [change map](change-map.md) converts through `sceneFromMap`:
 
 - No scene UI, Story/Impact/Cost/Timeline view or export.
 - The Story projection has no collector route or dashboard consumer yet; V21 renders it.
-- No producer emits `symbol`, `hunk`, `cost` or `capability` nodes yet.
+- No producer emits `cost` or `capability` nodes yet.
+- The `symbols`, `hunks` and `attribution` claim kinds are an additive V23 extension of the version-1 Story contract. No persisted Story is stored, so there is no migration; a future consumer must accept the new kinds.
 - No model-generated summaries; narrative claims are rule-generated from retained observations.
 - No Mermaid/SVG export; native scene data stays the source of truth.

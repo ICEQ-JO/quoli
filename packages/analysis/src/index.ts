@@ -8,6 +8,7 @@ export * from "./map";
 export * from "./reconcile";
 export * from "./scene";
 export * from "./story";
+export * from "./story-changes";
 export * from "./symbols";
 export * from "./usage";
 
