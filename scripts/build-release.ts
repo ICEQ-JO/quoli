@@ -10,7 +10,8 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import { build } from "esbuild";
 import { artifactDigest, signingKey, signManifest } from "../apps/cli/src/release";
@@ -55,6 +56,19 @@ await exec("pnpm", ["build"], {
 });
 rmSync(destination, { recursive: true, force: true });
 mkdirSync(join(destination, "runtime"), { recursive: true });
+const analysisRequire = createRequire(join(root, "packages/analysis/package.json"));
+const treeSitterWasm = dirname(
+  analysisRequire.resolve("@vscode/tree-sitter-wasm/wasm/tree-sitter.wasm"),
+);
+mkdirSync(join(destination, "runtime/wasm"), { recursive: true });
+for (const file of [
+  "tree-sitter.js",
+  "tree-sitter.wasm",
+  "tree-sitter-typescript.wasm",
+  "tree-sitter-tsx.wasm",
+]) {
+  cpSync(join(treeSitterWasm, file), join(destination, "runtime/wasm", file));
+}
 const standalone = join(root, "apps/web", releaseBuild, "standalone");
 if (!existsSync(join(standalone, "apps/web/server.js")))
   throw new Error("Standalone server layout was not generated as expected.");

@@ -72,6 +72,49 @@ test("change lists are bounded projections with source provenance and no file bo
   assert.match(detail.afterContent.text, /value = 2/);
   store.close();
 });
+test("selected-file details include symbol groups derived from captured text", () => {
+  const store = new Store(":memory:");
+  store.registerProject("repo", "Example", false, { ...defaultPolicy, code: true });
+  store.appendSnapshot(
+    "repo",
+    "review",
+    snapshot("snap_before", "export function value() {\n  return 1;\n}\n"),
+    "baseline",
+  );
+  store.appendSnapshot(
+    "repo",
+    "review",
+    snapshot("snap_after", "export function value() {\n  return 2;\n}\n"),
+    "checkpoint",
+  );
+  const list = readChanges(store, "repo", "review", query).data as {
+    files: { id: string }[];
+  };
+  const detail = readChanges(store, "repo", "review", {
+    ...query,
+    fileId: list.files[0].id,
+    limit: 1,
+  }).data as {
+    diff: { lines: unknown[]; nextCursor: number | null };
+    symbols: {
+      state: string;
+      language: string;
+      groups: { name: string; status: string; lines: unknown[] }[];
+      unattributed: number;
+    };
+  };
+  assert.equal(detail.diff.lines.length, 1);
+  assert.ok(detail.diff.nextCursor);
+  assert.equal(detail.symbols.state, "available");
+  assert.equal(detail.symbols.language, "typescript");
+  assert.equal(detail.symbols.unattributed, 0);
+  assert.deepEqual(
+    detail.symbols.groups.map((group) => [group.name, group.status]),
+    [["value", "modified"]],
+  );
+  assert.ok(detail.symbols.groups[0].lines.length >= 2);
+  store.close();
+});
 test("snapshot and file identities cannot escape the project/session/pair scope", () => {
   const store = new Store(":memory:");
   store.registerProject("repo", "Example", false, { ...defaultPolicy, code: true });

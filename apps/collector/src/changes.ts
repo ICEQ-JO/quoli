@@ -1,4 +1,5 @@
-import { compareSnapshots, diffFile } from "../../../packages/analysis/src/diff";
+import { compareSnapshots, diffAll, diffPage } from "../../../packages/analysis/src/diff";
+import { groupFileSymbols } from "../../../packages/analysis/src/symbols";
 import {
   type ChangeDetail,
   type ChangeList,
@@ -53,6 +54,7 @@ export function readChanges(
     if (!change)
       return { status: 404, data: { error: "File change not available in this snapshot pair." } };
     const { before: beforeFile, after: afterFile, ...details } = change;
+    const fullDiff = diffAll(change);
     return {
       status: 200,
       data: {
@@ -62,7 +64,8 @@ export function readChanges(
         afterContent: afterFile?.content ?? null,
         beforeStatus: beforeFile?.status ?? null,
         afterStatus: afterFile?.status ?? null,
-        diff: diffFile(change, { cursor: query.cursor, limit: query.limit }),
+        diff: diffPage(fullDiff, { cursor: query.cursor, limit: query.limit }),
+        symbols: groupFileSymbols(change, fullDiff),
       },
     };
   }

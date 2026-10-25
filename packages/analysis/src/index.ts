@@ -8,6 +8,7 @@ export * from "./map";
 export * from "./reconcile";
 export * from "./scene";
 export * from "./story";
+export * from "./symbols";
 export * from "./usage";
 
 export function relationships(events: StoredEvent[]): Relationship[] {

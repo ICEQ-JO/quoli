@@ -4,6 +4,7 @@
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "@traceframe/schema": "workspace:*"
+    "@traceframe/schema": "workspace:*",
+    "@vscode/tree-sitter-wasm": "0.3.1"
   }
 }
