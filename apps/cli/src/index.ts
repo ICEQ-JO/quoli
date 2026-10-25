@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { autostart, loginLifecycle } from "./autostart";
+import { bitbucketCommand } from "./bitbucket";
 import { childEnvironment, cliConfig, connectArguments, requireNode } from "./config";
 import { githubCommand } from "./github";
 import { gitlabCommand } from "./gitlab";
@@ -31,6 +32,9 @@ quoli github review OWNER/REPO --pull N  List changed paths; add --path FILE to 
 quoli gitlab connect [--base-url URL]   Connect a read-only GitLab token read from stdin
 quoli gitlab status | disconnect     Inspect or remove the local GitLab credential
 quoli gitlab review GROUP/PROJECT --merge-request N  List changed paths; add --path FILE
+quoli bitbucket connect --email EMAIL  Connect a read-only Bitbucket API token from stdin
+quoli bitbucket status | disconnect Inspect or remove the local Bitbucket credential
+quoli bitbucket review WORKSPACE/REPO --pull-request N  List changed paths; add --path FILE
 quoli settings ...                 Capture policy, pause, retention and deletion
 quoli autostart enable|disable|status  Optional Linux user-login startup
 quoli update ARCHIVE KEY VERSION    Verify and install an explicitly trusted newer release
@@ -123,6 +127,10 @@ async function main() {
   }
   if (command === "gitlab") {
     await gitlabCommand(args);
+    return;
+  }
+  if (command === "bitbucket") {
+    await bitbucketCommand(args);
     return;
   }
   if (command === "settings") {
