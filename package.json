@@ -1,42 +1,37 @@
 {
   "name": "quoli",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "packageManager": "pnpm@11.12.0",
   "engines": {
     "node": ">=24.16.0 <25"
   },
   "scripts": {
-    "release:signed": "node --import tsx scripts/build-release.ts --signed",
-    "release:verify": "node --import tsx scripts/verify-release.ts",
-    "release:local": "node --import tsx scripts/build-release.ts",
-    "test:release": "QUOLI_RELEASE_TEST=1 node --import tsx --test tests/release.test.ts",
-    "dev": "node --import tsx scripts/dev.ts",
-    "demo": "node --import tsx scripts/dev.ts --demo",
-    "seed": "node --import tsx scripts/seed.ts",
-    "repository": "node --import tsx scripts/repository.ts",
-    "bridge": "node --import tsx apps/bridge/src/index.ts",
-    "connect": "node --import tsx scripts/setup.ts",
-    "setup": "node --import tsx scripts/setup.ts",
-    "pilot": "node --import tsx scripts/pilot.ts",
-    "settings": "node --import tsx scripts/settings.ts",
-    "privacy:preview": "node --import tsx scripts/privacy-preview.ts",
-    "typecheck": "tsc --noEmit && pnpm --filter @traceframe/web typecheck",
+    "dev": "node --import tsx server/main.ts",
+    "demo": "node --import tsx server/main.ts --demo",
+    "start": "vite build && NODE_ENV=production node --import tsx server/main.ts",
+    "connect": "node --import tsx server/connect.ts",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "test:e2e": "playwright test",
-    "benchmark:capacity": "node --import tsx scripts/capacity.ts",
-    "smoke": "node --import tsx scripts/smoke.ts",
-    "build": "pnpm --filter @traceframe/web build"
+    "test": "node --import tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@xyflow/react": "12.9.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "yaml": "2.8.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.2",
-    "@playwright/test": "1.64.1",
     "@types/node": "24.19.2",
-    "esbuild": "0.28.2",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "5.1.0",
     "tsx": "4.23.15",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vite": "7.1.12"
   }
 }

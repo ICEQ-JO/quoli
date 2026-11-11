@@ -1,111 +1,105 @@
-# Quoli product vision
+# Quoli — product vision
 
-Owner direction: 2026-10-23. **Target product, not delivered capability.** The latest owner clarification supersedes the earlier local-dashboard-only plan. See [current implementation](implementation-progress.md), [target architecture](architecture.md) and [delivery roadmap](work/vision-roadmap.md).
+> **One map of everything your coding agents did — and everything it touched.**
 
-## Product
+## The problem
 
-Quoli is a hosted evidence, change-understanding, architecture-integrity and technical-debt workspace for AI-assisted development. A developer uses their coding agent locally, then opens Quoli in the cloud to understand what happened, what changed, what it cost, which extensions it used and what remains unverified. Teams can use the same evidence to review changes and enforce explicit architecture policies.
+Developers now ship code they did not write, reviewed only partly, into systems they do not fully understand. The agent ran 200 tool calls, spent a million tokens, spawned three subagents, edited 14 files on a branch, and that code deploys to two services. Today that story is scattered across a terminal scrollback, a git diff, a cloud console and a billing page. Nobody sees it whole.
 
-The experience is:
+Existing tools each see one slice:
+
+| Tool | Sees | Misses |
+| --- | --- | --- |
+| Agent tracing (LangSmith-style) | prompts, tool calls, tokens | the codebase and where the work landed |
+| Code maps (Sourcegraph, CodeSee) | structure of the code | who changed it and why |
+| Git clients | branches, commits, diffs | the agent's reasoning trail and cost |
+| Railway / cloud consoles | services and metrics | which change, by which agent, reached them |
+
+## The thesis
+
+The valuable thing is **not any single slice — it is the thread between them**:
 
 ```text
-OpenCode / Pi / Claude Code / Codex on a developer machine
-    → Quoli local connector: capture controls, sanitization, bounded durable delivery
-    → authenticated Quoli cloud: tenant-scoped evidence and derived views
-    → hosted dashboard: activity, subagents, costs, extensions, change scenes, policies and debt
+prompt → agent → tool calls → files changed → where they sit in the code
+       → which branch / commit → which service runs that code → how it behaves
 ```
 
-The local connector is required for local activity; a cloud repository connection alone cannot reveal a developer's local prompts, tools or subagents. Each harness needs a verified adapter. “Whatever harness” is the extensible product direction, not a claim of automatic universal support.
+Quoli is built around that thread. Everything is drawn on **one board** with **one shared selection**: pick an agent session and it lights up in every view — the files it touched in the code map, the branch it worked on, the services those files deploy to.
 
-## Customer outcomes and pillars
+## The language
 
-Every issue and PR names one or more pillars or commercial gates.
+Quoli's "new language" is a small, fixed visual vocabulary. Every view is composed only of these, so a developer learns it once.
 
-### P1 — Repositories anywhere
+**Things (nodes)**
 
-Connect local repositories and cloud repositories: GitHub first, then GitLab and Bitbucket. Select branches, commits and pull/merge requests; inspect bounded tree, blob and comparison observations. Preserve repository/ref/commit identity, rate limits, permission denials and partial-fetch states. Keep read operations separate from the later app permissions needed to publish policy checks.
+| Node | Meaning | Look |
+| --- | --- | --- |
+| Session | one agent run, from first prompt to end | row in the sidebar, chip on the Git lens |
+| Prompt | what the human asked | white card |
+| Agent | the main agent or a subagent | a swimlane |
+| Tool call | one action — read, edit, run, search, spawn, web/MCP | colored card |
+| File / folder | the code | chip inside nested folder boxes |
+| Branch / commit | version history | lane and dot |
+| Service | something that runs: web app, API, worker, database, cache, queue, pipeline, third-party | card on the infra board |
 
-A provider response is an observation, not a complete repository audit. Unfetched paths and denied scopes remain unknown. Provider credentials use least privilege, scoped encrypted storage and revocation; local credentials use the OS keychain where supported.
+**Relations (edges)**: `prompted`, `spawned`, `read`, `edited`, `imports`, `ran on branch`, `depends on`, `calls`, `deploys`.
 
-### P2 — Cross-harness evidence
+**Colors carry meaning everywhere**: blue = read, orange = edited, teal = ran a command, yellow = searched, purple = subagent, pink = web/MCP, red = failed. An orange glow on a file, a service or a session always means "the agent changed this."
 
-Support OpenCode, Pi, Claude Code, Codex and future tools through versioned adapters, a published capability matrix, synthetic fixtures and reversible setup. First integrate Claude Code and OpenCode, then complete Codex and Pi before claiming the full four-harness product. This sequence is a planning choice; change it when a demonstrated user need warrants it.
+**Every fact has a basis**, and the UI shows it:
 
-Capture every event the supported source exposes, with explicit gaps. Installed, detected, supported and connected are different states. A harness may never report exact exit codes, per-request usage or full child scope; the dashboard must show that limit.
+- *recorded* — reported by the agent (a hook event, a transcript line). Solid.
+- *derived* — computed from recorded facts or the repository (an import edge, a compose dependency). Solid.
+- *inferred* — a best guess from convention (a `stripe` dependency implies Stripe). **Dashed**, and labelled.
 
-### P3 — Observable activity and subagents
+Quoli never invents what it cannot see: unknown values stay unknown, and it never claims a feature works because a command exited 0.
 
-Track user prompts, turns, tool calls/results, declared plans and decisions, approvals, corrections and subagents. Preserve raw tool names with normalized categories, parent/child identities, spawn provenance, timing basis and field-level capability/content states.
+## The four lenses
 
-A decision is an emitted plan, rationale, approval, todo change or correction, or an explicitly marked derived grouping. Never collect or reconstruct hidden chain-of-thought. Do not join activity by text similarity or timestamps when IDs are missing. A missing result or ending stays a gap.
+One board, four ways to look at it. Number keys 1–4 switch; the selection and the timeline stay.
 
-### P4 — Token cost and attribution
+1. **Agents — what it did.** Swimlanes for the main agent and each subagent; tool calls in time order; prompts above; failures in red; token spend per lane.
+2. **Code — where it happened.** The repository as nested folder boxes. Files the session read are outlined blue, files it edited glow orange; everything else dims. Select a file to see its import edges, the exact edits the agent requested, and the git diff.
+3. **Git — which branch.** Branches as lanes, recent commits as dots, the uncommitted working tree, and the agent sessions that ran on each branch.
+4. **Infra — where it runs.** An Excalidraw-like board of services read from the repo (compose, Dockerfiles, Vercel, Fly, Railway, Render, Cloudflare, Serverless, Terraform, GitHub Actions, dependencies). Services whose code the session changed glow orange. Live CPU/memory where Docker is running locally.
 
-Show input, output, cache-read, cache-write and reasoning tokens where reported. Reconcile per-request and cumulative reports without double counting. Explain estimated cost using effective-dated model prices, currency, units and formulas. Separate provider-reported cost, list-price estimates and subscription cost.
+Across the bottom, a **timeline** replays the session step by step — every lens rewinds with it — with a cumulative token line.
 
-Break down by session, turn, request, model, subagent and tool only where evidence supports it. Unknown attribution stays unknown; no invented file/tool allocation. Estimates are not invoices. Old estimates retain the price version that explains them.
+## Who it is for
 
-### P5 — Plugins, skills and MCP use
+**First: the individual developer using Claude Code** who wants to answer, in under a minute, "what did the agent just do to my project, what did it cost, and what do I need to review?" Local, private, free to try.
 
-Show consented inventories and actual invocation of plugins, skills, MCP servers and commands, including name, version, source and status when exposed. Link invocations to the activity they served. Installed is not invoked, invoked is not effective, and opaque internals remain opaque. Discovery must not execute an extension.
+**Later: the team lead** who wants the same view across several developers' agents — which requires the hosted version.
 
-### P6 — Evidence-grounded change language
+## Principles
 
-Explain changes with a constrained, versioned evidence-scene schema, deterministic cited narrative and exact diff drill-down. Native scene data is the source of truth; Mermaid/SVG or other formats can be exports.
+- **Glanceable first, exact on demand.** The map tells the story in two seconds; the inspector shows the exact diff, input and output.
+- **Local by default.** Evidence never leaves the machine unless the user explicitly turns on sync.
+- **Honest.** Recorded vs inferred is always visible. Gaps are shown, not hidden.
+- **Zero-config.** `pnpm connect <repo>` and start the agent. Infrastructure is read from files already in the repo.
+- **Passive.** Quoli observes; it never blocks, slows or steers the agent.
 
-Node vocabulary: `turn`, `prompt`, `decision`, `subagent`, `tool`, `file`, `symbol`, `hunk`, `check`, `gap`, `cost`, `capability`. Edge vocabulary: `prompted`, `declared`, `spawned`, `invoked`, `touched`, `changed`, `verified`, `failed`, `cost_of`, `used`.
+## Roadmap
 
-Every node and edge carries recorded/derived/inferred basis, a generating rule, supporting evidence IDs and uncertainty. The `verified` vocabulary never means feature correctness merely because a command succeeded. Views: Story, Impact, Cost and Timeline. Syntax-aware diffs use bounded tree-sitter parsing for supported languages with file fallback. Hunk-to-prompt/tool links and “why” require supporting IDs or declared rationale. An optional model summary must remain secondary, explicitly consented and citation checked.
+Each phase is something a developer can use on its own.
 
-### P7 — Architecture integrity and technical-debt control plane
+| Phase | Outcome | Status |
+| --- | --- | --- |
+| **0 — Foundation** | Claude Code hooks → local server; sessions, tool calls, tokens; four lenses; replay; demo | **Built (this rebuild)** |
+| **1 — Daily driver** | Symbol-level code map (functions, routes, tables) for TS/Python; review checklist ("12 files changed, 3 not covered by a test run"); cost in dollars with a versioned price table; better large-repo layout | Next |
+| **2 — More agents** | Codex, OpenCode and Pi adapters on the same event model; MCP/skill/plugin usage per session | |
+| **3 — Live infra** | Provider connections (Vercel, Railway, Fly, AWS) for real deploys and metrics; link a deploy back to the commit and the session that produced it | |
+| **4 — Hosted** | Opt-in sync to a hosted dashboard; teams; shared sessions and review links | |
 
-This is part of the full product, with concrete implementation issues after the evidence/cloud foundation. It is not a discovery-only placeholder, and it need not delay the first paid evidence pilot.
+## Non-goals (for now)
 
-Build a versioned architecture model covering modules, dependencies, ownership boundaries, database schema and approved patterns. Add validated rules-as-code, deterministic dependency/schema/boundary checks, bounded duplication signals and explainable static blast-radius views. Keep a technical-debt ledger with owner, reason, expiry, evidence and follow-up.
+- Replacing an IDE, a code review tool or an APM product. Quoli links to them; it does not rebuild them.
+- Capturing hidden model reasoning. Only what the agent emits.
+- Controlling the agent (approvals, policy enforcement). Observation first.
 
-A GitHub app, then GitLab integration, connects pull/merge requests and exact commit identities. Reports provide pass/warn/block outcomes, missing-evidence states, deterministic rule findings and machine-readable fix requests. Only explicitly configured deterministic rules may block; model text may explain or suggest, never gate. PRs without provenance can be analyzed but cannot be labeled agent-created. Stale results cannot approve a newer commit. Run in observation mode and evaluate false positives before enabling enforcement.
+## Open questions for the owner
 
-A policy gate is not a safety or correctness certification. Static dependency reach is not observed runtime impact. Self-hosting and enterprise certification remain separate demand-driven work.
-
-## Cloud and privacy contract
-
-The hosted dashboard and consented local-to-cloud synchronization are now approved product architecture. This does **not** authorize uploading this repository's existing private sessions or changing anyone's runtime capture settings during development.
-
-- Default to metadata-only collection and synchronization. Prompt text, tool content, code/diffs and extension configuration each need explicit capture and upload controls. Explain when a richer diagram needs content that is disabled.
-- Separate permission to retain evidence locally from permission to send it to the cloud. Preview categories, destination, retention and project scope during connector pairing. Deny unknown policy or stale consent generations before any durable outbox write or upload.
-- Apply controls and sanitization before local persistence and network transmission; revalidate on the cloud boundary. Redaction reduces risk and cannot guarantee removal of every secret.
-- Keep a durable bounded outbox, stable delivery IDs and acknowledge only committed cloud writes. Retries must not duplicate activity or resurrect deleted projects.
-- Authenticate users and devices separately. Tenant/project authorization applies to every event, blob, query, job, cache and export; never trust tenant identity supplied in payloads. Encrypt transport and retained cloud data; keep keys and tokens out of evidence.
-- Provide device revocation, access audit, export, retention, deletion and documented backup expiry. Delete derived data and caches with primary evidence; fence disconnected producers. Explain that user-exported copies and external backups are outside immediate revocation.
-- Treat captured content as inert untrusted data. Never replay commands, execute repository code or follow embedded links during ingestion/analysis.
-
-## Commercial and operational gates
-
-| Gate | Required outcome |
-| --- | --- |
-| Cloud foundation | Reproducible environments, accounts, tenant isolation, connector pairing, ingestion/storage, hosted query/dashboard path |
-| Distribution and platforms | Signed versioned connector downloads, verified updates and rollback, tested Linux/macOS support; Windows explicitly excluded until implemented |
-| Licensing and billing | Hosted trial/subscription entitlements, plan limits, cancellation/refund behavior; existing evidence remains readable/exportable after expiry |
-| Onboarding | Sign in, create workspace/project, pair device, choose capture/upload settings, connect repository/harness, review first evidence |
-| Data controls | Category consent, local/cloud retention and deletion, revoke devices, export, access audit, secure tokens |
-| CI and release discipline | Automated synthetic checks, migration/release validation, staging rollout and recovery |
-| Security and trust | Threat model, adversarial cross-tenant tests, reviewed legal/privacy/security terms, disclosure and dependency hygiene |
-| Operations and support | Content-free service metrics, bounded queues/quotas, backups with tested restore, incident/deletion/recovery runbooks and support |
-| Team readiness | Workspace memberships and basic roles for hosted isolation; secure sharing, then enterprise identity as a later increment |
-
-## Delivery sequence
-
-1. Repair retry privacy/lifecycle gaps, establish CI and pin the cloud data/security contract.
-2. Migrate evidence contracts compatibly and build cloud identity, isolated storage, pairing, durable sync and authorized queries.
-3. Adapt the existing session workspace into the hosted dashboard. Ship Claude/OpenCode, repository connections, subagents, cost, extension use and Story/syntax-aware review behind the cloud gates.
-4. Complete signed connectors, lifecycle controls, payment, trust/operations and a fresh-machine hosted paid-pilot demonstration.
-5. Complete Codex/Pi, other providers, all scene views, team sharing and the architecture/debt implementation track. Observe policy behavior before enforcing rules.
-6. Add more languages, enterprise SSO and optional model summaries according to customer evidence. Self-hosting and certifications require their own decisions.
-
-Exact prerequisite relations live in [the issue index](issues/vision/README.md). A sequenced backlog is not a delivery date or a claim that all features exist.
-
-## Remaining decisions
-
-Cloud dashboard plus local connectors, the full four-harness destination, native evidence scenes and concrete architecture/debt scope are settled owner direction. Do not reopen them as local-only-versus-cloud discovery.
-
-Still decide the first paid buyer, hosting provider/region and data-residency obligations, auth/payment vendors, exact trial/pricing/limits, supported OS versions/architectures, launch retention defaults, initial syntax languages beyond TypeScript/JavaScript, and policy pilot rule set. Record implementation choices in [decisions](decisions.md); verify external contracts before coding integrations.
+1. **Pricing and audience** — free local tool with paid hosted teams, or paid from day one?
+2. **Symbol-level map** — invest in a real call graph (compiler/tree-sitter, full-depth) or stay file-level with smarter grouping?
+3. **Which second agent** matters most to you: Codex, OpenCode or Pi?
+4. **Infra providers** — which one do you deploy to today? That decides Phase 3's first integration.

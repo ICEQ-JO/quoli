@@ -1,0 +1,75 @@
+import { closeSync, openSync, readSync, statSync } from "node:fs";
+import type { Store, UsageRow } from "./db.ts";
+
+const MAX_READ = 8 * 1024 * 1024;
+
+/**
+ * Claude Code writes every assistant message to a JSONL transcript with its
+ * reported token usage. Hooks do not carry usage, so this is where tokens come from.
+ * A message appears once per content block; rows are keyed by message id.
+ */
+export function usageFromLines(lines: string[], sessionId: string, agentId: string): UsageRow[] {
+  const rows: UsageRow[] = [];
+  for (const line of lines) {
+    let entry: Record<string, unknown>;
+    try {
+      entry = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (entry.type !== "assistant") continue;
+    const message = entry.message as Record<string, unknown> | undefined;
+    const usage = message?.usage as Record<string, unknown> | undefined;
+    if (!message || !usage || typeof message.id !== "string") continue;
+    const n = (k: string) => (typeof usage[k] === "number" ? (usage[k] as number) : 0);
+    rows.push({
+      messageId: message.id,
+      sessionId,
+      agentId:
+        typeof entry.agentId === "string" && entry.isSidechain
+          ? (entry.agentId as string)
+          : agentId,
+      model: typeof message.model === "string" ? message.model : null,
+      at: typeof entry.timestamp === "string" ? entry.timestamp : new Date().toISOString(),
+      input: n("input_tokens"),
+      output: n("output_tokens"),
+      cacheRead: n("cache_read_input_tokens"),
+      cacheWrite: n("cache_creation_input_tokens"),
+    });
+  }
+  return rows;
+}
+
+/** Reads only the new complete lines since the last call. */
+export function syncTranscript(store: Store, path: string, sessionId: string, agentId: string) {
+  if (!path.endsWith(".jsonl")) return;
+  let size: number;
+  try {
+    size = statSync(path).size;
+  } catch {
+    return;
+  }
+  let offset = store.transcriptOffset(path);
+  if (size < offset) offset = 0;
+  if (size === offset) return;
+  const length = Math.min(size - offset, MAX_READ);
+  const buffer = Buffer.alloc(length);
+  const fd = openSync(path, "r");
+  try {
+    readSync(fd, buffer, 0, length, offset);
+  } finally {
+    closeSync(fd);
+  }
+  const text = buffer.toString("utf8");
+  const end = text.lastIndexOf("\n");
+  if (end < 0) return;
+  for (const row of usageFromLines(text.slice(0, end).split("\n"), sessionId, agentId)) {
+    store.upsertUsage(row);
+  }
+  store.setTranscriptOffset(
+    path,
+    sessionId,
+    agentId,
+    offset + Buffer.byteLength(text.slice(0, end + 1)),
+  );
+}

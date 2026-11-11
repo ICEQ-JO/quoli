@@ -1,5 +1,4 @@
 node_modules/
-.next/
 dist/
 coverage/
 .env
@@ -10,16 +9,6 @@ coverage/
 *.sqlite-*
 *.db
 *.db-*
-.traceframe/
 .DS_Store
 *.tsbuildinfo
-playwright-report/
 test-results/
-.next-build/
-.next-e2e/
-.next-lifecycle/
-apps/web/next-env.d.ts
-
-.playwright-mcp/
-
-.next-release/

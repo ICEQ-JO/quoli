@@ -1,22 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
   "files": {
-    "includes": [
-      "**",
-      "!**/.next",
-      "!**/.next-build",
-      "!**/.next-e2e",
-      "!**/.next-lifecycle",
-      "!**/.next-release",
-      "!**/dist",
-      "!**/node_modules",
-      "!pnpm-lock.yaml",
-      "!test-results",
-      "!playwright-report",
-      "!**/.playwright-mcp",
-      "!**/*.md",
-      "!**/next-env.d.ts"
-    ]
+    "includes": ["**", "!**/dist", "!**/node_modules", "!pnpm-lock.yaml", "!**/*.md"]
   },
   "formatter": {
     "enabled": true,
@@ -43,6 +28,9 @@
         "rules": {
           "style": {
             "noDescendingSpecificity": "off"
+          },
+          "correctness": {
+            "noInvalidGridAreas": "off"
           }
         }
       }

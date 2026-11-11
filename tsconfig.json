@@ -1,11 +1,15 @@
 {
-  "extends": "./tsconfig.base.json",
-  "include": [
-    "packages/**/*.ts",
-    "scripts/**/*.ts",
-    "apps/collector/**/*.ts",
-    "apps/cli/**/*.ts",
-    "tests/**/*.ts",
-    "playwright.config.ts"
-  ]
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"]
+  },
+  "include": ["server", "shared", "web", "tests", "vite.config.ts"]
 }

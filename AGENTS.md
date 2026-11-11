@@ -2,9 +2,9 @@
 
 ## Product and architecture
 
-Quoli is the product and repository name (formerly Traceframe). Start with `docs/README.md` for product scope, architecture, evidence requirements and the implementation sequence. Preserve useful existing code and conventions.
+Quoli is the product and repository name (formerly Traceframe). It is one visual map of what coding agents did: agent activity, code, Git and infrastructure as four lenses on one board. Start with [docs/vision.md](docs/vision.md) (product, visual language, roadmap) and [docs/architecture.md](docs/architecture.md) (how it works, decisions, limitations). Preserve useful existing code and conventions.
 
-The owner's target product direction is [docs/vision.md](docs/vision.md): a hosted SaaS dashboard with consented local connectors, architecture-integrity and technical-debt controls, and cross-agent evidence covering cloud and local repositories, multiple harnesses, observable activity and subagents, token cost, plugin/skill use and evidence-grounded change diagrams. Every new issue and pull request must name the vision pillar or commercial-readiness gate it advances, or obtain explicit owner approval. The vision is target direction only; delivered capability is recorded in [docs/implementation-progress.md](docs/implementation-progress.md).
+The codebase was fully rebuilt in 2026-11 at the owner's direction; the previous implementation is in git history only. Every new issue and pull request names the roadmap phase in [docs/vision.md](docs/vision.md) it advances, or obtains explicit owner approval. The vision is direction; delivered capability and limitations are recorded in [docs/architecture.md](docs/architecture.md).
 
 ## Work tracking
 
@@ -33,8 +33,8 @@ The owner's target product direction is [docs/vision.md](docs/vision.md): a host
 
 - The append-only event history is the primary record; metrics, explanations and graphs are derived views. Preserve provenance and recorded/derived/inferred distinctions.
 - Unsupported values are null. Do not promise complete capture, hidden reasoning, exclusive file authorship or feature correctness from a successful command alone.
-- Keep evidence local unless the user explicitly enables project/category cloud synchronization. Capture and upload consent are separate; apply controls and redaction before persistence and transmission, revalidate cloud tenant/device scope, and treat captured text as untrusted data. Never upload existing private sessions merely to test development. Never replay recorded commands or external actions.
-- Verify official Claude Code integration contracts and supported runtime behavior before implementing ingestion. Maintain a synthetic fixture path without paid APIs.
+- Keep evidence local unless the user explicitly enables project cloud synchronization. Apply redaction before persistence and transmission and treat captured text as untrusted data. Never upload existing private sessions merely to test development. Never replay recorded commands or external actions.
+- Verify official Claude Code integration contracts and supported runtime behavior before implementing ingestion. Keep the synthetic demo (`pnpm demo`) and tests working without paid APIs.
 - Run checks appropriate to the change, document outcomes and limitations, and never commit credentials, real private sessions or generated runtime data.
 
 ## Required skills

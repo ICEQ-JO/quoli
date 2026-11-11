@@ -1,9 +1,0 @@
-{
-  "name": "@traceframe/bridge",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "@traceframe/schema": "workspace:*",
-    "@traceframe/storage": "workspace:*"
-  }
-}

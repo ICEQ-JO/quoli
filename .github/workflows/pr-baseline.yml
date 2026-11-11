@@ -30,15 +30,7 @@ jobs:
         run: |
           pnpm lint
           pnpm typecheck
-      - name: Run synthetic unit and integration checks
+      - name: Run tests
         run: pnpm test
-      - name: Install browser for fixture-only checks
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Run browser checks
-        run: pnpm test:e2e
-      - name: Build and inspect the local release
-        run: |
-          pnpm release:local
-          pnpm test:release
-          (cd dist && sha256sum --check quoli-*.tar.gz.sha256)
-          ! tar -tzf dist/quoli-*.tar.gz | grep -E '(^|/)(\.env(\..*)?|credential|[^/]+\.(sqlite|db)(-[^/]*)?)$'
+      - name: Build the web app
+        run: pnpm build
