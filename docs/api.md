@@ -49,3 +49,10 @@ Retention runs at startup, hourly, and when settings change.
   2. Each failed command not followed by a later successful run of the same command text.
   3. Any single edit removing 40 or more lines ("Large deletion in <file>").
   The wording never says a feature works or that tests passed in general; a successful command is only "ran and reported success".
+
+### Implementation notes (Increment 2)
+
+- `DELETE /api/prices` returns the default table. A saved table that fails validation on load falls back to the default.
+- Sums are rounded to 1e-9 USD. Usage rows with no model id are excluded from `usd` and not listed in `unpriced` (they have no id); their `costByModel` row has `usd: null`.
+- `report.changes` skips failed edit calls and files outside the project root. `report.commands` skips `run` calls without a string `command` (e.g. BashOutput). Commands starting with `git` are classified `other`, so commit messages mentioning "test" are not misread.
+- Checklist ids: `edited-after-test`, `failed-<toolCallId>`, `large-deletion-<toolCallId>`. "Last test command" is the last `test`-kind command whatever its status; a failed one is also covered by rule 2.

@@ -25,7 +25,9 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `server/app.ts` | The API ([docs/api.md](api.md)): ingest, projects, sessions, overview, settings, SSE, mutation guard |
 | `server/db.ts` | SQLite store: append-only `events`, deduplicated `usage`, transcript read offsets, `projects` registry, `settings` |
 | `server/ingest.ts` | Resolves repo root, records the branch at session start, redacts secrets, stores, reads transcripts |
-| `server/sessions.ts` | Pure derivation: raw events + usage → session view (turns, tool calls, agents, files, tokens) |
+| `server/sessions.ts` | Pure derivation: raw events + usage + price table → session view (turns, tool calls, agents, files, tokens, cost, report) |
+| `server/report.ts` | Pure functions behind the Summary: command classification, line counting, changes, review checklist |
+| `server/prices.ts` | Built-in list-price table, model matching, `costOf`, PUT validation, load/save via the `settings` table (key `prices`) |
 | `server/transcript.ts` | Token usage from Claude Code transcript JSONL, read incrementally |
 | `server/code.ts` | Code map: files from `git ls-files`, line counts, JS/TS relative imports, git status |
 | `server/gitstate.ts` | Branches (ahead/behind), recent commits, changed-file count |
@@ -40,6 +42,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - **Events are the record.** Every hook payload is stored as received (after redaction), append-only. All views are derived from events at read time, so improving the derivation improves old sessions too.
 - **Tokens come from transcripts.** Claude Code hooks do not carry usage; each hook points at the session transcript, which records per-message usage. Messages repeat once per content block, so rows are keyed by message id and merged with `MAX`.
 - **Repository views are computed live** from the working tree (`git`, files on disk). They are not stored.
+- **Costs and the report are derived, not stored.** Cost is computed per read from usage rows and the current price table, so editing prices re-prices history. Costs are estimates at list prices (no discounts, taxes, batch or long-context tiers), not invoices. Usage without a model id, or with a model matching no price row, is excluded and reported as unpriced.
 
 ## Security and privacy
 
@@ -65,3 +68,4 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - Infra is what config files declare; hosted metrics need provider connections that do not exist yet.
 - Large repos: capped at 1,500 files; folders without activity fold automatically above 220 files.
 - Dark theme only.
+- Cost and the Summary report are heuristics: commands are classified from their text, line counts come from recorded Edit/MultiEdit/Write inputs (a Write's removed lines are unknown), failed edits are ignored, and only edits inside the project root are counted. Edits made through Bash (sed, formatters, generators) are not seen. The checklist lists things worth a look and never says the work is correct.
