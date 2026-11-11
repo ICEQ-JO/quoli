@@ -60,7 +60,16 @@ Decisions made during the build:
 
 ## Increment 2: Session Summary and cost (M)
 
-Issue: #92 · Status: **not started**
+Issue: #92 · Status: **done** (on branch `claude/stoic-bardeen-5zymlb`)
+
+Delivered: session header with estimated cost; a Summary tab (first when a session is open) with what you asked, what changed (+/− lines from recorded edits), what it ran (test/build/lint/typecheck), what it cost (per model) and a derived review checklist; lens-specific inspector panels; cost on Home, the Sessions list and the sidebar; Settings → Prices (editable, resettable list-price table, prefix matching for dated model ids).
+
+Deviations and limits:
+- The checklist ships three rules (edits after the last test, failed commands never re-run successfully, large deletions). "Edits outside the session's branch" is not implemented: hooks do not report the branch at each edit, and guessing would break the no-inference rule.
+- Line counts come from the recorded edit inputs, not from Git, so they can differ from the final diff (the Git diff stays one click away in the Code lens).
+- Command kinds are matched by keyword (`test`, `tsc`, `lint`…), so an unusual command can be misclassified.
+- Cost is a list-price estimate; cache-write and older cache-read prices are derived from the standard ratios and editable.
+- Verified: lint, typecheck, 30 tests, build, and screenshots against the real demo server.
 
 **User value:** Opening a session answers "what did it do, what did it cost, what should I review?" in seconds, before any graph.
 

@@ -25,7 +25,7 @@ const ROWS: [string, number, number, number, number][] = [
 
 export const defaultPrices = (): PriceTable => ({
   version:
-    "Anthropic list prices as of 2026-11-03; cache prices marked * are derived (read 0.1× input, write 1.25× input)",
+    "Anthropic list prices as of 2026-11-03; cache writes and older cache reads derived (read 0.1× input, write 1.25× input)",
   currency: "USD",
   prices: ROWS.map(([model, input, output, cacheRead, cacheWrite]) => ({
     model,

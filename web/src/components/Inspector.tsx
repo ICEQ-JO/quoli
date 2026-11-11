@@ -115,7 +115,7 @@ function LensPanel(p: Props & { session: SessionDetail }) {
                   <span className="delta">
                     <span className="add">+{c.added}</span>{" "}
                     {c.rewrite ? (
-                      <span className="faint">new</span>
+                      <span className="faint">rewritten</span>
                     ) : (
                       <span className="del">−{c.removed}</span>
                     )}
