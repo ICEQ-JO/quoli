@@ -43,6 +43,7 @@ Everything stays on your machine (`~/.quoli`, override with `QUOLI_HOME`). The s
 ## Docs
 
 - [Product vision](docs/vision.md) — the idea, the visual language, the roadmap
+- [MVP plan](docs/mvp.md) — what we are building next, as issue-ready increments
 - [Architecture](docs/architecture.md) — how it works, decisions, limitations
 - [Working agreements](AGENTS.md)
 

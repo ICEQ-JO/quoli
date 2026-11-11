@@ -2,7 +2,7 @@
 
 ## Product and architecture
 
-Quoli is the product and repository name (formerly Traceframe). It is one visual map of what coding agents did: agent activity, code, Git and infrastructure as four lenses on one board. Start with [docs/vision.md](docs/vision.md) (product, visual language, roadmap) and [docs/architecture.md](docs/architecture.md) (how it works, decisions, limitations). Preserve useful existing code and conventions.
+Quoli is the product and repository name (formerly Traceframe). It is one visual map of what coding agents did: agent activity, code, Git and infrastructure as four lenses on one board. Start with [docs/vision.md](docs/vision.md) (product, visual language, roadmap), [docs/mvp.md](docs/mvp.md) (the current backlog) and [docs/architecture.md](docs/architecture.md) (how it works, decisions, limitations). Preserve useful existing code and conventions.
 
 The codebase was fully rebuilt in 2026-11 at the owner's direction; the previous implementation is in git history only. Every new issue and pull request names the roadmap phase in [docs/vision.md](docs/vision.md) it advances, or obtains explicit owner approval. The vision is direction; delivered capability and limitations are recorded in [docs/architecture.md](docs/architecture.md).
 

@@ -85,11 +85,12 @@ Each phase is something a developer can use on its own.
 
 | Phase | Outcome | Status |
 | --- | --- | --- |
-| **0 — Foundation** | Claude Code hooks → local server; sessions, tool calls, tokens; four lenses; replay; demo | **Built (this rebuild)** |
-| **1 — Daily driver** | Symbol-level code map (functions, routes, tables) for TS/Python; review checklist ("12 files changed, 3 not covered by a test run"); cost in dollars with a versioned price table; better large-repo layout | Next |
-| **2 — More agents** | Codex, OpenCode and Pi adapters on the same event model; MCP/skill/plugin usage per session | |
-| **3 — Live infra** | Provider connections (Vercel, Railway, Fly, AWS) for real deploys and metrics; link a deploy back to the commit and the session that produced it | |
-| **4 — Hosted** | Opt-in sync to a hosted dashboard; teams; shared sessions and review links | |
+| **0 — Foundation** | Claude Code hooks → local server; sessions, tool calls, tokens; four lenses; replay; demo | **Built** (proof of concept) |
+| **1 — MVP** | App shell with Home, Projects, Sessions and Settings; session Summary with cost in dollars and a review checklist; lenses that stay readable on real repos; polish and light theme. See the [MVP plan](mvp.md) | **Next** |
+| **2 — Deeper code** | Symbol-level code map (functions, routes, tables) for TS/Python | |
+| **3 — More agents** | Codex, OpenCode and Pi adapters on the same event model; MCP/skill/plugin usage per session | |
+| **4 — Live infra** | Provider connections (Vercel, Railway, Fly, AWS) for real deploys and metrics; link a deploy back to the commit and the session that produced it | |
+| **5 — Hosted** | Opt-in sync to a hosted dashboard; teams; shared sessions and review links | |
 
 ## Non-goals (for now)
 
