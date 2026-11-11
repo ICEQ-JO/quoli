@@ -44,6 +44,7 @@ export function ingest(
   store: Store,
   payload: Record<string, unknown>,
   at = new Date().toISOString(),
+  onNewRoot?: () => void,
 ) {
   const sessionId = payload.session_id;
   const event = payload.hook_event_name;
@@ -55,7 +56,8 @@ export function ingest(
   if (event === "SessionStart" && payload.quoli_branch === undefined) {
     payload.quoli_branch = git(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]);
   }
-  const clean = JSON.parse(redact(JSON.stringify(payload)));
+  const clean = store.settings().redact ? JSON.parse(redact(JSON.stringify(payload))) : payload;
+  const fresh = !store.hasRoot(root);
   store.append({ sessionId, root, event, at, payload: clean });
 
   if (typeof payload.transcript_path === "string") {
@@ -64,5 +66,6 @@ export function ingest(
   if (typeof payload.agent_transcript_path === "string" && typeof payload.agent_id === "string") {
     syncTranscript(store, payload.agent_transcript_path, sessionId, payload.agent_id);
   }
+  if (fresh) onNewRoot?.();
   return true;
 }

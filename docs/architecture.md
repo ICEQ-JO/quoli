@@ -21,8 +21,9 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `shared/model.ts` | The shared vocabulary: sessions, agents, tool calls, files, branches, services, links, basis |
 | `server/hook.mjs` | What Claude Code runs. Dependency-free, forwards stdin to the server, always exits 0, prints nothing |
 | `server/connect.ts` | `pnpm connect <repo>` — adds/removes Quoli's hooks in `<repo>/.claude/settings.local.json` |
-| `server/main.ts` | HTTP server: ingest, API, SSE, Vite (dev) or `dist/` (prod) |
-| `server/db.ts` | SQLite store: append-only `events`, deduplicated `usage`, transcript read offsets |
+| `server/main.ts` | HTTP server: host guard, static/Vite, hourly retention timer |
+| `server/app.ts` | The API ([docs/api.md](api.md)): ingest, projects, sessions, overview, settings, SSE, mutation guard |
+| `server/db.ts` | SQLite store: append-only `events`, deduplicated `usage`, transcript read offsets, `projects` registry, `settings` |
 | `server/ingest.ts` | Resolves repo root, records the branch at session start, redacts secrets, stores, reads transcripts |
 | `server/sessions.ts` | Pure derivation: raw events + usage → session view (turns, tool calls, agents, files, tokens) |
 | `server/transcript.ts` | Token usage from Claude Code transcript JSONL, read incrementally |
@@ -43,6 +44,8 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 ## Security and privacy
 
 - Binds to `127.0.0.1` only. Requests whose `Host` is not `127.0.0.1`/`localhost` are rejected (blocks DNS rebinding).
+- Every `POST`/`PUT`/`DELETE` under `/api/` requires `Content-Type: application/json` and an `Origin` of the server itself, so other web pages cannot change settings or delete data.
+- Connecting a project requires an absolute path that is a repository top level; hooks are written only to `<repo>/.claude/settings.local.json`. Project and retention deletion really delete rows, then truncate the WAL.
 - `/ingest` requires `Content-Type: application/json`, which browsers cannot send cross-origin without a preflight Quoli never answers.
 - File reads are limited to known project roots and paths inside them.
 - Prompts, tool inputs and outputs are stored locally so the UI can show them. Common credential shapes (API keys, GitHub tokens, AWS keys, private keys) are redacted before storage; redaction is best-effort, not a guarantee.

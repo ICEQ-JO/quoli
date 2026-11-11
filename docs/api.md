@@ -21,3 +21,13 @@ Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: a
 | `GET /api/stream` | | SSE: `{ type: "event", sessionId }` on ingest, `{ type: "projects" }` when projects change |
 
 Retention runs at startup, hourly, and when settings change.
+
+## Behavior notes
+
+- `DELETE` also needs `Content-Type: application/json`; send `{}` as the body.
+- `hookStatus`: `installed` when a hook command containing `server/hook.mjs` is in `<root>/.claude/settings.local.json`; `receiving` when installed and at least one event exists for the root; otherwise `not_connected`.
+- `Overview.needsReview` covers ended sessions that started in the last 7 days (max 20). Reasons are derived: "N failed tool calls", "N files changed" (10 or more edited files), "No command was run after the last edit". They never claim correctness.
+- `Overview.tokens` sums transcript usage rows by their own timestamps. `counts.sessionsToday` counts sessions with any event since local midnight.
+- `PUT /api/settings` rejects unknown keys and out-of-range values with `400 { error }`. Redaction applies at ingest time only; it never rewrites stored events.
+- Retention deletes whole sessions (events, usage rows, transcript offsets) whose last event is older than `retentionDays`, then truncates the WAL.
+- `/api/code|git|infra|file` accept any root that has events or is registered.

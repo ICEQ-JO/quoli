@@ -1,7 +1,15 @@
+import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import type { Settings } from "../shared/model.ts";
+
+/** Stable project id used in URLs: first 12 hex chars of sha256(root). */
+export const projectId = (root: string) =>
+  createHash("sha256").update(root).digest("hex").slice(0, 12);
+
+export const DEFAULT_SETTINGS: Settings = { retentionDays: null, redact: true };
 
 export const home = () => process.env.QUOLI_HOME ?? join(homedir(), ".quoli");
 
@@ -63,6 +71,14 @@ export class Store {
         agent_id TEXT NOT NULL,
         offset INTEGER NOT NULL
       );
+      CREATE INDEX IF NOT EXISTS transcripts_session ON transcripts(session_id);
+      CREATE TABLE IF NOT EXISTS projects (
+        id TEXT PRIMARY KEY,
+        root TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        connected_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     `);
   }
 
@@ -99,6 +115,123 @@ export class Store {
 
   hasRoot(root: string) {
     return !!this.db.prepare("SELECT 1 FROM events WHERE root = ? LIMIT 1").get(root);
+  }
+
+  /** Registers (or re-registers) a project connected through Quoli. */
+  registerProject(root: string, at = new Date().toISOString()) {
+    this.db
+      .prepare(
+        `INSERT INTO projects (id, root, name, connected_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT(root) DO UPDATE SET connected_at = excluded.connected_at`,
+      )
+      .run(projectId(root), root, basename(root), at);
+  }
+
+  unregisterProject(root: string) {
+    this.db.prepare("DELETE FROM projects WHERE root = ?").run(root);
+  }
+
+  registeredProjects(): { root: string; connectedAt: string }[] {
+    return this.db
+      .prepare("SELECT root, connected_at FROM projects")
+      .all()
+      .map((r) => ({ root: String(r.root), connectedAt: String(r.connected_at) }));
+  }
+
+  isRegistered(root: string) {
+    return !!this.db.prepare("SELECT 1 FROM projects WHERE root = ?").get(root);
+  }
+
+  /** Newest sessions first across every project. */
+  recentSessionIds(limit: number): string[] {
+    return this.db
+      .prepare("SELECT session_id FROM events GROUP BY session_id ORDER BY MAX(at) DESC LIMIT ?")
+      .all(limit)
+      .map((r) => String(r.session_id));
+  }
+
+  rootSessionIds(root: string): string[] {
+    return this.db
+      .prepare("SELECT DISTINCT session_id FROM events WHERE root = ?")
+      .all(root)
+      .map((r) => String(r.session_id));
+  }
+
+  /** Sessions whose newest event is older than the cutoff. */
+  staleSessionIds(cutoff: string): string[] {
+    return this.db
+      .prepare("SELECT session_id FROM events GROUP BY session_id HAVING MAX(at) < ?")
+      .all(cutoff)
+      .map((r) => String(r.session_id));
+  }
+
+  /** Really deletes whole sessions: events, usage rows and transcript offsets. */
+  deleteSessions(ids: string[]): { events: number; sessions: number } {
+    let events = 0;
+    this.db.exec("BEGIN");
+    try {
+      for (const id of ids) {
+        events += Number(
+          this.db.prepare("DELETE FROM events WHERE session_id = ?").run(id).changes,
+        );
+        this.db.prepare("DELETE FROM usage WHERE session_id = ?").run(id);
+        this.db.prepare("DELETE FROM transcripts WHERE session_id = ?").run(id);
+      }
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+    this.checkpoint();
+    return { events, sessions: ids.length };
+  }
+
+  checkpoint() {
+    this.db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+  }
+
+  /** Token totals for usage rows at or after the given ISO time. */
+  tokensSince(since: string) {
+    const r = this.db
+      .prepare(
+        `SELECT COALESCE(SUM(input),0) AS i, COALESCE(SUM(output),0) AS o,
+                COALESCE(SUM(cache_read),0) AS cr, COALESCE(SUM(cache_write),0) AS cw
+         FROM usage WHERE at >= ?`,
+      )
+      .get(since) as Record<string, number> | undefined;
+    return {
+      input: Number(r?.i ?? 0),
+      output: Number(r?.o ?? 0),
+      cacheRead: Number(r?.cr ?? 0),
+      cacheWrite: Number(r?.cw ?? 0),
+    };
+  }
+
+  sessionCount(since?: string): number {
+    const r = since
+      ? this.db
+          .prepare("SELECT COUNT(DISTINCT session_id) AS n FROM events WHERE at >= ?")
+          .get(since)
+      : this.db.prepare("SELECT COUNT(DISTINCT session_id) AS n FROM events").get();
+    return Number(r?.n ?? 0);
+  }
+
+  settings(): Settings {
+    const row = this.db.prepare("SELECT value FROM settings WHERE key = 'settings'").get();
+    let saved: Partial<Settings> = {};
+    try {
+      if (row) saved = JSON.parse(String(row.value));
+    } catch {}
+    return { ...DEFAULT_SETTINGS, ...saved };
+  }
+
+  saveSettings(settings: Settings) {
+    this.db
+      .prepare(
+        `INSERT INTO settings (key, value) VALUES ('settings', ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      )
+      .run(JSON.stringify(settings));
   }
 
   /** Keeps the largest value per field: transcripts repeat a message once per content block. */

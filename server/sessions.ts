@@ -10,7 +10,7 @@ import {
   type Turn,
   zeroTokens,
 } from "../shared/model.ts";
-import type { RawEvent, UsageRow } from "./db.ts";
+import { projectId, type RawEvent, type UsageRow } from "./db.ts";
 
 const LIVE_WINDOW_MS = 10 * 60_000;
 const str = (v: unknown) => (typeof v === "string" ? v : null);
@@ -120,14 +120,12 @@ export function deriveSession(
 
   const toolCalls = [...calls.values()];
   const last = events.at(-1)?.at ?? first.at;
-  const firstPrompt = turns
-    .find((t) => t.prompt.trim())
-    ?.prompt.trim()
-    .split("\n")[0];
+  const title = promptTitle(turns.map((t) => t.prompt)) ?? `Session ${first.sessionId.slice(0, 8)}`;
   return {
     id: first.sessionId,
+    projectId: projectId(root),
     root,
-    title: firstPrompt ? clip(firstPrompt, 90) : `Session ${first.sessionId.slice(0, 8)}`,
+    title,
     branch,
     startedAt: first.at,
     endedAt,
@@ -153,6 +151,22 @@ export function deriveSession(
       },
     })),
   };
+}
+
+/** First line of the first prompt with text, without Claude Code image placeholders like "[Image #4]". */
+function promptTitle(prompts: string[]): string | null {
+  const given = prompts.filter((p) => p.trim());
+  if (!given.length) return null;
+  for (const p of given) {
+    for (const line of p.split("\n")) {
+      const clean = line
+        .replace(/\[Image #\d+\]/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (clean) return clip(clean, 90);
+    }
+  }
+  return "Image prompt";
 }
 
 export function summarizeSession(d: SessionDetail): SessionSummary {
