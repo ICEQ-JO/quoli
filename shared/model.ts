@@ -44,6 +44,8 @@ export interface SessionSummary {
   failures: number;
   tokens: TokenTotals;
   models: string[];
+  /** Estimated list-price cost of the reported usage (Increment 2). */
+  cost: Cost;
 }
 
 export interface TokenTotals {
@@ -92,6 +94,8 @@ export interface SessionDetail extends SessionSummary {
   /** Repo-relative path → how the session touched it. */
   files: Record<string, FileTouch>;
   usage: UsagePoint[];
+  /** What the Summary tab shows (Increment 2). All derived from recorded events. */
+  report: SessionReport;
 }
 
 export interface FileTouch {
@@ -209,6 +213,7 @@ export interface Overview {
   recent: SessionSummary[];
   /** Calendar day / last 7 days in the server's local time. */
   tokens: { today: TokenTotals; week: TokenTotals };
+  cost: { today: Cost; week: Cost };
   counts: { projects: number; sessions: number; sessionsToday: number };
 }
 
@@ -225,6 +230,68 @@ export interface ServerInfo {
   dataDir: string;
   port: number;
   version: string;
+}
+
+/* ---------- Summary and cost (Increment 2) ---------- */
+
+/** USD per million tokens. `model` matches a usage model id exactly or as a prefix (date suffixes). */
+export interface ModelPrice {
+  model: string;
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+}
+
+/** User-editable list prices. GET/PUT /api/prices. Costs are estimates, never invoices. */
+export interface PriceTable {
+  /** Free-form label of the table's source, e.g. "list prices 2026-11-03". */
+  version: string;
+  currency: "USD";
+  prices: ModelPrice[];
+}
+
+export interface Cost {
+  /** Sum over priced usage; null when nothing could be priced. */
+  usd: number | null;
+  /** Model ids that appeared in usage but matched no price (their tokens are excluded from usd). */
+  unpriced: string[];
+}
+
+/** A file the session changed, counted from the recorded Edit/MultiEdit/Write inputs. */
+export interface FileChange {
+  path: string;
+  added: number;
+  removed: number;
+  /** True when a Write replaced the whole file, so removed lines are unknown. */
+  rewrite: boolean;
+  toolCallIds: string[];
+}
+
+export interface CommandRun {
+  toolCallId: string;
+  command: string;
+  /** Classified from the command text, e.g. "npm test" → test. */
+  kind: "test" | "build" | "lint" | "typecheck" | "other";
+  status: ToolCall["status"];
+  at: string;
+}
+
+/** A derived review prompt. Never a claim that something works. */
+export interface ReviewItem {
+  id: string;
+  text: string;
+  toolCallIds: string[];
+  files: string[];
+}
+
+export interface SessionReport {
+  changes: FileChange[];
+  commands: CommandRun[];
+  checklist: ReviewItem[];
+  /** Cost per model; model null = usage without a model id. */
+  costByModel: { model: string | null; tokens: TokenTotals; usd: number | null }[];
+  priceVersion: string;
 }
 
 /* ---------- Helpers ---------- */

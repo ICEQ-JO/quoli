@@ -31,3 +31,21 @@ Retention runs at startup, hourly, and when settings change.
 - `PUT /api/settings` rejects unknown keys and out-of-range values with `400 { error }`. Redaction applies at ingest time only; it never rewrites stored events.
 - Retention deletes whole sessions (events, usage rows, transcript offsets) whose last event is older than `retentionDays`, then truncates the WAL.
 - `/api/code|git|infra|file` accept any root that has events or is registered.
+
+## Increment 2 additions
+
+| Method & path | Body | Returns |
+| --- | --- | --- |
+| `GET /api/prices` | | `PriceTable` (the saved table, or the built-in default) |
+| `PUT /api/prices` | `PriceTable` | `PriceTable`. Validates: currency `USD`, 1–200 rows, non-empty unique `model`, every price a finite number ≥ 0 and ≤ 1000. 400 with a readable `error` otherwise. |
+| `DELETE /api/prices` | `{}` | `PriceTable`, after resetting to the built-in default |
+
+- `SessionSummary.cost`, `SessionDetail.report` and `Overview.cost` are computed with the current table. Changing prices re-prices every session (costs are derived, not stored) and broadcasts `{ type: "projects" }`.
+- Price matching: exact model id first, then the longest `model` that is a prefix of the usage id (so `claude-sonnet-4-5` prices `claude-sonnet-4-5-20250929`). Unmatched models go to `unpriced` and are excluded from `usd`.
+- `report.changes`: per file, from recorded tool inputs. Edit/MultiEdit: removed = lines in `old_string`, added = lines in `new_string`. Write: added = lines in `content`, `rewrite: true`. Sorted by path.
+- `report.commands`: every `run`-category call with a `command` input, classified by text: test (`test`, `jest`, `vitest`, `pytest`, `go test`, `cargo test`, `rspec`, `node --test`), typecheck (`tsc`, `typecheck`, `mypy`, `pyright`), lint (`lint`, `eslint`, `biome`, `ruff`, `flake8`, `clippy`, `prettier --check`), build (`build`, `cargo build`, `go build`, `make`, `vite build`, `next build`), else other.
+- `report.checklist` rules (each item cites the tool calls and files behind it):
+  1. Files edited after the last test command (or "No test command was run" when there was none and files were edited), listing those files.
+  2. Each failed command not followed by a later successful run of the same command text.
+  3. Any single edit removing 40 or more lines ("Large deletion in <file>").
+  The wording never says a feature works or that tests passed in general; a successful command is only "ran and reported success".
