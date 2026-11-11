@@ -10,6 +10,7 @@ import { applyRetention, createApp, json, reviewReasons } from "../server/app.ts
 import { hooksInstalled } from "../server/connect.ts";
 import { projectId, type RawEvent, Store } from "../server/db.ts";
 import { ingest } from "../server/ingest.ts";
+import { defaultPrices } from "../server/prices.ts";
 import { deriveSession } from "../server/sessions.ts";
 
 const DAY = 86_400_000;
@@ -310,7 +311,7 @@ test("ten or more changed files is a review reason", () => {
     });
   }
   e("PreToolUse", { tool_name: "Bash", tool_use_id: "r", tool_input: { command: "t" } });
-  const d = deriveSession(events, []);
+  const d = deriveSession(events, [], defaultPrices());
   assert.ok(d);
   assert.deepEqual(reviewReasons(d), ["10 files changed"]);
 });
@@ -335,7 +336,7 @@ test("session titles drop image placeholders and collapse whitespace", () => {
         payload: { prompt },
       })),
     ];
-    return deriveSession(events, []);
+    return deriveSession(events, [], defaultPrices());
   };
   assert.equal(title("[Image #4]  fix   the\tbug [Image #5]")?.title, "fix the bug");
   assert.equal(title("[Image #4]\nSecond line")?.title, "Second line");

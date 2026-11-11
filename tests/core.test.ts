@@ -8,6 +8,7 @@ import { connect } from "../server/connect.ts";
 import { type RawEvent, Store } from "../server/db.ts";
 import { detectInfra } from "../server/infra.ts";
 import { ingest, redact } from "../server/ingest.ts";
+import { defaultPrices } from "../server/prices.ts";
 import { deriveSession } from "../server/sessions.ts";
 import { usageFromLines } from "../server/transcript.ts";
 
@@ -73,7 +74,7 @@ test("a session is derived from hook events: turns, calls, files, failures, suba
     "s1",
     "main",
   );
-  const s = deriveSession(events, usage, Date.parse("2026-01-01T00:01:00Z"));
+  const s = deriveSession(events, usage, defaultPrices(), Date.parse("2026-01-01T00:01:00Z"));
   assert.ok(s);
   assert.equal(s.title, "Fix the bug");
   assert.equal(s.branch, "main");

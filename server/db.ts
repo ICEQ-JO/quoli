@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import type { Settings } from "../shared/model.ts";
+import type { Settings, TokenTotals } from "../shared/model.ts";
 
 /** Stable project id used in URLs: first 12 hex chars of sha256(root). */
 export const projectId = (root: string) =>
@@ -232,6 +232,43 @@ export class Store {
          ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
       )
       .run(JSON.stringify(settings));
+  }
+
+  getSetting(key: string): string | null {
+    const row = this.db.prepare("SELECT value FROM settings WHERE key = ?").get(key);
+    return row ? String(row.value) : null;
+  }
+
+  putSetting(key: string, value: string) {
+    this.db
+      .prepare(
+        `INSERT INTO settings (key, value) VALUES (?, ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      )
+      .run(key, value);
+  }
+
+  deleteSetting(key: string) {
+    this.db.prepare("DELETE FROM settings WHERE key = ?").run(key);
+  }
+
+  /** Usage since a time, grouped by model (null = no model id). */
+  usageByModelSince(since: string): { model: string | null; tokens: TokenTotals }[] {
+    return this.db
+      .prepare(
+        `SELECT model, SUM(input) AS i, SUM(output) AS o, SUM(cache_read) AS cr, SUM(cache_write) AS cw
+         FROM usage WHERE at >= ? GROUP BY model`,
+      )
+      .all(since)
+      .map((r) => ({
+        model: r.model === null ? null : String(r.model),
+        tokens: {
+          input: Number(r.i),
+          output: Number(r.o),
+          cacheRead: Number(r.cr),
+          cacheWrite: Number(r.cw),
+        },
+      }));
   }
 
   /** Keeps the largest value per field: transcripts repeat a message once per content block. */

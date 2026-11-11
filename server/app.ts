@@ -4,6 +4,7 @@ import { basename, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type {
   Overview,
+  PriceTable,
   Project,
   SessionDetail,
   SessionSummary,
@@ -15,6 +16,14 @@ import { home, projectId, type Store } from "./db.ts";
 import { gitState } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
 import { git, ingest, redact } from "./ingest.ts";
+import {
+  costOf,
+  defaultPrices,
+  loadPrices,
+  resetPrices,
+  savePrices,
+  validatePrices,
+} from "./prices.ts";
 import { deriveSession, summarizeSession } from "./sessions.ts";
 
 const version: string = JSON.parse(
@@ -108,15 +117,18 @@ export function createApp(store: Store, port: () => number) {
       );
   }
 
-  const details = (ids: string[]) =>
-    ids
-      .map((id) => deriveSession(store.events(id), store.usage(id)))
+  const details = (ids: string[]) => {
+    const prices = loadPrices(store);
+    return ids
+      .map((id) => deriveSession(store.events(id), store.usage(id), prices))
       .filter((d): d is SessionDetail => d !== null);
+  };
 
   function overview(): Overview {
     const now = Date.now();
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
+    const prices = loadPrices(store);
     const all = details(store.recentSessionIds(500));
     const week = new Date(now - 7 * DAY).toISOString();
     const needsReview = all
@@ -131,6 +143,10 @@ export function createApp(store: Store, port: () => number) {
       tokens: {
         today: store.tokensSince(startOfDay.toISOString()),
         week: store.tokensSince(week),
+      },
+      cost: {
+        today: costOf(store.usageByModelSince(startOfDay.toISOString()), prices),
+        week: costOf(store.usageByModelSince(week), prices),
       },
       counts: {
         projects: projects().length,
@@ -201,9 +217,10 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/projects") return json(res, 200, projects());
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
+    if (path === "/api/prices") return json(res, 200, loadPrices(store));
     if (path === "/api/session") {
       const id = url.searchParams.get("id") ?? "";
-      const detail = deriveSession(store.events(id), store.usage(id));
+      const detail = deriveSession(store.events(id), store.usage(id), loadPrices(store));
       return json(res, detail ? 200 : 404, detail);
     }
     if (path === "/api/sessions") {
@@ -296,6 +313,22 @@ export function createApp(store: Store, port: () => number) {
       applyRetention(store);
       broadcast({ type: "projects" });
       return json(res, 200, settingsResponse());
+    }
+    if (method === "PUT" && path === "/api/prices") {
+      let table: PriceTable;
+      try {
+        table = validatePrices(await payload());
+      } catch (error) {
+        throw new BadRequest((error as Error).message);
+      }
+      savePrices(store, table);
+      broadcast({ type: "projects" });
+      return json(res, 200, loadPrices(store));
+    }
+    if (method === "DELETE" && path === "/api/prices") {
+      resetPrices(store);
+      broadcast({ type: "projects" });
+      return json(res, 200, defaultPrices());
     }
     if (method === "POST" && path === "/api/redact-preview") {
       const { text } = await payload();

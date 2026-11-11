@@ -3,6 +3,7 @@ import {
   type AgentNode,
   categorize,
   type FileTouch,
+  type PriceTable,
   type SessionDetail,
   type SessionSummary,
   type TokenTotals,
@@ -11,6 +12,8 @@ import {
   zeroTokens,
 } from "../shared/model.ts";
 import { projectId, type RawEvent, type UsageRow } from "./db.ts";
+import { costOf } from "./prices.ts";
+import { buildReport } from "./report.ts";
 
 const LIVE_WINDOW_MS = 10 * 60_000;
 const str = (v: unknown) => (typeof v === "string" ? v : null);
@@ -20,6 +23,7 @@ const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…`
 export function deriveSession(
   events: RawEvent[],
   usage: UsageRow[],
+  prices: PriceTable,
   now = Date.now(),
 ): SessionDetail | null {
   const first = events[0];
@@ -106,6 +110,7 @@ export function deriveSession(
 
   const tokens = zeroTokens();
   const models = new Set<string>();
+  const byModel = new Map<string | null, TokenTotals>();
   for (const u of usage) {
     const t: TokenTotals = {
       input: u.input,
@@ -114,11 +119,18 @@ export function deriveSession(
       cacheWrite: u.cacheWrite,
     };
     add(tokens, t);
+    if (!byModel.has(u.model)) byModel.set(u.model, zeroTokens());
+    add(byModel.get(u.model) as TokenTotals, t);
     add((agents.get(u.agentId) ?? (agents.get("main") as AgentNode)).tokens, t);
     if (u.model) models.add(u.model);
   }
 
   const toolCalls = [...calls.values()];
+  const costByModel = [...byModel].map(([model, t]) => ({
+    model,
+    tokens: t,
+    usd: costOf([{ model, tokens: t }], prices).usd,
+  }));
   const last = events.at(-1)?.at ?? first.at;
   const title = promptTitle(turns.map((t) => t.prompt)) ?? `Session ${first.sessionId.slice(0, 8)}`;
   return {
@@ -135,6 +147,8 @@ export function deriveSession(
     failures: toolCalls.filter((c) => c.status === "failed").length,
     tokens,
     models: [...models],
+    cost: costOf(costByModel, prices),
+    report: buildReport(toolCalls, costByModel, prices.version),
     agents: [...agents.values()],
     turns,
     toolCalls,
@@ -170,7 +184,7 @@ function promptTitle(prompts: string[]): string | null {
 }
 
 export function summarizeSession(d: SessionDetail): SessionSummary {
-  const { agents: _a, turns: _t, toolCalls: _c, files: _f, usage: _u, ...rest } = d;
+  const { agents: _a, turns: _t, toolCalls: _c, files: _f, usage: _u, report: _r, ...rest } = d;
   return rest;
 }
 
