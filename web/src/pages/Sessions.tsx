@@ -10,7 +10,7 @@ import {
   projectName,
   useNow,
 } from "../components/ui.tsx";
-import { ago, compact, duration, tokenSum } from "../format.ts";
+import { ago, compact, duration, money, tokenSum } from "../format.ts";
 import { Link, navigate, paths } from "../router.ts";
 
 const PAGE = 100;
@@ -163,6 +163,9 @@ export function SessionsPage() {
                 <th scope="col" className="num c-n">
                   Tokens
                 </th>
+                <th scope="col" className="num c-n" title="Estimate from list prices">
+                  Cost
+                </th>
                 <th scope="col" className="num c-n">
                   Failed
                 </th>
@@ -218,6 +221,17 @@ function Row({ s, name }: { s: SessionSummary; name: string }) {
       <td className="num">{s.filesTouched}</td>
       <td className="num" title={tokenSum(s.tokens).toLocaleString()}>
         {compact(tokenSum(s.tokens))}
+      </td>
+      <td
+        className="num nowrap"
+        title={
+          s.cost.unpriced.length
+            ? `Estimate. No price for: ${s.cost.unpriced.join(", ")}`
+            : "Estimate from list prices"
+        }
+      >
+        {money(s.cost)}
+        {s.cost.unpriced.length > 0 && <span className="warn"> ⚠</span>}
       </td>
       <td className={`num ${s.failures ? "fail" : "faint"}`}>{s.failures}</td>
     </tr>

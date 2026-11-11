@@ -18,7 +18,7 @@ export type Route =
   | { name: "notfound" };
 
 const CHANGE = "quoli:navigate";
-const LENSES: Lens[] = ["agents", "code", "git", "infra"];
+const LENSES: Lens[] = ["summary", "agents", "code", "git", "infra"];
 const KINDS = ["file", "tool", "service", "commit", "branch"] as const;
 
 export function parseRoute(pathname: string): Route {

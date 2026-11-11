@@ -1,4 +1,4 @@
-import type { Project, TokenTotals } from "../../../shared/model.ts";
+import type { Cost, Project, TokenTotals } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { Onboarding } from "../components/Onboarding.tsx";
 import {
@@ -10,7 +10,7 @@ import {
   TokenBreakdown,
   useNow,
 } from "../components/ui.tsx";
-import { compact, tokenSum } from "../format.ts";
+import { compact, money, tokenSum } from "../format.ts";
 import { Link, paths } from "../router.ts";
 
 export function HomePage() {
@@ -32,7 +32,7 @@ export function HomePage() {
   }
   if (overview.counts.projects === 0) return <Onboarding />;
 
-  const { live, needsReview, recent, tokens, counts } = overview;
+  const { live, needsReview, recent, tokens, cost, counts } = overview;
   return (
     <div className="page">
       <PageHead title="Home">
@@ -55,8 +55,8 @@ export function HomePage() {
             </ul>
           )}
         </section>
-        <TokenCard id="h-today" title="Tokens today" tokens={tokens.today} />
-        <TokenCard id="h-week" title="Tokens this week" tokens={tokens.week} />
+        <TokenCard id="h-today" title="Tokens today" tokens={tokens.today} cost={cost.today} />
+        <TokenCard id="h-week" title="Tokens this week" tokens={tokens.week} cost={cost.week} />
       </div>
 
       <div className="columns">
@@ -108,13 +108,34 @@ export function HomePage() {
   );
 }
 
-function TokenCard({ id, title, tokens }: { id: string; title: string; tokens: TokenTotals }) {
+function TokenCard({
+  id,
+  title,
+  tokens,
+  cost,
+}: {
+  id: string;
+  title: string;
+  tokens: TokenTotals;
+  cost: Cost;
+}) {
   const total = tokenSum(tokens);
   return (
     <section className="card" aria-labelledby={id}>
       <h2 id={id}>{title}</h2>
-      <p className="big" title={total.toLocaleString()}>
-        {compact(total)}
+      <p className="big">
+        <span title={total.toLocaleString()}>{compact(total)}</span>
+        <span
+          className="big-cost"
+          title={
+            cost.unpriced.length
+              ? `Estimate from list prices. No price for: ${cost.unpriced.join(", ")}`
+              : "Estimate from list prices, not an invoice"
+          }
+        >
+          {money(cost)} est.
+          {cost.unpriced.length > 0 && " ⚠"}
+        </span>
       </p>
       <TokenBreakdown tokens={tokens} />
     </section>

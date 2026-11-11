@@ -7,7 +7,7 @@ import type {
   ToolCall,
 } from "../../shared/model.ts";
 
-export type Lens = "agents" | "code" | "git" | "infra";
+export type Lens = "summary" | "agents" | "code" | "git" | "infra";
 
 export type Selection =
   | { kind: "file"; id: string }

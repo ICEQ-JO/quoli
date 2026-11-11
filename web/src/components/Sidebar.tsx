@@ -1,5 +1,5 @@
 import type { SessionSummary } from "../../../shared/model.ts";
-import { ago, compact, tokenSum } from "../format.ts";
+import { ago, compact, money, tokenSum } from "../format.ts";
 import { Link } from "../router.ts";
 
 interface Props {
@@ -57,6 +57,7 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath }: Props) {
                   {s.filesTouched} {s.filesTouched === 1 ? "file" : "files"}
                 </span>
                 <span>{compact(tokenSum(s.tokens))} tok</span>
+                <span title="Estimate from list prices">{money(s.cost)}</span>
                 {s.failures > 0 && <span className="fail">{s.failures} failed</span>}
               </span>
             </Link>

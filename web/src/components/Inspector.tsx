@@ -1,11 +1,12 @@
 import { useState } from "react";
-import type { SessionDetail, ToolCall } from "../../../shared/model.ts";
+import type { SessionDetail } from "../../../shared/model.ts";
 import { api, useData } from "../api.ts";
-import { ago, CATEGORY, clock, compact, duration, fileName, tokenSum } from "../format.ts";
+import { ago, CATEGORY, clock, duration, fileName } from "../format.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
 
 interface Props extends LensContext {
+  lens: Lens;
   goto: (lens: Lens, s: Selection) => void;
   onRefresh: () => void;
 }
@@ -18,13 +19,13 @@ export function Inspector(p: Props) {
   else if (s?.kind === "service") body = <ServicePanel {...p} id={s.id} />;
   else if (s?.kind === "commit") body = <CommitPanel {...p} sha={s.id} />;
   else if (s?.kind === "branch") body = <BranchPanel {...p} name={s.id} />;
-  else if (p.session) body = <SessionPanel {...p} session={p.session} />;
+  else if (p.session) body = <LensPanel {...p} session={p.session} />;
   else body = <ProjectPanel {...p} />;
   return (
     <aside className="inspector">
       {s && (
         <button type="button" className="back" onClick={() => p.select(null)}>
-          ← {p.session ? "Session overview" : "Project"}
+          ← {p.session ? "Back to list" : "Project"}
         </button>
       )}
       {body}
@@ -65,153 +66,146 @@ function Stat({ label, value, tone }: { label: string; value: React.ReactNode; t
   );
 }
 
-function SessionPanel({ session, goto }: Props & { session: SessionDetail }) {
-  const t = session.tokens;
-  const total = tokenSum(t) || 1;
-  const edited = Object.entries(session.files).filter(([, f]) => f.edited > 0);
-  const readOnly = Object.entries(session.files).filter(([, f]) => f.edited === 0);
-  const mix = Object.entries(
-    session.toolCalls.reduce<Record<string, number>>((m, c) => {
-      m[c.category] = (m[c.category] ?? 0) + 1;
-      return m;
-    }, {}),
-  ).sort((a, b) => b[1] - a[1]);
-  return (
-    <>
-      <header className="panel-head">
-        <span className={`status ${session.live ? "live" : ""}`}>
-          {session.live ? "Live" : session.endedAt ? "Ended" : "Idle"}
-        </span>
-        <h2 title={session.title}>{session.title}</h2>
-        <p className="meta">
-          {[
-            session.branch ? (
-              <span key="b" className="mono" title={session.branch}>
-                {session.branch}
-              </span>
-            ) : null,
-            `started ${ago(session.startedAt)}`,
-            duration(session.startedAt, session.endedAt),
-          ]
-            .filter(Boolean)
-            .flatMap((part, i) => (i ? [" · ", part] : [part]))}
-        </p>
-      </header>
-      <div className="stats">
-        <Stat label="tool calls" value={session.toolCount} />
-        <Stat label="files changed" value={edited.length} tone="edit" />
-        <Stat label="failed calls" value={session.failures} tone={session.failures ? "fail" : ""} />
-        <Stat label="tokens" value={compact(tokenSum(t))} />
-      </div>
-      <Section title="Tokens" aside={session.models.join(" · ") || "no usage reported yet"}>
-        <div className="token-bar">
-          {(["input", "output", "cacheRead", "cacheWrite"] as const).map((k) => (
-            <span key={k} className={`seg ${k}`} style={{ width: `${(t[k] / total) * 100}%` }} />
-          ))}
-        </div>
-        <dl className="token-list">
-          <dt>
-            <i className="sw input" />
-            Input
-          </dt>
-          <dd>{compact(t.input)}</dd>
-          <dt>
-            <i className="sw output" />
-            Output
-          </dt>
-          <dd>{compact(t.output)}</dd>
-          <dt>
-            <i className="sw cacheRead" />
-            Cache read
-          </dt>
-          <dd>{compact(t.cacheRead)}</dd>
-          <dt>
-            <i className="sw cacheWrite" />
-            Cache write
-          </dt>
-          <dd>{compact(t.cacheWrite)}</dd>
-        </dl>
-        {session.agents.length > 1 && (
-          <ul className="agent-list">
-            {session.agents.map((a) => (
-              <li key={a.id}>
-                <span>{a.kind === "main" ? "Main agent" : `Subagent · ${a.type ?? a.id}`}</span>
-                <span className="mono">{compact(tokenSum(a.tokens))}</span>
+/** What the inspector shows with nothing selected: the part of the session this lens is about. */
+function LensPanel(p: Props & { session: SessionDetail }) {
+  const { lens, session, goto, select, calls, touched, git, infra, sessions, openSession } = p;
+  if (lens === "agents") {
+    return (
+      <Section title="Tool calls" aside={String(calls.length)}>
+        {calls.length === 0 ? (
+          <p className="faint">No tool calls were recorded.</p>
+        ) : (
+          <ul className="call-list">
+            {calls.map((c) => (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  title={`${c.name}: ${c.summary}`}
+                  onClick={() => select({ kind: "tool", id: c.id })}
+                >
+                  <span className="cat" style={{ background: CATEGORY[c.category].color }} />
+                  <span className="cl-name">{c.name}</span>
+                  <span className="cl-sum">{c.summary}</span>
+                  <span className={`st ${c.status}`}>{c.status}</span>
+                </button>
               </li>
             ))}
           </ul>
         )}
       </Section>
-      <Section title="Prompts" aside={String(session.turns.length)}>
-        <ol className="prompts">
-          {session.turns.map((turn, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: turns are ordered
-            <li key={i}>
-              <span className="time">{clock(turn.at)}</span>
-              <p>{turn.prompt}</p>
-            </li>
-          ))}
-        </ol>
+    );
+  }
+  if (lens === "code") {
+    const changed = session.report.changes;
+    return (
+      <Section title="Changed files" aside={String(changed.length)}>
+        {changed.length === 0 ? (
+          <p className="faint">No files were changed.</p>
+        ) : (
+          <ul className="file-list">
+            {changed.map((c) => (
+              <li key={c.path}>
+                <button
+                  type="button"
+                  title={c.path}
+                  onClick={() => select({ kind: "file", id: c.path })}
+                >
+                  <span className="fname">{fileName(c.path)}</span>
+                  <span className="fdir">{c.path.slice(0, -fileName(c.path).length - 1)}</span>
+                  <span className="delta">
+                    <span className="add">+{c.added}</span>{" "}
+                    {c.rewrite ? (
+                      <span className="faint">new</span>
+                    ) : (
+                      <span className="del">−{c.removed}</span>
+                    )}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </Section>
-      <Section title="Changed files" aside={String(edited.length)}>
-        <FileList entries={edited} onPick={(f) => goto("code", { kind: "file", id: f })} />
-      </Section>
-      {readOnly.length > 0 && (
-        <Section title="Read only" aside={String(readOnly.length)}>
-          <FileList entries={readOnly} onPick={(f) => goto("code", { kind: "file", id: f })} />
+    );
+  }
+  if (lens === "git") {
+    const branch = git?.branches.find((b) => b.current);
+    const ran = branch ? sessions.filter((s) => s.branch === branch.name) : [];
+    return (
+      <>
+        <Section title="Repository now">
+          {branch ? (
+            <dl className="kv panel-kv">
+              <div>
+                <dt>Current branch</dt>
+                <dd className="mono" title={branch.name}>
+                  {branch.name}
+                </dd>
+              </div>
+              <div>
+                <dt>Changed files</dt>
+                <dd>{git?.changed ?? 0}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="faint">No Git data for this project.</p>
+          )}
         </Section>
-      )}
-      <Section title="What it did">
-        <ul className="mix">
-          {mix.map(([cat, n]) => (
-            <li key={cat}>
-              <span
-                className="mix-label"
-                style={
-                  { "--c": CATEGORY[cat as ToolCall["category"]].color } as React.CSSProperties
-                }
+        {branch && (
+          <Section title="Sessions on this branch" aside={String(ran.length)}>
+            {ran.length === 0 ? (
+              <p className="faint">No recorded sessions ran on this branch.</p>
+            ) : (
+              <ul className="links">
+                {ran.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      title={s.title}
+                      className={s.id === session.id ? "current" : ""}
+                      onClick={() => openSession(s.id)}
+                    >
+                      <b>{s.title}</b> <span className="faint">{ago(s.startedAt)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Section>
+        )}
+      </>
+    );
+  }
+  const hit = (infra?.services ?? [])
+    .map((s) => ({ s, files: editedUnder(touched, s.sourceDir) }))
+    .filter((x) => x.files.length > 0);
+  return (
+    <Section title="Services this session changed" aside={String(hit.length)}>
+      {hit.length === 0 ? (
+        <p className="faint">
+          {infra
+            ? "No service's source directory contains a file this session changed."
+            : "Infrastructure has not loaded."}
+        </p>
+      ) : (
+        <ul className="links">
+          {hit.map(({ s, files }) => (
+            <li key={s.id}>
+              <button
+                type="button"
+                title={`${s.name}: ${files.join(", ")}`}
+                onClick={() => goto("infra", { kind: "service", id: s.id })}
               >
-                {CATEGORY[cat as ToolCall["category"]].label}
-              </span>
-              <span
-                className="mix-bar"
-                style={{
-                  width: `${(n / session.toolCount) * 100}%`,
-                  background: CATEGORY[cat as ToolCall["category"]].color,
-                }}
-              />
-              <span className="mono">{n}</span>
+                <b>{s.name}</b>{" "}
+                <span className="faint">
+                  {files.length} {files.length === 1 ? "file" : "files"}
+                </span>
+              </button>
             </li>
           ))}
         </ul>
-      </Section>
-    </>
-  );
-}
-
-function FileList({
-  entries,
-  onPick,
-}: {
-  entries: [string, { read: number; edited: number }][];
-  onPick: (f: string) => void;
-}) {
-  if (!entries.length) return <p className="faint">None.</p>;
-  return (
-    <ul className="file-list">
-      {entries.map(([path, f]) => (
-        <li key={path}>
-          <button type="button" onClick={() => onPick(path)} title={path}>
-            <span className="fname" title={path}>
-              {fileName(path)}
-            </span>
-            <span className="fdir">{path.slice(0, -fileName(path).length - 1)}</span>
-            {f.edited > 0 && <span className="badge e">✎{f.edited}</span>}
-            {f.read > 0 && <span className="badge r">{f.read}</span>}
-          </button>
-        </li>
-      ))}
-    </ul>
+      )}
+    </Section>
   );
 }
 

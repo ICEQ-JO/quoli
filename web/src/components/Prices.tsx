@@ -1,0 +1,256 @@
+import { useEffect, useState } from "react";
+import type { PriceTable } from "../../../shared/model.ts";
+import { api, useData } from "../api.ts";
+import { ErrorState, Loading } from "./ui.tsx";
+
+const FIELDS = ["input", "output", "cacheRead", "cacheWrite"] as const;
+const LABEL: Record<(typeof FIELDS)[number], string> = {
+  input: "Input",
+  output: "Output",
+  cacheRead: "Cache read",
+  cacheWrite: "Cache write",
+};
+
+/** A row being edited: numbers stay strings until saved so partial typing is not lost. */
+interface Row {
+  key: number;
+  model: string;
+  input: string;
+  output: string;
+  cacheRead: string;
+  cacheWrite: string;
+}
+
+let nextKey = 1;
+const toRows = (t: PriceTable): Row[] =>
+  t.prices.map((p) => ({
+    key: nextKey++,
+    model: p.model,
+    input: String(p.input),
+    output: String(p.output),
+    cacheRead: String(p.cacheRead),
+    cacheWrite: String(p.cacheWrite),
+  }));
+
+const sameRows = (a: Row[], b: Row[]) =>
+  a.length === b.length &&
+  a.every((r, i) => r.model === b[i].model && FIELDS.every((f) => r[f] === b[i][f]));
+
+export function PricesSection() {
+  const [table, refresh, loadError] = useData("prices", api.prices);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [version, setVersion] = useState("");
+  const [base, setBase] = useState<Row[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const adopt = (t: PriceTable) => {
+    const r = toRows(t);
+    setRows(r);
+    setBase(r);
+    setVersion(t.version);
+  };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: adopt only sets state
+  useEffect(() => {
+    if (table) adopt(table);
+  }, [table]);
+
+  const loaded = !!table;
+  useEffect(() => {
+    if (loaded && location.hash === "#prices")
+      document.getElementById("prices")?.scrollIntoView({ block: "start" });
+  }, [loaded]);
+
+  const dirty = !!table && !sameRows(rows, base);
+  const edit = (key: number, patch: Partial<Row>) => {
+    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+    setMessage(null);
+  };
+  const invalidNumber = (v: string) =>
+    v.trim() === "" || !Number.isFinite(Number(v)) || Number(v) < 0;
+  const clientInvalid = rows.some(
+    (r) => !r.model.trim() || FIELDS.some((f) => invalidNumber(r[f])),
+  );
+
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const saved = await api.savePrices({
+        version: version || "custom",
+        currency: "USD",
+        prices: rows.map((r) => ({
+          model: r.model.trim(),
+          input: Number(r.input),
+          output: Number(r.output),
+          cacheRead: Number(r.cacheRead),
+          cacheWrite: Number(r.cacheWrite),
+        })),
+      });
+      adopt(saved);
+      setMessage("Saved. Every session was re-priced.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+    setBusy(false);
+  };
+
+  const reset = async () => {
+    if (
+      !window.confirm(
+        "Replace your prices with the built-in defaults? Your edits to the table will be lost.",
+      )
+    )
+      return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      adopt(await api.resetPrices());
+      setMessage("Reset to the built-in defaults.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+    setBusy(false);
+  };
+
+  return (
+    <section className="card" aria-labelledby="prices-h" id="prices">
+      <h2 id="prices-h">
+        Prices <span className="faint">{table ? table.version : ""}</span>
+      </h2>
+      <p className="faint">
+        USD per million tokens. A model id matches exactly or as a prefix (date-suffixed ids). Costs
+        are estimates, not invoices.
+      </p>
+      {!table && (loadError ? <ErrorState message={loadError} retry={refresh} /> : <Loading />)}
+      {table && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!clientInvalid) save();
+          }}
+        >
+          <div className="price-wrap">
+            <table className="price-table">
+              <caption className="sr-only">Model prices in USD per million tokens</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Model id</th>
+                  {FIELDS.map((f) => (
+                    <th scope="col" className="num" key={f}>
+                      {LABEL[f]}
+                    </th>
+                  ))}
+                  <th scope="col">
+                    <span className="sr-only">Remove</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={r.key}>
+                    <td>
+                      <input
+                        className="input mono"
+                        value={r.model}
+                        aria-label={`Model id, row ${i + 1}`}
+                        title={r.model}
+                        spellCheck={false}
+                        aria-invalid={!r.model.trim()}
+                        onChange={(e) => edit(r.key, { model: e.target.value })}
+                      />
+                    </td>
+                    {FIELDS.map((f) => (
+                      <td key={f}>
+                        <input
+                          className="input num-in"
+                          type="number"
+                          min={0}
+                          step="any"
+                          inputMode="decimal"
+                          value={r[f]}
+                          aria-label={`${LABEL[f]} price for ${r.model || `row ${i + 1}`}`}
+                          aria-invalid={invalidNumber(r[f])}
+                          onChange={(e) => edit(r.key, { [f]: e.target.value })}
+                        />
+                      </td>
+                    ))}
+                    <td>
+                      <button
+                        type="button"
+                        className="btn danger sm"
+                        aria-label={`Remove ${r.model || `row ${i + 1}`}`}
+                        onClick={() => {
+                          setRows((rs) => rs.filter((x) => x.key !== r.key));
+                          setMessage(null);
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="faint">
+                      No prices. Every model will show as unpriced.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="form-foot">
+            <button
+              type="button"
+              className="btn"
+              onClick={() =>
+                setRows((rs) => [
+                  ...rs,
+                  {
+                    key: nextKey++,
+                    model: "",
+                    input: "0",
+                    output: "0",
+                    cacheRead: "0",
+                    cacheWrite: "0",
+                  },
+                ])
+              }
+            >
+              Add model
+            </button>
+            <button type="button" className="btn" disabled={busy} onClick={reset}>
+              Reset to defaults
+            </button>
+            <button
+              type="submit"
+              className="btn primary"
+              disabled={busy || !dirty || clientInvalid}
+            >
+              {busy ? "Working…" : "Save prices"}
+            </button>
+            {clientInvalid && dirty && (
+              <span className="faint">
+                Every row needs a model id and four numbers of 0 or more.
+              </span>
+            )}
+            {message && (
+              <span className="ok" role="status">
+                {message}
+              </span>
+            )}
+            {error && (
+              <span className="form-error" role="alert">
+                {error}
+              </span>
+            )}
+          </div>
+        </form>
+      )}
+    </section>
+  );
+}

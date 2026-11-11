@@ -1,4 +1,4 @@
-import type { TokenTotals, ToolCategory } from "../../shared/model.ts";
+import type { Cost, TokenTotals, ToolCategory } from "../../shared/model.ts";
 
 export const CATEGORY: Record<ToolCategory, { label: string; color: string }> = {
   read: { label: "Read", color: "var(--read)" },
@@ -41,6 +41,15 @@ export const clock = (iso: string) =>
     second: "2-digit",
     hour12: false,
   });
+
+/** Compact dollar amount: `$1.23`, `<$0.01`, `—` when nothing could be priced. */
+export function usd(n: number | null): string {
+  if (n === null) return "—";
+  if (n > 0 && n < 0.01) return "<$0.01";
+  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export const money = (c: Cost) => usd(c.usd);
 
 export const fileName = (path: string) => path.split("/").at(-1) ?? path;
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Project } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
+import { PricesSection } from "../components/Prices.tsx";
 import { DeleteDataDialog, ErrorState, Loading, PageHead } from "../components/ui.tsx";
 
 const PRESETS = [7, 30, 90];
@@ -177,6 +178,8 @@ export function SettingsPage() {
               )}
             </div>
           </form>
+
+          <PricesSection />
 
           <RedactPreview />
 

@@ -3,9 +3,11 @@ import type { SessionDetail, ToolCall } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { Inspector } from "../components/Inspector.tsx";
 import { Palette } from "../components/Palette.tsx";
+import { SessionHeader } from "../components/SessionHeader.tsx";
 import { Sidebar } from "../components/Sidebar.tsx";
+import { Summary } from "../components/Summary.tsx";
 import { Timeline } from "../components/Timeline.tsx";
-import { ErrorState, Loading } from "../components/ui.tsx";
+import { ErrorState, Loading, projectName } from "../components/ui.tsx";
 import { AgentsLens } from "../lenses/AgentsLens.tsx";
 import { CodeLens } from "../lenses/CodeLens.tsx";
 import { GitLens } from "../lenses/GitLens.tsx";
@@ -14,6 +16,7 @@ import { Link, navigate, parseBoardQuery, paths, useLocation } from "../router.t
 import type { Lens, LensContext, Selection, Touch } from "../state.ts";
 
 const LENSES: { id: Lens; label: string; hint: string }[] = [
+  { id: "summary", label: "Summary", hint: "What was asked, changed, run and spent" },
   { id: "agents", label: "Agents", hint: "What the agent did" },
   { id: "code", label: "Code", hint: "Where it happened" },
   { id: "git", label: "Git", hint: "Which branch and commits" },
@@ -41,7 +44,14 @@ export function BoardPage({
   const { search } = useLocation();
   const view = parseBoardQuery(search);
   const remembered = remember("quoli.lens");
-  const lens: Lens = view.lens ?? (isLens(remembered) ? remembered : "code");
+  // Summary needs a session: it is that session's default, and not offered without one.
+  const lens: Lens = sessionId
+    ? (view.lens ?? "summary")
+    : view.lens && view.lens !== "summary"
+      ? view.lens
+      : isLens(remembered) && remembered !== "summary"
+        ? remembered
+        : "code";
   const selection = view.selection;
 
   const [projects, refreshProjects, projectsError] = useData("projects", api.projects);
@@ -69,7 +79,7 @@ export function BoardPage({
   );
   const setLens = (l: Lens) => {
     remember("quoli.lens", l);
-    go(sessionId, l, selection);
+    go(sessionId, l, l === "summary" ? null : selection);
   };
   const select = (s: Selection) => go(sessionId, view.lens, s);
   const gotoLens = (l: Lens, s: Selection) => {
@@ -109,7 +119,8 @@ export function BoardPage({
       if ((e.target as HTMLElement)?.closest("input, textarea, select")) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const n = Number(e.key);
-      if (n >= 1 && n <= 4) setLens(LENSES[n - 1].id);
+      if (n >= 1 && n <= LENSES.length && (sessionId || LENSES[n - 1].id !== "summary"))
+        setLens(LENSES[n - 1].id);
       if (e.key === "Escape" && selection) select(null);
     };
     const open = () => setPalette(true);
@@ -169,9 +180,12 @@ export function BoardPage({
     openSession,
   };
   const branch = git?.branches.find((b) => b.current);
+  const href = (l: Lens, s: Selection) =>
+    paths.board(projectId, sessionId, { lens: l, selection: s });
+  const summary = lens === "summary";
 
   return (
-    <div className="app">
+    <div className={`app ${summary ? "is-summary" : ""}`}>
       <header className="topbar">
         <Link to={paths.projects()} className="crumb" title="Back to Projects">
           Projects
@@ -199,18 +213,20 @@ export function BoardPage({
           </span>
         )}
         <nav className="lenses" aria-label="Lens">
-          {LENSES.map((l, i) => (
-            <button
-              type="button"
-              key={l.id}
-              className={lens === l.id ? "active" : ""}
-              aria-pressed={lens === l.id}
-              onClick={() => setLens(l.id)}
-              title={`${l.hint} (${i + 1})`}
-            >
-              {l.label}
-            </button>
-          ))}
+          {LENSES.map((l, i) =>
+            l.id === "summary" && !sessionId ? null : (
+              <button
+                type="button"
+                key={l.id}
+                className={lens === l.id ? "active" : ""}
+                aria-pressed={lens === l.id}
+                onClick={() => setLens(l.id)}
+                title={`${l.hint} (${i + 1})`}
+              >
+                {l.label}
+              </button>
+            ),
+          )}
         </nav>
         <button type="button" className="search-button" onClick={() => setPalette(true)}>
           Search <kbd>⌘K</kbd>
@@ -224,29 +240,42 @@ export function BoardPage({
         projectPath={project.root}
       />
 
+      {sessionId && session && (
+        <SessionHeader
+          session={session}
+          projectName={projectName(projects, projectId)}
+          summaryHref={href("summary", null)}
+        />
+      )}
+
       <main className="canvas">
         {sessionId && sessionError && !session && (
           <div className="board-notice">
             <ErrorState title="Session not found" message={sessionError} />
           </div>
         )}
+        {summary && sessionId && !session && !sessionError && <Loading label="Loading session…" />}
+        {summary && session && <Summary session={session} href={href} />}
         {lens === "agents" && <AgentsLens {...ctx} />}
         {lens === "code" && <CodeLens {...ctx} />}
         {lens === "git" && <GitLens {...ctx} />}
         {lens === "infra" && <InfraLens {...ctx} />}
       </main>
 
-      <Inspector
-        {...ctx}
-        onRefresh={() => {
-          refreshCode();
-          refreshGit();
-          refreshInfra();
-        }}
-        goto={gotoLens}
-      />
+      {!summary && (
+        <Inspector
+          {...ctx}
+          lens={lens}
+          onRefresh={() => {
+            refreshCode();
+            refreshGit();
+            refreshInfra();
+          }}
+          goto={gotoLens}
+        />
+      )}
 
-      {sessionId && session && (
+      {sessionId && session && !summary && (
         <Timeline
           session={session}
           calls={ordered}
