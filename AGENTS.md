@@ -8,14 +8,14 @@ The codebase was fully rebuilt in 2026-11 at the owner's direction; the previous
 
 ## Work tracking
 
-- Use only the **Quolii** Linear workspace for work tracking. Do not create, read, update, or link Quoli work in the Documentu-ai Linear workspace. GitHub remains the repository, pull-request and code-review host.
-- Before starting a feature or substantive task, create or select a concrete, medium-sized Linear issue. Split oversized work into demonstrable increments and group tiny related tasks into one useful increment.
-- Include user value, scope, non-goals, dependencies, acceptance criteria, test plan, privacy/security considerations and relative size M. Link prerequisite Linear issues when available.
+- Track work in **GitHub issues** on `ICEQ-JO/quoli` (owner direction 2026-11-12: GitHub only, no Linear). Do not use any Linear workspace for Quoli.
+- Before starting a feature or substantive task, create or select a concrete, medium-sized GitHub issue. Split oversized work into demonstrable increments and group tiny related tasks into one useful increment.
+- Include user value, scope, non-goals, dependencies, acceptance criteria, test plan, privacy/security considerations and relative size M. Link prerequisite issues when available.
 - Keep issue status and acceptance criteria current. Deferred ideas may remain local drafts until their scope is approved.
 
 ## Branches, pull requests and identity
 
-- Work on a branch and create a pull request when finishing a Linear issue or feature. Reference the Linear issue in the PR description; use `Closes #N` only for an actual GitHub issue that the PR satisfies.
+- Work on a branch and create a pull request when finishing an issue or feature. Reference the issue in the PR description; use `Closes #N` only when the PR fully satisfies that issue.
 - Do not push completed feature work directly to `main`. The owner's explicitly requested initial repository bootstrap is the one-time exception.
 - Use `ICEQ-JO` as both Git author and committer name, with the verified account's GitHub no-reply email (`151853839+ICEQ-JO@users.noreply.github.com`), for commits created by agents. Do not add agent co-author trailers or rewrite unrelated existing authorship.
 - Push and perform any authorized merges through the authenticated `ICEQ-JO` account. Verify the active account before writing to GitHub; if unavailable, stop that external action and report it. Do not impersonate this account with other credentials.

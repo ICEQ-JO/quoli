@@ -10,15 +10,29 @@
  */
 export type Basis = "recorded" | "derived" | "inferred";
 
+/**
+ * Whether Claude Code is wired to this project:
+ *   receiving     – Quoli's hooks are installed and at least one event has arrived
+ *   installed     – hooks are installed but no event has arrived yet
+ *   not_connected – hooks are not installed (past sessions may still be stored)
+ */
+export type HookStatus = "receiving" | "installed" | "not_connected";
+
 export interface Project {
+  /** Stable id: first 12 hex chars of sha256(root). Used in URLs. */
+  id: string;
   root: string;
   name: string;
   sessions: number;
   lastActivity: string | null;
+  hookStatus: HookStatus;
+  /** When the project was connected through Quoli, if it was. */
+  connectedAt: string | null;
 }
 
 export interface SessionSummary {
   id: string;
+  projectId: string;
   root: string;
   title: string;
   branch: string | null;
@@ -182,6 +196,35 @@ export interface Link {
 export interface InfraMap {
   services: Service[];
   links: Link[];
+}
+
+/* ---------- App (Increment 1) ---------- */
+
+/** GET /api/overview — what the Home page shows, across all projects. */
+export interface Overview {
+  live: SessionSummary[];
+  /** Derived; each reason is a plain sentence, e.g. "2 failed tool calls". */
+  needsReview: { session: SessionSummary; reasons: string[] }[];
+  /** Most recent sessions first, at most 10. */
+  recent: SessionSummary[];
+  /** Calendar day / last 7 days in the server's local time. */
+  tokens: { today: TokenTotals; week: TokenTotals };
+  counts: { projects: number; sessions: number; sessionsToday: number };
+}
+
+/** User settings, stored in SQLite. GET/PUT /api/settings. */
+export interface Settings {
+  /** Delete whole sessions whose last event is older than this; null keeps everything. */
+  retentionDays: number | null;
+  /** Redact common credential shapes before storing events. */
+  redact: boolean;
+}
+
+/** Read-only facts about this Quoli install, returned with settings. */
+export interface ServerInfo {
+  dataDir: string;
+  port: number;
+  version: string;
 }
 
 /* ---------- Helpers ---------- */

@@ -2,7 +2,7 @@
 
 Status: **planned**. Owner direction 2026-11-12: the rebuilt app proves the pipeline (real Claude Code sessions arrive live with prompts, tool calls and tokens) but feels like a proof of concept. There is no dashboard, no real navigation, no projects or settings, and the lenses break down on a real repository.
 
-This page is the working backlog for the MVP. Each increment is written so it can be copied into a **Quolii** Linear issue as-is (`AGENTS.md`: user value, scope, non-goals, dependencies, acceptance criteria, test plan, privacy/security, size). Build them in order. Every increment must keep `pnpm demo`, `pnpm test`, `pnpm typecheck`, `pnpm lint` and `pnpm build` passing.
+This page is the working backlog for the MVP. Each increment is tracked as a GitHub issue (work is tracked on GitHub only). Build them in order. Every increment must keep `pnpm demo`, `pnpm test`, `pnpm typecheck`, `pnpm lint` and `pnpm build` passing.
 
 ## What testing on a real repository showed
 
@@ -20,6 +20,8 @@ Found by the owner running Quoli on the Quoli repository itself:
 | Bugs | The missing branch renders a stray "·". Prompts show raw `[Image #4]`. Truncated names have no tooltip. |
 
 ## Increment 1: App shell, Home, Projects, Settings (M)
+
+Issue: #91 · Status: **not started**
 
 **User value:** Quoli feels like an app you can find your way around. You land on what matters, manage repos without the terminal, and can link to anything.
 
@@ -49,6 +51,8 @@ Found by the owner running Quoli on the Quoli repository itself:
 
 ## Increment 2: Session Summary and cost (M)
 
+Issue: #92 · Status: **not started**
+
 **User value:** Opening a session answers "what did it do, what did it cost, what should I review?" in seconds, before any graph.
 
 **Scope**
@@ -77,6 +81,8 @@ Found by the owner running Quoli on the Quoli repository itself:
 
 ## Increment 3: Lenses that work at real scale (M)
 
+Issue: #93 · Status: **not started**
+
 **User value:** The map stays readable on a real repo with thousands of files and hundreds of commits.
 
 **Scope**
@@ -99,6 +105,8 @@ Found by the owner running Quoli on the Quoli repository itself:
 **Privacy/security:** unchanged.
 
 ## Increment 4: Product polish (M)
+
+Issue: #94 · Status: **not started**
 
 **User value:** It feels finished and trustworthy.
 
