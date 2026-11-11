@@ -14,6 +14,10 @@ const store = new Store();
 if (process.argv.includes("--demo")) {
   const { seedDemo } = await import("./demo.ts");
   seedDemo(store);
+  if (process.argv.includes("--large")) {
+    const { seedLargeDemo } = await import("./large-demo.ts");
+    seedLargeDemo(store);
+  }
 }
 
 const app = createApp(store, () => PORT);
