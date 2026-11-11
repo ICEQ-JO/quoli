@@ -1,22 +1,24 @@
 import type { SessionSummary } from "../../../shared/model.ts";
 import { ago, compact, tokenSum } from "../format.ts";
+import { Link } from "../router.ts";
 
 interface Props {
   sessions: SessionSummary[] | null;
   activeId: string | null;
-  onOpen: (id: string | null) => void;
+  /** The board URL with this session selected (null clears the selection). */
+  hrefFor: (id: string | null) => string;
   projectPath: string;
 }
 
-export function Sidebar({ sessions, activeId, onOpen, projectPath }: Props) {
+export function Sidebar({ sessions, activeId, hrefFor, projectPath }: Props) {
   return (
     <nav className="sidebar" aria-label="Agent sessions">
       <div className="side-head">
         <span>Agent sessions</span>
         {activeId && (
-          <button type="button" className="link" onClick={() => onOpen(null)}>
+          <Link to={hrefFor(null)} className="link">
             Clear
-          </button>
+          </Link>
         )}
       </div>
       {sessions === null && <p className="faint pad">Loading…</p>}
@@ -29,10 +31,10 @@ export function Sidebar({ sessions, activeId, onOpen, projectPath }: Props) {
       <ul className="session-list">
         {sessions?.map((s) => (
           <li key={s.id}>
-            <button
-              type="button"
+            <Link
+              to={hrefFor(s.id === activeId ? null : s.id)}
               className={`session-item ${s.id === activeId ? "active" : ""}`}
-              onClick={() => onOpen(s.id === activeId ? null : s.id)}
+              aria-current={s.id === activeId ? "page" : undefined}
             >
               <span className="row">
                 <span
@@ -40,9 +42,15 @@ export function Sidebar({ sessions, activeId, onOpen, projectPath }: Props) {
                   title={s.live ? "Live" : "Not running"}
                 />
                 <span className="when">{s.live ? "Live now" : ago(s.startedAt)}</span>
-                {s.branch && <span className="branch">{s.branch}</span>}
+                {s.branch && (
+                  <span className="branch" title={s.branch}>
+                    {s.branch}
+                  </span>
+                )}
               </span>
-              <span className="title">{s.title}</span>
+              <span className="title" title={s.title}>
+                {s.title}
+              </span>
               <span className="row meta">
                 <span>{s.toolCount} tools</span>
                 <span>
@@ -51,7 +59,7 @@ export function Sidebar({ sessions, activeId, onOpen, projectPath }: Props) {
                 <span>{compact(tokenSum(s.tokens))} tok</span>
                 {s.failures > 0 && <span className="fail">{s.failures} failed</span>}
               </span>
-            </button>
+            </Link>
           </li>
         ))}
       </ul>

@@ -1,0 +1,296 @@
+import { useEffect, useState } from "react";
+import type { Project } from "../../../shared/model.ts";
+import { api, useData, useLiveEvents } from "../api.ts";
+import { DeleteDataDialog, ErrorState, Loading, PageHead } from "../components/ui.tsx";
+
+const PRESETS = [7, 30, 90];
+const EXAMPLE =
+  "export ANTHROPIC_API_KEY=sk-ant-api03-EXAMPLEEXAMPLEEXAMPLE0000\ncurl -H 'Authorization: Bearer abc123def456ghi789' https://example.test";
+
+type Retention = "forever" | "7" | "30" | "90" | "custom";
+
+const toChoice = (days: number | null): Retention =>
+  days === null ? "forever" : PRESETS.includes(days) ? (String(days) as Retention) : "custom";
+
+export function SettingsPage() {
+  const [data, refresh, error] = useData("settings", api.settings);
+  const [projects, refreshProjects, projectsError] = useData("projects", api.projects);
+  useLiveEvents(refreshProjects);
+
+  const [retention, setRetention] = useState<Retention>("forever");
+  const [custom, setCustom] = useState("14");
+  const [redact, setRedact] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<Project | null>(null);
+  const [deleted, setDeleted] = useState<string | null>(null);
+
+  const loaded = data?.settings;
+  useEffect(() => {
+    if (!loaded) return;
+    setRetention(toChoice(loaded.retentionDays));
+    if (loaded.retentionDays !== null) setCustom(String(loaded.retentionDays));
+    setRedact(loaded.redact);
+  }, [loaded]);
+
+  const days =
+    retention === "forever" ? null : retention === "custom" ? Number(custom) : Number(retention);
+  const invalid = days !== null && (!Number.isInteger(days) || days < 1);
+  const dirty = !!loaded && (days !== loaded.retentionDays || redact !== loaded.redact);
+
+  const save = async () => {
+    setSaving(true);
+    setSaveError(null);
+    setSaved(false);
+    try {
+      await api.saveSettings({ retentionDays: days, redact });
+      setSaved(true);
+      refresh();
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : String(e));
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="page">
+      <PageHead title="Settings">
+        Everything stays on this machine unless you turn on sync.
+      </PageHead>
+      {!data && (error ? <ErrorState message={error} retry={refresh} /> : <Loading />)}
+      {data && (
+        <>
+          <section className="card" aria-labelledby="set-where">
+            <h2 id="set-where">This install</h2>
+            <dl className="kv wide">
+              <div>
+                <dt>Data location</dt>
+                <dd className="mono" title={data.info.dataDir}>
+                  {data.info.dataDir}
+                </dd>
+              </div>
+              <div>
+                <dt>Port</dt>
+                <dd className="mono">{data.info.port} (loopback only)</dd>
+              </div>
+              <div>
+                <dt>Version</dt>
+                <dd className="mono">{data.info.version}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <form
+            className="card"
+            aria-labelledby="set-data"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!invalid) save();
+            }}
+          >
+            <h2 id="set-data">Retention and redaction</h2>
+            <div className="field">
+              <label htmlFor="set-ret">Keep sessions for</label>
+              <div className="field-row">
+                <select
+                  id="set-ret"
+                  className="input"
+                  value={retention}
+                  onChange={(e) => {
+                    setRetention(e.target.value as Retention);
+                    setSaved(false);
+                  }}
+                >
+                  <option value="forever">Keep forever</option>
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="90">90 days</option>
+                  <option value="custom">Custom…</option>
+                </select>
+                {retention === "custom" && (
+                  <>
+                    <label htmlFor="set-days" className="sr-only">
+                      Days
+                    </label>
+                    <input
+                      id="set-days"
+                      className="input narrow"
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={custom}
+                      aria-invalid={invalid}
+                      onChange={(e) => {
+                        setCustom(e.target.value);
+                        setSaved(false);
+                      }}
+                    />
+                    <span className="faint">days</span>
+                  </>
+                )}
+              </div>
+              <p className="faint">
+                {days === null
+                  ? "Nothing is deleted automatically."
+                  : `Sessions whose last event is older than ${days} ${days === 1 ? "day" : "days"} are deleted permanently, including their events and token usage. This runs when you save, at startup and hourly.`}
+              </p>
+              {invalid && (
+                <p className="form-error" role="alert">
+                  Enter a whole number of days, 1 or more.
+                </p>
+              )}
+            </div>
+
+            <div className="field">
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={redact}
+                  onChange={(e) => {
+                    setRedact(e.target.checked);
+                    setSaved(false);
+                  }}
+                />
+                Redact credentials before storing events
+              </label>
+              <p className="faint">
+                Common secret shapes (API keys, bearer tokens) are replaced before anything is
+                written to disk. It is best effort, not a guarantee.
+              </p>
+            </div>
+
+            <div className="form-foot">
+              <button type="submit" className="btn primary" disabled={saving || invalid || !dirty}>
+                {saving ? "Saving…" : "Save changes"}
+              </button>
+              {saved && (
+                <span className="ok" role="status">
+                  Saved. Retention was applied.
+                </span>
+              )}
+              {saveError && (
+                <span className="form-error" role="alert">
+                  {saveError}
+                </span>
+              )}
+            </div>
+          </form>
+
+          <RedactPreview />
+
+          <section className="card" aria-labelledby="set-del">
+            <h2 id="set-del">Delete project data</h2>
+            <p className="faint">
+              Removes a project's recorded events and unregisters it. Your repository is not
+              touched.
+            </p>
+            {deleted && (
+              <p className="notice" role="status">
+                {deleted}
+              </p>
+            )}
+            {!projects &&
+              (projectsError ? (
+                <ErrorState message={projectsError} retry={refreshProjects} />
+              ) : (
+                <Loading />
+              ))}
+            {projects?.length === 0 && <p className="faint">No projects.</p>}
+            <ul className="plain-list">
+              {projects?.map((p) => (
+                <li key={p.id}>
+                  <span className="strong" title={p.root}>
+                    {p.name}
+                  </span>
+                  <span className="faint">
+                    {p.sessions} {p.sessions === 1 ? "session" : "sessions"}
+                  </span>
+                  <button type="button" className="btn danger" onClick={() => setDeleting(p)}>
+                    Delete data
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
+      {deleting && (
+        <DeleteDataDialog
+          project={deleting}
+          close={() => setDeleting(null)}
+          done={(r) => {
+            setDeleted(
+              `Deleted ${r.events} events from ${r.sessions} ${r.sessions === 1 ? "session" : "sessions"} of ${deleting.name}.`,
+            );
+            setDeleting(null);
+            refreshProjects();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function RedactPreview() {
+  const [text, setText] = useState("");
+  const [out, setOut] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!text) {
+      setOut(null);
+      setError(null);
+      return;
+    }
+    let live = true;
+    const t = setTimeout(() => {
+      api
+        .redactPreview(text)
+        .then((r) => {
+          if (!live) return;
+          setOut(r.text);
+          setError(null);
+        })
+        .catch((e) => live && setError(e instanceof Error ? e.message : String(e)));
+    }, 300);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [text]);
+  return (
+    <section className="card" aria-labelledby="set-red">
+      <h2 id="set-red">Redaction preview</h2>
+      <label htmlFor="red-in">Paste text to see what gets redacted</label>
+      <textarea
+        id="red-in"
+        className="input mono"
+        rows={4}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Paste a command, log line or prompt…"
+        spellCheck={false}
+      />
+      <p>
+        <button type="button" className="btn" onClick={() => setText(EXAMPLE)}>
+          Try an example
+        </button>
+      </p>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      {out !== null && (
+        <>
+          <p className="label">Stored as</p>
+          <pre className="preview" aria-live="polite">
+            {out}
+          </pre>
+          {out === text && <p className="faint">Nothing in this text matched a redaction rule.</p>}
+        </>
+      )}
+      <p className="faint">This text is sent only to your local Quoli server and is not saved.</p>
+    </section>
+  );
+}

@@ -45,7 +45,11 @@ function Section({
     <section className="panel-section">
       <h3>
         {title}
-        {aside && <span className="aside">{aside}</span>}
+        {aside && (
+          <span className="aside" title={typeof aside === "string" ? aside : undefined}>
+            {aside}
+          </span>
+        )}
       </h3>
       {children}
     </section>
@@ -78,10 +82,19 @@ function SessionPanel({ session, goto }: Props & { session: SessionDetail }) {
         <span className={`status ${session.live ? "live" : ""}`}>
           {session.live ? "Live" : session.endedAt ? "Ended" : "Idle"}
         </span>
-        <h2>{session.title}</h2>
+        <h2 title={session.title}>{session.title}</h2>
         <p className="meta">
-          {session.branch && <span className="mono">{session.branch}</span>} · started{" "}
-          {ago(session.startedAt)} · {duration(session.startedAt, session.endedAt)}
+          {[
+            session.branch ? (
+              <span key="b" className="mono" title={session.branch}>
+                {session.branch}
+              </span>
+            ) : null,
+            `started ${ago(session.startedAt)}`,
+            duration(session.startedAt, session.endedAt),
+          ]
+            .filter(Boolean)
+            .flatMap((part, i) => (i ? [" · ", part] : [part]))}
         </p>
       </header>
       <div className="stats">
@@ -189,7 +202,9 @@ function FileList({
       {entries.map(([path, f]) => (
         <li key={path}>
           <button type="button" onClick={() => onPick(path)} title={path}>
-            <span className="fname">{fileName(path)}</span>
+            <span className="fname" title={path}>
+              {fileName(path)}
+            </span>
             <span className="fdir">{path.slice(0, -fileName(path).length - 1)}</span>
             {f.edited > 0 && <span className="badge e">✎{f.edited}</span>}
             {f.read > 0 && <span className="badge r">{f.read}</span>}
@@ -214,7 +229,9 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
     <>
       <header className="panel-head">
         <span className="status">{meta?.language ?? "File"}</span>
-        <h2 className="mono">{fileName(path)}</h2>
+        <h2 className="mono" title={path}>
+          {fileName(path)}
+        </h2>
         <p className="meta mono">{path}</p>
         <p className="meta">
           {meta ? `${meta.lines} lines` : ""}
@@ -275,14 +292,22 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
           <ul className="links">
             {meta?.imports.map((f) => (
               <li key={`o${f}`}>
-                <button type="button" onClick={() => goto("code", { kind: "file", id: f })}>
+                <button
+                  type="button"
+                  title={f}
+                  onClick={() => goto("code", { kind: "file", id: f })}
+                >
                   imports <b>{fileName(f)}</b>
                 </button>
               </li>
             ))}
             {importers.map((f) => (
               <li key={`i${f.path}`}>
-                <button type="button" onClick={() => goto("code", { kind: "file", id: f.path })}>
+                <button
+                  type="button"
+                  title={f.path}
+                  onClick={() => goto("code", { kind: "file", id: f.path })}
+                >
                   used by <b>{fileName(f.path)}</b>
                 </button>
               </li>
@@ -304,7 +329,7 @@ function ToolPanel({ id, session, goto }: Props & { id: string }) {
         <span className="status" style={{ color: CATEGORY[call.category].color }}>
           {CATEGORY[call.category].label}
         </span>
-        <h2>{call.name}</h2>
+        <h2 title={call.name}>{call.name}</h2>
         <p className="meta mono">{call.summary}</p>
         <p className="meta">
           <span className={`st ${call.status}`}>{call.status}</span> · {clock(call.startedAt)} ·{" "}
@@ -317,7 +342,11 @@ function ToolPanel({ id, session, goto }: Props & { id: string }) {
           <ul className="links">
             {call.files.map((f) => (
               <li key={f}>
-                <button type="button" onClick={() => goto("code", { kind: "file", id: f })}>
+                <button
+                  type="button"
+                  title={f}
+                  onClick={() => goto("code", { kind: "file", id: f })}
+                >
                   <b>{fileName(f)}</b> <span className="faint">{f}</span>
                 </button>
               </li>
@@ -352,7 +381,7 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
     <>
       <header className="panel-head">
         <span className="status">{s.kind}</span>
-        <h2>{s.name}</h2>
+        <h2 title={s.name}>{s.name}</h2>
         <p className="meta">
           {s.platform}
           {s.sourceDir !== null && (
@@ -385,7 +414,11 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
           <ul className="links">
             {changed.map((f) => (
               <li key={f}>
-                <button type="button" onClick={() => goto("code", { kind: "file", id: f })}>
+                <button
+                  type="button"
+                  title={f}
+                  onClick={() => goto("code", { kind: "file", id: f })}
+                >
                   <b>{fileName(f)}</b> <span className="faint">{f}</span>
                 </button>
               </li>
@@ -400,6 +433,7 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
               <li key={`${l.from}${l.to}`}>
                 <button
                   type="button"
+                  title={name(l.from === id ? l.to : l.from)}
                   onClick={() =>
                     goto("infra", { kind: "service", id: l.from === id ? l.to : l.from })
                   }
@@ -437,7 +471,7 @@ function CommitPanel({ sha, git }: Props & { sha: string }) {
     <>
       <header className="panel-head">
         <span className="status mono">{c.sha}</span>
-        <h2>{c.subject}</h2>
+        <h2 title={c.subject}>{c.subject}</h2>
         <p className="meta">
           {c.author} · {ago(c.at)}
         </p>
@@ -462,7 +496,9 @@ function BranchPanel({ name, git, sessions, openSession }: Props & { name: strin
     <>
       <header className="panel-head">
         <span className="status">{b.current ? "Checked out" : "Branch"}</span>
-        <h2 className="mono">{b.name}</h2>
+        <h2 className="mono" title={b.name}>
+          {b.name}
+        </h2>
         <p className="meta">
           {b.upstream ? `tracks ${b.upstream}` : "no upstream"} · last commit {ago(b.lastCommitAt)}
         </p>
@@ -472,7 +508,7 @@ function BranchPanel({ name, git, sessions, openSession }: Props & { name: strin
           <ul className="links">
             {ran.map((s) => (
               <li key={s.id}>
-                <button type="button" onClick={() => openSession(s.id)}>
+                <button type="button" title={s.title} onClick={() => openSession(s.id)}>
                   <b>{s.title}</b> <span className="faint">{ago(s.startedAt)}</span>
                 </button>
               </li>
@@ -491,7 +527,7 @@ function ProjectPanel({ root, sessions, code, git, infra, onRefresh }: Props) {
     <>
       <header className="panel-head">
         <span className="status">Project</span>
-        <h2>{root?.split("/").at(-1)}</h2>
+        <h2 title={root ?? undefined}>{root?.split("/").at(-1)}</h2>
         <p className="meta mono">{root}</p>
       </header>
       <div className="stats">

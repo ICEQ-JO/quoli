@@ -1,3 +1,5 @@
+import { Link, paths } from "../router.ts";
+
 export function Onboarding() {
   return (
     <div className="onboarding">
@@ -24,6 +26,11 @@ export function Onboarding() {
             <span>Watch it appear here, live.</span>
           </li>
         </ol>
+        <p>
+          <Link to={paths.projects()} className="btn primary">
+            Connect a repository
+          </Link>
+        </p>
         <p className="faint">
           Want to look around first? Restart with <code>pnpm demo</code> for a sample project with
           three recorded sessions.

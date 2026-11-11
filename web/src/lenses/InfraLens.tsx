@@ -161,7 +161,9 @@ function ServiceNode({ data }: NodeProps) {
       <Handle type="target" position={Position.Left} className="h" />
       <div className="svc-head">
         <span className="svc-icon">{ICON[s.kind]}</span>
-        <span className="svc-name">{s.name}</span>
+        <span className="svc-name" title={s.name}>
+          {s.name}
+        </span>
         <span className="svc-platform">{s.platform}</span>
       </div>
       <div className="svc-sub">
@@ -187,7 +189,11 @@ function ServiceNode({ data }: NodeProps) {
       {changed.length > 0 && (
         <div className="svc-changed">✎ {changed.length} files changed by this session</div>
       )}
-      {s.basis === "inferred" && <div className="svc-basis">inferred from {s.evidence}</div>}
+      {s.basis === "inferred" && (
+        <div className="svc-basis" title={`inferred from ${s.evidence}`}>
+          inferred from {s.evidence}
+        </div>
+      )}
       <Handle type="source" position={Position.Right} className="h" />
     </div>
   );

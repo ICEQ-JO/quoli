@@ -150,7 +150,9 @@ function ToolNode({ data }: NodeProps) {
       <Handle type="target" position={Position.Left} className="h" />
       <Handle type="target" position={Position.Top} id="top" className="h" />
       <div className="tool-head">
-        <span className="tool-name">{call.name.replace(/^mcp__/, "")}</span>
+        <span className="tool-name" title={call.name}>
+          {call.name.replace(/^mcp__/, "")}
+        </span>
         <span className="tool-status">
           {call.status === "running"
             ? "running"

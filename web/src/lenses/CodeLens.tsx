@@ -260,7 +260,9 @@ function FileNode({ data }: NodeProps) {
   return (
     <div className={cls} title={`${file.path} · ${file.lines} lines`}>
       <Handle type="target" position={Position.Left} className="h" />
-      <span className="name">{fileName(file.path)}</span>
+      <span className="name" title={file.path}>
+        {fileName(file.path)}
+      </span>
       {touch?.edited ? <span className="badge e">✎{touch.edited}</span> : null}
       {touch?.read ? <span className="badge r">{touch.read}</span> : null}
       {file.status !== "clean" && (
@@ -282,7 +284,9 @@ function DirNode({ data }: NodeProps) {
   return (
     <div className={`dir-node ${hot ? "hot" : ""} ${depth === 0 ? "root" : ""}`}>
       <div className="dir-head">
-        <span className="dir-name">{label ?? dir.name}</span>
+        <span className="dir-name" title={dir.path || label || dir.name}>
+          {label ?? dir.name}
+        </span>
         <span className="dir-count">{compact(dir.total)} files</span>
         {depth > 0 && (
           <button
@@ -306,7 +310,9 @@ function FoldedNode({ data }: NodeProps) {
   const { dir, hot } = data as { dir: Dir; hot: boolean };
   return (
     <div className={`folded-node ${hot ? "hot" : ""}`} title="Click to open">
-      <span className="dir-name">{dir.name}/</span>
+      <span className="dir-name" title={dir.path || dir.name}>
+        {dir.name}/
+      </span>
       <span className="dir-count">{compact(dir.total)} files</span>
     </div>
   );

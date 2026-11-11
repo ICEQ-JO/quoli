@@ -143,7 +143,9 @@ function BranchNode({ data }: NodeProps) {
   return (
     <div className={`branch-node ${selected ? "selected" : ""}`}>
       <span className="swatch" style={{ background: color }} />
-      <span className="branch-name">{branch.name}</span>
+      <span className="branch-name" title={branch.name}>
+        {branch.name}
+      </span>
       {branch.current && <span className="tag">HEAD</span>}
       <span className="branch-meta">
         {branch.ahead ? `↑${branch.ahead} ` : ""}
@@ -169,7 +171,9 @@ function SessionNode({ data }: NodeProps) {
   return (
     <div className={`session-chip ${active ? "active" : ""}`} title={session.title}>
       <span className={`live-dot ${session.live ? "on" : ""}`} />
-      <span className="chip-title">{session.title}</span>
+      <span className="chip-title" title={session.title}>
+        {session.title}
+      </span>
       <span className="chip-meta">
         {session.toolCount} tools · {compact(tokenSum(session.tokens))} tok
       </span>
