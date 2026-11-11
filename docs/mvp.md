@@ -21,7 +21,16 @@ Found by the owner running Quoli on the Quoli repository itself:
 
 ## Increment 1: App shell, Home, Projects, Settings (M)
 
-Issue: #91 · Status: **not started**
+Issue: #91 · Status: **done** (on branch `claude/stoic-bardeen-5zymlb`)
+
+Delivered: History-API routing (`/`, `/projects`, `/sessions`, `/settings`, `/projects/:id[/sessions/:sid]?lens=&sel=`), left navigation with a live indicator, Home, Projects (connect/disconnect/delete from the UI, hook status), Sessions (search, filters, paging), Settings (retention, redaction toggle and preview, install info, per-project delete), projects registry, mutation guard, retention, title and tooltip fixes. API contract: [api.md](api.md).
+
+Decisions made during the build:
+- A project board opens with no session selected; pick one from its sidebar. (The proof of concept auto-selected the latest.)
+- "Needs review" covers ended sessions from the last 7 days only; a live session is mid-work, so "no command after the last edit" would be noise.
+- `DELETE` requests carry a JSON body like every other mutation, so the same guard applies.
+- The theme setting moves to Increment 4 together with the light theme.
+- Verified: lint, typecheck, 17 tests, build, and a browser run against the real server (connect via the UI, URLs surviving reload and back/forward, no horizontal scroll at 1280 px). Not yet verified against a live Claude Code session.
 
 **User value:** Quoli feels like an app you can find your way around. You land on what matters, manage repos without the terminal, and can link to anything.
 

@@ -155,8 +155,9 @@ export function SettingsPage() {
                 Redact credentials before storing events
               </label>
               <p className="faint">
-                Common secret shapes (API keys, bearer tokens) are replaced before anything is
-                written to disk. It is best effort, not a guarantee.
+                Common credential shapes (Anthropic/OpenAI-style API keys, GitHub tokens, AWS access
+                keys, Slack tokens and private keys) are replaced before anything is written to
+                disk. It is best effort, not a guarantee.
               </p>
             </div>
 

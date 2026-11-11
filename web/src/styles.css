@@ -324,6 +324,7 @@ kbd {
 }
 
 .live-dot {
+  display: inline-block;
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -2178,7 +2179,7 @@ p.state {
   background: rgb(255 92 92 / 12%);
 }
 
-.input {
+:is(input, select, textarea).input {
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--line-strong);
@@ -2194,7 +2195,7 @@ textarea.input {
   margin-top: 6px;
 }
 
-.input.mono {
+:is(input, select, textarea).input.mono {
   font: 12px var(--mono);
 }
 
