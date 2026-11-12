@@ -1,5 +1,6 @@
 import type { Cost, ModelPrice, PriceTable, TokenTotals } from "../shared/model.ts";
 import type { Store } from "./db.ts";
+import { livePrices } from "./liveprices.ts";
 
 /** [model, input, output, cacheRead, cacheWrite] in USD per million tokens. */
 const ROWS: [string, number, number, number, number][] = [
@@ -149,6 +150,46 @@ export function loadPrices(store: Store): PriceTable {
     } catch {}
   }
   return defaultPrices();
+}
+
+/**
+ * Adds live prices to a table. With the built-in table, a live price replaces the built-in row for
+ * the same model id (it is newer); with a table the user edited, the user's rows always win and
+ * live prices only fill in models it does not price.
+ */
+export function withLive(
+  table: PriceTable,
+  live: ModelPrice[] | null,
+  edited: boolean,
+): PriceTable {
+  if (!live?.length) return table;
+  const prices = edited
+    ? [...table.prices, ...live.filter((p) => !priceFor(p.model, table))]
+    : [...live, ...table.prices.filter((p) => !live.some((l) => l.model === p.model))];
+  return { ...table, prices };
+}
+
+let memo: { key: string; table: PriceTable } | null = null;
+
+/** The prices costs are computed with: the price table plus live prices when they are on. */
+export function effectivePrices(store: Store): PriceTable {
+  const raw = store.getSetting("prices");
+  const live = store.settings().livePrices ? livePrices() : null;
+  const key = `${raw ?? ""}\0${live?.fetchedAt ?? ""}`;
+  if (memo?.key === key) return memo.table;
+  const table = loadPrices(store);
+  // Any saved table is the user's: their rows win over live prices.
+  const merged = withLive(table, live?.prices ?? null, raw !== null);
+  memo = {
+    key,
+    table: live?.prices.length
+      ? {
+          ...merged,
+          version: `${table.version}; with models.dev prices fetched ${live.fetchedAt.slice(0, 10)}`,
+        }
+      : merged,
+  };
+  return memo.table;
 }
 
 export const savePrices = (store: Store, table: PriceTable) =>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { PriceTable } from "../../../shared/model.ts";
 import { api, useData } from "../api.ts";
+import { ago } from "../format.ts";
 import { ErrorState, Loading } from "./ui.tsx";
 
 const FIELDS = ["input", "output", "cacheRead", "cacheWrite"] as const;
@@ -125,6 +126,7 @@ export function PricesSection() {
         USD per million tokens. A model id matches exactly or as a prefix (date-suffixed ids). Costs
         are estimates, not invoices.
       </p>
+      <LivePrices />
       {!table && (loadError ? <ErrorState message={loadError} retry={refresh} /> : <Loading />)}
       {table && (
         <form
@@ -252,5 +254,56 @@ export function PricesSection() {
         </form>
       )}
     </section>
+  );
+}
+
+/**
+ * Live prices from models.dev: on by default, fetched once a day, used for models this table does
+ * not price (and, while the table is the built-in one, in place of its older rows).
+ */
+function LivePrices() {
+  const [status, refresh] = useData("live-prices", api.livePrices);
+  const [busy, setBusy] = useState(false);
+  if (!status) return null;
+  const toggle = async (on: boolean) => {
+    setBusy(true);
+    try {
+      await api.saveSettings({ livePrices: on });
+    } catch {}
+    // The first fetch runs in the background; look again once it has had time to finish.
+    refresh();
+    if (on) setTimeout(refresh, 4000);
+    setBusy(false);
+  };
+  return (
+    <div className="live-prices">
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={status.enabled}
+          disabled={busy}
+          onChange={(e) => toggle(e.target.checked)}
+        />
+        Use current prices from{" "}
+        <a href="https://models.dev" target="_blank" rel="noreferrer">
+          models.dev
+        </a>
+      </label>
+      <p className="faint">
+        {status.enabled && status.fetchedAt
+          ? `${status.models} models, updated ${ago(status.fetchedAt)}. `
+          : status.enabled
+            ? "Not fetched yet. "
+            : ""}
+        Checked once a day with a plain request that sends nothing about you. Until you save your
+        own prices below, live prices are used wherever they exist; after that your rows win and
+        live prices fill in the models you don't list.
+      </p>
+      {status.enabled && status.error && (
+        <p className="form-error" role="alert">
+          Last update failed ({status.error}); the previous prices stay in use.
+        </p>
+      )}
+    </div>
   );
 }

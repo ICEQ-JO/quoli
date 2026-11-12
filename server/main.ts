@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { applyRetention, createApp, json } from "./app.ts";
 import { refreshHooks } from "./connect.ts";
 import { Store } from "./db.ts";
+import { startLivePrices } from "./liveprices.ts";
 import { refreshSetup, spoolFile } from "./setup.ts";
 import { drainSpool } from "./spool.ts";
 import { waitlistRequest } from "./waitlist.ts";
@@ -88,6 +89,7 @@ for (const root of refreshHooks(roots))
   console.log(`  Updated Quoli's hook in ${root} to port ${PORT}`);
 if (!landing) {
   for (const agent of refreshSetup()) console.log(`  Updated Quoli's user-level ${agent} install`);
+  startLivePrices(() => store.settings().livePrices);
   const queued = drainSpool(store, spoolFile());
   if (queued) console.log(`  Recorded ${queued} events sent while Quoli was closed`);
 }

@@ -19,10 +19,12 @@ import { commitDetail, gitState, parseLimit } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
 import { git, ingest, redact } from "./ingest.ts";
 import { insightsReport } from "./insights.ts";
+import { liveStatusOf, updateLivePrices } from "./liveprices.ts";
 import { addManual, loadManual, mergeManual, saveManual, validateManual } from "./manual.ts";
 import {
   costOf,
   defaultPrices,
+  effectivePrices,
   loadPrices,
   resetPrices,
   savePrices,
@@ -84,6 +86,9 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
         throw new BadRequest(`${key} must be null or a number above 0 and at most 1000000`);
       }
       next[key] = value as number | null;
+    } else if (key === "livePrices") {
+      if (typeof value !== "boolean") throw new BadRequest("livePrices must be true or false");
+      next.livePrices = value;
     } else if (key === "redact") {
       if (typeof value !== "boolean") throw new BadRequest("redact must be true or false");
       next.redact = value;
@@ -163,7 +168,7 @@ export function createApp(store: Store, port: () => number) {
     return detail;
   };
   const details = (ids: string[]) => {
-    const prices = loadPrices(store);
+    const prices = effectivePrices(store);
     const key = JSON.stringify(prices);
     return ids.map((id) => derive(id, prices, key)).filter((d): d is SessionDetail => d !== null);
   };
@@ -172,7 +177,7 @@ export function createApp(store: Store, port: () => number) {
     const now = Date.now();
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
-    const prices = loadPrices(store);
+    const prices = effectivePrices(store);
     const all = details(store.recentSessionIds(500));
     const week = new Date(now - 7 * DAY).toISOString();
     const needsReview = all
@@ -265,6 +270,9 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
     if (path === "/api/prices") return json(res, 200, loadPrices(store));
+    if (path === "/api/prices/live") {
+      return json(res, 200, liveStatusOf(store.settings().livePrices));
+    }
     if (path === "/api/usage") {
       const days = Number(url.searchParams.get("days") ?? 30);
       if (!Number.isInteger(days) || days < 1 || days > 365) {
@@ -461,8 +469,11 @@ export function createApp(store: Store, port: () => number) {
       }
     }
     if (method === "PUT" && path === "/api/settings") {
-      store.saveSettings(mergeSettings(store.settings(), await payload()));
+      const before = store.settings();
+      const next = mergeSettings(before, await payload());
+      store.saveSettings(next);
       applyRetention(store);
+      if (next.livePrices && !before.livePrices) void updateLivePrices();
       broadcast({ type: "projects" });
       return json(res, 200, settingsResponse());
     }

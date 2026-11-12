@@ -7,7 +7,7 @@ import {
   zeroTokens,
 } from "../shared/model.ts";
 import { projectId, type Store, type UsageRow } from "./db.ts";
-import { costOf, loadPrices, priceFor, usdOf } from "./prices.ts";
+import { costOf, effectivePrices, priceFor, usdOf } from "./prices.ts";
 
 const DAY = 86_400_000;
 
@@ -47,7 +47,7 @@ export function usageReport(
   now = new Date(),
   agent: AgentKind | null = null,
 ): UsageReport {
-  const prices = loadPrices(store);
+  const prices = effectivePrices(store);
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
   const today = start.toISOString();

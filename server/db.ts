@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: Settings = {
   redact: true,
   budgetDailyUsd: null,
   budgetMonthlyUsd: null,
+  livePrices: true,
 };
 
 export const home = () => process.env.QUOLI_HOME ?? join(homedir(), ".quoli");

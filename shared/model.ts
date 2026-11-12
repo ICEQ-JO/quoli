@@ -364,6 +364,19 @@ export interface Settings {
   /** Local spend budgets in USD (estimates); null = none. They only change what the UI shows. */
   budgetDailyUsd: number | null;
   budgetMonthlyUsd: number | null;
+  /** Fetch current model prices from models.dev once a day (GET /api/prices/live). */
+  livePrices: boolean;
+}
+
+/** Live prices from models.dev: used for models the price table does not have. */
+export interface LivePriceStatus {
+  enabled: boolean;
+  source: string;
+  /** When the prices in use were fetched; null before the first fetch. */
+  fetchedAt: string | null;
+  models: number;
+  /** Why the last fetch failed, when it did; the previous prices stay in use. */
+  error: string | null;
 }
 
 /** Read-only facts about this Quoli install, returned with settings. */

@@ -6,6 +6,7 @@ import type {
   GitState,
   InfraMap,
   InsightsReport,
+  LivePriceStatus,
   ManualService,
   Overview,
   PriceTable,
@@ -66,6 +67,7 @@ export const api = {
   settings: () => get<SettingsResponse>("/api/settings"),
   saveSettings: (patch: Partial<Settings>) => send<SettingsResponse>("PUT", "/api/settings", patch),
   prices: () => get<PriceTable>("/api/prices"),
+  livePrices: () => get<LivePriceStatus>("/api/prices/live"),
   usage: (days: number, agent?: AgentKind) =>
     get<UsageReport>(`/api/usage?days=${days}${agent ? `&agent=${agent}` : ""}`),
   insights: (days: number, f: { project?: string; agent?: string; model?: string }) => {
