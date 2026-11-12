@@ -209,6 +209,80 @@ export interface CodeMap {
   truncated: number;
 }
 
+/* ---------- Code graph (functions, imports, calls) ---------- */
+
+export type SymbolKind =
+  | "function"
+  | "method"
+  | "class"
+  | "component"
+  | "variable-function"
+  | "module";
+
+export interface CodeSymbol {
+  /** Stable: `<path>#<qualifiedName>`. Top-level statements are `<path>#<module>` (kind "module"). */
+  id: string;
+  file: string;
+  name: string;
+  /** `OrderService.create` for a method; equal to `name` for top-level symbols. */
+  qualifiedName: string;
+  kind: SymbolKind;
+  /** 1-based, inclusive. */
+  startLine: number;
+  endLine: number;
+  exported: boolean;
+}
+
+/**
+ * `import`: file path to file path, always `resolved`. `call`: caller symbol id to callee symbol id.
+ * `possible` means the callee was matched only by method name (at most 3 candidates); calls that
+ * cannot be tied to a file of the repository (libraries, runtime) have no edge.
+ */
+export interface CodeEdge {
+  from: string;
+  to: string;
+  kind: "import" | "call";
+  certainty: "resolved" | "possible";
+}
+
+export interface CodeGraphFile {
+  path: string;
+  language: string;
+  lines: number;
+}
+
+export interface Stack {
+  /** Programming languages by number of files; `share` is files / all files of these languages. */
+  languages: { name: string; files: number; share: number }[];
+  /** `evidence` is the manifest the dependency was read from. */
+  frameworks: { name: string; version: string | null; package: string | null; evidence: string }[];
+  packages: { name: string; path: string; framework: string | null }[];
+}
+
+export interface CodeGraph {
+  commit: string | null;
+  generatedAt: string;
+  stack: Stack;
+  files: CodeGraphFile[];
+  symbols: CodeSymbol[];
+  edges: CodeEdge[];
+  /** True when more source files exist than the scan limit. */
+  truncated: boolean;
+  stats: {
+    files: number;
+    symbols: number;
+    imports: number;
+    calls: number;
+    possibleCalls: number;
+    /** Files parsed in this build; the rest came from the cache. */
+    parsed: number;
+    cached: number;
+    /** Source files skipped: too large, generated or minified. */
+    skipped: number;
+    ms: number;
+  };
+}
+
 /* ---------- Git ---------- */
 
 export interface Branch {
