@@ -315,7 +315,7 @@ function record(
   }
 }
 
-/** An OpenCode file input as stored: OpenCode's `path`, plus the `file_path` its adapter adds. */
+/** An OpenCode or Pi file input as stored: the agent's `path`, plus the `file_path` its adapter adds. */
 const ocPath = (path: string) => ({ path, file_path: path });
 
 export function seedDemo(store: Store) {
@@ -659,6 +659,35 @@ export function seedDemo(store: Store) {
           ...ocPath(p("apps/api/.env.example")),
           content: "DATABASE_URL=\nSTRIPE_KEY=\nREDIS_URL=redis://localhost:6379\n",
         },
+      },
+    ],
+  });
+
+  record(store, {
+    id: "demo-pi-pool",
+    root,
+    branch: "main",
+    start: now - 4 * 3_600_000,
+    end: true,
+    transcripts,
+    agent: { kind: "pi", version: "0.75.3", model: "claude-sonnet-4-5" },
+    steps: [
+      { prompt: "Make the database pool size configurable." },
+      { tool: "grep", input: { pattern: "max:", path: p("apps/api/src") } },
+      { tool: "read", input: ocPath(p("apps/api/src/db/client.ts")) },
+      {
+        tool: "edit",
+        input: {
+          ...ocPath(p("apps/api/src/db/client.ts")),
+          old_string: "max: 10,\n",
+          new_string: "max: Number(process.env.DB_POOL_MAX ?? 10),\n",
+        },
+      },
+      {
+        tool: "bash",
+        input: { command: "pnpm --filter api typecheck" },
+        output: "Done in 6.1s",
+        secs: 7,
       },
     ],
   });

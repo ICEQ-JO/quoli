@@ -173,11 +173,103 @@ const opencode: Adapter = {
   },
 };
 
+/**
+ * Pi (docs/extensions.md in @earendil-works/pi-coding-agent 0.75): records from Quoli's project
+ * extension, server/pi-extension.ts. Tools are read/write/edit/ls with `path`, bash with
+ * `command`, grep/find with a `pattern` and an optional folder `path`. `edit` carries
+ * `edits: [{ oldText, newText }]`, mapped onto Claude Code's `old_string`/`new_string`.
+ * A tool failure is the end event's `isError`.
+ */
+function piInput(tool: string, input: unknown): Record<string, unknown> {
+  const i = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  const out: Record<string, unknown> = { ...i };
+  if (["read", "edit"].includes(categorize(tool)) && typeof i.path === "string") {
+    out.file_path = i.path;
+  }
+  if (Array.isArray(i.edits)) {
+    const edits = i.edits.map((e) => {
+      const o = (e && typeof e === "object" ? e : {}) as Record<string, unknown>;
+      return { old_string: text(o.oldText) ?? "", new_string: text(o.newText) ?? "" };
+    });
+    if (edits.length === 1) {
+      out.old_string = edits[0].old_string;
+      out.new_string = edits[0].new_string;
+      delete out.edits;
+    } else out.edits = edits;
+  }
+  return out;
+}
+
+const pi: Adapter = {
+  agent: "pi",
+  normalize(p) {
+    if (typeof p.sessionID !== "string" || typeof p.pi_event !== "string") return null;
+    const base = { session_id: p.sessionID, cwd: p.cwd, pi_event: p.pi_event };
+    switch (p.pi_event) {
+      case "session.start":
+        return { ...base, hook_event_name: "SessionStart", source: text(p.reason) ?? "startup" };
+      case "prompt":
+        return { ...base, hook_event_name: "UserPromptSubmit", prompt: text(p.text) ?? "" };
+      case "tool.start":
+      case "tool.end": {
+        const name = text(p.tool) ?? "unknown";
+        const call = {
+          ...base,
+          tool_name: name,
+          tool_use_id: p.id,
+          tool_input: piInput(name, p.input),
+        };
+        if (p.pi_event === "tool.start") return { ...call, hook_event_name: "PreToolUse" };
+        const output = text(p.output) ?? "";
+        return p.isError === true
+          ? { ...call, hook_event_name: "PostToolUseFailure", error: output || "failed" }
+          : { ...call, hook_event_name: "PostToolUse", tool_response: output };
+      }
+      case "message.end":
+        return {
+          ...base,
+          hook_event_name: "PostModelRequest",
+          model: text(p.model),
+          provider: text(p.provider),
+          message_id: p.messageID,
+          token_usage: p.usage,
+          stop_reason: text(p.stopReason),
+        };
+      case "agent.end":
+        return { ...base, hook_event_name: "Stop" };
+      case "session.shutdown":
+        // A reload keeps the same session running.
+        return p.reason === "reload"
+          ? null
+          : { ...base, hook_event_name: "SessionEnd", reason: p.reason };
+      default:
+        return null;
+    }
+  },
+  usage(p, at) {
+    const t = p.token_usage as Record<string, unknown> | null | undefined;
+    if (p.hook_event_name !== "PostModelRequest" || !t || typeof t !== "object") return null;
+    if (typeof p.session_id !== "string" || typeof p.message_id !== "string") return null;
+    return {
+      messageId: `pi:${p.session_id}:${p.message_id}`,
+      sessionId: p.session_id,
+      agentId: "main",
+      model: text(p.model),
+      at,
+      input: num(t.input),
+      output: num(t.output),
+      cacheRead: num(t.cacheRead),
+      cacheWrite: num(t.cacheWrite),
+    };
+  },
+};
+
 /** Agents with a live capture adapter. */
 const ADAPTERS: Partial<Record<AgentKind, Adapter>> = {
   "claude-code": claudeCode,
   codex,
   opencode,
+  pi,
 };
 
 export const adapterFor = (agent: AgentKind): Adapter | null => ADAPTERS[agent] ?? null;

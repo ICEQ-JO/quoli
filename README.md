@@ -30,7 +30,7 @@ A replay bar steps through any session call by call, and every lens follows alon
 
 **Honest by design:** every fact is marked as recorded, derived or inferred. Unknown values stay empty, and costs are estimates at list prices, not invoices.
 
-**Supported agents:** Claude Code, Codex and OpenCode (version 2).
+**Supported agents:** Claude Code, Codex, OpenCode (version 2) and Pi.
 
 ## Try it in two minutes
 
@@ -38,7 +38,7 @@ Requires Node 24 (Node 22.13+ also works) and pnpm.
 
 ```sh
 pnpm install
-pnpm demo                 # synthetic demo project: Claude Code, Codex and OpenCode sessions
+pnpm demo                 # synthetic demo project: Claude Code, Codex, OpenCode and Pi sessions
 ```
 
 Open http://127.0.0.1:4400.
@@ -63,7 +63,9 @@ For Codex, run `pnpm connect /path/to/your/repo --agent codex`, then start `code
 
 For OpenCode, run `pnpm connect /path/to/your/repo --agent opencode`. That installs a small plugin as `.opencode/plugins/quoli.js` (kept out of Git), which OpenCode loads the next time it starts in that repo.
 
-You can also connect a repository from **Projects → Connect** in the app and choose the agents there. `pnpm connect /path/to/your/repo --remove` (with `--agent codex` or `--agent opencode`) removes them again.
+For Pi, run `pnpm connect /path/to/your/repo --agent pi`. That installs a small extension as `.pi/extensions/quoli.ts` (kept out of Git), which Pi loads the next time it starts in that repo.
+
+You can also connect a repository from **Projects → Connect** in the app and choose the agents there. `pnpm connect /path/to/your/repo --remove` (with `--agent codex`, `opencode` or `pi`) removes them again.
 
 Press `?` in the app for all keyboard shortcuts. The main ones:
 - `1`–`5` switch lenses;
@@ -131,6 +133,6 @@ pnpm build        # app + landing
 
 ## Status
 
-Quoli is an early-stage project, built in the open. Phase 1 (the MVP) is largely built, and phase 3 now records Codex and OpenCode alongside Claude Code. Next on the roadmap:
+Quoli is an early-stage project, built in the open. Phase 1 (the MVP) is largely built, and phase 3 now records Codex, OpenCode and Pi alongside Claude Code. Next on the roadmap:
 - **Deeper observability:** per-step cost and time, failures and loops, cross-session trends, live alerts;
 - **Later phases:** symbol-level code maps, live hosting-provider data, and opt-in team sharing.
