@@ -29,14 +29,14 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `server/report.ts` | Pure functions behind the Summary: command classification, line counting, changes, review checklist |
 | `server/prices.ts` | Built-in list-price table, model matching, `costOf`, PUT validation, load/save via the `settings` table (key `prices`) |
 | `server/transcript.ts` | Token usage from Claude Code transcript JSONL, read incrementally |
-| `server/code.ts` | Code map: files from `git ls-files`, line counts, JS/TS relative imports, git status |
+| `server/code.ts` | Code map: files from `git ls-files`, line counts, JS/TS relative imports, git status and uncommitted line counts (`git diff --numstat HEAD`) |
 | `server/gitstate.ts` | Branches (ahead/behind), recent commits, changed-file count |
 | `server/infra.ts` | Service detection from config files; live Docker metrics when available |
 | `server/usage.ts` | `GET /api/usage`: spend and tokens per day, model, project and session; cache savings; today/month spend for budgets |
 | `server/demo.ts` | Builds a sample repo and records three synthetic sessions |
 | `web/src/App.tsx` | Shell: navigation sidebar (Dashboard, Sessions, Usage, projects, Settings) and routes |
 | `web/src/pages/*` | Dashboard, Sessions, Usage, Projects, Settings (General, Prices, Data, Appearance) and the Board (session list, lens tabs, canvas, details panel, replay bar) |
-| `web/src/lenses/*` | The four lenses. Agents opens on Steps (one row per call, prompt sections, subagent threads, filters, details in place; `agents/Timeline.tsx`) with Lanes (the graph) as the alternative; Code, Git and Infra draw on React Flow via `Board.tsx` |
+| `web/src/lenses/*` | The four lenses. Agents opens on Steps (one row per call, prompt sections, subagent threads, filters, details in place; `agents/Timeline.tsx`) with Lanes (the graph) as the alternative; Code opens on the change map (`code/changemap.ts`, `code/ChangeMapView.tsx`: the changed files in the middle, what they import on the left, what imports them on the right, one or two steps out) with All files (the folder explorer) as the alternative; Code, Git and Infra draw on React Flow via `Board.tsx` |
 | `web/src/components/*` | NavSidebar, session Sidebar, Inspector, Timeline (replay bar), Trace (one tick per tool call), SpendChart, Palette (⌘K), Diff, Onboarding |
 
 ## Data model
@@ -67,7 +67,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - Claude Code only. Hook payload fields were taken from Claude Code's documented hook contract and exercised with realistic synthetic payloads; verify against your installed version.
 - Subagent ↔ spawning `Task` call is matched by launch order (drawn dashed), because hooks do not link them by id.
 - Claude Code records some non-human turns as prompts. The Agents lens shows background-task notifications (`<task-notification>`) and slash commands (`<command-name>`) as one-line notices; other injected text still shows as a prompt.
-- File-level code map; imports are resolved for relative JS/TS only.
+- File-level code map; imports are resolved for relative JS/TS only, so other languages appear in the change map without connections. The change map draws an import between neighbouring columns or between two changed files; imports between two neighbours in the same column are left out, and each neighbour column keeps its 14 best-connected files ("+N more not drawn"). "Changed by this session" comes from recorded Edit/MultiEdit/Write calls, so files changed through Bash are missing there; "Uncommitted" shows them from git.
 - Infra is what config files declare; hosted metrics need provider connections that do not exist yet.
 - Large repos: the code map lists up to 50,000 paths and reads line counts/imports for up to 5,000 files (≤ 512 KB); the Code lens opens at folder level. Git history pages 200 commits at a time (max 2,000 per request).
 - Usage and budgets are estimates from transcript usage at list prices, bucketed by the server's local time zone. A budget is a display threshold, not an alert channel or a spending limit.

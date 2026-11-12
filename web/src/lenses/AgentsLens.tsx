@@ -2,7 +2,7 @@ import { type Edge, Handle, MarkerType, type Node, type NodeProps, Position } fr
 import { useMemo, useState } from "react";
 import type { AgentNode, ToolCall } from "../../../shared/model.ts";
 import { nodeA11y, quietNode, toolLabel } from "../a11y.ts";
-import { CATEGORY, compact, duration, plural, tokenSum } from "../format.ts";
+import { CATEGORY, compact, plural, tokenSum } from "../format.ts";
 import { isSelected, type LensContext } from "../state.ts";
 import {
   type CallFilter,

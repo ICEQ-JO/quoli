@@ -179,3 +179,180 @@
   white-space: nowrap;
   cursor: default;
 }
+
+/* ---- Mode controls ---- */
+
+.code-bar > .segmented {
+  pointer-events: auto;
+  flex: none;
+}
+
+.code-bar .segmented button:disabled {
+  opacity: 0.45;
+}
+
+/* ---- Change map ---- */
+
+.map-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  height: 100%;
+  padding: 0 2px;
+  font: 600 var(--fs-sm) var(--sans);
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+
+.map-count {
+  font: var(--fs-xs) var(--mono);
+  color: var(--faint);
+}
+
+.map-more {
+  padding: 4px 2px;
+  font-size: var(--fs-xs);
+  color: var(--faint);
+}
+
+.map-file {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+  padding: 0 12px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    border-color 0.15s;
+}
+
+.map-file:hover {
+  border-color: var(--muted);
+}
+
+.map-file.near {
+  background: var(--panel);
+}
+
+.map-file.centre {
+  border-color: var(--line-strong);
+}
+
+/* The orange glow always means "the agent changed this". */
+.map-file.agent {
+  border-color: var(--edit);
+  background: color-mix(in srgb, var(--edit) 10%, var(--raised));
+  box-shadow: 0 0 18px -8px color-mix(in srgb, var(--edit) 80%, transparent);
+}
+
+.map-file.pending {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.map-file.read:not(.agent) {
+  box-shadow: inset 0 0 0 1px var(--read);
+  border-color: var(--read);
+}
+
+.map-file.selected {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.map-file.related {
+  border-color: var(--muted);
+}
+
+.map-file.faded {
+  opacity: 0.35;
+}
+
+.mf-top,
+.mf-sub {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mf-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 var(--fs-sm) var(--mono);
+  color: var(--text);
+}
+
+.map-file.near .mf-name {
+  font-weight: 500;
+}
+
+.mf-diff {
+  display: inline-flex;
+  gap: 6px;
+  font: var(--fs-xs) var(--mono);
+}
+
+.mf-diff .add {
+  color: var(--ok-text);
+}
+
+.mf-diff .del {
+  color: var(--fail-text);
+}
+
+.mf-sub {
+  font-size: var(--fs-xs);
+  color: var(--faint);
+}
+
+.mf-dir {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+
+.mf-tag {
+  flex: none;
+  color: var(--muted);
+}
+
+.mf-tag.git {
+  color: var(--faint);
+}
+
+.mf-lines {
+  flex: none;
+  font-family: var(--mono);
+}
+
+.code-lens.map {
+  display: flex;
+  flex-direction: column;
+}
+
+.code-lens.map > .code-bar {
+  position: static;
+  flex: none;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.map-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
