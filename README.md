@@ -54,8 +54,8 @@ Then open http://127.0.0.1:4471. The demo data is fully synthetic and needs no A
 ## Install
 
 ```sh
-npx https://iceq.best/quoli-0.2.0.tgz setup   # once: records every repository for the agents on this machine
-npx https://iceq.best/quoli-0.2.0.tgz         # open http://127.0.0.1:4400
+npx https://iceq.best/quoli-0.2.1.tgz setup   # once: records every repository for the agents on this machine
+npx https://iceq.best/quoli-0.2.1.tgz         # open http://127.0.0.1:4400
 ```
 
 Needs Node.js 22.13 or newer. The package is served from the website for now; it will also be on npm as `@iceq/quoli` (the plain name `quoli` was refused as too close to `quill`). It contains only the built app (`pnpm pack:release` makes it in `release/`; see [docs/architecture.md](docs/architecture.md)). From a clone of this repository, use the `pnpm` commands below instead.
@@ -101,7 +101,7 @@ Press `?` in the app for all keyboard shortcuts. The main ones:
 
 ## Classes
 
-Instructors can see how a class uses coding agents at `/class/` on the hosted site: students opt in from Settings → Class sync, and only session summaries are shared (never prompts or code). Setup: [docs/classes.md](docs/classes.md).
+Sign in with GitHub at [iceq.best/app](https://iceq.best/app/) to create or join a team (a class, a company, a group of friends). Members opt in from Settings → Team sync, and only session summaries are shared (never prompts or code); the team owner sees how the team uses coding agents. Setup: [docs/teams.md](docs/teams.md).
 
 ## Privacy
 

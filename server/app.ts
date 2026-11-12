@@ -399,7 +399,9 @@ export function createApp(store: Store, port: () => number) {
       const c = loadSync(store);
       if (key !== undefined) {
         if (key !== "" && !(typeof key === "string" && /^qk_[0-9a-f]{48}$/.test(key.trim()))) {
-          throw new BadRequest("That is not a sync key: copy it from the class page (qk_…)");
+          throw new BadRequest(
+            "That is not a sync key: copy it from your Quoli account at iceq.best/app (qk_…)",
+          );
         }
         c.key = (key as string).trim();
         c.lastError = null;

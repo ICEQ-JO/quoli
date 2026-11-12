@@ -6,7 +6,7 @@ import { knownUsd, mainModel, sessionMs } from "./insights.ts";
 import { lastActivityAt } from "./steps.ts";
 
 /**
- * Class sync (#144): opt-in upload of session *summaries* to a hosted Quoli class.
+ * Team sync (#144, #151): opt-in upload of session *summaries* to the teams of a Quoli account.
  *
  * Only the fields in `SessionUpload` leave the machine: agent, model, GitHub repo, branch, times,
  * token counts, estimated cost and call/failure/loop counts. Never prompts, tool input or
@@ -41,7 +41,7 @@ export interface SyncConfig {
   /** The hosted project's URL and public anon key; filled from the build defaults. */
   url: string;
   anonKey: string;
-  /** The student's sync key from the class page. */
+  /** The member's sync key from the account page. */
   key: string;
   /** Sessions that started before this are never sent. */
   since: string | null;

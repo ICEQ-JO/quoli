@@ -3,8 +3,8 @@ import { api, useData } from "../api.ts";
 import { ago } from "../format.ts";
 import { ErrorState, Loading } from "./ui.tsx";
 
-/** Where students sign in, join a class and get their sync key. */
-export const CLASS_PAGE = "https://iceq.best/class/";
+/** The Quoli account page: sign in, join a team and get a sync key. */
+export const ACCOUNT_PAGE = "https://iceq.best/app/";
 
 /** What a summary contains; the same allow-list as `toUpload` in server/sync.ts. */
 const SENT = [
@@ -17,7 +17,7 @@ const SENT = [
 const NEVER = "prompts, code, commands, tool output, file names, folder paths or session titles";
 
 /**
- * Settings → Class sync: paste the sync key from the class page and turn sending on or off.
+ * Settings → Team sync: paste the sync key from the account page and turn sending on or off.
  * Off by default; only sessions that start after it is turned on are sent.
  */
 export function SyncSettings() {
@@ -42,23 +42,22 @@ export function SyncSettings() {
 
   return (
     <section className="card sync" aria-labelledby="sync-h">
-      <h2 id="sync-h">Class sync</h2>
+      <h2 id="sync-h">Team sync</h2>
       <p className="faint">
-        Share a summary of each session with your class, so your instructor sees how the class is
-        using coding agents. Off until you turn it on, and only sessions you start after that are
-        shared.
+        Share a summary of each session with your teams, so the team owner sees how the team uses
+        coding agents. Off until you turn it on, and only sessions you start after that are shared.
       </p>
       {!status.available ? (
-        <p className="notice">This copy of Quoli is not set up for a class service yet.</p>
+        <p className="notice">This copy of Quoli is not set up for Quoli accounts yet.</p>
       ) : (
         <>
           <ol className="sync-steps">
             <li>
-              Open the{" "}
-              <a href={CLASS_PAGE} target="_blank" rel="noreferrer">
-                class page
+              Open your{" "}
+              <a href={ACCOUNT_PAGE} target="_blank" rel="noreferrer">
+                Quoli account
               </a>
-              , sign in with GitHub and join with your instructor's invite code.
+              , sign in with GitHub and join your team with its invite code.
             </li>
             <li>Create a sync key there and paste it here.</li>
           </ol>
@@ -105,7 +104,7 @@ export function SyncSettings() {
               disabled={busy || !status.hasKey}
               onChange={(e) => save({ enabled: e.target.checked })}
             />
-            Send session summaries to my class
+            Send session summaries to my teams
           </label>
           <p className="faint sync-state" role="status">
             {status.enabled

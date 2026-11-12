@@ -24,16 +24,16 @@ export default defineConfig({
     outDir: "../dist",
     emptyOutDir: true,
     // QUOLI_BUILD=landing builds only the public pages (Vercel): the landing page and the hosted
-    // class page (web/class, Supabase); the local app is never
+    // account page (web/app at /app/, Supabase); the local app is never
     // published there because it needs its private evidence server.
     rollupOptions: {
       input:
         process.env.QUOLI_BUILD === "landing"
-          ? { landing: "web/landing/index.html", class: "web/class/index.html" }
+          ? { landing: "web/landing/index.html", account: "web/app/index.html" }
           : {
               app: "web/index.html",
               landing: "web/landing/index.html",
-              class: "web/class/index.html",
+              account: "web/app/index.html",
             },
     },
   },
