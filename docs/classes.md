@@ -7,7 +7,7 @@ Quoli Classes (#144) lets an instructor see how a class uses coding agents. Stud
 | Piece | Where | Notes |
 | --- | --- | --- |
 | Database, sign-in, access rules | Supabase (`supabase/migrations`) | Row-level security; uploads through `submit_summaries` with a student's sync key. No service key is used anywhere. |
-| Class page | `web/class` + `web/src/class`, built with the landing page and served at `/class/` on Vercel | Reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at build time. |
+| Class page | `web/class` + `web/src/class`, built with the landing page and served at `/class/` on Vercel | Uses the URL and publishable key in `shared/hosted.ts`; `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` override them at build time (local development). |
 | Uploader | `server/sync.ts` in each student's Quoli | Off by default; Settings → Class sync. Reads `QUOLI_SYNC_URL` and `QUOLI_SYNC_ANON_KEY`, which the published package will carry as defaults. |
 
 ## One-time setup (owner)
@@ -16,7 +16,7 @@ Quoli Classes (#144) lets an instructor see how a class uses coding agents. Stud
 2. **GitHub sign-in**: GitHub → Settings → Developer settings → OAuth Apps → New. Homepage `https://iceq.best`, callback `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the Client ID and Secret into Supabase → Authentication → Providers → GitHub (free).
 3. **Redirects**: Supabase → Authentication → URL Configuration: Site URL `https://iceq.best/class/`, and add `https://iceq.best/class/` to Redirect URLs.
 4. **Schema**: `supabase link --project-ref <ref>` then `supabase db push` applies `supabase/migrations`.
-5. **Vercel**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the project's environment variables and redeploy. The page is then at `https://iceq.best/class/`.
+5. **Vercel**: no environment variables are needed; the page reads `shared/hosted.ts`. Redeploy. The page is then at `https://iceq.best/class/`.
 
 ## Using it
 

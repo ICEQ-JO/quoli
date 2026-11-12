@@ -233,7 +233,12 @@ function excludeFromGit(repo: string, rel: string) {
   writeFileSync(exclude, `${current}${current && !current.endsWith("\n") ? "\n" : ""}${entry}\n`);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+// Run directly (pnpm connect). Never inside the published bundle, where every module shares one URL.
+if (
+  process.env.QUOLI_BUNDLED !== "1" &&
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1])
+) {
   const args = process.argv.slice(2);
   const agentAt = args.indexOf("--agent");
   const agent = (agentAt >= 0 ? args[agentAt + 1] : "claude-code") as HookAgent;

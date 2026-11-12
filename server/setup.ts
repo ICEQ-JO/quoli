@@ -153,21 +153,25 @@ export function refreshSetup(): HookAgent[] {
   return stale;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
-  const args = process.argv.slice(2);
+/** How to start Quoli: the published package or a clone of the repository. */
+export const START = process.env.QUOLI_BUNDLED === "1" ? "npx quoli" : "pnpm dev";
+const SETUP = process.env.QUOLI_BUNDLED === "1" ? "npx quoli setup" : "pnpm quoli-setup";
+
+/** `quoli setup [agent…] [--remove]`; returns the exit code. */
+export function setupCli(args: string[]): number {
   const remove = args.includes("--remove");
   const named = args.filter((a) => !a.startsWith("--")) as HookAgent[];
   const unknown = named.filter((a) => !HOOK_AGENTS.includes(a));
   if (unknown.length || args.includes("--help")) {
     console.log(
-      `Usage: pnpm quoli-setup [${HOOK_AGENTS.join("|")} ...] [--remove]\nWith no agent named, sets up every agent found on this machine.`,
+      `Usage: ${SETUP} [${HOOK_AGENTS.join("|")} ...] [--remove]\nWith no agent named, sets up every agent found on this machine.`,
     );
-    process.exit(unknown.length ? 1 : 0);
+    return unknown.length ? 1 : 0;
   }
   const agents = named.length ? named : remove ? HOOK_AGENTS : detectedAgents();
   if (!agents.length) {
     console.log("No coding agent found (looked for Claude Code, Codex, OpenCode and Pi).");
-    process.exit(1);
+    return 1;
   }
   const results = setup(agents, remove);
   for (const r of results) {
@@ -180,12 +184,21 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
   }
   if (!remove) {
     console.log(
-      "\nEvery repository you open with these agents is now recorded. Start Quoli with `pnpm dev`.",
+      `\nEvery repository you open with these agents is now recorded. Start Quoli with \`${START}\`.`,
     );
     if (results.some((r) => r.agent === "codex" && !r.error)) {
       console.log("Codex: run `codex` once and approve Quoli's hooks with /hooks.");
     }
     console.log("Sessions run while Quoli is closed are kept and appear when it starts.");
   }
-  process.exit(results.some((r) => r.error) ? 1 : 0);
+  return results.some((r) => r.error) ? 1 : 0;
+}
+
+// Run directly (pnpm quoli-setup). The published bundle has its own entry, server/cli.ts.
+if (
+  process.env.QUOLI_BUNDLED !== "1" &&
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1])
+) {
+  process.exit(setupCli(process.argv.slice(2)));
 }

@@ -1,5 +1,6 @@
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { HOSTED_SUPABASE } from "../../../shared/hosted.ts";
 import { AGENT_NAMES, type AgentKind } from "../../../shared/model.ts";
 import { ago, compact, usd } from "../format.ts";
 
@@ -11,8 +12,10 @@ import { ago, compact, usd } from "../format.ts";
  * user may see.
  */
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const SUPABASE_URL =
+  (import.meta.env.VITE_SUPABASE_URL as string | undefined) || HOSTED_SUPABASE.url;
+const KEY =
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || HOSTED_SUPABASE.publishableKey;
 
 interface ClassRow {
   id: string;

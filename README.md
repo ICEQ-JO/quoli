@@ -51,6 +51,15 @@ QUOLI_HOME=/tmp/quoli-demo QUOLI_PORT=4471 pnpm demo -- --large
 
 Then open http://127.0.0.1:4471. The demo data is fully synthetic and needs no API keys.
 
+## Install
+
+```sh
+npx quoli@latest setup   # once: records every repository for the agents on this machine
+npx quoli@latest         # open http://127.0.0.1:4400
+```
+
+Needs Node.js 22.13 or newer. The npm package contains only the built app (`pnpm pack:release` makes it in `release/`; see [docs/architecture.md](docs/architecture.md)). From a clone of this repository, use the `pnpm` commands below instead.
+
 ## Use it with your own repositories
 
 ```sh

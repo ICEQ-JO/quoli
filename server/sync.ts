@@ -1,3 +1,4 @@
+import { HOSTED_SUPABASE } from "../shared/hosted.ts";
 import type { SessionDetail, SyncStatus } from "../shared/model.ts";
 import type { Store } from "./db.ts";
 import { githubRepo } from "./github.ts";
@@ -51,8 +52,8 @@ export interface SyncConfig {
 
 /** The hosted class service; overridable for development with a local Supabase. */
 export const HOSTED = {
-  url: process.env.QUOLI_SYNC_URL ?? "",
-  anonKey: process.env.QUOLI_SYNC_ANON_KEY ?? "",
+  url: process.env.QUOLI_SYNC_URL ?? HOSTED_SUPABASE.url,
+  anonKey: process.env.QUOLI_SYNC_ANON_KEY ?? HOSTED_SUPABASE.publishableKey,
 };
 
 const BLANK: SyncConfig = {
