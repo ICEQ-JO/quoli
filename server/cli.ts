@@ -7,6 +7,13 @@
  *   quoli setup [...]   record every repository for the agents on this machine (see setup.ts)
  *   quoli --version
  */
+// node:sqlite is stable enough for Quoli; its "experimental" notice only confuses people.
+const warn = process.emitWarning.bind(process);
+process.emitWarning = ((w: string | Error, ...a: unknown[]) =>
+  String(w).includes("SQLite")
+    ? undefined
+    : (warn as (...x: unknown[]) => void)(w, ...a)) as typeof process.emitWarning;
+
 const [cmd, ...rest] = process.argv.slice(2);
 const portAt = process.argv.indexOf("--port");
 if (portAt > 0) process.env.QUOLI_PORT = process.argv[portAt + 1];
@@ -20,6 +27,10 @@ if (cmd === "connect") {
   if (next !== "start") process.exit(next);
   process.env.NODE_ENV = "production";
   await import("./main.ts");
+} else if (cmd === "sync") {
+  // Started by the hooks while Quoli is closed (server/background.ts); not for people.
+  const { runSync } = await import("./background.ts");
+  process.exit(await runSync());
 } else if (cmd === "setup") {
   const { setupCli } = await import("./setup.ts");
   process.exit(setupCli(rest));

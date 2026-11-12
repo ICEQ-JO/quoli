@@ -267,7 +267,10 @@ function summarize(input: unknown, root: string): string {
   if (str(i.description)) return clip(String(i.description), 140);
   if (str(i.url)) return String(i.url);
   if (str(i.query)) return clip(String(i.query), 140);
-  return clip(JSON.stringify(i), 120);
+  for (const k of ["prompt", "message", "text", "title", "name"])
+    if (str(i[k])) return clip(String(i[k]).split("\n")[0], 140);
+  // Nothing readable (ids, flags): the tool's name says more than raw JSON would.
+  return "";
 }
 
 function outputText(r: unknown): string | null {

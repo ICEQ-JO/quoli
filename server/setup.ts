@@ -4,6 +4,12 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { AGENT_NAMES } from "../shared/model.ts";
 import {
+  installSyncCommand,
+  removeSyncCommand,
+  syncCommand,
+  syncCommandFile,
+} from "./background.ts";
+import {
   commandFor,
   connect,
   HOOK_AGENTS,
@@ -73,6 +79,7 @@ export function setup(agents: HookAgent[], remove = false, roots?: string[]): Se
   if (!remove) {
     mkdirSync(home(), { recursive: true });
     copyFileSync(hook, hookCopy());
+    installSyncCommand();
   }
   const results = agents.map((agent): SetupResult => {
     const { file } = globalTarget(agent);
@@ -84,6 +91,7 @@ export function setup(agents: HookAgent[], remove = false, roots?: string[]): Se
       return { agent, file, error: (error as Error).message };
     }
   });
+  if (remove && !HOOK_AGENTS.some(isSetUp)) removeSyncCommand();
   if (!remove) {
     const done = results.filter((r) => !r.error).map((r) => r.agent);
     for (const root of roots ?? registeredRoots()) {
@@ -150,7 +158,21 @@ export function refreshSetup(): HookAgent[] {
       : hookStale || !text.includes(JSON.stringify(commandFor(agent, hookCopy())).slice(1, -1));
   });
   if (stale.length) setup(stale, false, []);
+  else if (syncCommandStale()) installSyncCommand();
   return stale;
+}
+
+/** sync.json points somewhere else, or (from the package) the app copy is another version. */
+function syncCommandStale(): boolean {
+  try {
+    if (readFileSync(syncCommandFile(), "utf8") !== `${JSON.stringify(syncCommand(), null, 2)}\n`)
+      return true;
+    if (process.env.QUOLI_BUNDLED !== "1") return false;
+    const copy = JSON.parse(readFileSync(join(home(), "app", "package.json"), "utf8"));
+    return copy.version !== process.env.QUOLI_VERSION;
+  } catch {
+    return true;
+  }
 }
 
 /**
