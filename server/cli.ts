@@ -11,6 +11,7 @@ const portAt = process.argv.indexOf("--port");
 if (portAt > 0) process.env.QUOLI_PORT = process.argv[portAt + 1];
 
 const VERSION = process.env.QUOLI_VERSION ?? "dev";
+const Q = `npx https://iceq.best/quoli-${VERSION}.tgz`;
 
 if (cmd === "setup") {
   const { setupCli } = await import("./setup.ts");
@@ -20,11 +21,11 @@ if (cmd === "setup") {
 } else if (cmd === "--help" || cmd === "-h" || cmd === "help") {
   console.log(`Quoli ${VERSION}: one map of what your coding agents did.
 
-  npx quoli              start Quoli on http://127.0.0.1:4400
-  npx quoli setup        record every repository for Claude Code, Codex, OpenCode and Pi
-  npx quoli setup --remove
-  npx quoli demo         start with a synthetic demo project
-  --port <n>             use another port (or set QUOLI_PORT)
+  ${Q}               start Quoli on http://127.0.0.1:4400
+  ${Q} setup         record every repository for Claude Code, Codex, OpenCode and Pi
+  ${Q} setup --remove
+  ${Q} demo          start with a synthetic demo project
+  --port <n>   use another port (or set QUOLI_PORT)
 
 Data stays on this machine in ~/.quoli (QUOLI_HOME to change).`);
 } else if (cmd === undefined || cmd === "start" || cmd === "demo" || cmd === "--port") {
@@ -32,7 +33,7 @@ Data stays on this machine in ~/.quoli (QUOLI_HOME to change).`);
   if (cmd === "demo") process.argv.push("--demo");
   await import("./main.ts");
 } else {
-  console.log(`Unknown command: ${cmd}. Run \`npx quoli --help\`.`);
+  console.log(`Unknown command: ${cmd}. Run \`${Q} --help\`.`);
   process.exit(1);
 }
 
