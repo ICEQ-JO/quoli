@@ -533,7 +533,7 @@ export function seedDemo(store: Store) {
     start: now - 26 * 3_600_000,
     end: true,
     transcripts,
-    agent: { kind: "codex", version: "0.163.0", model: "gpt-5-codex" },
+    agent: { kind: "codex", version: "0.163.0", model: "gpt-5.3-codex" },
     steps: [
       { prompt: "Wire the search box into the product grid so it filters by name." },
       {

@@ -1,12 +1,14 @@
 #!/usr/bin/env node
-// Claude Code runs this for every hook event with the event JSON on stdin.
+// Claude Code and Codex run this for every hook event with the event JSON on stdin.
+// Arguments: the Quoli port, then the agent when it is not Claude Code (for example "codex").
 // It forwards the event to the local Quoli server and never affects the agent:
 // it prints nothing (stdout is read as a hook decision) and always exits 0.
 const port = process.argv[2] ?? process.env.QUOLI_PORT ?? "4400";
+const agent = /^[a-z-]+$/.test(process.argv[3] ?? "") ? `?agent=${process.argv[3]}` : "";
 const chunks = [];
 for await (const chunk of process.stdin) chunks.push(chunk);
 try {
-  await fetch(`http://127.0.0.1:${port}/ingest`, {
+  await fetch(`http://127.0.0.1:${port}/ingest${agent}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: Buffer.concat(chunks),

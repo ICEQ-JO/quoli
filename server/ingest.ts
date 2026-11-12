@@ -52,8 +52,13 @@ export function ingest(
   onNewRoot?: () => void,
   agent: AgentKind = "claude-code",
 ) {
-  const normalized = adapterFor(agent)?.normalize(raw);
-  return normalized ? recordEvent(store, normalized, agent, at, onNewRoot) : false;
+  const adapter = adapterFor(agent);
+  const normalized = adapter?.normalize(raw);
+  if (!adapter || !normalized || !recordEvent(store, normalized, agent, at, onNewRoot))
+    return false;
+  const usage = adapter.usage?.(normalized, at);
+  if (usage) store.upsertUsage(usage);
+  return true;
 }
 
 /**

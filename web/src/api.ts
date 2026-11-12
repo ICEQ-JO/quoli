@@ -48,7 +48,8 @@ export interface SettingsResponse {
 
 export const api = {
   projects: () => get<Project[]>("/api/projects"),
-  connectProject: (path: string) => send<Project>("POST", "/api/projects", { path }),
+  connectProject: (path: string, agents?: AgentKind[]) =>
+    send<Project>("POST", "/api/projects", { path, agents }),
   disconnectProject: (projectId: string) =>
     send<Project>("POST", `/api/projects/${id(projectId)}/disconnect`),
   deleteProject: (projectId: string) =>

@@ -19,12 +19,12 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | Path | What |
 | --- | --- |
 | `shared/model.ts` | The shared vocabulary: sessions, agents, tool calls, files, branches, services, links, basis |
-| `server/hook.mjs` | What Claude Code runs. Dependency-free, forwards stdin to the server, always exits 0, prints nothing |
-| `server/connect.ts` | `pnpm connect <repo>` — adds/removes Quoli's hooks in `<repo>/.claude/settings.local.json` |
+| `server/hook.mjs` | What Claude Code and Codex run. Dependency-free, forwards stdin to the server (`/ingest?agent=codex` for Codex), always exits 0, prints nothing |
+| `server/connect.ts` | `pnpm connect <repo> [--agent codex]` — adds/removes Quoli's hooks in `<repo>/.claude/settings.local.json`, or for Codex in `<repo>/.codex/hooks.json` (added to `.git/info/exclude` so it is never committed) |
 | `server/main.ts` | HTTP server: host guard, static/Vite, hourly retention timer |
 | `server/app.ts` | The API ([docs/api.md](api.md)): ingest, projects, sessions, overview, settings, SSE, mutation guard |
 | `server/db.ts` | SQLite store: append-only `events`, deduplicated `usage`, transcript read offsets, `projects` registry, `settings` |
-| `server/adapters.ts` | One adapter per coding agent, mapping its hook payload into the shared Claude Code-shaped event. Only Claude Code's (identity) is registered; Codex and OpenCode follow in #117 and #118 |
+| `server/adapters.ts` | One adapter per coding agent, mapping its hook payload into the shared Claude Code-shaped event and, where the agent reports it in hooks, a token usage row. Claude Code (identity) and Codex are registered; OpenCode follows in #118 |
 | `server/ingest.ts` | Runs the agent's adapter, resolves repo root, records the branch at session start, redacts secrets, stores (stamping `quoli_agent` on non-Claude events), reads Claude Code transcripts |
 | `server/sessions.ts` | Pure derivation: raw events + usage + price table → session view (turns, tool calls, agents, files, tokens, cost, report) |
 | `server/report.ts` | Pure functions behind the Summary: command classification, line counting, changes, review checklist |
@@ -70,7 +70,13 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 
 ## Known limitations
 
-- Claude Code is the only agent connected today. Sessions, usage, tool categories (`categorize` in `shared/model.ts`, lower-cased names for all three agents) and the Summary report are agent-neutral: they read Codex `apply_patch` bodies and argument-list commands and OpenCode's camelCase `filePath`/`oldString`/`newString`. The synthetic demo includes one Codex and one OpenCode session in that shape. Codex and OpenCode sessions get token usage only from what their adapters report (no transcript reading), and a model without a price (for example `gpt-5-codex`) counts in tokens, not in spend.
+- Claude Code and Codex can be connected; OpenCode is next (#118). Codex specifics (contract: learn.chatgpt.com/docs/hooks and the generated schemas in `openai/codex` `codex-rs/hooks/schema`):
+  - Codex runs project hooks only after the user trusts them with `/hooks` (or the project's `.codex/` layer is untrusted and nothing runs); until the first event the project shows Codex as waiting for trust.
+  - Hosted tools such as WebSearch do not fire Codex hooks, so they are never recorded.
+  - Codex has no tool-failure event. A result whose first lines report a non-zero exit (`Exit code: N`, `Process exited with code N`) is stored as a failure marked `quoli_failure_inferred`; other failures read as ok.
+  - Token usage comes from `PostModelRequest.token_usage` per model request (`input_tokens` include cached input, so uncached input is stored as `input_tokens − cached_input_tokens`). Rollout files are not read.
+  - A Codex subagent that runs under its own session id appears as a separate session.
+- Sessions, usage, tool categories (`categorize` in `shared/model.ts`, lower-cased names for all three agents) and the Summary report are agent-neutral: they read Codex `apply_patch` bodies and argument-list commands and OpenCode's camelCase `filePath`/`oldString`/`newString`. The synthetic demo includes one Codex and one OpenCode session in that shape. Codex and OpenCode sessions get token usage only from what their adapters report (no transcript reading), and a model without a price (for example `gpt-5-codex`) counts in tokens, not in spend. Prices match an exact model id or a dated snapshot of it (`<model>-<digit>…`), so `gpt-5` never prices `gpt-5.3-codex`. Built-in OpenAI prices are the standard tier up to 272K input; longer contexts, Batch, Flex and Fast mode cost differently and are not modelled.
 - Hook payload fields were taken from Claude Code's documented hook contract and exercised with realistic synthetic payloads; verify against your installed version.
 - Subagent ↔ spawning `Task` call is matched by launch order (drawn dashed), because hooks do not link them by id.
 - Claude Code records some non-human turns as prompts. The Agents lens shows background-task notifications (`<task-notification>`) and slash commands (`<command-name>`) as one-line notices; other injected text still shows as a prompt.

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Project } from "../../../shared/model.ts";
+import { AGENT_NAMES, type AgentKind, type Project } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import {
   DeleteDataDialog,
@@ -29,6 +29,28 @@ export function HookBadge({ project }: { project: Project }) {
   );
 }
 
+/** Agents Quoli can install hooks for. OpenCode capture comes through a plugin (#118). */
+const HOOK_AGENTS: AgentKind[] = ["claude-code", "codex"];
+
+/** One line per agent with hooks installed: receiving, or what the user still has to do. */
+function AgentHooks({ project }: { project: Project }) {
+  if (!project.agents.length) return null;
+  return (
+    <ul className="agent-hooks">
+      {project.agents.map(({ agent, status }) => (
+        <li key={agent}>
+          <span className="agent-tag">{AGENT_NAMES[agent]}</span>{" "}
+          {status === "receiving"
+            ? "receiving"
+            : agent === "codex"
+              ? "waiting for trust: run codex in the repo and approve Quoli's hooks with /hooks"
+              : "waiting for the first event"}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function ProjectsPage() {
   const [projects, refresh, error] = useData("projects", api.projects);
   const [deleting, setDeleting] = useState<Project | null>(null);
@@ -37,6 +59,21 @@ export function ProjectsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   useNow();
   useLiveEvents(refresh);
+
+  const addCodex = async (p: Project) => {
+    setBusy(p.id);
+    setRowError(({ [p.id]: _, ...rest }) => rest);
+    try {
+      await api.connectProject(p.root, ["codex"]);
+      setNotice(
+        `Added Codex hooks to ${p.name} (.codex/hooks.json, kept out of Git). Run codex there and approve them with /hooks.`,
+      );
+      refresh();
+    } catch (e) {
+      setRowError((r) => ({ ...r, [p.id]: e instanceof Error ? e.message : String(e) }));
+    }
+    setBusy(null);
+  };
 
   const disconnect = async (p: Project) => {
     setBusy(p.id);
@@ -105,6 +142,7 @@ export function ProjectsPage() {
                 </td>
                 <td>
                   <HookBadge project={p} />
+                  <AgentHooks project={p} />
                   {rowError[p.id] && (
                     <p className="form-error" role="alert">
                       {rowError[p.id]}
@@ -117,6 +155,18 @@ export function ProjectsPage() {
                   <Link to={paths.board(p.id)} className="btn">
                     Open
                   </Link>
+                  {p.hookStatus !== "not_connected" &&
+                    !p.agents.some((a) => a.agent === "codex") && (
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={busy === p.id}
+                        title="Install Quoli's hooks for Codex in this repository too"
+                        onClick={() => addCodex(p)}
+                      >
+                        Add Codex
+                      </button>
+                    )}
                   <button
                     type="button"
                     className="btn"
@@ -162,6 +212,9 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Project | null>(null);
+  const [agents, setAgents] = useState<AgentKind[]>(["claude-code"]);
+  const toggle = (a: AgentKind, on: boolean) =>
+    setAgents((list) => (on ? [...list, a] : list.filter((x) => x !== a)));
   return (
     <form
       className="card connect"
@@ -171,7 +224,7 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
         setError(null);
         setDone(null);
         try {
-          const p = onConnected(await api.connectProject(path.trim()));
+          const p = onConnected(await api.connectProject(path.trim(), agents));
           setDone(p);
           setPath("");
         } catch (err) {
@@ -195,13 +248,31 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
           autoComplete="off"
           aria-describedby="connect-help"
         />
-        <button type="submit" className="btn primary" disabled={busy || !path.trim()}>
+        <button
+          type="submit"
+          className="btn primary"
+          disabled={busy || !path.trim() || !agents.length}
+        >
           {busy ? "Connecting…" : "Connect"}
         </button>
       </div>
+      <fieldset className="agent-choice">
+        <legend>Record sessions from</legend>
+        {HOOK_AGENTS.map((a) => (
+          <label key={a} className="check">
+            <input
+              type="checkbox"
+              checked={agents.includes(a)}
+              onChange={(e) => toggle(a, e.target.checked)}
+            />
+            {AGENT_NAMES[a]}
+          </label>
+        ))}
+      </fieldset>
       <p id="connect-help" className="faint">
-        The top level of a git repository. Quoli adds its hooks to that repo's .claude settings,
-        like pnpm connect does.
+        The top level of a git repository. Quoli adds its hooks to that repo's local Claude Code
+        settings (.claude/settings.local.json) and, for Codex, to .codex/hooks.json, which it keeps
+        out of Git. Same as pnpm connect.
       </p>
       {error && (
         <p className="form-error" role="alert">
@@ -210,8 +281,16 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
       )}
       {done && (
         <p className="notice" role="status">
-          Connected {done.name}. Next: start a new Claude Code session in that repo
-          <code className="path"> cd {done.root} && claude</code>
+          Connected {done.name}. Next: start a new session in that repo
+          {done.agents.some((a) => a.agent === "claude-code") && (
+            <code className="path"> cd {done.root} && claude</code>
+          )}
+          {done.agents.some((a) => a.agent === "codex") && (
+            <>
+              <code className="path"> cd {done.root} && codex</code> then approve Quoli's hooks with{" "}
+              <code>/hooks</code> (Codex runs project hooks only once you trust them).
+            </>
+          )}
         </p>
       )}
     </form>
