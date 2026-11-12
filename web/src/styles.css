@@ -3029,3 +3029,80 @@ textarea.input {
 .table.projects td.hooks {
   min-width: 240px;
 }
+
+/* Summary: where the time and money went (#127). */
+.sum-turns .c-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+  white-space: nowrap;
+}
+.sum-turns .c-bar .bar {
+  flex: 1;
+  height: 6px;
+  min-width: 60px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.sum-turns .c-bar .bar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--muted);
+}
+.sum-turns .c-bar .num {
+  min-width: 52px;
+  text-align: right;
+}
+.sum-turns tr.costly td.strong {
+  color: var(--text);
+  box-shadow: inset 2px 0 0 var(--brand);
+}
+.sum-turns td a {
+  color: inherit;
+}
+.sum-turns td a:hover {
+  text-decoration: underline;
+}
+.sum-turns .fail {
+  color: var(--fail);
+}
+.sum-sub {
+  margin: 16px 0 6px;
+  font-size: var(--fs-xs);
+  color: var(--faint);
+  font-weight: 600;
+}
+.sum-slow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sum-slow li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
+.sum-slow li:first-child {
+  border-top: 0;
+}
+.sum-slow a {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+}
+.sum-slow .num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.sum-slow .num.fail {
+  color: var(--fail);
+}

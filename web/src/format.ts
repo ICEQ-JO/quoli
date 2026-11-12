@@ -27,6 +27,15 @@ export function ago(iso: string | null): string {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
+/** A length of time: "0.4s", "12s", "3m 5s", "1h 20m". */
+export function span(ms: number): string {
+  const s = Math.max(0, ms) / 1000;
+  if (s < 10) return `${s.toFixed(1)}s`;
+  if (s < 60) return `${Math.round(s)}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
+  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+}
+
 export function duration(from: string, to: string | null): string {
   const s = Math.max(0, ((to ? Date.parse(to) : Date.now()) - Date.parse(from)) / 1000);
   if (s < 60) return `${Math.round(s)}s`;

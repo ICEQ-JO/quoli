@@ -11,7 +11,7 @@ import {
 import type { AgentNode, SessionDetail, ToolCall, ToolCategory } from "../../../../shared/model.ts";
 import { onRoveKey, toolLabel } from "../../a11y.ts";
 import { RecordedChange } from "../../components/Diff.tsx";
-import { CATEGORY, clock, compact, fileName, plural, tokenSum } from "../../format.ts";
+import { CATEGORY, clock, compact, fileName, plural, span, tokenSum } from "../../format.ts";
 import type { Selection } from "../../state.ts";
 import {
   type CallFilter,
@@ -385,7 +385,12 @@ function CallDetail({ call, select }: { call: ToolCall; select: (s: Selection) =
             {f}
           </button>
         ))}
-        <span className="faint">Started {clock(call.startedAt)}</span>
+        <span className="faint">
+          Started {clock(call.startedAt)}
+          {call.endedAt
+            ? ` · took ${span(Date.parse(call.endedAt) - Date.parse(call.startedAt))}`
+            : " · still running"}
+        </span>
       </div>
     </div>
   );
