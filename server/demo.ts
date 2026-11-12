@@ -312,6 +312,9 @@ function record(
   }
 }
 
+/** An OpenCode file input as stored: OpenCode's `path`, plus the `file_path` its adapter adds. */
+const ocPath = (path: string) => ({ path, file_path: path });
+
 export function seedDemo(store: Store) {
   const base = join(home(), "demo");
   const root = join(base, "shop");
@@ -590,12 +593,12 @@ export function seedDemo(store: Store) {
     steps: [
       { prompt: "Document the environment variables the API needs." },
       { tool: "grep", input: { pattern: "process.env", path: "apps/api" } },
-      { tool: "read", input: { filePath: p("apps/api/src/db/client.ts") } },
-      { tool: "read", input: { filePath: p("apps/api/src/services/payments.ts") } },
+      { tool: "read", input: ocPath(p("apps/api/src/db/client.ts")) },
+      { tool: "read", input: ocPath(p("apps/api/src/services/payments.ts")) },
       {
         tool: "write",
         input: {
-          filePath: p("apps/api/.env.example"),
+          ...ocPath(p("apps/api/.env.example")),
           content: "DATABASE_URL=\nSTRIPE_KEY=\nREDIS_URL=redis://localhost:6379\n",
         },
       },

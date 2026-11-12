@@ -29,8 +29,14 @@ export function HookBadge({ project }: { project: Project }) {
   );
 }
 
-/** Agents Quoli can install hooks for. OpenCode capture comes through a plugin (#118). */
-const HOOK_AGENTS: AgentKind[] = ["claude-code", "codex"];
+/** Agents Quoli can connect: hooks for Claude Code and Codex, a plugin for OpenCode. */
+const HOOK_AGENTS: AgentKind[] = ["claude-code", "codex", "opencode"];
+
+const WAITING: Record<AgentKind, string> = {
+  "claude-code": "waiting for the first event: start claude in the repo",
+  codex: "waiting for trust: run codex in the repo and approve Quoli's hooks with /hooks",
+  opencode: "waiting for the first event: start opencode in the repo",
+};
 
 /** One line per agent with hooks installed: receiving, or what the user still has to do. */
 function AgentHooks({ project }: { project: Project }) {
@@ -40,11 +46,7 @@ function AgentHooks({ project }: { project: Project }) {
       {project.agents.map(({ agent, status }) => (
         <li key={agent}>
           <span className="agent-tag">{AGENT_NAMES[agent]}</span>{" "}
-          {status === "receiving"
-            ? "receiving"
-            : agent === "codex"
-              ? "waiting for trust: run codex in the repo and approve Quoli's hooks with /hooks"
-              : "waiting for the first event"}
+          {status === "receiving" ? "receiving" : WAITING[agent]}
         </li>
       ))}
     </ul>
@@ -60,13 +62,15 @@ export function ProjectsPage() {
   useNow();
   useLiveEvents(refresh);
 
-  const addCodex = async (p: Project) => {
+  const addAgent = async (p: Project, agent: AgentKind) => {
     setBusy(p.id);
     setRowError(({ [p.id]: _, ...rest }) => rest);
     try {
-      await api.connectProject(p.root, ["codex"]);
+      await api.connectProject(p.root, [agent]);
       setNotice(
-        `Added Codex hooks to ${p.name} (.codex/hooks.json, kept out of Git). Run codex there and approve them with /hooks.`,
+        agent === "codex"
+          ? `Added Codex hooks to ${p.name} (.codex/hooks.json, kept out of Git). Run codex there and approve them with /hooks.`
+          : `Added ${AGENT_NAMES[agent]} to ${p.name}.${agent === "opencode" ? " The plugin is .opencode/plugins/quoli.js, kept out of Git." : ""}`,
       );
       refresh();
     } catch (e) {
@@ -140,7 +144,7 @@ export function ProjectsPage() {
                     {p.root}
                   </code>
                 </td>
-                <td>
+                <td className="hooks">
                   <HookBadge project={p} />
                   <AgentHooks project={p} />
                   {rowError[p.id] && (
@@ -155,18 +159,22 @@ export function ProjectsPage() {
                   <Link to={paths.board(p.id)} className="btn">
                     Open
                   </Link>
-                  {p.hookStatus !== "not_connected" &&
-                    !p.agents.some((a) => a.agent === "codex") && (
-                      <button
-                        type="button"
-                        className="btn"
-                        disabled={busy === p.id}
-                        title="Install Quoli's hooks for Codex in this repository too"
-                        onClick={() => addCodex(p)}
-                      >
-                        Add Codex
-                      </button>
-                    )}
+                  {p.hookStatus !== "not_connected" && p.agents.length < HOOK_AGENTS.length && (
+                    <select
+                      className="input add-agent"
+                      aria-label={`Record another agent's sessions in ${p.name}`}
+                      disabled={busy === p.id}
+                      value=""
+                      onChange={(e) => addAgent(p, e.target.value as AgentKind)}
+                    >
+                      <option value="">Add agent…</option>
+                      {HOOK_AGENTS.filter((a) => !p.agents.some((x) => x.agent === a)).map((a) => (
+                        <option key={a} value={a}>
+                          {AGENT_NAMES[a]}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <button
                     type="button"
                     className="btn"
@@ -270,9 +278,9 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
         ))}
       </fieldset>
       <p id="connect-help" className="faint">
-        The top level of a git repository. Quoli adds its hooks to that repo's local Claude Code
-        settings (.claude/settings.local.json) and, for Codex, to .codex/hooks.json, which it keeps
-        out of Git. Same as pnpm connect.
+        The top level of a git repository. Quoli adds its hooks to .claude/settings.local.json
+        (Claude Code) or .codex/hooks.json (Codex), or its plugin to .opencode/plugins/quoli.js
+        (OpenCode), and keeps the Codex and OpenCode files out of Git. Same as pnpm connect.
       </p>
       {error && (
         <p className="form-error" role="alert">
@@ -290,6 +298,9 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
               <code className="path"> cd {done.root} && codex</code> then approve Quoli's hooks with{" "}
               <code>/hooks</code> (Codex runs project hooks only once you trust them).
             </>
+          )}
+          {done.agents.some((a) => a.agent === "opencode") && (
+            <code className="path"> cd {done.root} && opencode</code>
           )}
         </p>
       )}

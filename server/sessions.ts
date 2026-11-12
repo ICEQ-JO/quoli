@@ -218,9 +218,8 @@ function rel(path: string, root: string): string | null {
   return r && !r.startsWith("..") && !isAbsolute(r) ? r : null;
 }
 
-/** The path field each agent uses: Claude Code `file_path`/`notebook_path`, OpenCode `filePath`. */
-const pathOf = (i: Record<string, unknown>) =>
-  str(i.file_path) ?? str(i.notebook_path) ?? str(i.filePath);
+/** The file a call names. Adapters map other agents' fields (OpenCode `path`) to `file_path`. */
+const pathOf = (i: Record<string, unknown>) => str(i.file_path) ?? str(i.notebook_path);
 
 /** Codex `apply_patch` names its files inside the patch text: `*** Update File: src/a.ts`. */
 function patchFiles(i: Record<string, unknown>): string[] {

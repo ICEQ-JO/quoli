@@ -121,7 +121,8 @@ test("Codex sessions keep their agent, patch files, commands and line counts", (
 
 test("OpenCode edits use camelCase fields", () =>
   withDir((cwd, store) => {
-    const input = { filePath: join(cwd, "src/c.ts"), oldString: "a\nb", newString: "c" };
+    const path = join(cwd, "src/c.ts");
+    const input = { path, file_path: path, oldString: "a\nb", newString: "c" };
     const send = (p: Record<string, unknown>) =>
       recordEvent(store, { session_id: "o", cwd, tool_use_id: "t", ...p }, "opencode");
     send({ hook_event_name: "PreToolUse", tool_name: "edit", tool_input: input });

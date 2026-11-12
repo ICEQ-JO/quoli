@@ -343,7 +343,11 @@ export function createApp(store: Store, port: () => number) {
       } catch (error) {
         throw new BadRequest((error as Error).message);
       }
-      for (const agent of new Set(chosen)) connect(root, false, agent);
+      try {
+        for (const agent of new Set(chosen)) connect(root, false, agent);
+      } catch (error) {
+        throw new BadRequest((error as Error).message);
+      }
       store.registerProject(root);
       broadcast({ type: "projects" });
       return json(res, 200, projectFor(projectId(root)));

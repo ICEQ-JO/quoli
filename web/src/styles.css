@@ -2400,7 +2400,7 @@ textarea.input {
 }
 
 .table.projects .cell-main {
-  max-width: 340px;
+  max-width: 280px;
 }
 
 .table.projects .cell-main a {
@@ -2412,11 +2412,11 @@ textarea.input {
 
 .table.projects .actions {
   text-align: right;
-  white-space: nowrap;
 }
 
-.table.projects .actions .btn {
-  margin-left: 6px;
+.table.projects .actions .btn,
+.table.projects .actions .add-agent {
+  margin: 3px 0 3px 6px;
 }
 
 .badge-status {
@@ -3021,4 +3021,11 @@ textarea.input {
 }
 .agent-choice legend {
   padding: 0;
+}
+.table.projects .actions .add-agent {
+  width: auto;
+  vertical-align: middle;
+}
+.table.projects td.hooks {
+  min-width: 240px;
 }
