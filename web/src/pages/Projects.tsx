@@ -144,7 +144,7 @@ export function ProjectsPage() {
                     {p.root}
                   </code>
                 </td>
-                <td>
+                <td className="hooks">
                   <HookBadge project={p} />
                   <AgentHooks project={p} />
                   {rowError[p.id] && (
@@ -159,19 +159,22 @@ export function ProjectsPage() {
                   <Link to={paths.board(p.id)} className="btn">
                     Open
                   </Link>
-                  {p.hookStatus !== "not_connected" &&
-                    HOOK_AGENTS.filter((a) => !p.agents.some((x) => x.agent === a)).map((a) => (
-                      <button
-                        key={a}
-                        type="button"
-                        className="btn"
-                        disabled={busy === p.id}
-                        title={`Record ${AGENT_NAMES[a]} sessions in this repository too`}
-                        onClick={() => addAgent(p, a)}
-                      >
-                        Add {AGENT_NAMES[a]}
-                      </button>
-                    ))}
+                  {p.hookStatus !== "not_connected" && p.agents.length < HOOK_AGENTS.length && (
+                    <select
+                      className="input add-agent"
+                      aria-label={`Record another agent's sessions in ${p.name}`}
+                      disabled={busy === p.id}
+                      value=""
+                      onChange={(e) => addAgent(p, e.target.value as AgentKind)}
+                    >
+                      <option value="">Add agent…</option>
+                      {HOOK_AGENTS.filter((a) => !p.agents.some((x) => x.agent === a)).map((a) => (
+                        <option key={a} value={a}>
+                          {AGENT_NAMES[a]}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <button
                     type="button"
                     className="btn"
