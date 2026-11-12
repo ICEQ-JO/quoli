@@ -161,8 +161,34 @@ export interface Commit {
   sessions?: string[];
 }
 
+export interface Remote {
+  name: string;
+  /** `host/owner/repo`, never credentials. Null when the URL could not be read as a host path. */
+  display: string | null;
+  /** Browser link for GitHub, GitLab and Bitbucket remotes; null for anything else. */
+  web: string | null;
+}
+
+export interface CommitFile {
+  path: string;
+  /** Null for binary files. */
+  added: number | null;
+  removed: number | null;
+}
+
+export interface CommitDetail {
+  sha: string;
+  files: CommitFile[];
+  /** Unified diff, clipped to `DIFF_LIMIT` characters; null when git could not produce it. */
+  diff: string | null;
+  truncated: boolean;
+}
+
 export interface GitState {
   branches: Branch[];
+  remotes: Remote[];
+  /** When remote-tracking refs were last updated by a fetch (FETCH_HEAD mtime); null if never. */
+  lastFetch: string | null;
   /** Newest first, in `--topo-order` (children before parents) so lanes are stable. */
   commits: Commit[];
   changed: number;

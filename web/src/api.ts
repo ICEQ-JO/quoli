@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   CodeMap,
+  CommitDetail,
   GitState,
   InfraMap,
   Overview,
@@ -65,6 +66,8 @@ export const api = {
   git: (root: string, limit?: number) =>
     get<GitState>(`/api/git?${q(root)}${limit ? `&limit=${limit}` : ""}`),
   infra: (root: string) => get<InfraMap>(`/api/infra?${q(root)}`),
+  commit: (root: string, sha: string) =>
+    get<CommitDetail>(`/api/commit?${q(root)}&sha=${encodeURIComponent(sha)}`),
   file: (root: string, path: string) =>
     get<{ path: string; content: string | null; diff: string | null }>(
       `/api/file?${q(root)}&path=${encodeURIComponent(path)}`,
@@ -116,6 +119,13 @@ let source: EventSource | null = null;
 function connect() {
   if (source) return;
   source = new EventSource("/api/stream");
+  // After the server restarts the browser reconnects on its own; reload what we show, since
+  // anything fetched while it was down failed.
+  let opened = false;
+  source.onopen = () => {
+    if (opened) for (const l of listeners) l({ type: "projects" });
+    opened = true;
+  };
   source.onmessage = (m) => {
     try {
       const msg = JSON.parse(m.data);

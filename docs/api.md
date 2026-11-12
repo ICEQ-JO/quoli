@@ -35,6 +35,8 @@ Retention runs at startup, hourly, and when settings change.
 - `SessionSummary.trace`: one character per tool call in time order (first 400): `r` read, `e` edit, `c` run, `s` search, `a` subagent, `w` web/MCP, `o` other, `f` failed (`TRACE_CODES` in `shared/model.ts`).
 - Retention deletes whole sessions (events, usage rows, transcript offsets) whose last event is older than `retentionDays`, then truncates the WAL.
 - `/api/code|git|infra|file` accept any root that has events or is registered.
+- `GitState.remotes`: each fetch remote as `host/owner/repo` (credentials in the URL are dropped) and a browser link for GitHub, GitLab and Bitbucket; `lastFetch` is FETCH_HEAD's modification time. Quoli never calls a Git host.
+- `GET /api/commit?root=&sha=` returns `CommitDetail`: the commit's files with added/removed lines (`null` for binary) and its diff, clipped to 300,000 characters (`truncated`). `sha` must be 4–40 hex characters, otherwise `404`.
 - `CodeFile.diff`: uncommitted `{ added, removed }` lines against HEAD from `git diff --numstat HEAD`; untracked text files count all their lines as added; `null` when clean or binary.
 
 ## Increment 2 additions

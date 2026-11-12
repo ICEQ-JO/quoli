@@ -30,7 +30,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `server/prices.ts` | Built-in list-price table, model matching, `costOf`, PUT validation, load/save via the `settings` table (key `prices`) |
 | `server/transcript.ts` | Token usage from Claude Code transcript JSONL, read incrementally |
 | `server/code.ts` | Code map: files from `git ls-files`, line counts, JS/TS relative imports, git status and uncommitted line counts (`git diff --numstat HEAD`) |
-| `server/gitstate.ts` | Branches (ahead/behind), recent commits, changed-file count |
+| `server/gitstate.ts` | Branches (ahead/behind), recent commits, changed-file count, remotes (credentials dropped), last fetch time, one commit's files and diff |
 | `server/infra.ts` | Service detection from config files; live Docker metrics when available |
 | `server/usage.ts` | `GET /api/usage`: spend and tokens per day, model, project and session; cache savings; today/month spend for budgets |
 | `server/demo.ts` | Builds a sample repo and records three synthetic sessions |
@@ -71,5 +71,6 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - Infra is what config files declare; hosted metrics need provider connections that do not exist yet.
 - Large repos: the code map lists up to 50,000 paths and reads line counts/imports for up to 5,000 files (≤ 512 KB); the Code lens opens at folder level. Git history pages 200 commits at a time (max 2,000 per request).
 - Usage and budgets are estimates from transcript usage at list prices, bucketed by the server's local time zone. A budget is a display threshold, not an alert channel or a spending limit.
+- The Git lens reads the local repository only. Remote branches are what the last `git fetch` saw, and commits that exist only on a remote are not drawn (the history follows local branches). A commit is tagged with a session only when that session's recorded `git commit` output printed its sha; `git commit -q` prints nothing, so such commits stay untagged.
 - Themes: dark and light (System follows the OS). Contrast is enforced by `tests/theme-contrast.test.ts`; accessibility was checked with axe-core and keyboard walkthroughs, not a real screen reader.
 - Cost and the Summary report are heuristics: commands are classified from their text, line counts come from recorded Edit/MultiEdit/Write inputs (a Write's removed lines are unknown), failed edits are ignored, and only edits inside the project root are counted. Edits made through Bash (sed, formatters, generators) are not seen. The checklist lists things worth a look and never says the work is correct.
