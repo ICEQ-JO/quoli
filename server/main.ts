@@ -6,7 +6,7 @@ import { applyRetention, createApp, json } from "./app.ts";
 import { refreshHooks } from "./connect.ts";
 import { Store } from "./db.ts";
 import { startLivePrices } from "./liveprices.ts";
-import { refreshSetup, spoolFile } from "./setup.ts";
+import { refreshSetup, START, spoolFile } from "./setup.ts";
 import { drainSpool } from "./spool.ts";
 import { waitlistRequest } from "./waitlist.ts";
 
@@ -100,7 +100,7 @@ server.listen(PORT, HOST, () => {
   console.log(`\n  Quoli → http://${HOST}:${PORT}${landing ? "/landing/" : ""}\n`);
   if (!landing && !store.roots().length) {
     console.log(
-      "  No sessions yet. Run `pnpm quoli-setup` once, or `pnpm demo` to explore sample data.\n",
+      `  No sessions yet. Run \`${START === "npx quoli" ? "npx quoli setup" : "pnpm quoli-setup"}\` once, or \`${START === "npx quoli" ? "npx quoli demo" : "pnpm demo"}\` to explore sample data.\n`,
     );
   }
 });
