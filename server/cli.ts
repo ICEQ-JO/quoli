@@ -20,10 +20,10 @@ if (cmd === "setup") {
 } else if (cmd === "--help" || cmd === "-h" || cmd === "help") {
   console.log(`Quoli ${VERSION}: one map of what your coding agents did.
 
-  npx quoli              start Quoli on http://127.0.0.1:4400
-  npx quoli setup        record every repository for Claude Code, Codex, OpenCode and Pi
-  npx quoli setup --remove
-  npx quoli demo         start with a synthetic demo project
+  npx @iceq/quoli              start Quoli on http://127.0.0.1:4400
+  npx @iceq/quoli setup        record every repository for Claude Code, Codex, OpenCode and Pi
+  npx @iceq/quoli setup --remove
+  npx @iceq/quoli demo         start with a synthetic demo project
   --port <n>             use another port (or set QUOLI_PORT)
 
 Data stays on this machine in ~/.quoli (QUOLI_HOME to change).`);
@@ -32,7 +32,7 @@ Data stays on this machine in ~/.quoli (QUOLI_HOME to change).`);
   if (cmd === "demo") process.argv.push("--demo");
   await import("./main.ts");
 } else {
-  console.log(`Unknown command: ${cmd}. Run \`npx quoli --help\`.`);
+  console.log(`Unknown command: ${cmd}. Run \`npx @iceq/quoli --help\`.`);
   process.exit(1);
 }
 

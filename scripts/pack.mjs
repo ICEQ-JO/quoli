@@ -59,11 +59,12 @@ writeFileSync(
   join(out, "package.json"),
   `${JSON.stringify(
     {
-      name: "quoli",
+      name: "@iceq/quoli",
       version: pkg.version,
       description:
         "One local map of what your coding agents did: Claude Code, Codex, OpenCode and Pi sessions, cost, failures and loops.",
       license: "UNLICENSED",
+      publishConfig: { access: "public" },
       homepage: "https://iceq.best",
       type: "module",
       bin: { quoli: "server/cli.mjs" },
@@ -83,15 +84,15 @@ One local map of what your coding agents did: every Claude Code, Codex, OpenCode
 what it changed, what it cost, what failed and where it looped.
 
 \`\`\`sh
-npx quoli setup   # once: records every repository for the agents on this machine
-npx quoli         # open http://127.0.0.1:4400
+npx @iceq/quoli setup   # once: records every repository for the agents on this machine
+npx @iceq/quoli         # open http://127.0.0.1:4400
 \`\`\`
 
 - Requires Node.js 22.13 or newer.
 - Everything stays on your machine in \`~/.quoli\`. The only outbound request is a daily download of
   public model prices from models.dev, and, only if you turn it on, Class sync, which shares
   session summaries (never prompts or code) with your class.
-- \`npx quoli setup --remove\` takes Quoli out of every agent again. \`npx quoli --help\` lists the rest.
+- \`npx @iceq/quoli setup --remove\` takes Quoli out of every agent again. \`npx @iceq/quoli --help\` lists the rest.
 
 More: https://iceq.best
 `,

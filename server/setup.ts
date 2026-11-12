@@ -154,8 +154,8 @@ export function refreshSetup(): HookAgent[] {
 }
 
 /** How to start Quoli: the published package or a clone of the repository. */
-export const START = process.env.QUOLI_BUNDLED === "1" ? "npx quoli" : "pnpm dev";
-const SETUP = process.env.QUOLI_BUNDLED === "1" ? "npx quoli setup" : "pnpm quoli-setup";
+export const START = process.env.QUOLI_BUNDLED === "1" ? "npx @iceq/quoli" : "pnpm dev";
+const SETUP = process.env.QUOLI_BUNDLED === "1" ? "npx @iceq/quoli setup" : "pnpm quoli-setup";
 
 /** `quoli setup [agent…] [--remove]`; returns the exit code. */
 export function setupCli(args: string[]): number {

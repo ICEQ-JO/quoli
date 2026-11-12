@@ -100,7 +100,7 @@ server.listen(PORT, HOST, () => {
   console.log(`\n  Quoli → http://${HOST}:${PORT}${landing ? "/landing/" : ""}\n`);
   if (!landing && !store.roots().length) {
     console.log(
-      `  No sessions yet. Run \`${START === "npx quoli" ? "npx quoli setup" : "pnpm quoli-setup"}\` once, or \`${START === "npx quoli" ? "npx quoli demo" : "pnpm demo"}\` to explore sample data.\n`,
+      `  No sessions yet. Run \`${START === "npx @iceq/quoli" ? "npx @iceq/quoli setup" : "pnpm quoli-setup"}\` once, or \`${START === "npx @iceq/quoli" ? "npx @iceq/quoli demo" : "pnpm demo"}\` to explore sample data.\n`,
     );
   }
 });
