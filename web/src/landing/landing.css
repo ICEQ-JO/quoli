@@ -737,6 +737,9 @@ main {
   overflow: hidden;
   box-shadow: 0 12px 30px #04324624;
 }
+.tour-window picture {
+  display: block;
+}
 .tour-window img {
   display: block;
   width: 100%;
@@ -1859,4 +1862,29 @@ html[data-paused="true"] #quoli-landing *::after {
 .tour-image:focus-visible {
   outline: 3px solid #fff;
   outline-offset: -4px;
+}
+.tour-missing {
+  aspect-ratio: 16 / 10;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  color: #d8e7ed;
+  font-size: 15px;
+}
+.tour-missing button {
+  font: inherit;
+  font-size: 14px;
+  color: #fff;
+  background: transparent;
+  border: 1px solid #8fc3d6;
+  border-radius: 8px;
+  padding: 9px 16px;
+  min-height: 40px;
+  cursor: pointer;
+}
+.tour-missing button:hover {
+  background: #ffffff14;
 }
