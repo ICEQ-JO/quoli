@@ -148,7 +148,12 @@ const opencode: Adapter = {
           opencode_cost: p.cost,
         };
       case "turn.ended":
-        return { ...base, hook_event_name: "Stop", outcome: p.outcome };
+        return {
+          ...base,
+          hook_event_name: "Stop",
+          outcome: p.outcome,
+          last_assistant_message: text(p.text),
+        };
       default:
         return null;
     }
@@ -236,7 +241,7 @@ const pi: Adapter = {
           stop_reason: text(p.stopReason),
         };
       case "agent.end":
-        return { ...base, hook_event_name: "Stop" };
+        return { ...base, hook_event_name: "Stop", last_assistant_message: text(p.text) };
       case "session.shutdown":
         // A reload keeps the same session running.
         return p.reason === "reload"

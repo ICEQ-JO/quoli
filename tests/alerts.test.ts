@@ -161,7 +161,7 @@ test("the live view of a session shows the running call and spend in the last 10
   const d = {
     ...live("a"),
     agents: [],
-    turns: [{ prompt: "go", at: ago(20), toolCallIds: [] }],
+    turns: [{ prompt: "go", at: ago(20), toolCallIds: [], reply: null }],
     toolCalls: [call("1", 3, "running", "pnpm test"), call("2", 2, "ok", "cat a.ts")],
     files: {},
     usage: [usage(15, 1_000_000), usage(4, 250_000)],

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CommandRun, SessionDetail } from "../../../shared/model.ts";
+import { AGENT_NAMES, type CommandRun, type SessionDetail } from "../../../shared/model.ts";
 import { clock, compact, fileName, span, tokenSum, usd } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import type { Lens, Selection } from "../state.ts";
@@ -66,7 +66,10 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
                 // biome-ignore lint/suspicious/noArrayIndexKey: turns are ordered
                 <li key={i}>
                   <span className="time">{clock(t.at)}</span>
-                  <p>{t.prompt}</p>
+                  <div>
+                    <p>{t.prompt}</p>
+                    {t.reply && <Reply text={t.reply} agent={AGENT_NAMES[session.agent]} />}
+                  </div>
                 </li>
               ))}
             </ol>
@@ -547,5 +550,22 @@ function TimeAndMoney({ session, href }: { session: SessionDetail; href: Href })
         </>
       )}
     </Sec>
+  );
+}
+
+/** The agent's final reply to a prompt, as recorded. Long replies open on request. */
+function Reply({ text, agent }: { text: string; agent: string }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > 480 || text.split("\n").length > 6;
+  return (
+    <div className="sum-reply">
+      <span className="sum-reply-who">{agent} replied</span>
+      <p className={long && !open ? "clamped" : undefined}>{text}</p>
+      {long && (
+        <button type="button" className="sum-reply-more" onClick={() => setOpen(!open)}>
+          {open ? "Show less" : "Show the whole reply"}
+        </button>
+      )}
+    </div>
   );
 }

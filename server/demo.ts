@@ -198,6 +198,8 @@ function record(
     transcripts: string;
     /** Another agent's session: events go through `recordEvent`, token usage straight to the store. */
     agent?: { kind: AgentKind; version: string; model: string };
+    /** The agent's final reply, sent on Stop like `last_assistant_message`. */
+    reply?: string;
   },
 ) {
   const { id, root } = opts;
@@ -308,7 +310,10 @@ function record(
   }
   usage("main", 2400, 1100, 61000, 0);
   t += 3000;
-  send({ hook_event_name: "Stop" });
+  send({
+    hook_event_name: "Stop",
+    ...(opts.reply ? { last_assistant_message: opts.reply } : {}),
+  });
   if (opts.end) {
     t += 1000;
     send({ hook_event_name: "SessionEnd", reason: "exit" });
@@ -344,6 +349,8 @@ export function seedDemo(store: Store) {
 
   record(store, {
     id: "demo-rounding",
+    reply:
+      "Fixed the rounding in `formatTotal`: totals are now rounded once, after summing, instead of per line. Added a test for three items at $0.10 that used to show $0.29. All checkout tests pass.",
     root,
     branch: "main",
     start: now - 2 * 86_400_000,
@@ -642,6 +649,8 @@ export function seedDemo(store: Store) {
 
   record(store, {
     id: "demo-opencode-docs",
+    reply:
+      "Documented the six environment variables the API reads in `docs/env.md`, with defaults and which ones are required in production. `DATABASE_URL` and `JWT_SECRET` have no default, so the API refuses to start without them.",
     root,
     branch: "main",
     start: now - 6 * 3_600_000,
@@ -694,6 +703,8 @@ export function seedDemo(store: Store) {
 
   record(store, {
     id: "demo-worker",
+    reply:
+      "Failed email jobs are retried by BullMQ with its default settings: 3 attempts with exponential backoff starting at 1 second. After the third failure the job moves to the failed set and nothing alerts on it. I did not change anything.",
     root,
     branch: "feature/refunds",
     start: now - 3 * 60_000,
