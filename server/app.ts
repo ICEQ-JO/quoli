@@ -33,6 +33,7 @@ import {
 import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
 import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
 import { liveSession } from "./steps.ts";
+import { loadSync, saveSync, syncOnce, syncStatus } from "./sync.ts";
 import { usageReport } from "./usage.ts";
 
 const version: string = JSON.parse(
@@ -270,6 +271,7 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
     if (path === "/api/prices") return json(res, 200, loadPrices(store));
+    if (path === "/api/sync") return json(res, 200, syncStatus(loadSync(store)));
     if (path === "/api/prices/live") {
       return json(res, 200, liveStatusOf(store.settings().livePrices));
     }
@@ -392,6 +394,27 @@ export function createApp(store: Store, port: () => number) {
       broadcast({ type: "projects" });
       return json(res, 200, projectFor(projectId(root)));
     }
+    if (method === "PUT" && path === "/api/sync") {
+      const { enabled, key } = await payload();
+      const c = loadSync(store);
+      if (key !== undefined) {
+        if (key !== "" && !(typeof key === "string" && /^qk_[0-9a-f]{48}$/.test(key.trim()))) {
+          throw new BadRequest("That is not a sync key: copy it from the class page (qk_…)");
+        }
+        c.key = (key as string).trim();
+        c.lastError = null;
+      }
+      if (enabled !== undefined) {
+        if (typeof enabled !== "boolean") throw new BadRequest("enabled must be true or false");
+        if (enabled && !c.key) throw new BadRequest("Add your sync key first");
+        if (enabled && !c.enabled) c.since = new Date().toISOString();
+        c.enabled = enabled;
+      }
+      if (!c.key) c.enabled = false;
+      saveSync(store, c);
+      if (c.enabled) void sync();
+      return json(res, 200, syncStatus(loadSync(store)));
+    }
     if (method === "POST" && path === "/api/setup") {
       const { agents, remove } = await payload();
       if (
@@ -501,7 +524,29 @@ export function createApp(store: Store, port: () => number) {
     return json(res, 404, { error: "Not found" });
   }
 
-  return { api, broadcast };
+  /** One class-sync pass (summaries only); main.ts runs it every minute. */
+  let syncing = false;
+  async function sync(options?: Parameters<typeof syncOnce>[2]) {
+    const c = loadSync(store);
+    if (syncing || !c.enabled) return syncStatus(c);
+    syncing = true;
+    try {
+      const next = await syncOnce(c, details(store.recentSessionIds(500)), options);
+      // Settings may have changed while the upload ran; keep them and add only the outcome.
+      const latest = loadSync(store);
+      saveSync(store, {
+        ...latest,
+        lastSyncAt: next.lastSyncAt,
+        lastError: next.lastError,
+        sent: next.sent,
+      });
+      return syncStatus(loadSync(store));
+    } finally {
+      syncing = false;
+    }
+  }
+
+  return { api, broadcast, sync };
 }
 
 /** Plain-sentence, derived reasons to look at a session again. Never a claim of correctness. */

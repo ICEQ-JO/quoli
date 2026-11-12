@@ -368,6 +368,20 @@ export interface Settings {
   livePrices: boolean;
 }
 
+/** Class sync (GET/PUT /api/sync): summaries only, never the sync key. */
+export interface SyncStatus {
+  enabled: boolean;
+  /** This build knows a hosted class service to send to. */
+  available: boolean;
+  hasKey: boolean;
+  /** Only sessions that started after this are sent. */
+  since: string | null;
+  lastSyncAt: string | null;
+  lastError: string | null;
+  /** Summaries sent so far (an updated session counts again). */
+  sent: number;
+}
+
 /** Live prices from models.dev: used for models the price table does not have. */
 export interface LivePriceStatus {
   enabled: boolean;
