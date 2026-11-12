@@ -107,9 +107,11 @@ Each phase is something a developer can use on its own.
 
 ## Landing presentation
 
-Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) presents the four-lens
-idea as a living pixel codebase city and collects waitlist interest. Owner
-direction 2026-11-12: speak to coding-agent users and engineering teams, while
-clearly separating current Claude Code/local support from planned adapters,
-shared sessions and hosted sync. The page is a separate marketing surface;
-its artwork and demonstration are illustrative, never evidence of a real session.
+Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) presents Quoli's
+connected record through original animated pixel scenery, a physical session
+recorder and an interactive product example. Owner correction 2026-11-12:
+replace the rejected game-like city and follow the reference site's actual page structure
+and animated pixel material. Speak to coding-agent users and engineering teams,
+while separating current Claude Code/local support from planned adapters,
+shared sessions and hosted sync. The marketing page is isolated from the app;
+its demonstrations are synthetic, never evidence of a real captured session.

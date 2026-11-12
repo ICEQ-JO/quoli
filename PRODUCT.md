@@ -31,3 +31,6 @@ Quoli. Owner requests a complete landing-page replacement inspired by the refere
 - Glanceable first, precise evidence on demand.
 - Observe passively; never replay captured commands.
 - Label unknowns, derivations and synthetic demonstrations honestly.
+
+## Owner correction — 2026-11-12
+The owner rejected the first pixel-city implementation as game-like and unlike the reference site. Replace it completely. The reference site is the direct structural and material reference: compact equal hero panels, dotted white page, vivid green/blue pixel surfaces, original animated figures that perform their mechanism, terminal demonstration, product display and full website footer. No city, robot mascot, game world or generic stacked landing sections. Existing audience, waitlist goal and product facts stand.

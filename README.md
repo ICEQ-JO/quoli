@@ -64,5 +64,5 @@ For an isolated preview, including an isolated email list:
     QUOLI_HOME=/tmp/quoli-landing-preview pnpm landing
 
 Open http://127.0.0.1:4420/landing/. The four-lens example is synthetic, with no
-connection to captured sessions. Fonts and original pixel artwork are self-hosted.
+connection to captured sessions. Fonts are self-hosted; the original pixel scenery and recorder animate in code.
 See [the landing-page notes](docs/landing.md) for assets, email storage, and launch limits.

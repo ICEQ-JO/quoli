@@ -1,25 +1,20 @@
-# Quoli living pixel world
+# Quoli — animated pixel recording
 
-Owner delegated all creative decisions on 2026-11-12. Audience: coding-agent users and engineering teams. Main conversion: join waitlist. Pixel scenery, lettering, characters and motion are pinned by the the reference site reference.
+Owner correction, 2026-11-12: FULL REPLACEMENT. The prior city/robot/cottage design is explicitly rejected and has no visual authority. The user directs using the reference site's structure, pixelated material and substantive animation. Creative control remains delegated within this pinned direction.
 
-Product mechanism: a shared selection follows one coding-agent run through activity, files, Git and declared infrastructure. Scene: a developer pauses after agent work to understand what changed. First surface must make that connected visibility understandable and desirable.
+Audience: coding-agent users and engineering teams. Goal: join waitlist, understand Quoli's connected evidence. Current integration: Claude Code locally; other adapters and shared hosted/team work are planned.
 
-Avoid the usual dashboard screenshot over gradient and its opposite, an abstract art-only splash. Grounded directions: coastal pixel city; railway dispatch; print-room registration; botanical field station; cartridge-game atlas; animation exposure sheet; pixel observatory archipelago. Seed 7b18e79d assigned 7. The user-pinned living-city concept takes precedence: fuse the observatory's linked sightlines with the coastal codebase city. Catalog challengers (ANSI BBS, darkroom, color canopy) carry weaker product clarity or conflict with the pinned pixel daylight world; brick assembly suggests useful change-by-change sequencing but loses city legibility. Remaining sleeve/illuminated-initial challengers are outside the pinned visual family.
+Reference anatomy inspected in browser: thin header; equal compact rounded hero panels (left animated green landscape with centered headline, right darker moving pixel field with explanation/CTA); slim identity strip; left large animated figure with product copy below, right tall terminal on vivid green pixel backing; large blue transition chapter; product board left and three explanations right; huge mission link; blue field multi-column footer.
 
-Composition delegated: choose among three generated desktop comps. Main art: generous coastal city at right; left pixel title and email CTA. White daylight ground, jade and copper, crisp pixel text with readable sans body. One city, four semantic viewpoints. Robot courier is the signature character; its trail ties the lenses together.
+Quoli implementation: original live procedural forest/contour hero, mechanical twin-reel session recorder (40–80 purposeful parts; Figure scope), progressive synthetic terminal, green-to-blue signal chapter and usable four-lens product board. Waitlist form stays, re-styled. Mission and roadmap are real local views. No invented trust logos/prices.
 
-Inventory:
-- Slim nav, original pixel Q mark, three anchors, waitlist link: semantic HTML/SVG.
-- Large pixel headline, paragraph, email field, CTA: semantic HTML; self-hosted pixel font and sans.
-- Dense city terrain, roofs, canals, trees, machinery: original generated raster.
-- Courier movement, clouds, moving path packets, lens selection: canvas/SVG/DOM overlays, paused offscreen/reduced motion.
-- Product walkthrough: genuine functional tabs with explicitly synthetic events/files/branch/service state.
-- Anatomy object: four connected observation stations, each on supported terrain, four-tone shading, pathway sits on ground, signals arrive at real station terminals. Pixel styling takes precedence over monochrome skill defaults.
-- Supporting story: compact evidence excerpts, local privacy, planned team/multi-agent roadmap; no invented customer or outcome metrics.
-- Waitlist: local SQLite collector, explicit consent, no automatic sending/analytics. Preview submissions isolated from private app data. Production marketing hosting and email delivery are not in scope.
+Motion: state model drives reel rotation, head position, tape markers, lamps, terminal reveal and chapter phase. One RAF loop per canvas, direct drawing on an integer grid, time-based easing; IntersectionObserver and visibility stop loops. Reduced motion is a readable still with functioning manual controls. Play/pause and replay are keyboard accessible.
 
-Selected comp: .impeccable/mocks/comp-a.png (approved under explicit creative
-delegation). Keep the split headline/signup and city composition; do not reproduce
-the comp's invented outcome claims, customer proof or fake agent activity.
-Final generated assets: web/public/landing/quoli-city.webp, courier.webp,
-cottage.webp; built-in ImageGen, original prompts stored alongside them.
+Implementation media: countable geometry, technical mechanisms, pixel contours and expressive reactive motion are Canvas/SVG territory; no generated static scenery or floating image loops. No new image generation is needed for this code-native work.
+
+Pinned direction supersedes the old seed and comps. Old images/comps, World.tsx and old CSS are removed from the final source. No old component survives on visual authority alone. Keep only tested signup logic and neutral entry/server plumbing.
+
+Typography precision from direct browser reference: the reference site's compact hero heading
+is Jost sans; its section headings and brand are pixel lettering. Match this
+division (Jost hero/body, Jersey 10 section headings/brand). The user's reference
+takes precedence over an overly broad reading of "pixel headings."

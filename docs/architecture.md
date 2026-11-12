@@ -80,3 +80,4 @@ same-origin, size-limited handler, stored separately in waitlist.sqlite;
 it sends no email. This is a loopback preview. Public marketing hosting and
 delivery require a separate acquisition service, never exposing the private
 evidence APIs. See [landing.md](landing.md).
+\nThe owner-directed replacement uses original procedural Canvas scenery and a\nphysical recorder rather than generated city artwork. The scene model drives\nrecorder transport and progressive terminal from one clock. Informational\nmarketing views use query navigation within the isolated landing entry.\n

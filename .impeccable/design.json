@@ -1,247 +1,322 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-12T10:29:58.040118+00:00",
+  "generatedAt": "2026-11-12T11:12:03.844895+00:00",
   "title": "Design System: Quoli landing",
   "extensions": {
     "colorMeta": {
       "paper": {
         "role": "neutral",
-        "displayName": "Daylight Paper",
+        "displayName": "Paper",
         "tonalRamp": [
-          "oklch(15% 0.018 145)",
-          "oklch(27% 0.018 145)",
-          "oklch(39% 0.018 145)",
-          "oklch(51% 0.018 145)",
-          "oklch(63% 0.018 145)",
-          "oklch(75% 0.018 145)",
-          "oklch(87% 0.018 145)",
-          "oklch(95% 0.018 145)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
       "ink": {
         "role": "neutral",
-        "displayName": "Harbor Ink",
+        "displayName": "Ink",
         "tonalRamp": [
-          "oklch(15% 0.035 190)",
-          "oklch(27% 0.035 190)",
-          "oklch(39% 0.035 190)",
-          "oklch(51% 0.035 190)",
-          "oklch(63% 0.035 190)",
-          "oklch(75% 0.035 190)",
-          "oklch(87% 0.035 190)",
-          "oklch(95% 0.035 190)"
-        ]
-      },
-      "green": {
-        "role": "primary",
-        "displayName": "Canal Jade",
-        "tonalRamp": [
-          "oklch(15% 0.07 165)",
-          "oklch(27% 0.07 165)",
-          "oklch(39% 0.07 165)",
-          "oklch(51% 0.07 165)",
-          "oklch(63% 0.07 165)",
-          "oklch(75% 0.07 165)",
-          "oklch(87% 0.07 165)",
-          "oklch(95% 0.07 165)"
+          "oklch(15% 0.0254 244.20)",
+          "oklch(26% 0.0254 244.20)",
+          "oklch(38% 0.0254 244.20)",
+          "oklch(49% 0.0254 244.20)",
+          "oklch(61% 0.0254 244.20)",
+          "oklch(72% 0.0254 244.20)",
+          "oklch(84% 0.0254 244.20)",
+          "oklch(95% 0.0254 244.20)"
         ]
       },
       "muted": {
         "role": "neutral",
-        "displayName": "Quiet Reed",
+        "displayName": "Muted",
         "tonalRamp": [
-          "oklch(15% 0.025 155)",
-          "oklch(27% 0.025 155)",
-          "oklch(39% 0.025 155)",
-          "oklch(51% 0.025 155)",
-          "oklch(63% 0.025 155)",
-          "oklch(75% 0.025 155)",
-          "oklch(87% 0.025 155)",
-          "oklch(95% 0.025 155)"
+          "oklch(15% 0.0207 240.35)",
+          "oklch(26% 0.0207 240.35)",
+          "oklch(38% 0.0207 240.35)",
+          "oklch(49% 0.0207 240.35)",
+          "oklch(61% 0.0207 240.35)",
+          "oklch(72% 0.0207 240.35)",
+          "oklch(84% 0.0207 240.35)",
+          "oklch(95% 0.0207 240.35)"
         ]
       },
-      "line": {
-        "role": "neutral",
-        "displayName": "Pale Reed",
-        "tonalRamp": [
-          "oklch(15% 0.025 135)",
-          "oklch(27% 0.025 135)",
-          "oklch(39% 0.025 135)",
-          "oklch(51% 0.025 135)",
-          "oklch(63% 0.025 135)",
-          "oklch(75% 0.025 135)",
-          "oklch(87% 0.025 135)",
-          "oklch(95% 0.025 135)"
-        ]
-      },
-      "copper": {
-        "role": "secondary",
-        "displayName": "Roof Copper",
-        "tonalRamp": [
-          "oklch(15% 0.11 45)",
-          "oklch(27% 0.11 45)",
-          "oklch(39% 0.11 45)",
-          "oklch(51% 0.11 45)",
-          "oklch(63% 0.11 45)",
-          "oklch(75% 0.11 45)",
-          "oklch(87% 0.11 45)",
-          "oklch(95% 0.11 45)"
-        ]
-      },
-      "mint": {
-        "role": "neutral",
-        "displayName": "Mint Wash",
-        "tonalRamp": [
-          "oklch(15% 0.025 130)",
-          "oklch(27% 0.025 130)",
-          "oklch(39% 0.025 130)",
-          "oklch(51% 0.025 130)",
-          "oklch(63% 0.025 130)",
-          "oklch(75% 0.025 130)",
-          "oklch(87% 0.025 130)",
-          "oklch(95% 0.025 130)"
-        ]
-      },
-      "white": {
-        "role": "neutral",
-        "displayName": "White",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(27% 0 0)",
-          "oklch(39% 0 0)",
-          "oklch(51% 0 0)",
-          "oklch(63% 0 0)",
-          "oklch(75% 0 0)",
-          "oklch(87% 0 0)",
-          "oklch(95% 0 0)"
-        ]
-      },
-      "green-hover": {
+      "brand": {
         "role": "primary",
-        "displayName": "Deep Canal Jade",
+        "displayName": "Brand",
         "tonalRamp": [
-          "oklch(15% 0.07 165)",
-          "oklch(27% 0.07 165)",
-          "oklch(39% 0.07 165)",
-          "oklch(51% 0.07 165)",
-          "oklch(63% 0.07 165)",
-          "oklch(75% 0.07 165)",
-          "oklch(87% 0.07 165)",
-          "oklch(95% 0.07 165)"
+          "oklch(15% 0.1453 130.54)",
+          "oklch(26% 0.1453 130.54)",
+          "oklch(38% 0.1453 130.54)",
+          "oklch(49% 0.1453 130.54)",
+          "oklch(61% 0.1453 130.54)",
+          "oklch(72% 0.1453 130.54)",
+          "oklch(84% 0.1453 130.54)",
+          "oklch(95% 0.1453 130.54)"
         ]
       },
-      "document": {
-        "role": "neutral",
-        "displayName": "Warm Document",
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
         "tonalRamp": [
-          "oklch(15% 0.01 90)",
-          "oklch(27% 0.01 90)",
-          "oklch(39% 0.01 90)",
-          "oklch(51% 0.01 90)",
-          "oklch(63% 0.01 90)",
-          "oklch(75% 0.01 90)",
-          "oklch(87% 0.01 90)",
-          "oklch(95% 0.01 90)"
+          "oklch(15% 0.1876 129.54)",
+          "oklch(26% 0.1876 129.54)",
+          "oklch(38% 0.1876 129.54)",
+          "oklch(49% 0.1876 129.54)",
+          "oklch(61% 0.1876 129.54)",
+          "oklch(72% 0.1876 129.54)",
+          "oklch(84% 0.1876 129.54)",
+          "oklch(95% 0.1876 129.54)"
         ]
       },
-      "night": {
+      "tint": {
         "role": "neutral",
-        "displayName": "Night Jade",
+        "displayName": "Tint",
         "tonalRamp": [
-          "oklch(15% 0.05 165)",
-          "oklch(27% 0.05 165)",
-          "oklch(39% 0.05 165)",
-          "oklch(51% 0.05 165)",
-          "oklch(63% 0.05 165)",
-          "oklch(75% 0.05 165)",
-          "oklch(87% 0.05 165)",
-          "oklch(95% 0.05 165)"
+          "oklch(15% 0.0287 121.98)",
+          "oklch(26% 0.0287 121.98)",
+          "oklch(38% 0.0287 121.98)",
+          "oklch(49% 0.0287 121.98)",
+          "oklch(61% 0.0287 121.98)",
+          "oklch(72% 0.0287 121.98)",
+          "oklch(84% 0.0287 121.98)",
+          "oklch(95% 0.0287 121.98)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.0075 151.88)",
+          "oklch(26% 0.0075 151.88)",
+          "oklch(38% 0.0075 151.88)",
+          "oklch(49% 0.0075 151.88)",
+          "oklch(61% 0.0075 151.88)",
+          "oklch(72% 0.0075 151.88)",
+          "oklch(84% 0.0075 151.88)",
+          "oklch(95% 0.0075 151.88)"
+        ]
+      },
+      "dot": {
+        "role": "neutral",
+        "displayName": "Dot",
+        "tonalRamp": [
+          "oklch(15% 0.0092 150.69)",
+          "oklch(26% 0.0092 150.69)",
+          "oklch(38% 0.0092 150.69)",
+          "oklch(49% 0.0092 150.69)",
+          "oklch(61% 0.0092 150.69)",
+          "oklch(72% 0.0092 150.69)",
+          "oklch(84% 0.0092 150.69)",
+          "oklch(95% 0.0092 150.69)"
+        ]
+      },
+      "blue-brand": {
+        "role": "secondary",
+        "displayName": "Blue Brand",
+        "tonalRamp": [
+          "oklch(15% 0.1001 230.79)",
+          "oklch(26% 0.1001 230.79)",
+          "oklch(38% 0.1001 230.79)",
+          "oklch(49% 0.1001 230.79)",
+          "oklch(61% 0.1001 230.79)",
+          "oklch(72% 0.1001 230.79)",
+          "oklch(84% 0.1001 230.79)",
+          "oklch(95% 0.1001 230.79)"
+        ]
+      },
+      "blue-accent": {
+        "role": "secondary",
+        "displayName": "Blue Accent",
+        "tonalRamp": [
+          "oklch(15% 0.1187 228.21)",
+          "oklch(26% 0.1187 228.21)",
+          "oklch(38% 0.1187 228.21)",
+          "oklch(49% 0.1187 228.21)",
+          "oklch(61% 0.1187 228.21)",
+          "oklch(72% 0.1187 228.21)",
+          "oklch(84% 0.1187 228.21)",
+          "oklch(95% 0.1187 228.21)"
+        ]
+      },
+      "blue-tint": {
+        "role": "secondary",
+        "displayName": "Blue Tint",
+        "tonalRamp": [
+          "oklch(15% 0.0202 216.20)",
+          "oklch(26% 0.0202 216.20)",
+          "oklch(38% 0.0202 216.20)",
+          "oklch(49% 0.0202 216.20)",
+          "oklch(61% 0.0202 216.20)",
+          "oklch(72% 0.0202 216.20)",
+          "oklch(84% 0.0202 216.20)",
+          "oklch(95% 0.0202 216.20)"
+        ]
+      },
+      "night-paper": {
+        "role": "neutral",
+        "displayName": "Night Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0120 167.23)",
+          "oklch(26% 0.0120 167.23)",
+          "oklch(38% 0.0120 167.23)",
+          "oklch(49% 0.0120 167.23)",
+          "oklch(61% 0.0120 167.23)",
+          "oklch(72% 0.0120 167.23)",
+          "oklch(84% 0.0120 167.23)",
+          "oklch(95% 0.0120 167.23)"
         ]
       },
       "night-ink": {
         "role": "neutral",
-        "displayName": "Moonlit Text",
+        "displayName": "Night Ink",
         "tonalRamp": [
-          "oklch(15% 0.035 120)",
-          "oklch(27% 0.035 120)",
-          "oklch(39% 0.035 120)",
-          "oklch(51% 0.035 120)",
-          "oklch(63% 0.035 120)",
-          "oklch(75% 0.035 120)",
-          "oklch(87% 0.035 120)",
-          "oklch(95% 0.035 120)"
+          "oklch(15% 0.0109 149.86)",
+          "oklch(26% 0.0109 149.86)",
+          "oklch(38% 0.0109 149.86)",
+          "oklch(49% 0.0109 149.86)",
+          "oklch(61% 0.0109 149.86)",
+          "oklch(72% 0.0109 149.86)",
+          "oklch(84% 0.0109 149.86)",
+          "oklch(95% 0.0109 149.86)"
+        ]
+      },
+      "night-muted": {
+        "role": "neutral",
+        "displayName": "Night Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0190 155.72)",
+          "oklch(26% 0.0190 155.72)",
+          "oklch(38% 0.0190 155.72)",
+          "oklch(49% 0.0190 155.72)",
+          "oklch(61% 0.0190 155.72)",
+          "oklch(72% 0.0190 155.72)",
+          "oklch(84% 0.0190 155.72)",
+          "oklch(95% 0.0190 155.72)"
+        ]
+      },
+      "night-border": {
+        "role": "neutral",
+        "displayName": "Night Border",
+        "tonalRamp": [
+          "oklch(15% 0.0218 158.10)",
+          "oklch(26% 0.0218 158.10)",
+          "oklch(38% 0.0218 158.10)",
+          "oklch(49% 0.0218 158.10)",
+          "oklch(61% 0.0218 158.10)",
+          "oklch(72% 0.0218 158.10)",
+          "oklch(84% 0.0218 158.10)",
+          "oklch(95% 0.0218 158.10)"
+        ]
+      },
+      "night-dot": {
+        "role": "neutral",
+        "displayName": "Night Dot",
+        "tonalRamp": [
+          "oklch(15% 0.0279 152.85)",
+          "oklch(26% 0.0279 152.85)",
+          "oklch(38% 0.0279 152.85)",
+          "oklch(49% 0.0279 152.85)",
+          "oklch(61% 0.0279 152.85)",
+          "oklch(72% 0.0279 152.85)",
+          "oklch(84% 0.0279 152.85)",
+          "oklch(95% 0.0279 152.85)"
+        ]
+      },
+      "night-tint": {
+        "role": "neutral",
+        "displayName": "Night Tint",
+        "tonalRamp": [
+          "oklch(15% 0.0459 145.52)",
+          "oklch(26% 0.0459 145.52)",
+          "oklch(38% 0.0459 145.52)",
+          "oklch(49% 0.0459 145.52)",
+          "oklch(61% 0.0459 145.52)",
+          "oklch(72% 0.0459 145.52)",
+          "oklch(84% 0.0459 145.52)",
+          "oklch(95% 0.0459 145.52)"
         ]
       }
     },
     "typographyMeta": {
       "display": {
-        "displayName": "Pixel display",
-        "purpose": "Hero headline; responsive values are in the landing stylesheet."
+        "displayName": "Sans hero",
+        "purpose": "Compact hero headline; Jost, never pixel lettering."
       },
       "headline": {
-        "displayName": "Pixel headline",
-        "purpose": "Section headings."
+        "displayName": "Pixel chapter",
+        "purpose": "Section headings in Jersey 10."
       },
       "body": {
-        "displayName": "Natural sans",
-        "purpose": "Hero explanation; other copy uses contextual sizes."
+        "displayName": "Sans explanation",
+        "purpose": "Readable product copy and interactions."
       }
     },
     "shadows": [
       {
-        "name": "city-tag",
-        "value": "0 6px 15px #34512b0a",
-        "purpose": "Subtle separation over scenery."
+        "name": "hero-action",
+        "value": "0 2px 3px #1d2e0018",
+        "purpose": "Small lift over the dark field."
       },
       {
-        "name": "station",
-        "value": "0 3px 7px #2450380a",
-        "purpose": "Map control lift."
+        "name": "terminal",
+        "value": "0 10px 24px #233a0025",
+        "purpose": "Inset terminal structure."
       },
       {
-        "name": "review-document",
-        "value": "0 15px 35px #36522b08",
-        "purpose": "Paper excerpt depth."
+        "name": "product",
+        "value": "0 7px 20px #063b5220",
+        "purpose": "Product board over blue field."
+      },
+      {
+        "name": "signup",
+        "value": "0 3px 8px #304c0010",
+        "purpose": "Faint form lift."
       }
     ],
     "motion": [
       {
-        "name": "button-hover",
-        "value": "background 0.15s",
-        "purpose": "Waitlist hover; disabled for reduced motion."
+        "name": "terminal-reveal",
+        "value": "opacity 0.5s ease, transform 0.5s ease",
+        "purpose": "Synthetic steps emerge with the recorder clock."
       },
       {
-        "name": "cloud-drift",
-        "value": "12s ease-in-out infinite alternate",
-        "purpose": "Ambient cloud movement."
+        "name": "session-cycle",
+        "value": "16s",
+        "purpose": "Shared synthetic recorder and terminal cycle."
       },
       {
-        "name": "robot-bob",
-        "value": "2.5s steps(3, end) infinite",
-        "purpose": "Tiny courier bob."
+        "name": "canvas-paint",
+        "value": ">45ms between paints",
+        "purpose": "Pixel canvases throttle painting; visibility, pause and reduced motion stop loops."
       },
       {
-        "name": "signal-flow",
-        "value": "3s linear infinite",
-        "purpose": "Station signal movement."
+        "name": "feature-scan",
+        "value": "5s ease-in-out infinite",
+        "purpose": "Small blue mechanism indicators; disabled for reduced motion."
       }
     ],
     "breakpoints": [
       {
-        "name": "wide-min",
-        "value": "1550px"
+        "name": "wide",
+        "value": "min-width: 1600px"
       },
       {
-        "name": "compact-max",
-        "value": "1150px"
+        "name": "compact",
+        "value": "max-width: 1100px"
       },
       {
-        "name": "stacked-max",
-        "value": "800px"
+        "name": "stack",
+        "value": "max-width: 780px"
       },
       {
-        "name": "narrow-max",
-        "value": "540px"
+        "name": "narrow",
+        "value": "max-width: 520px"
       }
     ]
   },
@@ -249,72 +324,89 @@
     {
       "name": "Waitlist button",
       "kind": "button",
-      "refersTo": "button-primary",
-      "description": "Primary signup action.",
-      "html": "<button class=\"ds-button\">Join the waitlist <svg aria-hidden=\"true\" viewBox=\"0 0 20 20\" width=\"16\" height=\"16\" fill=\"none\"><path d=\"M3 10h13M10 4l6 6-6 6\" stroke=\"currentColor\" stroke-width=\"1.7\"/></svg></button>",
-      "css": ".ds-button{font-family:Quoli Sans,system-ui,sans-serif;border:0;display:flex;align-items:center;justify-content:center;gap:12px;background:var(--green,#245e4e);color:white;border-radius:2px;font-size:12px;font-weight:600;padding:13px 17px;min-height:44px;cursor:pointer;transition:background .15s}.ds-button:hover{background:#174a3b}.ds-button:focus-visible{outline:3px solid var(--copper,#af5936);outline-offset:5px;}.ds-button:disabled{cursor:wait;opacity:.65}@media(prefers-reduced-motion:reduce){.ds-button{transition:none}}"
+      "description": "Primary chapter-colored action.",
+      "html": "<button class=\"ds-primary\">Join the waitlist <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"M4 12h15m-6-6 6 6-6 6\"/></svg></button>",
+      "css": ".ds-primary{font-family:Quoli Sans,system-ui,sans-serif;display:inline-flex;align-items:center;gap:9px;background:var(--brand);color:#fff;border:0;border-radius:6px;padding:13px 15px;min-height:45px;font-size:12px;font-weight:500;cursor:pointer}.ds-primary:hover{filter:brightness(.88)}.ds-primary:focus-visible{outline:3px solid var(--brand);outline-offset:5px}",
+      "refersTo": "button-primary"
     },
     {
-      "name": "Navigation waitlist link",
+      "name": "Hero action",
       "kind": "button",
-      "refersTo": "navigation-cta",
-      "description": "Compact header conversion link.",
-      "html": "<a class=\"ds-nav-cta\" href=\"#waitlist\">Join the waitlist</a>",
-      "css": ".ds-nav-cta{font-family:Quoli Sans,system-ui,sans-serif;display:inline-flex;align-items:center;gap:20px;background:var(--green,#245e4e);color:#fff;padding:12px 19px;text-decoration:none;font-size:13px;font-weight:600;border-radius:3px}.ds-nav-cta:hover{background:#174a3b}.ds-nav-cta:focus-visible{outline:3px solid var(--copper,#af5936);outline-offset:5px;}"
+      "description": "White action over the dark pixel field.",
+      "html": "<a class=\"ds-hero\" href=\"#waitlist\">Join the waitlist <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"M4 12h15m-6-6 6 6-6 6\"/></svg></a>",
+      "css": ".ds-hero{font-family:Quoli Sans,system-ui,sans-serif;display:inline-flex;align-items:center;gap:28px;background:#fff;color:#17262b;font-size:15px;font-weight:500;text-decoration:none;padding:13px 20px;border-radius:9px;box-shadow:0 2px 3px #1d2e0018}.ds-hero:hover{background:#f0f7e4}.ds-hero:focus-visible{outline:3px solid var(--brand);outline-offset:5px}",
+      "refersTo": "hero-cta"
     },
     {
       "name": "Email field",
       "kind": "input",
-      "refersTo": "email-input",
-      "description": "Email portion of the shared white signup field group.",
-      "html": "<div class=\"ds-field\"><input class=\"ds-email\" type=\"email\" aria-label=\"Email address\" placeholder=\"Your email address\"/></div>",
-      "css": ".ds-field{display:flex;background:white;border:1px solid #cad6c6;border-radius:4px;padding:5px;box-shadow:0 4px 15px #32432c03}.ds-email{font-family:Quoli Sans,system-ui,sans-serif;min-width:0;flex:1;width:100%;font-size:13px;background:transparent;border:0;padding:10px 9px;color:var(--ink,#192f31);border-radius:2px}.ds-email::placeholder{color:#69766c;opacity:1}.ds-email:focus-visible{outline:2px solid var(--copper,#af5936);outline-offset:0}"
+      "description": "Flexible email field inside the signup group.",
+      "html": "<label class=\"ds-email-label\">Email address<span class=\"ds-email-group\"><input class=\"ds-email\" type=\"email\" placeholder=\"you@example.com\" /></span></label>",
+      "css": ".ds-email-label{font-family:Quoli Sans,system-ui,sans-serif;display:grid;gap:8px;color:var(--ink);font-size:12px}.ds-email-group{display:flex;padding:5px;background:var(--paper);border:1px solid #aabca2;border-radius:10px;box-shadow:0 3px 8px #304c0010}.ds-email{font-family:Quoli Sans,system-ui,sans-serif;width:100%;min-width:0;background:none;border:0;padding:12px 9px;border-radius:5px;color:var(--ink);font-size:14px}.ds-email::placeholder{color:var(--muted);opacity:1}.ds-email:focus-visible{outline:3px solid var(--brand);outline-offset:5px}",
+      "refersTo": "email-input"
     },
     {
-      "name": "Navigation anchors",
+      "name": "Navigation",
       "kind": "nav",
-      "description": "Desktop text links; hidden at the narrow breakpoint.",
-      "html": "<nav class=\"ds-nav\" aria-label=\"Landing sections\"><a href=\"#lenses\">The four lenses</a><a href=\"#privacy\">Local by default</a></nav>",
-      "css": ".ds-nav{font-family:Quoli Sans,system-ui,sans-serif;display:flex;gap:36px}.ds-nav a{text-decoration:none;font-size:14px;color:#42554d}.ds-nav a:hover{color:var(--copper,#af5936)}.ds-nav a:focus-visible{outline:3px solid var(--copper,#af5936);outline-offset:5px;}"
+      "description": "Pixel brand with simple sans links.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Example navigation\"><a class=\"ds-brand\" href=\"#\">Quoli</a><a href=\"?page=roadmap\">Roadmap</a><a href=\"?page=mission\">Mission</a></nav>",
+      "css": ".ds-nav{font-family:Quoli Sans,system-ui,sans-serif;display:flex;align-items:center;gap:29px;color:var(--ink);font-size:14px}.ds-nav a{text-decoration:none;color:inherit}.ds-nav .ds-brand{font:34px/1 Quoli Pixel,monospace;letter-spacing:-.7px;margin-right:auto}.ds-nav a:hover{color:var(--brand)}.ds-nav a:focus-visible{outline:3px solid var(--brand);outline-offset:5px}"
     },
     {
-      "name": "Station control",
-      "kind": "button",
-      "description": "Warm selection treatment on an illustrated map station.",
-      "html": "<button class=\"ds-station\" aria-pressed=\"true\"><span class=\"ds-dot\"></span>Code</button>",
-      "css": ".ds-station{font-family:Quoli Sans,system-ui,sans-serif;display:flex;align-items:center;gap:7px;border:1px solid #c2d1b4;border-radius:3px;background:#f8fbf7ed;padding:7px 10px;color:#46634b;font-size:11px;min-height:34px;box-shadow:0 3px 7px #2450380a;cursor:pointer}.ds-station:hover{background:#fff}.ds-station[aria-pressed=true]{color:#754428;border-color:#b87b46;background:#fff9eb}.ds-station:focus-visible{outline:3px solid var(--copper,#af5936);outline-offset:5px;}.ds-dot{height:4px;width:4px;background:#7f9d70}.ds-station[aria-pressed=true] .ds-dot{background:#b86e3f}"
+      "name": "Roadmap status",
+      "kind": "chip",
+      "description": "Small informational status, not a filter.",
+      "html": "<span class=\"ds-status\">Available locally</span>",
+      "css": ".ds-status{font-family:Quoli Sans,system-ui,sans-serif;display:inline-block;background:var(--tint);color:var(--brand);padding:4px 9px;border-radius:4px;font-size:11px}"
     },
     {
-      "name": "Lens evidence panel",
+      "name": "Signup confirmation",
       "kind": "card",
-      "refersTo": "lens-detail",
-      "description": "Warm evidence surface inside the four-lens explorer.",
-      "html": "<section class=\"ds-detail\"><h3>Find the change in the code.</h3><p>See which files the session read and edited.</p><div class=\"ds-evidence\"><span>FILE CHANGES</span><span>SYNTHETIC</span></div></section>",
-      "css": ".ds-detail{font-family:Quoli Sans,system-ui,sans-serif;padding:40px 32px 25px;background:#fffefb;border-left:1px solid #d9e3d0;color:var(--ink,#192f31)}.ds-detail h3{margin:0;font-size:23px;font-weight:500;letter-spacing:-.5px;line-height:1.2}.ds-detail p{font-size:13px;color:var(--muted,#52635d);margin:15px 0 0;max-width:400px;line-height:1.7}.ds-evidence{display:flex;justify-content:space-between;gap:10px;margin-top:25px;border-top:1px solid #dce5d5;border-bottom:1px solid #dce5d5;padding:12px 0;font-size:8px;letter-spacing:1.2px;color:#4e664e}"
+      "description": "Tinted surface for confirmed signup.",
+      "html": "<div class=\"ds-success\" role=\"status\"><strong>You\u2019re on the list.</strong><p>Thanks for following Quoli.</p></div>",
+      "css": ".ds-success{font-family:Quoli Sans,system-ui,sans-serif;padding:20px;border:1px solid #b4ce94;border-radius:10px;background:var(--tint);color:var(--ink)}.ds-success strong{font-size:16px;font-weight:500}.ds-success p{font-size:12px;margin:6px 0 0;line-height:1.7}",
+      "refersTo": "signup-success"
+    },
+    {
+      "name": "Lens tab",
+      "kind": "button",
+      "description": "Selected blue lens with a bottom rule.",
+      "html": "<button class=\"ds-tab\" type=\"button\" aria-pressed=\"true\">Agents</button>",
+      "css": ".ds-tab{font-family:Quoli Sans,system-ui,sans-serif;background:none;color:#067ca5;border:0;border-bottom:2px solid #067ca5;padding:10px 11px;font-size:10px;cursor:pointer}.ds-tab:hover{background:var(--tint)}.ds-tab:focus-visible{outline:3px solid var(--brand);outline-offset:5px}"
     }
   ],
   "narrative": {
-    "northStar": "The Living Codebase City",
-    "overview": "A living coastal codebase city makes connected work tangible: jade waterways, copper roofs, a small robot courier and four observation stations. The surrounding interface is quiet daylight paper, crisp pixel display lettering and natural, readable sans-serif text.\n\nThis record applies only to `/landing`, loaded through `web/landing/index.html` and `web/src/landing/landing.css`. It does not redefine the local application\u2019s existing styles. The city is an illustrative metaphor; evidence excerpts retain their synthetic labels, and planned integrations remain visibly distinct from delivered capability.",
+    "northStar": "The Recording Garden",
+    "overview": "The Recording Garden makes agent work tangible through original pixel forests, contour fields and a working twin-reel recorder. Dotted white paper and compact paired panels carry a lively green-to-blue progression. Rounded framing contains the pixel geometry; precise sans-serif explanation keeps the product legible.\n\nThis system applies only to /landing and its Mission, Roadmap and Privacy views. The reference site is the owner-pinned structural and material reference; the scenery, mechanisms, content and product demonstration are original Quoli work. The former city, robot and cottage direction is rejected and has no visual authority.",
     "keyCharacteristics": [
-      "Original pixel scenery and courier character on a sun-white ground.",
-      "Large pixel headlines paired with readable sans-serif explanations.",
-      "Restrained jade controls, copper focus and selected-station accents.",
-      "Calm ambient movement with offscreen pause and reduced-motion support."
+      "Compact equal hero panels over dotted white paper.",
+      "Jost hero and body; Jersey 10 section headings and brand.",
+      "Vivid lime-green and blue pixel fields with mechanical, state-driven motion.",
+      "Real controls and clearly labeled synthetic evidence."
     ],
-    "rules": [],
+    "rules": [
+      {
+        "name": "The Two Type Voices Rule",
+        "body": "Keep the hero headline and explanatory text in Quoli Sans; section headings and brand lettering use Quoli Pixel.",
+        "section": "typography"
+      },
+      {
+        "name": "The Chapter Color Rule",
+        "body": "Green introduces recording; blue introduces connected understanding. Chapter changes update brand, accent and tint together.",
+        "section": "colors"
+      }
+    ],
     "dos": [
-      "Do keep this system scoped to /landing.",
-      "Do preserve crisp pixel rendering for scenery and courier assets.",
-      "Do use sans-serif for paragraphs, forms and evidence explanations.",
-      "Do preserve visible keyboard focus, tab keyboard controls and reduced-motion behavior.",
-      "Do retain synthetic, derived and planned labels alongside the relevant content."
+      "Do keep this system scoped to /landing and its informational views.",
+      "Do preserve the compact paired hero, dotted paper and crisp code-native pixel rendering.",
+      "Do keep keyboard focus, pause/replay controls and readable reduced-motion states.",
+      "Do retain synthetic, recorded, derived, inferred and planned labels where applicable."
     ],
     "donts": [
-      "Don\u2019t apply the landing stylesheet or its root tokens to the application.",
-      "Don\u2019t turn illustrative city signals into claims of live captured activity.",
-      "Don\u2019t replace readable body copy with pixel lettering.",
-      "Don\u2019t introduce unapproved customer proof, availability claims or pricing."
+      "Don\u2019t restore the rejected city, robot mascot, cottage or game-world direction.",
+      "Don\u2019t use pixel lettering for the hero headline, paragraphs or evidence text.",
+      "Don\u2019t replace the working recorder with static generated scenery or floating image loops.",
+      "Don\u2019t apply these tokens to the existing application or invent customer proof, pricing or availability claims."
     ]
   }
 }
