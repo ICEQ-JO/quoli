@@ -66,20 +66,24 @@ light text and baby-blue actions; the hero artwork remains a bright illustration
 
 Activity colors in the synthetic terminal and actual product screenshots retain
 their existing meanings. Decorative blue is not a new category of agent activity.
-The CSS custom properties in `web/src/landing/landing.css` are authoritative.
+CSS custom properties in `web/src/landing/landing.css` govern the page;
+`PixelScene.tsx` owns canvas shades, including cream highlights. `--accent` is
+baby blue, `--dot` matches the border, and `--button`/`--button-ink` reverse between
+midnight and ice blue by theme. `--error` is red for form errors.
 
 ## Typography
 
 Self-hosted Jost (`Quoli Sans`) carries the headline, explanation and navigation;
 Jersey 10 (`Quoli Pixel`) carries the wordmark and section headings. Both retain
-their OFL licenses. Code and paths use monospace. Body copy is 16–18px, supporting
+their OFL licenses. Code and paths use monospace. Body copy is 15–18px, supporting
 labels 12–15px. The mobile headline is 38px; product headings reach 50px on desktop.
 
 ## Layout
 
 A single continuous sky field opens the page: promise and actions on the left,
 original pixel scenery and a four-lens trace on the right. The hero reaches 1400px;
-other content is bounded between 1140px and 1240px. On mobile the illustration
+main marketing sections are bounded between 1140px and 1240px. Navigation is
+1280px; informational pages are 820px. On mobile the illustration
 follows the copy inside the same clipped frame.
 
 The recording section leads with explanation above the working recorder, beside
@@ -87,7 +91,8 @@ an entirely inset terminal. Six horizontal product tabs sit above a wide screens
 they become two rows of three on mobile. Collaboration uses a ruled list, followed
 by the waitlist, a small mission link and a flat pale-blue footer. There is no
 full-page dotted ground, oversized mission banner or contour-textured footer.
-Breakpoints at 1000, 760 and 440px reflow content rather than clipping it.
+A 1440px rule adds hero side margins; breakpoints at 1000, 760 and 440px
+reflow content rather than clipping it.
 
 ## Elevation & Depth
 
@@ -98,7 +103,8 @@ hero uses object-fit cover to preserve its pixel proportions.
 
 ## Shapes
 
-Rounded outer frames hold crisp stepped artwork. Controls have 8px radii;
+Rounded outer frames hold crisp stepped artwork. Primary controls have 8px radii; form groups use 10px, and secondary
+controls range from 4px to 6px;
 terminal and screenshot frames use 18px, the desktop hero 24px.
 The landing mark is an open stepped Q with a diagonal stepped trace and detached
 square endpoint. It has a transparent interior and works in a single color.
