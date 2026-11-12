@@ -1,48 +1,30 @@
 import { useEffect, useRef, useState } from "react";
-import { isTypingTarget, modalOpen, modKey } from "./a11y.ts";
+import { isTypingTarget, modalOpen } from "./a11y.ts";
 import { api, useData, useLiveEvents } from "./api.ts";
 import { ShortcutOverlay } from "./components/Dialog.tsx";
+import { NavSidebar } from "./components/NavSidebar.tsx";
 import { type PaletteItem, PaletteView, pageItems } from "./components/Palette.tsx";
-import { Icon } from "./components/ui.tsx";
 import { BoardPage } from "./pages/Board.tsx";
-import { HomePage } from "./pages/Home.tsx";
+import { DashboardPage } from "./pages/Dashboard.tsx";
 import { ProjectsPage } from "./pages/Projects.tsx";
 import { SessionsPage } from "./pages/Sessions.tsx";
 import { SettingsPage } from "./pages/Settings.tsx";
+import { UsagePage } from "./pages/Usage.tsx";
 import { Link, navigate, paths, useLocation } from "./router.ts";
-
-const NAV = [
-  { label: "Home", to: paths.home(), icon: Icon.home, match: (p: string) => p === "/" },
-  {
-    label: "Projects",
-    to: paths.projects(),
-    icon: Icon.projects,
-    match: (p: string) => p.startsWith("/projects"),
-  },
-  {
-    label: "Sessions",
-    to: paths.sessions(),
-    icon: Icon.sessions,
-    match: (p: string) => p.startsWith("/sessions"),
-  },
-  {
-    label: "Settings",
-    to: paths.settings(),
-    icon: Icon.settings,
-    match: (p: string) => p.startsWith("/settings"),
-  },
-];
 
 export function App() {
   const { pathname, route } = useLocation();
   const [overview, refreshOverview] = useData("shell:overview", api.overview);
-  useLiveEvents(refreshOverview);
+  const [projects, refreshProjects] = useData("projects", api.projects);
+  useLiveEvents(() => {
+    refreshOverview();
+    refreshProjects();
+  });
   // A session stops being live without any event, so look again now and then.
   useEffect(() => {
     const t = setInterval(refreshOverview, 30_000);
     return () => clearInterval(t);
   }, [refreshOverview]);
-  const live = overview?.live.length ?? 0;
 
   // After moving to another page, start reading at its content rather than at the nav rail.
   const page = useRef(route.name);
@@ -66,67 +48,17 @@ export function App() {
       >
         Skip to content
       </a>
-      <nav className="rail" aria-label="Main">
-        <Link to={paths.home()} className="rail-brand" aria-label="Quoli home" title="Quoli">
-          <span className="logo" aria-hidden />
-        </Link>
-        <ul>
-          {NAV.map((n) => {
-            const current = n.match(pathname);
-            return (
-              <li key={n.to}>
-                <Link
-                  to={n.to}
-                  className={`rail-link ${current ? "active" : ""}`}
-                  aria-current={current ? "page" : undefined}
-                >
-                  {n.icon}
-                  <span>{n.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-        <div className="rail-foot">
-          <button
-            type="button"
-            className="rail-link"
-            title={`Search (${modKey()}+K)`}
-            onClick={() => window.dispatchEvent(new Event("quoli:palette"))}
-          >
-            {Icon.search}
-            <span>Search</span>
-          </button>
-          <button
-            type="button"
-            className="rail-link"
-            title="Keyboard shortcuts (?)"
-            onClick={() => window.dispatchEvent(new Event("quoli:shortcuts"))}
-          >
-            {Icon.keyboard}
-            <span>Shortcuts</span>
-          </button>
-          {live > 0 && (
-            <Link
-              to={paths.sessions()}
-              className="live-indicator"
-              title={`${live} live ${live === 1 ? "session" : "sessions"}`}
-            >
-              <i aria-hidden="true" />
-              Live <b>{live}</b>
-            </Link>
-          )}
-        </div>
-      </nav>
+      <NavSidebar pathname={pathname} projects={projects} overview={overview} />
       <Main
         className="shell-main"
         id={route.name === "board" ? undefined : "main"}
         tabIndex={route.name === "board" ? undefined : -1}
       >
-        {route.name === "home" && <HomePage />}
+        {route.name === "home" && <DashboardPage />}
+        {route.name === "usage" && <UsagePage />}
         {route.name === "projects" && <ProjectsPage />}
         {route.name === "sessions" && <SessionsPage />}
-        {route.name === "settings" && <SettingsPage />}
+        {route.name === "settings" && <SettingsPage section={route.section} />}
         {route.name === "board" && (
           <BoardPage
             key={route.projectId}

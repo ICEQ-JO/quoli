@@ -9,7 +9,12 @@ import type { Settings, TokenTotals } from "../shared/model.ts";
 export const projectId = (root: string) =>
   createHash("sha256").update(root).digest("hex").slice(0, 12);
 
-export const DEFAULT_SETTINGS: Settings = { retentionDays: null, redact: true };
+export const DEFAULT_SETTINGS: Settings = {
+  retentionDays: null,
+  redact: true,
+  budgetDailyUsd: null,
+  budgetMonthlyUsd: null,
+};
 
 export const home = () => process.env.QUOLI_HOME ?? join(homedir(), ".quoli");
 
@@ -250,6 +255,30 @@ export class Store {
 
   deleteSetting(key: string) {
     this.db.prepare("DELETE FROM settings WHERE key = ?").run(key);
+  }
+
+  /** Usage rows at or after a time, with the project root of their session. */
+  usageSince(since: string): (UsageRow & { root: string })[] {
+    return this.db
+      .prepare(
+        `SELECT u.*, r.root FROM usage u
+         JOIN (SELECT session_id, MIN(root) AS root FROM events GROUP BY session_id) r
+           ON r.session_id = u.session_id
+         WHERE u.at >= ? ORDER BY u.at`,
+      )
+      .all(since)
+      .map((r) => ({
+        messageId: String(r.message_id),
+        sessionId: String(r.session_id),
+        agentId: String(r.agent_id),
+        model: r.model === null ? null : String(r.model),
+        at: String(r.at),
+        input: Number(r.input),
+        output: Number(r.output),
+        cacheRead: Number(r.cache_read),
+        cacheWrite: Number(r.cache_write),
+        root: String(r.root),
+      }));
   }
 
   /** Usage since a time, grouped by model (null = no model id). */

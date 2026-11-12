@@ -1,0 +1,43 @@
+# Product
+
+<!-- impeccable:product-schema 1 -->
+
+## Platform
+
+web
+
+## Users
+A developer who uses Claude Code on their own repositories, at their desk, right after (or while) an agent works. Their job: understand in under a minute what the agent did to the project, what it cost, and what they need to review before trusting or merging it. Later audience (not yet built): a team lead looking across several developers' agents, which needs the hosted version.
+
+## Product Purpose
+Quoli is one visual map of what coding agents did. It joins the trail that today is scattered across terminal scrollback, git diffs, cloud consoles and billing pages: prompt → agent → tool calls → files changed → where they sit in the code → which branch/commit → which service runs that code. Success is a developer answering "what changed, what did it cost, what do I review?" without leaving Quoli.
+
+## Positioning
+Other tools see one slice: agent tracing sees prompts and tokens but not the codebase; code maps (Sourcegraph, CodeSee) see structure but not who changed it or why; Git clients see commits but not the agent's trail or cost; cloud consoles see services but not which change reached them. Quoli draws all four as lenses on one board with one shared selection, so picking a session lights up its files, its branch and the services those files deploy to.
+
+## Operating Context
+Runs locally: `pnpm dev`/`pnpm demo` serves the app on 127.0.0.1:4400. `pnpm connect <repo>` (or Projects → Connect) installs Claude Code hooks; events stream in live over SSE. Used beside a terminal running Claude Code and an editor. Sessions range from a 2-call question to 500+ tool calls with subagents; repositories range from tens to tens of thousands of files and thousands of commits.
+
+## Capabilities and Constraints
+- Agents: Claude Code only today (Codex, OpenCode, Pi on the roadmap).
+- Code: file-level map with relative JS/TS import edges; symbol-level (functions, routes, tables) is roadmap Phase 2.
+- Git: reads the local repository with `git` (branches, remote-tracking refs from the last fetch, commits). No GitHub API.
+- Infra: detected from config files in the repo, plus live CPU/memory from local Docker. Hosted provider connections (Vercel, AWS, Supabase, …) and their metrics are roadmap Phase 4 and do not exist yet.
+- Cost is an estimate from an editable list-price table, never an invoice.
+- Terminology: session, prompt, agent/subagent, tool call, lens (Summary, Agents, Code, Git, Infra), project.
+
+## Brand Commitments
+Name: Quoli (formerly Traceframe). Owner direction 2026-11-12: the app must feel like a finished product in the spirit of Linear, not an MVP. Fixed color meanings: blue = read, orange = edited, teal = ran a command, yellow = searched, purple = subagent, pink = web/MCP, red = failed; an orange glow always means "the agent changed this".
+
+## Evidence on Hand
+Real local sessions recorded from Claude Code; the synthetic demo (`pnpm demo`, `pnpm demo --large`: ~2,400 files, 560+ commits). No users, testimonials, benchmarks or pricing exist; do not invent them.
+
+## Product Principles
+- Glanceable first, exact on demand: the map tells the story in two seconds; the code, diff, input and output are one click away.
+- Honest: every fact is recorded, derived or inferred, and the UI shows which. Unknown stays unknown; a passing command never means a feature works.
+- Local by default: nothing leaves the machine unless the user turns on sync.
+- Passive: Quoli observes and never blocks or steers the agent.
+- Zero-config: connect a repo and start the agent; infrastructure is read from files already in the repo.
+
+## Accessibility & Inclusion
+WCAG AA contrast in dark and light themes (enforced by `tests/theme-contrast.test.ts`), full keyboard operation, screen-reader labels on canvas nodes, no horizontal scroll at 1280 px.

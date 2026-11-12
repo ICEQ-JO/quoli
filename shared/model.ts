@@ -46,6 +46,11 @@ export interface SessionSummary {
   models: string[];
   /** Estimated list-price cost of the reported usage (Increment 2). */
   cost: Cost;
+  /**
+   * The activity trace: one character per tool call in time order (first 400), see TRACE_CODES.
+   * Derived from recorded tool calls.
+   */
+  trace: string;
 }
 
 export interface TokenTotals {
@@ -232,6 +237,9 @@ export interface Settings {
   retentionDays: number | null;
   /** Redact common credential shapes before storing events. */
   redact: boolean;
+  /** Local spend budgets in USD (estimates); null = none. They only change what the UI shows. */
+  budgetDailyUsd: number | null;
+  budgetMonthlyUsd: number | null;
 }
 
 /** Read-only facts about this Quoli install, returned with settings. */
@@ -303,7 +311,56 @@ export interface SessionReport {
   priceVersion: string;
 }
 
+/* ---------- Usage (redesign R1) ---------- */
+
+/** One calendar day in the server's local time zone. */
+export interface UsageDay {
+  /** YYYY-MM-DD */
+  date: string;
+  tokens: TokenTotals;
+  /** Estimated cost of priced usage that day; null when nothing could be priced. */
+  usd: number | null;
+}
+
+/** GET /api/usage?days=N — spend and tokens over the last N days (1–365), all derived from usage rows. */
+export interface UsageReport {
+  days: UsageDay[];
+  total: { tokens: TokenTotals; cost: Cost };
+  byModel: { model: string | null; tokens: TokenTotals; usd: number | null }[];
+  byProject: {
+    projectId: string;
+    name: string;
+    root: string;
+    tokens: TokenTotals;
+    usd: number | null;
+  }[];
+  /** Most expensive sessions in the range, at most 10. */
+  topSessions: {
+    id: string;
+    projectId: string;
+    title: string;
+    startedAt: string;
+    tokens: TokenTotals;
+    usd: number | null;
+  }[];
+  /** What cache reads saved versus paying the input price for the same tokens (priced models only). */
+  cacheSavingsUsd: number | null;
+  /** Spend so far today and this calendar month, for the budgets. */
+  spend: { today: number | null; month: number | null };
+}
+
 /* ---------- Helpers ---------- */
+
+/** Trace characters per tool category; a failed call is "f" whatever its category. */
+export const TRACE_CODES: Record<ToolCategory, string> = {
+  read: "r",
+  edit: "e",
+  run: "c",
+  search: "s",
+  agent: "a",
+  web: "w",
+  other: "o",
+};
 
 export const zeroTokens = (): TokenTotals => ({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
 

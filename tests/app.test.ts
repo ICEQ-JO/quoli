@@ -350,7 +350,12 @@ test("settings are validated, saved, and drive redaction", async () => {
   store0 = store;
   try {
     const first = await call("GET", "/api/settings");
-    assert.deepEqual(first.body.settings, { retentionDays: null, redact: true });
+    assert.deepEqual(first.body.settings, {
+      retentionDays: null,
+      redact: true,
+      budgetDailyUsd: null,
+      budgetMonthlyUsd: null,
+    });
     assert.equal(typeof first.body.info.port, "number");
     assert.match(first.body.info.version, /^\d+\.\d+\.\d+/);
 
@@ -365,7 +370,12 @@ test("settings are validated, saved, and drive redaction", async () => {
       assert.equal((await call("PUT", "/api/settings", bad)).status, 400, JSON.stringify(bad));
     }
     const ok = await call("PUT", "/api/settings", { retentionDays: 30, redact: false });
-    assert.deepEqual(ok.body.settings, { retentionDays: 30, redact: false });
+    assert.deepEqual(ok.body.settings, {
+      retentionDays: 30,
+      redact: false,
+      budgetDailyUsd: null,
+      budgetMonthlyUsd: null,
+    });
 
     const secret = "sk-ant-abcdefghijklmnopqrstuvwxyz0123";
     hook("/s", "x", "UserPromptSubmit", { prompt: secret });

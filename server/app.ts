@@ -25,6 +25,7 @@ import {
   validatePrices,
 } from "./prices.ts";
 import { deriveSession, summarizeSession } from "./sessions.ts";
+import { usageReport } from "./usage.ts";
 
 const version: string = JSON.parse(
   readFileSync(resolve(fileURLToPath(import.meta.url), "../../package.json"), "utf8"),
@@ -72,6 +73,11 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
         throw new BadRequest("retentionDays must be null or a whole number from 1 to 3650");
       }
       next.retentionDays = value as number | null;
+    } else if (key === "budgetDailyUsd" || key === "budgetMonthlyUsd") {
+      if (value !== null && !(typeof value === "number" && value > 0 && value <= 1_000_000)) {
+        throw new BadRequest(`${key} must be null or a number above 0 and at most 1000000`);
+      }
+      next[key] = value as number | null;
     } else if (key === "redact") {
       if (typeof value !== "boolean") throw new BadRequest("redact must be true or false");
       next.redact = value;
@@ -218,6 +224,13 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
     if (path === "/api/prices") return json(res, 200, loadPrices(store));
+    if (path === "/api/usage") {
+      const days = Number(url.searchParams.get("days") ?? 30);
+      if (!Number.isInteger(days) || days < 1 || days > 365) {
+        return json(res, 400, { error: "days must be a whole number from 1 to 365" });
+      }
+      return json(res, 200, usageReport(store, days, details));
+    }
     if (path === "/api/session") {
       const id = url.searchParams.get("id") ?? "";
       const detail = deriveSession(store.events(id), store.usage(id), loadPrices(store));

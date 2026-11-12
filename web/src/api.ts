@@ -10,6 +10,7 @@ import type {
   SessionDetail,
   SessionSummary,
   Settings,
+  UsageReport,
 } from "../../shared/model.ts";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -56,6 +57,7 @@ export const api = {
   settings: () => get<SettingsResponse>("/api/settings"),
   saveSettings: (patch: Partial<Settings>) => send<SettingsResponse>("PUT", "/api/settings", patch),
   prices: () => get<PriceTable>("/api/prices"),
+  usage: (days: number) => get<UsageReport>(`/api/usage?days=${days}`),
   savePrices: (table: PriceTable) => send<PriceTable>("PUT", "/api/prices", table),
   resetPrices: () => send<PriceTable>("DELETE", "/api/prices"),
   redactPreview: (text: string) => send<{ text: string }>("POST", "/api/redact-preview", { text }),

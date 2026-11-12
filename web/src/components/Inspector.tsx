@@ -5,7 +5,7 @@ import { ago, CATEGORY, clock, duration, fileName, plural } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
-import { ErrorState } from "./ui.tsx";
+import { ErrorState, Icon } from "./ui.tsx";
 
 interface Props extends LensContext {
   lens: Lens;
@@ -28,8 +28,14 @@ export function Inspector(p: Props) {
   return (
     <aside className="inspector" aria-label="Inspector">
       {s && (
-        <button type="button" className="back" onClick={() => p.select(null)}>
-          ← {p.session ? "Back to list" : "Project"}
+        <button
+          type="button"
+          className="back"
+          onClick={() => p.select(null)}
+          title="Close details (Esc)"
+        >
+          {Icon.close}
+          Close
         </button>
       )}
       {body}
