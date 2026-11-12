@@ -11,6 +11,7 @@ import { Summary } from "../components/Summary.tsx";
 import { Timeline } from "../components/Timeline.tsx";
 import { ErrorState, Icon, Loading, projectName } from "../components/ui.tsx";
 import { AgentsLens } from "../lenses/AgentsLens.tsx";
+import { useAgentsView } from "../lenses/agents/view.ts";
 import { CodeLens } from "../lenses/CodeLens.tsx";
 import { GitLens } from "../lenses/GitLens.tsx";
 import { InfraLens } from "../lenses/InfraLens.tsx";
@@ -81,6 +82,7 @@ export function BoardPage({
   // biome-ignore lint/correctness/useExhaustiveDependencies: fold the list when a session opens
   useEffect(() => setListOpen(!sessionId), [Boolean(sessionId)]);
   // Details without a selection (lens overview lists) are opt-in; a selection always opens them.
+  const agentsView = useAgentsView();
   const [details, setDetails] = useState(() => remember("quoli.details") === "open");
   const toggleDetails = () => {
     remember("quoli.details", details ? null : "open");
@@ -207,10 +209,14 @@ export function BoardPage({
   const fetched = lens === "code" || lens === "git" || lens === "infra" ? lensFetch[lens] : null;
   const blocked = fetched && !fetched.data && fetched.error ? fetched : null;
 
+  // In the Agents lens' Steps view a selected call opens in place, so it needs no side panel.
+  const inPlace = lens === "agents" && agentsView === "timeline" && selection?.kind === "tool";
+  const panelOpen = !summary && (details || (!!selection && !inPlace));
+
   return (
     <div
       className={`app ${summary ? "is-summary" : ""} ${listOpen ? "" : "no-list"} ${
-        !summary && (selection || details) ? "" : "no-details"
+        panelOpen ? "" : "no-details"
       } ${sessionId && session && !summary ? "" : "no-replay"}`}
     >
       <header className="topbar">
@@ -292,12 +298,12 @@ export function BoardPage({
         {!summary && (
           <button
             type="button"
-            className={`icon-btn ${selection || details ? "on" : ""}`}
-            onClick={() => (selection ? select(null) : toggleDetails())}
-            aria-pressed={!!(selection || details)}
+            className={`icon-btn ${panelOpen ? "on" : ""}`}
+            onClick={() => (selection && !inPlace ? select(null) : toggleDetails())}
+            aria-pressed={panelOpen}
             aria-label="Details panel"
             title={
-              selection
+              selection && !inPlace
                 ? "Close details (Esc)"
                 : details
                   ? "Hide the details panel"
@@ -367,7 +373,7 @@ export function BoardPage({
       </main>
       {session && <LiveAnnouncer session={session} />}
 
-      {!summary && (selection || details) && (
+      {panelOpen && (
         <Inspector
           {...ctx}
           hookStatus={project.hookStatus}

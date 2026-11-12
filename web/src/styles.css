@@ -750,19 +750,16 @@ kbd {
   border-radius: 8px;
   background: var(--raised);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--c);
   padding: 7px 10px;
   transition: opacity 0.25s;
 }
 
 .tool-node:hover {
   border-color: var(--muted);
-  border-left-color: var(--c);
 }
 
 .tool-node.failed {
   border-color: var(--fail);
-  border-left-color: var(--fail);
   background: color-mix(in srgb, var(--fail) 8%, transparent);
 }
 

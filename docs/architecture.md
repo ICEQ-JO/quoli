@@ -36,7 +36,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `server/demo.ts` | Builds a sample repo and records three synthetic sessions |
 | `web/src/App.tsx` | Shell: navigation sidebar (Dashboard, Sessions, Usage, projects, Settings) and routes |
 | `web/src/pages/*` | Dashboard, Sessions, Usage, Projects, Settings (General, Prices, Data, Appearance) and the Board (session list, lens tabs, canvas, details panel, replay bar) |
-| `web/src/lenses/*` | The four lenses, all on React Flow via `Board.tsx` |
+| `web/src/lenses/*` | The four lenses. Agents opens on Steps (one row per call, prompt sections, subagent threads, filters, details in place; `agents/Timeline.tsx`) with Lanes (the graph) as the alternative; Code, Git and Infra draw on React Flow via `Board.tsx` |
 | `web/src/components/*` | NavSidebar, session Sidebar, Inspector, Timeline (replay bar), Trace (one tick per tool call), SpendChart, Palette (⌘K), Diff, Onboarding |
 
 ## Data model
@@ -66,6 +66,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 
 - Claude Code only. Hook payload fields were taken from Claude Code's documented hook contract and exercised with realistic synthetic payloads; verify against your installed version.
 - Subagent ↔ spawning `Task` call is matched by launch order (drawn dashed), because hooks do not link them by id.
+- Claude Code records some non-human turns as prompts. The Agents lens shows background-task notifications (`<task-notification>`) and slash commands (`<command-name>`) as one-line notices; other injected text still shows as a prompt.
 - File-level code map; imports are resolved for relative JS/TS only.
 - Infra is what config files declare; hosted metrics need provider connections that do not exist yet.
 - Large repos: the code map lists up to 50,000 paths and reads line counts/imports for up to 5,000 files (≤ 512 KB); the Code lens opens at folder level. Git history pages 200 commits at a time (max 2,000 per request).
