@@ -2,10 +2,13 @@ import { useState } from "react";
 import type { HookStatus, SessionDetail } from "../../../shared/model.ts";
 import { api, useData } from "../api.ts";
 import { ago, CATEGORY, clock, duration, fileName, plural } from "../format.ts";
+import { mergeRefs, refTitle } from "../lenses/git/refs.ts";
+import { ServiceForm } from "../lenses/infra/ServiceForm.tsx";
+import { isAdded } from "../lenses/infra/split.ts";
 import { Link, paths } from "../router.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
-import { ErrorState } from "./ui.tsx";
+import { ErrorState, Icon } from "./ui.tsx";
 
 interface Props extends LensContext {
   lens: Lens;
@@ -28,8 +31,14 @@ export function Inspector(p: Props) {
   return (
     <aside className="inspector" aria-label="Inspector">
       {s && (
-        <button type="button" className="back" onClick={() => p.select(null)}>
-          ← {p.session ? "Back to list" : "Project"}
+        <button
+          type="button"
+          className="back"
+          onClick={() => p.select(null)}
+          title="Close details (Esc)"
+        >
+          {Icon.close}
+          Close
         </button>
       )}
       {body}
@@ -391,9 +400,18 @@ function ToolPanel({ id, session, goto }: Props & { id: string }) {
   );
 }
 
-function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
+function ServicePanel({
+  id,
+  infra,
+  touched,
+  goto,
+  projectId,
+  refreshInfra,
+}: Props & { id: string }) {
+  const [editing, setEditing] = useState<string | null>(null);
   const s = infra?.services.find((x) => x.id === id);
   if (!s) return null;
+  const added = isAdded(s);
   const changed = editedUnder(touched, s.sourceDir);
   const name = (sid: string) => infra?.services.find((x) => x.id === sid)?.name ?? sid;
   const links = infra?.links.filter((l) => l.from === id || l.to === id) ?? [];
@@ -429,6 +447,29 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
           Fly, Railway…) need a provider connection, which is not built yet.
         </p>
       )}
+      {s.kind !== "pipeline" &&
+        (editing === s.id ? (
+          <ServiceForm
+            key={s.id}
+            projectId={projectId}
+            service={s}
+            onDone={(changed) => {
+              setEditing(null);
+              if (changed) refreshInfra();
+            }}
+          />
+        ) : (
+          <div className="svc-actions">
+            {s.url && (
+              <a className="btn sm" href={s.url} target="_blank" rel="noopener noreferrer">
+                Open dashboard
+              </a>
+            )}
+            <button type="button" className="btn sm" onClick={() => setEditing(s.id)}>
+              {added || s.manual ? "Edit" : "Rename or add a dashboard link"}
+            </button>
+          </div>
+        ))}
       {changed.length > 0 && (
         <Section title="Changed by this session" aside={String(changed.length)}>
           <ul className="links">
@@ -472,13 +513,21 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
         )}
       </Section>
       <Section title="How Quoli knows">
-        <p className="note">
-          {s.basis === "inferred" ? "Inferred" : "Declared"} in{" "}
-          <span className="mono">{s.evidence}</span>.{" "}
-          {s.basis === "inferred"
-            ? "A dependency or convention suggests this service; it may not exist in every environment."
-            : "Read directly from a configuration file in the repository."}
-        </p>
+        {added ? (
+          <p className="note">
+            Added by you in Quoli and stored on this machine only. No file declares it, and Quoli
+            has no connection to it.
+          </p>
+        ) : (
+          <p className="note">
+            {s.basis === "inferred" ? "Inferred" : "Declared"} in{" "}
+            <span className="mono">{s.evidence}</span>.{" "}
+            {s.basis === "inferred"
+              ? "A dependency or convention suggests this service; it may not exist in every environment."
+              : "Read directly from a configuration file in the repository."}
+            {s.manual && " You renamed it or added its dashboard link."}
+          </p>
+        )}
       </Section>
     </>
   );
@@ -491,6 +540,11 @@ function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: s
     !loaded && root ? `commit:${root}:${sha}` : null,
     () => api.git(root as string, 2000),
   );
+  const [detail, reloadDetail, detailError] = useData(
+    root ? `commit-detail:${root}:${sha}` : null,
+    () => api.commit(root as string, sha),
+  );
+  const [showDiff, setShowDiff] = useState(false);
   const c = loaded ?? deep?.commits.find((x) => x.sha === sha);
   if (!c && deepError)
     return (
@@ -503,6 +557,13 @@ function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: s
       </p>
     );
   const madeBy = sessions.filter((s) => c.sessions?.includes(s.id));
+  const tags = mergeRefs(
+    c.refs,
+    git?.remotes.map((r) => r.name) ?? [],
+    git?.branches.find((b) => b.current)?.name ?? null,
+  );
+  const added = detail?.files.reduce((n, f) => n + (f.added ?? 0), 0) ?? 0;
+  const removed = detail?.files.reduce((n, f) => n + (f.removed ?? 0), 0) ?? 0;
   return (
     <>
       <header className="panel-head">
@@ -510,18 +571,11 @@ function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: s
         <h2 title={c.subject}>{c.subject}</h2>
         <p className="meta">
           {c.author} · {ago(c.at)}
+          {c.parents.length > 1 ? " · merge commit" : ""}
         </p>
       </header>
-      {c.refs.length > 0 && (
-        <Section title="Refs">
-          <p className="mono">{c.refs.join(", ")}</p>
-        </Section>
-      )}
-      <Section title="Parents">
-        <p className="mono">{c.parents.join(", ") || "root commit"}</p>
-      </Section>
       {madeBy.length > 0 && (
-        <Section title="Created by session" aside="recorded">
+        <Section title="Made by session" aside="recorded git commit output">
           <ul className="links">
             {madeBy.map((s) => (
               <li key={s.id}>
@@ -533,9 +587,81 @@ function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: s
           </ul>
         </Section>
       )}
+      {tags.length > 0 && (
+        <Section title="Branches and tags here">
+          <ul className="ref-list">
+            {tags.map((t) => (
+              <li key={`${t.kind}:${t.name}`} title={refTitle(t)}>
+                <span className={`g-ref ${t.kind}`}>{t.name}</span>
+                <span className="faint">{REF_WORDS[t.kind]}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+      <Section
+        title={detail ? `Files changed · ${detail.files.length}` : "Files changed"}
+        aside={detail ? `+${added} −${removed}` : undefined}
+      >
+        {detail ? (
+          <ul className="commit-files">
+            {detail.files.map((f) => (
+              <li key={f.path} title={f.path}>
+                <span className="mono cf-path">{f.path}</span>
+                {f.added === null ? (
+                  <span className="faint">binary</span>
+                ) : (
+                  <span className="cf-n mono">
+                    <span className="add">+{f.added}</span>{" "}
+                    <span className="del">−{f.removed}</span>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : detailError ? (
+          <ErrorState
+            title="Could not read this commit"
+            message={detailError}
+            retry={reloadDetail}
+          />
+        ) : (
+          <p className="faint" role="status">
+            Loading…
+          </p>
+        )}
+      </Section>
+      {detail?.diff && (
+        <Section title="Diff">
+          {showDiff ? (
+            <>
+              <UnifiedDiff text={detail.diff} />
+              {detail.truncated && (
+                <p className="faint">
+                  The diff is cut off here; run git show {c.sha} for the rest.
+                </p>
+              )}
+            </>
+          ) : (
+            <button type="button" className="btn" onClick={() => setShowDiff(true)}>
+              Show the diff
+            </button>
+          )}
+        </Section>
+      )}
+      <Section title="Parents">
+        <p className="mono">{c.parents.join(", ") || "root commit"}</p>
+      </Section>
     </>
   );
 }
+
+const REF_WORDS = {
+  local: "local branch, not pushed at this commit",
+  synced: "local branch, pushed: the remote copy matches",
+  remote: "remote-tracking branch, as of the last fetch",
+  tag: "tag",
+} as const;
 
 function BranchPanel({ name, git, sessions, openSession }: Props & { name: string }) {
   const b = git?.branches.find((x) => x.name === name);

@@ -1,11 +1,12 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { Branch, Commit, GitState, SessionSummary } from "../../../shared/model.ts";
+import type { Branch, Commit, GitState, Remote, SessionSummary } from "../../../shared/model.ts";
 import { onRoveKey } from "../a11y.ts";
 import { api } from "../api.ts";
 import { ago, plural } from "../format.ts";
 import { isSelected, type LensContext } from "../state.ts";
 import "./git/git.css";
 import { assignLanes, type LaneRow, reachable } from "./git/lanes.ts";
+import { mergeRefs, refTitle } from "./git/refs.ts";
 
 const ROW = 28;
 const OVERSCAN = 12;
@@ -91,6 +92,7 @@ export function GitLens(ctx: LensContext) {
   }
 
   const current = git.branches.find((b) => b.current);
+  const remoteNames = git.remotes.map((r) => r.name);
   const lead = git.changed > 0 ? 1 : 0;
   const total = git.commits.length + lead;
   const first = Math.max(0, Math.floor(view.top / ROW) - OVERSCAN);
@@ -135,6 +137,8 @@ export function GitLens(ctx: LensContext) {
         titles={titles}
         tabStop={i === Math.max(first, lead)}
         activeId={session?.id}
+        remotes={remoteNames}
+        currentBranch={current?.name ?? null}
         onSelect={() => select({ kind: "commit", id: c.sha })}
         openSession={openSession}
       />,
@@ -143,7 +147,9 @@ export function GitLens(ctx: LensContext) {
 
   return (
     <div className="git-lens">
+      <RepoHeader root={root} remotes={git.remotes} lastFetch={git.lastFetch} />
       <BranchList
+        hasRemote={git.remotes.length > 0}
         branches={git.branches}
         sessions={sessions}
         selection={selection}
@@ -158,7 +164,7 @@ export function GitLens(ctx: LensContext) {
           setView({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight })
         }
       >
-        <div className="g-body" style={{ height: total * ROW + 56 }}>
+        <div className="g-body" style={{ height: total * ROW + 110 }}>
           {rows}
           <div className="g-more" style={{ top: total * ROW + 8 }}>
             {git.hasMore ? (
@@ -176,7 +182,96 @@ export function GitLens(ctx: LensContext) {
           </div>
         </div>
       </div>
+      <div className="legend g-legend">
+        <span className="g-lg">
+          <svg width="10" height="10" aria-hidden="true">
+            <circle cx="5" cy="5" r="4" fill="var(--muted)" />
+          </svg>
+          commit
+        </span>
+        <span className="g-lg">
+          <svg width="10" height="10" aria-hidden="true">
+            <circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--muted)" strokeWidth="2" />
+          </svg>
+          merge
+        </span>
+        <span className="g-ref local">{git.remotes.length ? "local branch" : "branch"}</span>
+        {git.remotes.length > 0 && (
+          <>
+            <span className="g-ref synced">
+              pushed
+              <PushedIcon />
+            </span>
+            <span className="g-ref remote">{git.remotes[0]?.name}/… remote only</span>
+          </>
+        )}
+        <span className="g-session">commit made by a session</span>
+      </div>
     </div>
+  );
+}
+
+function RepoHeader({
+  root,
+  remotes,
+  lastFetch,
+}: {
+  root: string | null;
+  remotes: Remote[];
+  lastFetch: string | null;
+}) {
+  const name = root?.split("/").filter(Boolean).at(-1) ?? "repository";
+  return (
+    <div className="g-header">
+      <span className="g-where" title={root ?? ""}>
+        <b>Local Git</b>
+        <span className="mono">{name}</span>
+      </span>
+      {remotes.length === 0 ? (
+        <span className="faint">No remote configured</span>
+      ) : (
+        remotes.map((r) => (
+          <span key={r.name} className="g-remote">
+            <span className="mono faint">{r.name}</span>
+            {r.web ? (
+              <a href={r.web} target="_blank" rel="noreferrer noopener" className="mono">
+                {r.display}
+              </a>
+            ) : (
+              <span className="mono">{r.display ?? "local path"}</span>
+            )}
+          </span>
+        ))
+      )}
+      <span
+        className="g-fetch faint"
+        title="Quoli reads your repository with git on this machine; it never calls GitHub. Remote branches are what your last git fetch saw."
+      >
+        {remotes.length > 0
+          ? lastFetch
+            ? `remote branches as of your last fetch, ${ago(lastFetch)}`
+            : "never fetched: remote branches may be missing"
+          : "read with git on this machine"}
+      </span>
+    </div>
+  );
+}
+
+function PushedIcon() {
+  return (
+    <svg className="g-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M4.5 12.5h7a3 3 0 00.4-6 4 4 0 00-7.6-1A3.3 3.3 0 004.5 12.5z" />
+      <path d="M6.3 9.2l1.3 1.3 2.4-2.6" />
+    </svg>
+  );
+}
+
+function TagIcon() {
+  return (
+    <svg className="g-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M2.5 3.5v4l6 6 5-5-6-6h-4z" />
+      <circle cx="5.3" cy="5.3" r="0.9" />
+    </svg>
   );
 }
 
@@ -201,6 +296,8 @@ function CommitRow(p: {
   titles: Map<string, SessionSummary>;
   tabStop: boolean;
   activeId: string | undefined;
+  remotes: string[];
+  currentBranch: string | null;
   onSelect: () => void;
   openSession: (id: string) => void;
 }) {
@@ -209,7 +306,8 @@ function CommitRow(p: {
   const mid = ROW / 2;
   const col = (n: number) => LANE_COLORS[n % LANE_COLORS.length];
   const merge = c.parents.length > 1;
-  const refs = c.refs.slice(0, 3);
+  const tags = mergeRefs(c.refs, p.remotes, p.currentBranch);
+  const refs = tags.slice(0, 3);
   return (
     // biome-ignore lint/a11y/useSemanticElements: a row that holds other buttons, not a form group
     <div
@@ -286,14 +384,20 @@ function CommitRow(p: {
         <span className="g-subject" title={`${c.sha} · ${c.subject}`}>
           {c.subject}
         </span>
-        {refs.map((r) => (
-          <span key={r} className={`g-ref ${/^tag: /.test(r) ? "tag" : ""}`} title={r}>
-            {r.replace(/^tag: /, "")}
+        {refs.map((t) => (
+          <span
+            key={`${t.kind}:${t.name}`}
+            className={`g-ref ${t.kind} ${t.current ? "current" : ""}`}
+            title={refTitle(t)}
+          >
+            {t.kind === "tag" && <TagIcon />}
+            {t.name}
+            {t.kind === "synced" && <PushedIcon />}
           </span>
         ))}
-        {c.refs.length > refs.length && (
-          <span className="g-ref" title={c.refs.slice(3).join(", ")}>
-            +{c.refs.length - refs.length}
+        {tags.length > refs.length && (
+          <span className="g-ref more" title={tags.slice(3).map(refTitle).join("\n")}>
+            +{tags.length - refs.length}
           </span>
         )}
         {(c.sessions ?? []).map((id) => {
@@ -327,6 +431,7 @@ function CommitRow(p: {
 }
 
 function BranchList(p: {
+  hasRemote: boolean;
   branches: Branch[];
   sessions: SessionSummary[];
   selection: LensContext["selection"];
@@ -424,7 +529,7 @@ function BranchList(p: {
                 b.name === p.activeBranch ? "active" : ""
               }`}
               onClick={() => p.onSelect(b.name)}
-              title={`${b.name}${b.upstream ? ` → ${b.upstream}` : ""}${
+              title={`${b.name}${b.upstream ? ` tracks ${b.upstream}${b.ahead ? `, ${b.ahead} not pushed` : ""}${b.behind ? `, ${b.behind} not pulled` : ""}` : ": local only, never pushed"}${
                 ran.length ? `\nSessions: ${ran.map((s) => s.title).join("; ")}` : ""
               }`}
             >
@@ -436,6 +541,7 @@ function BranchList(p: {
               />
               <span className="g-bname">{b.name}</span>
               {b.current && <span className="g-tag">HEAD</span>}
+              {!b.upstream && p.hasRemote && <span className="g-meta">local only</span>}
               {b.ahead > 0 && <span className="g-meta">↑{b.ahead}</span>}
               {b.behind > 0 && <span className="g-meta">↓{b.behind}</span>}
               {ran.length > 0 && (

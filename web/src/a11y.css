@@ -100,8 +100,18 @@ main:focus {
   border-radius: 5px;
 }
 
+/* Reduced motion: no pulsing, sliding or animated camera moves anywhere. */
 @media (prefers-reduced-motion: reduce) {
-  .skip-link {
-    transition: none;
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override every component rule */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override every component rule */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override every component rule */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override every component rule */
+    scroll-behavior: auto !important;
   }
 }

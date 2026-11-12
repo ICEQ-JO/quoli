@@ -1,6 +1,7 @@
 import type { SessionDetail } from "../../../shared/model.ts";
 import { ago, duration, money, tokenSum } from "../format.ts";
 import { Link } from "../router.ts";
+import { Trace } from "./Trace.tsx";
 import { useNow } from "./ui.tsx";
 
 /** What the selected session is, at a glance, above every lens. */
@@ -20,10 +21,12 @@ export function SessionHeader({
   return (
     <section className="session-head" aria-label="Selected session">
       <div className="sh-row">
-        <span className={`status ${session.live ? "live" : ""}`}>
+        <span className={`sh-status ${session.live ? "live" : ""}`}>
+          <i aria-hidden />
           {session.live ? "Live" : "Ended"}
         </span>
         <h1 title={session.title}>{session.title}</h1>
+        <Trace trace={session.trace} max={64} />
         <Link
           to={summaryHref}
           className="sh-cost"
@@ -53,6 +56,10 @@ export function SessionHeader({
         )}
         <span title={when}>
           started {ago(session.startedAt)} · {duration(session.startedAt, session.endedAt)}
+        </span>
+        <span>
+          {session.toolCount} {session.toolCount === 1 ? "call" : "calls"}
+          {session.failures > 0 && <span className="fail"> · {session.failures} failed</span>}
         </span>
         {session.models.length > 0 && (
           <span className="mono" title={session.models.join(", ")}>

@@ -1,6 +1,7 @@
 import type { SessionSummary } from "../../../shared/model.ts";
-import { ago, compact, money, plural, tokenSum } from "../format.ts";
+import { ago, money, plural } from "../format.ts";
 import { Link } from "../router.ts";
+import { Trace } from "./Trace.tsx";
 import { ErrorState, LiveDot } from "./ui.tsx";
 
 interface Props {
@@ -20,7 +21,8 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error
   return (
     <nav className="sidebar" aria-label="Agent sessions">
       <div className="side-head">
-        <span>Agent sessions</span>
+        <h2>Sessions</h2>
+        {sessions && sessions.length > 0 && <span className="side-count">{sessions.length}</span>}
         {activeId && (
           <Link to={hrefFor(null)} className="link">
             Clear
@@ -49,7 +51,10 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error
               className={`session-item ${s.id === activeId ? "active" : ""}`}
               aria-current={s.id === activeId ? "true" : undefined}
             >
-              <span className="row">
+              <span className="title" title={s.title}>
+                {s.title}
+              </span>
+              <span className="row meta">
                 <LiveDot live={s.live} />
                 <span className="when">{s.live ? "Live now" : ago(s.startedAt)}</span>
                 {s.branch && (
@@ -57,15 +62,13 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error
                     {s.branch}
                   </span>
                 )}
+                <span className="cost" title="Estimate from list prices">
+                  {money(s.cost, s.tokens)}
+                </span>
               </span>
-              <span className="title" title={s.title}>
-                {s.title}
-              </span>
-              <span className="row meta">
-                <span>{plural(s.toolCount, "tool")}</span>
-                <span>{plural(s.filesTouched, "file")}</span>
-                <span>{compact(tokenSum(s.tokens))} tok</span>
-                <span title="Estimate from list prices">{money(s.cost, s.tokens)}</span>
+              <span className="row trace-row">
+                <Trace trace={s.trace} max={40} />
+                <span>{plural(s.toolCount, "call")}</span>
                 {s.failures > 0 && <span className="fail">{s.failures} failed</span>}
               </span>
             </Link>

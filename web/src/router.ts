@@ -13,11 +13,14 @@ export type Route =
   | { name: "home" }
   | { name: "projects" }
   | { name: "sessions" }
-  | { name: "settings" }
+  | { name: "settings"; section: SettingsSection }
+  | { name: "usage" }
   | { name: "board"; projectId: string; sessionId: string | null }
   | { name: "notfound" };
 
 const CHANGE = "quoli:navigate";
+export const SETTINGS_SECTIONS = ["general", "prices", "data", "appearance"] as const;
+export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 const LENSES: Lens[] = ["summary", "agents", "code", "git", "infra"];
 const KINDS = ["file", "tool", "service", "commit", "branch"] as const;
 
@@ -34,8 +37,14 @@ export function parseRoute(pathname: string): Route {
     });
   if (parts.length === 0) return { name: "home" };
   const [a, b, c, d] = parts;
-  if (parts.length === 1 && (a === "projects" || a === "sessions" || a === "settings"))
+  if (parts.length === 1 && (a === "projects" || a === "sessions" || a === "usage"))
     return { name: a };
+  if (a === "settings" && parts.length <= 2) {
+    const section = (b ?? "general") as SettingsSection;
+    return SETTINGS_SECTIONS.includes(section)
+      ? { name: "settings", section }
+      : { name: "notfound" };
+  }
   if (a === "projects" && b && parts.length === 2)
     return { name: "board", projectId: b, sessionId: null };
   if (a === "projects" && b && c === "sessions" && d && parts.length === 4)
@@ -76,7 +85,9 @@ export const paths = {
   home: () => "/",
   projects: () => "/projects",
   sessions: () => "/sessions",
-  settings: () => "/settings",
+  settings: (section?: SettingsSection) =>
+    section && section !== "general" ? `/settings/${section}` : "/settings",
+  usage: () => "/usage",
   board: (projectId: string, sessionId?: string | null, view?: BoardView) =>
     `/projects/${encodeURIComponent(projectId)}${
       sessionId ? `/sessions/${encodeURIComponent(sessionId)}` : ""

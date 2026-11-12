@@ -350,7 +350,12 @@ test("settings are validated, saved, and drive redaction", async () => {
   store0 = store;
   try {
     const first = await call("GET", "/api/settings");
-    assert.deepEqual(first.body.settings, { retentionDays: null, redact: true });
+    assert.deepEqual(first.body.settings, {
+      retentionDays: null,
+      redact: true,
+      budgetDailyUsd: null,
+      budgetMonthlyUsd: null,
+    });
     assert.equal(typeof first.body.info.port, "number");
     assert.match(first.body.info.version, /^\d+\.\d+\.\d+/);
 
@@ -365,7 +370,12 @@ test("settings are validated, saved, and drive redaction", async () => {
       assert.equal((await call("PUT", "/api/settings", bad)).status, 400, JSON.stringify(bad));
     }
     const ok = await call("PUT", "/api/settings", { retentionDays: 30, redact: false });
-    assert.deepEqual(ok.body.settings, { retentionDays: 30, redact: false });
+    assert.deepEqual(ok.body.settings, {
+      retentionDays: 30,
+      redact: false,
+      budgetDailyUsd: null,
+      budgetMonthlyUsd: null,
+    });
 
     const secret = "sk-ant-abcdefghijklmnopqrstuvwxyz0123";
     hook("/s", "x", "UserPromptSubmit", { prompt: secret });
@@ -468,6 +478,53 @@ test("derived sessions are cached until the session changes or prices change", a
     assert.equal((await call("GET", "/api/session?id=c1")).body.report.priceVersion, "edited");
     store.deleteSessions(["c1"]);
     assert.equal((await call("GET", "/api/session?id=c1")).status, 404);
+  } finally {
+    close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("services added by hand are saved per project, merged into the infra map and removable", async () => {
+  const { call, close } = await start();
+  const dir = repo();
+  try {
+    const pid = (await call("POST", "/api/projects", { path: dir })).body.id;
+    const base = `/api/projects/${pid}/services`;
+    const bad = await call("POST", base, {
+      name: "x",
+      kind: "web",
+      provider: "vercel",
+      url: "javascript:alert(1)",
+    });
+    assert.equal(bad.status, 400);
+    assert.equal(
+      (await call("POST", base, { name: "x", kind: "pipeline", provider: "aws" })).status,
+      400,
+    );
+
+    const added = await call("POST", base, {
+      name: "Production web",
+      kind: "web",
+      provider: "vercel",
+      url: "https://vercel.com/acme/web",
+      sourceDir: "apps/web",
+    });
+    assert.equal(added.status, 200);
+    const entry = added.body[0];
+    let infra = (await call("GET", `/api/infra?root=${encodeURIComponent(dir)}`)).body;
+    const card = infra.services.find((s: { manual: string }) => s.manual === entry.id);
+    assert.equal(card.name, "Production web");
+    assert.equal(card.platform, "vercel");
+    assert.equal(card.evidence, "added by you");
+    assert.equal(card.metrics, null);
+
+    const edited = await call("PUT", `${base}/${entry.id}`, { ...entry, name: "Web" });
+    assert.equal(edited.body[0].name, "Web");
+    assert.equal((await call("PUT", `${base}/m-ffffffff`, entry)).status, 404);
+
+    await call("DELETE", `${base}/${entry.id}`, {});
+    infra = (await call("GET", `/api/infra?root=${encodeURIComponent(dir)}`)).body;
+    assert.ok(infra.services.every((s: { manual: string | null }) => s.manual === null));
   } finally {
     close();
     rmSync(dir, { recursive: true, force: true });

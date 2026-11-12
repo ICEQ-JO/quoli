@@ -8,6 +8,7 @@ import {
   type SessionSummary,
   type TokenTotals,
   type ToolCall,
+  TRACE_CODES,
   type Turn,
   zeroTokens,
 } from "../shared/model.ts";
@@ -149,6 +150,11 @@ export function deriveSession(
     toolCount: toolCalls.length,
     filesTouched: Object.keys(files).length,
     failures: toolCalls.filter((c) => c.status === "failed").length,
+    trace: [...toolCalls]
+      .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
+      .slice(0, 400)
+      .map((c) => (c.status === "failed" ? "f" : TRACE_CODES[c.category]))
+      .join(""),
     tokens,
     models: [...models],
     cost: costOf(costByModel, prices),

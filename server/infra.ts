@@ -14,7 +14,17 @@ const IMAGE_KINDS: [RegExp, ServiceKind][] = [
   [/nginx|caddy|traefik/, "web"],
 ];
 
-const DEPENDENCIES: { match: RegExp; id: string; name: string; kind: ServiceKind }[] = [
+/**
+ * `hosted` services run at a provider, so they never fold into a local compose service of the
+ * same kind (a DynamoDB client is not the compose Postgres).
+ */
+const DEPENDENCIES: {
+  match: RegExp;
+  id: string;
+  name: string;
+  kind: ServiceKind;
+  hosted?: true;
+}[] = [
   {
     match: /^(pg|postgres|@neondatabase\/serverless|drizzle-orm\/pg)$/,
     id: "postgres",
@@ -40,7 +50,67 @@ const DEPENDENCIES: { match: RegExp; id: string; name: string; kind: ServiceKind
     kind: "external",
   },
   { match: /^@aws-sdk\/client-s3$/, id: "s3", name: "S3 storage", kind: "external" },
+  {
+    match: /^@aws-sdk\/(client-dynamodb|lib-dynamodb)$/,
+    id: "dynamodb",
+    name: "DynamoDB",
+    kind: "database",
+    hosted: true,
+  },
+  { match: /^@aws-sdk\/client-sqs$/, id: "sqs", name: "SQS", kind: "queue", hosted: true },
+  {
+    match: /^@azure\/storage-blob$/,
+    id: "azure-blob",
+    name: "Azure Blob Storage",
+    kind: "external",
+  },
+  { match: /^@azure\/cosmos$/, id: "cosmos", name: "Cosmos DB", kind: "database", hosted: true },
+  {
+    match: /^@google-cloud\/storage$/,
+    id: "gcs",
+    name: "Google Cloud Storage",
+    kind: "external",
+  },
+  { match: /^(firebase|firebase-admin)$/, id: "firebase", name: "Firebase", kind: "external" },
+  {
+    match: /^@planetscale\/database$/,
+    id: "planetscale",
+    name: "PlanetScale",
+    kind: "database",
+    hosted: true,
+  },
+  { match: /^@vercel\/blob$/, id: "vercel-blob", name: "Vercel Blob", kind: "external" },
 ];
+
+/** Deploy commands in CI workflows: [pattern, platform, kind of an undeclared target]. */
+const DEPLOY_STEPS: [RegExp, string, ServiceKind | null][] = [
+  [/vercel/i, "vercel", "web"],
+  [/flyctl|fly deploy|superfly/i, "fly.io", "container"],
+  [/railway (up|deploy)|railwayapp/i, "railway", "container"],
+  [/wrangler/i, "cloudflare", "function"],
+  [/netlify/i, "netlify", "web"],
+  [/docker\/build-push-action|docker push/i, "docker", null],
+  [/serverless deploy/i, "aws-lambda", "function"],
+  [/aws s3 (sync|cp)|aws-actions\//i, "aws", "external"],
+  [/azure\/webapps-deploy|azure\/functions-action|\baz webapp\b/i, "azure", "web"],
+  [/gcloud (run|app|functions) deploy|google-github-actions\/deploy/i, "google-cloud", "container"],
+  [/supabase (db push|functions deploy)/i, "supabase", "external"],
+  [/firebase deploy|FirebaseExtended\/action-hosting-deploy/i, "firebase", "web"],
+];
+
+const PLATFORM_NAMES: Record<string, string> = {
+  vercel: "Vercel",
+  "fly.io": "Fly.io",
+  railway: "Railway",
+  cloudflare: "Cloudflare",
+  netlify: "Netlify",
+  "aws-lambda": "AWS Lambda",
+  aws: "AWS",
+  azure: "Azure",
+  "google-cloud": "Google Cloud",
+  supabase: "Supabase",
+  firebase: "Firebase",
+};
 
 const TF_KINDS: [RegExp, ServiceKind][] = [
   [/db_instance|rds|sql_database|_sql_|dynamodb|database/, "database"],
@@ -70,8 +140,9 @@ export function infraMap(root: string): InfraMap {
 export function detectInfra({ list, read }: Files): InfraMap {
   const services = new Map<string, Service>();
   const links: Link[] = [];
-  const add = (s: Omit<Service, "metrics" | "ports"> & { ports?: string[] }) => {
-    if (!services.has(s.id)) services.set(s.id, { ports: [], metrics: null, ...s });
+  const add = (s: Omit<Service, "metrics" | "ports" | "url" | "manual"> & { ports?: string[] }) => {
+    if (!services.has(s.id))
+      services.set(s.id, { ports: [], metrics: null, url: null, manual: null, ...s });
     return services.get(s.id) as Service;
   };
   const link = (from: string, to: string, kind: Link["kind"], basis: Link["basis"]) => {
@@ -228,9 +299,11 @@ export function detectInfra({ list, read }: Files): InfraMap {
         [...services.values()].find(
           (s) => s.kind === known.kind && s.name.toLowerCase().includes(known.id.slice(0, 5)),
         ) ??
-        [...services.values()].find(
-          (s) => s.kind === known.kind && s.platform === "docker-compose",
-        );
+        (known.hosted
+          ? undefined
+          : [...services.values()].find(
+              (s) => s.kind === known.kind && s.platform === "docker-compose",
+            ));
       const target =
         existing ??
         add({
@@ -260,18 +333,27 @@ export function detectInfra({ list, read }: Files): InfraMap {
       basis: "derived",
       evidence: file,
     });
-    const targets: [RegExp, string][] = [
-      [/vercel/i, "vercel"],
-      [/flyctl|fly deploy|superfly/i, "fly.io"],
-      [/railway (up|deploy)|railwayapp/i, "railway"],
-      [/wrangler/i, "cloudflare"],
-      [/netlify/i, "netlify"],
-      [/docker\/build-push-action|docker push/i, "docker"],
-      [/serverless deploy/i, "aws-lambda"],
-    ];
-    for (const [re, platform] of targets) {
+    for (const [re, platform, kind] of DEPLOY_STEPS) {
       if (!re.test(text)) continue;
-      for (const s of services.values()) {
+      const targets = () =>
+        [...services.values()].filter(
+          (s) =>
+            s.platform === platform ||
+            (platform === "docker" && s.platform === "docker-compose" && s.sourceDir !== null),
+        );
+      // A deploy step to a host no file declares still tells us something runs there.
+      if (kind && targets().length === 0) {
+        add({
+          id: `deploy:${platform}`,
+          name: `${PLATFORM_NAMES[platform] ?? platform} deploy target`,
+          kind,
+          platform,
+          sourceDir: null,
+          basis: "inferred",
+          evidence: file,
+        });
+      }
+      for (const s of targets()) {
         if (
           s.platform === platform ||
           (platform === "docker" && s.platform === "docker-compose" && s.sourceDir !== null)

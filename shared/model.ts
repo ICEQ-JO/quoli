@@ -46,6 +46,11 @@ export interface SessionSummary {
   models: string[];
   /** Estimated list-price cost of the reported usage (Increment 2). */
   cost: Cost;
+  /**
+   * The activity trace: one character per tool call in time order (first 400), see TRACE_CODES.
+   * Derived from recorded tool calls.
+   */
+  trace: string;
 }
 
 export interface TokenTotals {
@@ -122,6 +127,8 @@ export interface CodeFile {
   /** False when contents were not read (unknown type, over 512 KB, or over the scan budget). */
   scanned: boolean;
   status: "clean" | "modified" | "added" | "untracked";
+  /** Uncommitted lines added/removed against HEAD (`git diff --numstat`); null when clean or binary. */
+  diff: { added: number; removed: number } | null;
 }
 
 export interface CodeMap {
@@ -154,8 +161,34 @@ export interface Commit {
   sessions?: string[];
 }
 
+export interface Remote {
+  name: string;
+  /** `host/owner/repo`, never credentials. Null when the URL could not be read as a host path. */
+  display: string | null;
+  /** Browser link for GitHub, GitLab and Bitbucket remotes; null for anything else. */
+  web: string | null;
+}
+
+export interface CommitFile {
+  path: string;
+  /** Null for binary files. */
+  added: number | null;
+  removed: number | null;
+}
+
+export interface CommitDetail {
+  sha: string;
+  files: CommitFile[];
+  /** Unified diff, clipped to `DIFF_LIMIT` characters; null when git could not produce it. */
+  diff: string | null;
+  truncated: boolean;
+}
+
 export interface GitState {
   branches: Branch[];
+  remotes: Remote[];
+  /** When remote-tracking refs were last updated by a fetch (FETCH_HEAD mtime); null if never. */
+  lastFetch: string | null;
   /** Newest first, in `--topo-order` (children before parents) so lanes are stable. */
   commits: Commit[];
   changed: number;
@@ -187,9 +220,29 @@ export interface Service {
   sourceDir: string | null;
   ports: string[];
   basis: Basis;
-  /** The file that told us this service exists. */
+  /** The file that told us this service exists, or "added by you" for a service added by hand. */
   evidence: string;
   metrics: ServiceMetrics | null;
+  /** Dashboard link the user gave; Quoli never fetches it. */
+  url: string | null;
+  /** Id of the hand-made entry that added or edits this service; null when none does. */
+  manual: string | null;
+}
+
+/**
+ * A service the user added or edited by hand. Stored locally per project; no credentials,
+ * no connection, so it never carries live status or metrics.
+ */
+export interface ManualService {
+  id: string;
+  /** Detected service this entry renames or links; null for a service added from scratch. */
+  of: string | null;
+  name: string;
+  kind: ServiceKind;
+  /** A provider id from shared/providers.ts or free text for any other host. */
+  provider: string;
+  url: string | null;
+  sourceDir: string | null;
 }
 
 export interface ServiceMetrics {
@@ -232,6 +285,9 @@ export interface Settings {
   retentionDays: number | null;
   /** Redact common credential shapes before storing events. */
   redact: boolean;
+  /** Local spend budgets in USD (estimates); null = none. They only change what the UI shows. */
+  budgetDailyUsd: number | null;
+  budgetMonthlyUsd: number | null;
 }
 
 /** Read-only facts about this Quoli install, returned with settings. */
@@ -303,7 +359,56 @@ export interface SessionReport {
   priceVersion: string;
 }
 
+/* ---------- Usage (redesign R1) ---------- */
+
+/** One calendar day in the server's local time zone. */
+export interface UsageDay {
+  /** YYYY-MM-DD */
+  date: string;
+  tokens: TokenTotals;
+  /** Estimated cost of priced usage that day; null when nothing could be priced. */
+  usd: number | null;
+}
+
+/** GET /api/usage?days=N — spend and tokens over the last N days (1–365), all derived from usage rows. */
+export interface UsageReport {
+  days: UsageDay[];
+  total: { tokens: TokenTotals; cost: Cost };
+  byModel: { model: string | null; tokens: TokenTotals; usd: number | null }[];
+  byProject: {
+    projectId: string;
+    name: string;
+    root: string;
+    tokens: TokenTotals;
+    usd: number | null;
+  }[];
+  /** Most expensive sessions in the range, at most 10. */
+  topSessions: {
+    id: string;
+    projectId: string;
+    title: string;
+    startedAt: string;
+    tokens: TokenTotals;
+    usd: number | null;
+  }[];
+  /** What cache reads saved versus paying the input price for the same tokens (priced models only). */
+  cacheSavingsUsd: number | null;
+  /** Spend so far today and this calendar month, for the budgets. */
+  spend: { today: number | null; month: number | null };
+}
+
 /* ---------- Helpers ---------- */
+
+/** Trace characters per tool category; a failed call is "f" whatever its category. */
+export const TRACE_CODES: Record<ToolCategory, string> = {
+  read: "r",
+  edit: "e",
+  run: "c",
+  search: "s",
+  agent: "a",
+  web: "w",
+  other: "o",
+};
 
 export const zeroTokens = (): TokenTotals => ({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
 

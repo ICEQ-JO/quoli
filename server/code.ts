@@ -45,6 +45,7 @@ export function codeMap(root: string): CodeMap {
     .split("\n")
     .filter((p) => p && !BINARY.test(p));
   const status = gitStatus(root);
+  const numstat = diffStat(root);
   const paths = listed.slice(0, MAX_LISTED);
   const known = new Set(paths);
   const files: CodeFile[] = [];
@@ -65,14 +66,19 @@ export function codeMap(root: string): CodeMap {
         continue; // listed but gone or unreadable (deleted in the working tree)
       }
     }
+    const lines = text === null ? 0 : text.split("\n").length;
+    const state = status.get(path) ?? "clean";
     files.push({
       path,
-      lines: text === null ? 0 : text.split("\n").length,
+      lines,
       language,
       imports:
         text !== null && /\.(m|c)?[jt]sx?$/.test(path) ? resolveImports(path, text, known) : [],
       scanned: text !== null,
-      status: status.get(path) ?? "clean",
+      status: state,
+      diff:
+        numstat.get(path) ??
+        (state === "untracked" && text !== null ? { added: lines, removed: 0 } : null),
     });
   }
   return { root, files, truncated: Math.max(0, listed.length - MAX_LISTED) };
@@ -97,6 +103,21 @@ export function gitStatus(root: string): Map<string, CodeFile["status"]> {
     const code = line.slice(0, 2);
     const path = line.slice(3).split(" -> ").at(-1) ?? "";
     out.set(path, code === "??" ? "untracked" : code.includes("A") ? "added" : "modified");
+  }
+  return out;
+}
+
+/** Uncommitted line counts per path against HEAD; binary files (`-`) are left out. */
+export function diffStat(root: string): Map<string, { added: number; removed: number }> {
+  const out = new Map<string, { added: number; removed: number }>();
+  for (const line of (git(root, ["diff", "--numstat", "HEAD"]) ?? "").split("\n")) {
+    const [a, r, ...rest] = line.split("\t");
+    const path = rest.join("\t");
+    if (!path || a === "-" || r === "-") continue;
+    out.set(path.includes(" => ") ? (path.split(" => ").at(-1) ?? path) : path, {
+      added: Number(a),
+      removed: Number(r),
+    });
   }
   return out;
 }

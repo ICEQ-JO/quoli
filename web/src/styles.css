@@ -1,27 +1,30 @@
 /* Design tokens. Dark is the default; `data-theme="light"` is set before first paint by web/index.html
    and kept in sync by web/src/theme.ts. Contrast of the text pairs is checked in tests/theme-contrast.test.ts. */
 :root {
-  /* surfaces */
-  --bg: #0a0a0b;
-  --panel: #0f0f11;
-  --raised: #16161a;
-  --hover: #1c1c21;
-  --line: #222228;
-  --line-strong: #34343c;
-  --dots: #2a2a30;
+  /* surfaces: cool near-black, lifted one step per layer */
+  --bg: #08090a;
+  --panel: #0e0f11;
+  --raised: #151619;
+  --hover: #1b1c20;
+  --line: #1f2024;
+  --line-strong: #2e3036;
+  --dots: #222429;
   --shadow: #000;
+  --scrim: rgb(0 0 0 / 0.55);
+  --select: rgb(255 255 255 / 0.06);
 
   /* text */
-  --text: #ececef;
-  --text-2: #c9c9cf;
-  --muted: #a3a3ad;
-  --faint: #85858f;
-  --on-accent: #1a0b03;
-  --on-text: #111;
+  --text: #f2f3f5;
+  --text-2: #d2d5db;
+  --muted: #9a9ea8;
+  --faint: #81858f;
+  --on-accent: #0b0c0e;
+  --on-text: #111214;
 
-  /* accent and semantic colors */
-  --accent: #ff6a2b;
-  --accent-hover: #ff7d47;
+  /* UI chrome is neutral; hue is reserved for meaning */
+  --accent: #e8e9ec;
+  --accent-hover: #ffffff;
+  --brand: #ff6a2b;
   --read: #4da3ff;
   --edit: #ff6a2b;
   --run: #2dd4bf;
@@ -30,6 +33,7 @@
   --web: #f472b6;
   --ok: #3ecf8e;
   --fail: #ff5c5c;
+  --warn: #f5a524;
   --ok-text: #9be8c4;
   --fail-text: #ffb4b4;
 
@@ -39,9 +43,11 @@
   --fs-md: 13px;
   --fs-lg: 15px;
   --fs-xl: 18px;
-  --fs-2xl: 24px;
-  --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --fs-2xl: 22px;
+  --sans:
+    "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:
+    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* spacing scale (4px base) */
   --sp-1: 4px;
@@ -50,28 +56,36 @@
   --sp-4: 16px;
   --sp-5: 24px;
   --sp-6: 32px;
+
+  --radius: 6px;
+  --radius-lg: 10px;
+  --nav-w: 232px;
+  --float-shadow: 0 8px 24px -6px rgb(0 0 0 / 0.5), 0 2px 6px -2px rgb(0 0 0 / 0.4);
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-  --bg: #f6f4ef;
-  --panel: #fbfaf7;
+  --bg: #f5f6f8;
+  --panel: #ffffff;
   --raised: #ffffff;
-  --hover: #eeebe3;
-  --line: #e4e0d6;
-  --line-strong: #cfc9bb;
-  --dots: #d8d3c6;
-  --shadow: #3a2f1c;
+  --hover: #eceef1;
+  --line: #e3e5e9;
+  --line-strong: #cdd0d6;
+  --dots: #dcdfe4;
+  --shadow: #1c2030;
+  --scrim: rgb(20 22 28 / 0.35);
+  --select: rgb(20 22 28 / 0.05);
 
-  --text: #1c1b19;
-  --text-2: #3d3b36;
-  --muted: #4d4a42;
-  --faint: #6b675e;
+  --text: #16171a;
+  --text-2: #33363c;
+  --muted: #555a63;
+  --faint: #656a74;
   --on-accent: #ffffff;
-  --on-text: #ececef;
+  --on-text: #f2f3f5;
 
-  --accent: #c2410c;
-  --accent-hover: #a8370a;
+  --accent: #1e1f23;
+  --accent-hover: #000000;
+  --brand: #e2571a;
   --read: #1560c0;
   --edit: #c2410c;
   --run: #0f766e;
@@ -80,8 +94,10 @@
   --web: #be185d;
   --ok: #15803d;
   --fail: #c62828;
+  --warn: #a15c00;
   --ok-text: #14632f;
   --fail-text: #a31f1f;
+  --float-shadow: 0 8px 24px -6px rgb(20 22 40 / 0.16), 0 2px 6px -2px rgb(20 22 40 / 0.1);
   color-scheme: light;
 }
 
@@ -100,7 +116,24 @@ body {
   background: var(--bg);
   color: var(--text);
   font: var(--fs-md) / 1.45 var(--sans);
+  font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--read) 35%, transparent);
+  color: var(--text);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.num,
+td.num,
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 button {
@@ -717,19 +750,16 @@ kbd {
   border-radius: 8px;
   background: var(--raised);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--c);
   padding: 7px 10px;
   transition: opacity 0.25s;
 }
 
 .tool-node:hover {
   border-color: var(--muted);
-  border-left-color: var(--c);
 }
 
 .tool-node.failed {
   border-color: var(--fail);
-  border-left-color: var(--fail);
   background: color-mix(in srgb, var(--fail) 8%, transparent);
 }
 
@@ -1824,95 +1854,6 @@ a {
   overflow: auto;
 }
 
-.rail {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  padding: 10px 6px;
-  border-right: 1px solid var(--line);
-  background: var(--panel);
-  min-height: 0;
-}
-
-.rail ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.rail-brand {
-  display: grid;
-  place-items: center;
-  height: 36px;
-  margin-bottom: 6px;
-}
-
-.rail-brand .logo {
-  width: 24px;
-  height: 24px;
-}
-
-.rail-link {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 8px 2px;
-  border-radius: 8px;
-  color: var(--muted);
-  font-size: var(--fs-xs);
-  font-weight: 550;
-}
-
-.rail-link:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-
-.rail-link.active {
-  background: var(--raised);
-  color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-}
-
-.rail-link.active svg {
-  color: var(--accent);
-}
-
-.rail-foot {
-  margin-top: auto;
-  display: grid;
-  gap: 8px;
-}
-
-.live-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  font-size: var(--fs-xs);
-  color: var(--ok);
-  font-weight: 600;
-  padding: 4px 0;
-}
-
-.live-indicator i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ok);
-  animation: pulse 1.8s infinite;
-}
-
-.live-indicator b {
-  font-family: var(--mono);
-  font-weight: 600;
-}
-
 .crumb {
   color: var(--muted);
   font-weight: 550;
@@ -2178,8 +2119,15 @@ a.strong:hover {
   color: var(--muted);
 }
 
-.state strong {
+.state strong,
+.state .state-title {
   color: var(--text);
+}
+
+.state .state-title {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 600;
 }
 
 .state.error {
@@ -2548,23 +2496,6 @@ textarea.input {
 }
 
 @media (max-width: 820px) {
-  .shell {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-  .rail {
-    flex-direction: row;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-    align-items: center;
-  }
-  .rail ul {
-    grid-auto-flow: column;
-  }
-  .rail-foot {
-    margin: 0 0 0 auto;
-    display: flex;
-  }
   .cards {
     grid-template-columns: 1fr;
   }

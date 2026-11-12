@@ -2,8 +2,9 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { Store } from "./db.ts";
-import { home } from "./db.ts";
+import { home, projectId } from "./db.ts";
 import { ingest } from "./ingest.ts";
+import { loadManual, saveManual } from "./manual.ts";
 
 /**
  * Builds a small sample repository ("shop") and records three synthetic
@@ -297,6 +298,20 @@ export function seedDemo(store: Store) {
   mkdirSync(transcripts, { recursive: true });
   const p = (rel: string) => join(root, rel);
   const now = Date.now();
+  // One service added by hand, as a user would through the Infra lens. Synthetic, no connection.
+  if (!loadManual(store, projectId(root)).length) {
+    saveManual(store, projectId(root), [
+      {
+        id: "m-00000001",
+        of: null,
+        name: "Product images",
+        kind: "external",
+        provider: "aws",
+        url: "https://console.aws.amazon.com/s3/",
+        sourceDir: "apps/web",
+      },
+    ]);
+  }
 
   record(store, {
     id: "demo-rounding",
