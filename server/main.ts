@@ -56,6 +56,10 @@ const vite = production
 const server = createServer(async (req, res) => {
   if (!guard(req)) return json(res, 403, { error: "Loopback only" });
   const url = new URL(req.url ?? "/", `http://${HOST}`);
+  if (url.pathname === "/landing") {
+    res.writeHead(307, { Location: `/landing/${url.search}` });
+    return res.end();
+  }
   try {
     if (url.pathname === "/api/waitlist") return await waitlistRequest(req, res);
     if (await app.api(req, res, url)) return;

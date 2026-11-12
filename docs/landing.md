@@ -20,6 +20,7 @@ the wordmark. Both are self-hosted under their included OFL licenses.
     QUOLI_HOME=/tmp/quoli-landing-preview pnpm landing
 
 Open http://127.0.0.1:4420/landing/. Override QUOLI_PORT when needed.
+The `/landing` address redirects to `/landing/`, preserving page query parameters.
 The main app remains at / with its existing styles. The landing has its own
 Vite HTML/React entry and never fetches captured evidence or installs hooks.
 
