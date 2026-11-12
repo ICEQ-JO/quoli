@@ -137,7 +137,8 @@ recorder and real screenshots of the synthetic demo. [#159](https://github.com/I
 establishes the baby-blue identity, stepped Q mark, continuous hero, left-side
 product tabs, optical-instrument and square workspace illustrations, and an
 animated contour-art footer. The page describes the existing opt-in team summary
-model and links to `/app/`, without public source-repository links. The app's separate styles and activity colors are unchanged.
+model and links to `/app/`, without public source-repository links. Dedicated Usage and Insights figures, workflow/setup content and FAQs explain
+shipped capabilities. The app's separate styles and activity colors are unchanged.
 
 The page reads no captured evidence. Explicit email submission uses the existing
 same-origin size-limited waitlist handler: separate local SQLite storage in preview,

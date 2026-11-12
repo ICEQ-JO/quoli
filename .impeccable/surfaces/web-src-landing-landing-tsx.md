@@ -16,3 +16,5 @@ Keep the separate app's semantic activity colors unchanged. Current local suppor
 Design tokens and material: docs/landing-design.md. Implementation: web/src/landing/landing.css. Logo and artwork remain subject to owner visual feedback; trademark clearance has not been performed.
 
 Owner positioning: Quoli is proprietary, built for developers and engineering teams. No student/research/open-source pitch or public source-repository links. Explain review context, usage/cost and current team summary sharing; prompts, source code, commands and tool output stay local.
+
+Content draft: full narrative now covers the problem, recorded review, four lenses, Usage/estimated spend, Insights/failures/loops, team summaries, evidence/privacy boundaries, setup and seven FAQs. New figures use the real synthetic demo, not fabricated metrics. Artwork is pending an explicit preference between the earlier landscape-led style and standalone desk; do not change it as an incidental copy edit.

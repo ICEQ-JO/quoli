@@ -158,3 +158,14 @@ pilot or open-source contributor pitch. The footer restores the owner's rounded
 animated contour treatment, with ice-blue text over a darkened blue canvas.
 The large pixel mission link replaces the compact text link. Canvas imagery is
 decorative and does not replace readable links. Repository links are absent.
+
+## Content and evidence expansion (review draft)
+
+The landing now explains the connected review workflow, Usage, Insights, team
+visibility, privacy, setup and practical questions in distinct sections. Original
+synthetic-demo Usage/Insights screenshots provide proof in matching themes. Costs
+are estimates and loop flags are investigative signals; detailed hosted review
+and live provider connections remain distinguished from shipped capabilities.
+Evidence sections alternate copy and screenshots on desktop and read copy-first
+on mobile. FAQs use native keyboard-operable disclosures. This pass keeps the
+current artwork while the owner's preferred earlier style is clarified.

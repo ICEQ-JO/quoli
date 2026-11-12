@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { PixelScene, SESSION_STEPS } from "./PixelScene.tsx";
+import { ProductScreenshot } from "./ProductScreenshot.tsx";
 import { Arrow, Brand, Mark, Moon } from "./ui.tsx";
 import { Waitlist } from "./Waitlist.tsx";
 
@@ -167,11 +168,6 @@ function ProductTour({
   onView: (i: number) => void;
 }) {
   const current = views[view];
-  const base = `/landing/product/${current.id}-${dark ? "dark" : "light"}`;
-  // A slow or dropped connection must never leave a broken-image icon: retry once, then say so.
-  const [failed, setFailed] = useState<{ key: string; tries: number }>({ key: "", tries: 0 });
-  const tries = failed.key === base ? failed.tries : 0;
-  const retry = tries === 1 ? "?retry=1" : "";
   return (
     <div className="tour">
       <div className="tour-tabs" role="tablist" aria-label="Parts of the Quoli app">
@@ -208,38 +204,9 @@ function ProductTour({
       </div>
       <div className="board-frame">
         <PixelScene kind="field" paused={paused} />
-        <figure
-          className="tour-window"
-          id="tour-panel"
-          role="tabpanel"
-          aria-labelledby={`tour-tab-${current.id}`}
-        >
-          {tries < 2 ? (
-            <a href={`${base}.jpg`} target="_blank" rel="noreferrer" className="tour-image">
-              <picture key={`${base}${retry}`}>
-                <source srcSet={`${base}.webp${retry}`} type="image/webp" />
-                <img
-                  src={`${base}.jpg${retry}`}
-                  width={1600}
-                  height={1000}
-                  alt={`The Quoli app, ${current.name} view, showing a synthetic demo session.`}
-                  loading="lazy"
-                  decoding="async"
-                  onError={() => setFailed({ key: base, tries: tries + 1 })}
-                />
-              </picture>
-              <span className="sr-only"> (opens the full-size screenshot)</span>
-            </a>
-          ) : (
-            <div className="tour-missing" role="status">
-              <p>The screenshot didn't load, probably a slow connection.</p>
-              <button type="button" onClick={() => setFailed({ key: base, tries: 0 })}>
-                Try again
-              </button>
-            </div>
-          )}
-          <figcaption>{current.caption}</figcaption>
-        </figure>
+        <div id="tour-panel" role="tabpanel" aria-labelledby={`tour-tab-${current.id}`}>
+          <ProductScreenshot screen={current} dark={dark} />
+        </div>
       </div>
     </div>
   );
@@ -524,8 +491,9 @@ export function Landing() {
                 <span>coding agents did.</span>
               </h1>
               <p>
-                Your agent moves fast. Stay close to the work. See what changed, what it cost, where
-                it got stuck and what needs review—across sessions, code, Git and infrastructure.
+                Quoli connects coding-agent sessions to the code, Git history and infrastructure
+                around them. Follow the work, inspect changes, understand estimated spend and give
+                your team visibility into how agents are being used.
               </p>
               <div className="hero-actions">
                 <a className="hero-cta" href="#waitlist">
@@ -535,7 +503,9 @@ export function Landing() {
                   Explore the app <Arrow />
                 </a>
               </div>
-              <small>Works locally with Claude Code, Codex, OpenCode and Pi.</small>
+              <small>
+                Claude Code, Codex, OpenCode and Pi. Local detail. Opt-in team summaries.
+              </small>
             </div>
             <div className="hero-art">
               <PixelScene kind="forest" paused={paused} />
@@ -569,6 +539,40 @@ export function Landing() {
               ))}
             </ul>
           </nav>
+          <section className="context-section" aria-labelledby="context-title">
+            <h2 id="context-title">
+              The diff shows the result.
+              <br />
+              <em>See the work behind it.</em>
+            </h2>
+            <p>
+              Before a change reaches Git, an agent may have searched the repository, tried several
+              approaches, spawned a subagent and rerun a failing command. Quoli keeps the recorded
+              trail connected to your project, so review starts with context instead of guesswork.
+            </p>
+            <ol className="work-thread" aria-label="The connected record">
+              <li>
+                <strong>Prompt</strong>
+                <span>What you asked</span>
+              </li>
+              <li>
+                <strong>Agent</strong>
+                <span>The recorded steps</span>
+              </li>
+              <li>
+                <strong>Code</strong>
+                <span>The files it touched</span>
+              </li>
+              <li>
+                <strong>Git</strong>
+                <span>The branch and commits</span>
+              </li>
+              <li>
+                <strong>Infra</strong>
+                <span>Declared services</span>
+              </li>
+            </ol>
+          </section>
           <section className="recording-section" id="how-it-works" aria-labelledby="recorder-title">
             <div className="recorder-column">
               <div className="recorder-stage">
@@ -591,18 +595,19 @@ export function Landing() {
               </div>
               <div className="recorder-copy">
                 <h2 id="recorder-title">
-                  A flight recorder.
+                  A session ends.
                   <br />
-                  <em>For your coding agent.</em>
+                  <em>Your review begins.</em>
                 </h2>
                 <p>
-                  A finished prompt is the start of your review. Quoli keeps prompts, tool calls,
-                  edits and command results connected, so you can follow the work without piecing
-                  together terminal scrollback.
+                  Return to the prompt, follow the tool calls, open the edits and inspect command
+                  results. Replay the recorded session in order, including supported subagent
+                  activity and failures. The trail stays available after the terminal moves on.
                 </p>
                 <p>
-                  Replay the session. Inspect a failed call. Catch an edit made after the tests ran.
-                  Find the evidence you need before you decide what to merge.
+                  In this example, the agent edits a test after running the test command. Quoli
+                  gives you that sequence to inspect. A successful command is evidence of a run, not
+                  a guarantee that the final change is correct.
                 </p>
               </div>
             </div>
@@ -621,14 +626,14 @@ export function Landing() {
             <div className="product-intro">
               <div className="product-intro-copy">
                 <h2 id="product-title">
-                  From agent activity
+                  One session.
                   <br />
-                  <em>to review context.</em>
+                  <em>Four connected lenses.</em>
                 </h2>
                 <p>
-                  A tool log tells you what ran. Quoli connects that record to the code around it,
-                  the Git history and the services declared in your repository. Move between views
-                  without losing the session you are reviewing.
+                  Follow agent activity, see changed files beside their imports, inspect the local
+                  branch history, and explore services declared in the repository. Switch the lens
+                  while keeping the session in view. The Summary brings the review context together.
                 </p>
               </div>
               <div className="chapter-signal">
@@ -641,17 +646,111 @@ export function Landing() {
               real company. Unknown values stay unknown, and inferred ones are labelled.
             </p>
           </section>
+          <section className="workflow-section" id="usage" aria-labelledby="usage-title">
+            <div className="workflow-copy">
+              <h2 id="usage-title">
+                Know where
+                <br />
+                <em>the tokens went.</em>
+              </h2>
+              <p>
+                An agent's cost is easier to understand when you can trace it back to the work.
+                Quoli turns reported token usage into estimated spend by model, project and session,
+                with a daily view that makes changes in usage visible.
+              </p>
+              <ul className="feature-lines">
+                <li>
+                  <strong>Find the expensive sessions.</strong> Open the work behind a high-cost run
+                  instead of stopping at a total.
+                </li>
+                <li>
+                  <strong>Understand the token mix.</strong> See input, output and cache usage,
+                  including estimated prompt-cache savings.
+                </li>
+                <li>
+                  <strong>Keep a budget in sight.</strong> Set daily and monthly display thresholds
+                  and see how current usage compares.
+                </li>
+              </ul>
+              <p className="evidence-note">
+                Costs use reported usage and model prices. They are estimates, not invoices;
+                unpriced models remain marked as unknown.
+              </p>
+            </div>
+            <div className="board-frame">
+              <PixelScene kind="field" paused={paused} />
+              <ProductScreenshot
+                dark={dark}
+                webp={false}
+                screen={{
+                  id: "usage",
+                  name: "Usage",
+                  caption:
+                    "The real Usage page running synthetic sessions: daily spend, model and project breakdowns, cache usage and the most expensive runs.",
+                }}
+              />
+            </div>
+          </section>
+          <section
+            className="workflow-section workflow-reverse"
+            id="insights"
+            aria-labelledby="insights-title"
+          >
+            <div className="workflow-copy">
+              <h2 id="insights-title">
+                Find the patterns.
+                <br />
+                <em>Inspect the detours.</em>
+              </h2>
+              <p>
+                One failure can be expected. Repeated failures, edit churn and long stretches of
+                searching can be worth a closer look. Quoli flags supported patterns in a session
+                and gives you an Insights view across recorded work.
+              </p>
+              <ul className="feature-lines">
+                <li>
+                  <strong>Follow the evidence.</strong> Possible loops include the rule that fired
+                  and links to the recorded steps.
+                </li>
+                <li>
+                  <strong>See trends across sessions.</strong> Explore failure rates, tool mix,
+                  session lengths and cost distributions.
+                </li>
+                <li>
+                  <strong>Look at the right slice.</strong> Filter Insights by project, agent, model
+                  and date range.
+                </li>
+              </ul>
+              <p className="evidence-note">
+                A possible loop is a signal to investigate, not a verdict about the agent. Patterns
+                outside the supported rules can be missed.
+              </p>
+            </div>
+            <div className="board-frame">
+              <PixelScene kind="field" paused={paused} />
+              <ProductScreenshot
+                dark={dark}
+                webp={false}
+                screen={{
+                  id: "insights",
+                  name: "Insights",
+                  caption:
+                    "The real Insights page with synthetic data: session trends, failure rate, possible loops and the mix of tools used. This is a demonstration, not a performance benchmark.",
+                }}
+              />
+            </div>
+          </section>
           <section className="collaborate" id="collaborate" aria-labelledby="collaborate-title">
             <div className="collaborate-intro">
               <h2 id="collaborate-title">
-                For developers.
+                Your team uses agents.
                 <br />
-                <em>For engineering teams.</em>
+                <em>Make the work visible.</em>
               </h2>
               <p>
-                One developer, several agents, or an engineering team. Give agent-written work the
-                context it deserves: a record you can inspect, costs you can track, and session
-                summaries your team can choose to share.
+                Engineering leads need more than anecdotes about agent usage. Create a team, invite
+                members and see the session summaries they choose to share, while detailed evidence
+                stays on their own machines. Individual developers keep the full local view.
               </p>
               <a className="button collaborate-cta" href="/app/">
                 Open the team dashboard <Arrow />
@@ -667,41 +766,175 @@ export function Landing() {
             </div>
             <ul className="collaborate-list">
               <li>
-                <h3>Review the work with context.</h3>
+                <h3>Know what is being used.</h3>
                 <p>
-                  Revisit prompts, tool calls and file changes together. See what commands ran,
-                  where they failed, and what changed afterward—so you know where to focus your
-                  review.
+                  See session summaries with the agent, model, repository and branch, alongside
+                  calls, failures, possible loops and estimated spend.
                 </p>
               </li>
               <li>
-                <h3>See where the effort goes.</h3>
+                <h3>Look across the team.</h3>
                 <p>
-                  Track token usage and estimated spend across models, sessions and projects. Spot
-                  repeated failures and possible loops, then inspect the steps behind them.
+                  Team owners can review activity by member and open recent summaries. Start
+                  conversations with a shared view of recorded usage.
                 </p>
               </li>
               <li>
-                <h3>Bring your team's agent usage into view.</h3>
+                <h3>Share summaries, keep the details local.</h3>
                 <p>
-                  Opt in to sharing session summaries with your team. Owners can see activity,
-                  failures, possible loops and estimated spend by member. Prompts, source code,
-                  commands and tool output stay on each developer's machine.
+                  Team sync is opt-in. Prompts, source code, commands, tool output, file names and
+                  local folder paths are excluded from uploads. Members can leave a team, revoke
+                  keys or delete shared data.
                 </p>
               </li>
             </ul>
           </section>
+          <section className="trust-section" aria-labelledby="trust-title">
+            <div>
+              <h2 id="trust-title">
+                Useful evidence.
+                <br />
+                <em>Clear boundaries.</em>
+              </h2>
+              <p>
+                Understanding agent work should not require uploading your source code. Keep
+                detailed sessions local, and choose whether a summary view is useful to your team.
+              </p>
+            </div>
+            <dl className="trust-facts">
+              <div>
+                <dt>Local detail, optional sharing.</dt>
+                <dd>
+                  Detailed agent evidence stays on your machine. The hosted team dashboard receives
+                  only the allowed summary fields when you enable sync.
+                </dd>
+              </div>
+              <div>
+                <dt>Recorded, derived or inferred.</dt>
+                <dd>
+                  Hook events are the record. Review context and maps are derived from that record
+                  and the repository; inferred relationships are labelled.
+                </dd>
+              </div>
+              <div>
+                <dt>Unknown stays unknown.</dt>
+                <dd>
+                  A missing price is not a zero cost. A declared service is not proof of a live
+                  deployment. Quoli shows the limits of what it can see.
+                </dd>
+              </div>
+            </dl>
+          </section>
+          <section className="getting-started" aria-labelledby="start-title">
+            <h2 id="start-title">
+              Keep your workflow.
+              <br />
+              <em>Add the missing view.</em>
+            </h2>
+            <ol>
+              <li>
+                <h3>Connect your agent.</h3>
+                <p>
+                  Use Quoli's setup to connect supported agent hooks. Keep working in your own
+                  terminal and editor.
+                </p>
+              </li>
+              <li>
+                <h3>Build as you normally do.</h3>
+                <p>
+                  Quoli observes supported events as the session runs. It does not approve, block or
+                  direct your agent's actions.
+                </p>
+              </li>
+              <li>
+                <h3>Review with context.</h3>
+                <p>
+                  Open the session, inspect the changes and follow the work across the board. Enable
+                  team summary sharing only if you want it.
+                </p>
+              </li>
+            </ol>
+          </section>
+          <section className="faq-section" aria-labelledby="faq-title">
+            <h2 id="faq-title">
+              Before you
+              <br />
+              <em>connect.</em>
+            </h2>
+            <div className="faq-list">
+              <details>
+                <summary>Which coding agents does Quoli support?</summary>
+                <p>
+                  Claude Code, Codex, OpenCode and Pi. Capture depends on the events each agent
+                  exposes; supported tools, usage reporting and subagent relationships differ
+                  between agents. Quoli does not capture hidden model reasoning.
+                </p>
+              </details>
+              <details>
+                <summary>What can I review in a session?</summary>
+                <p>
+                  Recorded prompts, supported tool calls and results, file edits, failures and
+                  usage. The session Summary brings together changes, commands, estimated costs and
+                  a derived review checklist. Code, Git and Infra add repository context around that
+                  work.
+                </p>
+              </details>
+              <details>
+                <summary>Can I use Quoli while an agent is running?</summary>
+                <p>
+                  The Dashboard and session views update as supported events arrive. Follow active
+                  tool calls and live sessions, then revisit the same record afterward. Optional
+                  browser alerts can flag configured conditions such as spend thresholds, quiet
+                  sessions and possible loops while Quoli is open.
+                </p>
+              </details>
+              <details>
+                <summary>Does Quoli decide whether the code is correct?</summary>
+                <p>
+                  No. It helps you find and inspect evidence. A recorded test run, review checklist
+                  or possible-loop flag does not establish feature correctness. You remain
+                  responsible for deciding what to review and merge.
+                </p>
+              </details>
+              <details>
+                <summary>What does the team dashboard receive?</summary>
+                <p>
+                  Allowed session-summary fields such as agent, model, GitHub repository, branch,
+                  activity counts and estimated spend. Prompts, source code, commands, tool output,
+                  file names and local folder paths are excluded. Sharing starts only when you
+                  choose to connect and enable sync.
+                </p>
+              </details>
+              <details>
+                <summary>How accurate are cost estimates?</summary>
+                <p>
+                  Quoli uses the token usage each supported agent reports and the current model
+                  price table. Estimates can differ from provider invoices because discounts,
+                  billing tiers and other pricing conditions are not fully modelled. Unpriced models
+                  are shown separately.
+                </p>
+              </details>
+              <details>
+                <summary>Does Infra show live production deployments?</summary>
+                <p>
+                  It shows services and pipelines declared in repository files, plus services you
+                  add by hand. Local Docker can provide live container metrics. Live connections to
+                  hosted providers and richer shared session review remain planned capabilities.
+                </p>
+              </details>
+            </div>
+          </section>
           <section className="waitlist-section" id="waitlist" aria-labelledby="waitlist-title">
             <div>
               <h2 id="waitlist-title">
-                Keep up with
+                Move fast with agents.
                 <br />
-                <em>what your agents do.</em>
+                <em>Keep the work in view.</em>
               </h2>
               <p>
-                Get Quoli product updates for your development workflow.
+                Join the list for product updates and the next Quoli releases.
                 <br />
-                Join the list for what comes next.
+                Built for your next session—and your team's next review.
               </p>
             </div>
             <Waitlist location="hero" />

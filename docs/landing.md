@@ -46,18 +46,34 @@ readable final recorder state and stops continuous updates. Terminal and product
 data are synthetic and labeled. The terminal shows only the steps reached so far, so it
 fills as the session plays; reduced motion shows every step.
 
-## Product tour and screenshots
+## Product proof and screenshots
 
-The product section is a tour of the real app: six side tabs (a compact grid on mobile) (Review, Agents, Code, Git, Infra,
-Dashboard) switch a screenshot in the baby-blue frame, with a caption saying what it shows.
-Tabs support arrow keys, Home and End, and the lens links under the hero (`#tour-tab-code`
-and so on) open the matching tab. The screenshot itself links to the full-size image.
+The six-tab product tour keeps desktop navigation on the left and a compact mobile
+grid. Tabs support arrow keys, Home and End; existing lens deep links still select
+the matching tab. Dedicated Usage and Insights sections now demonstrate spend,
+cache usage, failures, possible loops and cross-session trends. Captions label all
+figures as synthetic demonstrations, not customer benchmarks.
 
-The images in `web/public/landing/product/<view>-<light|dark>.webp` (plus a `.jpg` fallback for browsers without WebP) come from
-`pnpm demo --large` only (synthetic data, never a real session), captured at 1440×900
-at 2× and resized to 1600 px wide WebP and JPEG, with colour profiles stripped (`magick in.png -resize 1600x -strip …`). If a download fails the page retries once, then shows "The screenshot didn't load" with a Try again button instead of a broken image. The landing theme toggle picks the matching
-set. Retake them whenever the app's look changes noticeably; the page says they are
-screenshots of the synthetic demo.
+`ProductScreenshot.tsx` reuses the existing retry-once, error and retry-button
+behavior across the tour and evidence sections. Theme changes select the matching
+image set. Every image opens at full size.
+
+The original six views in `web/public/landing/product/` use WebP with JPEG fallback
+at 1600×1000. The new Usage/Insights light/dark images are native 1440×900 JPEG
+captures of the current app running `--demo --large`, with no real sessions or user
+accounts. No generated chart values or performance claims are substituted for the
+real UI. Capture new evidence on an isolated Quoli data directory and avoid regular
+server startup refreshing the user's agent integrations; use the landing mode to
+skip user-level setup refresh. The synthetic preview is never a capture source for
+private sessions.
+
+## Content narrative
+
+The page now explains the problem, recorded review workflow, four lenses, token
+usage/spend, failures and Insights, opt-in team summaries, evidence/privacy boundaries,
+setup and seven practical FAQs. The content is a review draft, not owner-approved
+final copy. A preference question is pending for the next artwork revision; this
+content pass deliberately preserves the current illustration implementation.
 
 ## Developers and engineering teams
 
@@ -124,3 +140,8 @@ links; summary-sharing claims are grounded in the current team implementation.
 The square scene passes animation, pause and reduced-motion checks. Footer text
 was checked against the brightest composited contour shade at WCAG AA contrast.
 Both themes pass axe; tested widths from 320 to 1440px have no horizontal overflow.
+
+Content-rebuild validation: 167 tests, typecheck, lint and build passed. Browser
+checks covered both themes, no overflow at 320–1440px, axe zero A/AA violations,
+keyboard tour and FAQ operation, screenshot loading, forced image-failure recovery
+and reduced-motion evidence visibility. Synthetic screenshot capture must not change the user's installed agent integrations.

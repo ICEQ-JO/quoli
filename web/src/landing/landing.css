@@ -1570,3 +1570,239 @@ html[data-paused="true"] #quoli-landing *::before,
 html[data-paused="true"] #quoli-landing *::after {
   animation-play-state: paused;
 }
+
+.context-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px 65px;
+  max-width: 1200px;
+  margin: 105px auto 0;
+  padding: 0 32px;
+  align-items: center;
+}
+.context-section > p,
+.trust-section > div > p {
+  font-size: 18px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.work-thread {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--border);
+}
+.work-thread li {
+  position: relative;
+  display: grid;
+  gap: 5px;
+}
+.work-thread li::before {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  left: 0;
+  top: -23px;
+  background: var(--brand);
+}
+.work-thread strong {
+  font-size: 18px;
+  font-weight: 550;
+}
+.work-thread span {
+  font-size: 14px;
+  color: var(--muted);
+}
+.workflow-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: 55px;
+  max-width: 1400px;
+  margin: 125px auto 0;
+  padding: 0 32px;
+}
+.workflow-copy {
+  min-width: 0;
+}
+.workflow-copy > p {
+  font-size: 17px;
+  color: var(--muted);
+  margin-top: 22px;
+}
+.workflow-reverse {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.85fr);
+}
+.workflow-reverse .workflow-copy {
+  order: 2;
+}
+.feature-lines {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+}
+.feature-lines li {
+  border-top: 1px solid var(--border);
+  padding: 15px 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.65;
+}
+.feature-lines strong {
+  color: var(--ink);
+  font-weight: 550;
+}
+.workflow-copy > .evidence-note {
+  font-size: 13px;
+  margin-top: 12px;
+}
+.trust-section,
+.faq-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 80px;
+  max-width: 1200px;
+  padding: 0 32px;
+  margin: 110px auto 0;
+}
+.trust-section > div > p {
+  font-size: 17px;
+  margin-top: 22px;
+}
+.trust-facts {
+  margin: 0;
+}
+.trust-facts > div {
+  border-top: 1px solid var(--border);
+  padding: 20px 0;
+}
+.trust-facts dt {
+  font-size: 19px;
+  font-weight: 550;
+}
+.trust-facts dd {
+  margin: 8px 0 0;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.getting-started {
+  max-width: 1200px;
+  padding: 0 32px;
+  margin: 110px auto 0;
+}
+.getting-started > ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 45px;
+  margin: 35px 0 0;
+  padding-left: 24px;
+}
+.getting-started li {
+  padding-left: 7px;
+}
+.getting-started li::marker {
+  color: var(--brand);
+  font:
+    24px Quoli Pixel,
+    monospace;
+}
+.getting-started h3 {
+  font-size: 20px;
+  font-weight: 550;
+}
+.getting-started p {
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.faq-list {
+  min-width: 0;
+}
+.faq-list details {
+  border-top: 1px solid var(--border);
+  padding: 20px 0;
+}
+.faq-list details:last-child {
+  border-bottom: 1px solid var(--border);
+}
+.faq-list summary {
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+.faq-list summary:hover {
+  color: var(--brand);
+}
+.faq-list p {
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: 15px;
+}
+.faq-list summary:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 5px;
+}
+@media (max-width: 1000px) {
+  .workflow-section {
+    gap: 30px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .trust-section,
+  .faq-section {
+    gap: 40px;
+  }
+  .context-section {
+    gap: 32px;
+  }
+}
+@media (max-width: 760px) {
+  .context-section,
+  .workflow-section,
+  .trust-section,
+  .faq-section {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin-top: 70px;
+    padding-inline: 24px;
+  }
+  .workflow-reverse .workflow-copy {
+    order: 0;
+  }
+  .context-section > p {
+    font-size: 16px;
+  }
+  .work-thread {
+    grid-template-columns: 1fr;
+    border-top: 0;
+    border-left: 1px solid var(--border);
+    padding: 0 0 0 23px;
+    margin-left: 3px;
+    gap: 20px;
+  }
+  .work-thread li::before {
+    left: -26px;
+    top: 9px;
+  }
+  .getting-started {
+    margin-top: 70px;
+    padding-inline: 24px;
+  }
+  .getting-started > ol {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .context-section h2,
+  .workflow-section h2,
+  .trust-section h2,
+  .getting-started h2,
+  .faq-section h2 {
+    font-size: 38px;
+  }
+}
