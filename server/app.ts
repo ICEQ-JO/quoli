@@ -13,9 +13,10 @@ import type {
 import { codeMap } from "./code.ts";
 import { connect, hooksInstalled, validateRepo } from "./connect.ts";
 import { home, projectId, type Store } from "./db.ts";
-import { gitState, parseLimit } from "./gitstate.ts";
+import { commitDetail, gitState, parseLimit } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
 import { git, ingest, redact } from "./ingest.ts";
+import { addManual, loadManual, mergeManual, saveManual, validateManual } from "./manual.ts";
 import {
   costOf,
   defaultPrices,
@@ -258,7 +259,12 @@ export function createApp(store: Store, port: () => number) {
       const limit = parseLimit(url.searchParams.get("limit"));
       return json(res, 200, gitState(root, limit, details(store.sessionIds(root))));
     }
-    if (path === "/api/infra") return json(res, 200, infraMap(root));
+    if (path === "/api/commit") {
+      const detail = commitDetail(root, url.searchParams.get("sha") ?? "");
+      return detail ? json(res, 200, detail) : json(res, 404, { error: "Unknown commit" });
+    }
+    if (path === "/api/infra")
+      return json(res, 200, mergeManual(infraMap(root), loadManual(store, projectId(root))));
     if (path === "/api/file") {
       const rel = normalize(url.searchParams.get("path") ?? "");
       const full = resolve(root, rel);
@@ -306,6 +312,41 @@ export function createApp(store: Store, port: () => number) {
       broadcast({ type: "projects" });
       return json(res, 200, projectFor(projectId(root)));
     }
+    const sv = path.match(/^\/api\/projects\/([0-9a-f]{12})\/services(?:\/(m-[0-9a-f]{8}))?$/);
+    if (sv) {
+      const project = projectFor(sv[1]);
+      if (!project) return json(res, 404, { error: "Unknown project" });
+      const list = loadManual(store, project.id);
+      const check = (run: () => typeof list) => {
+        try {
+          return run();
+        } catch (error) {
+          throw new BadRequest((error as Error).message);
+        }
+      };
+      if (method === "POST" && !sv[2]) {
+        const input = await payload();
+        const next = check(() => addManual(list, validateManual(input)));
+        saveManual(store, project.id, next);
+        return json(res, 200, next);
+      }
+      const at = list.findIndex((x) => x.id === sv[2]);
+      if (sv[2] && at < 0) return json(res, 404, { error: "Unknown service" });
+      if (method === "PUT" && sv[2]) {
+        const input = await payload();
+        const next = check(() => {
+          const entry = validateManual({ ...input, of: list[at].of }, list[at].id);
+          return list.map((x, i) => (i === at ? entry : x));
+        });
+        saveManual(store, project.id, next);
+        return json(res, 200, next);
+      }
+      if (method === "DELETE" && sv[2]) {
+        const next = list.filter((_, i) => i !== at);
+        saveManual(store, project.id, next);
+        return json(res, 200, next);
+      }
+    }
     const m = path.match(/^\/api\/projects\/([0-9a-f]{12})(\/disconnect)?$/);
     if (m) {
       const project = projectFor(m[1]);
@@ -319,6 +360,7 @@ export function createApp(store: Store, port: () => number) {
         removeProject(project.root);
         const removed = store.deleteSessions(store.rootSessionIds(project.root));
         store.unregisterProject(project.root);
+        saveManual(store, project.id, []);
         store.checkpoint();
         broadcast({ type: "projects" });
         return json(res, 200, removed);

@@ -185,6 +185,7 @@ export function BoardPage({
   }
 
   const ctx: LensContext = {
+    projectId,
     root,
     session: (sessionId ? session : null) as SessionDetail | null,
     calls: visibleCalls,
@@ -194,6 +195,7 @@ export function BoardPage({
     code,
     git,
     infra,
+    refreshInfra,
     sessions: sessions ?? [],
     openSession,
   };

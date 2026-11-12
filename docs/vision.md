@@ -103,4 +103,4 @@ Each phase is something a developer can use on its own.
 1. **Pricing and audience** — free local tool with paid hosted teams, or paid from day one?
 2. **Symbol-level map** — invest in a real call graph (compiler/tree-sitter, full-depth) or stay file-level with smarter grouping?
 3. **Which second agent** matters most to you: Codex, OpenCode or Pi?
-4. **Infra providers** — which one do you deploy to today? That decides Phase 3's first integration.
+4. **Infra providers** — which one do you deploy to today? That decides Phase 4's first integration. Until then any provider can be added by hand on the Infra board (#114), without a connection.

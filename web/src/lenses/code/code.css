@@ -250,6 +250,11 @@
   box-shadow: 0 0 18px -8px color-mix(in srgb, var(--edit) 80%, transparent);
 }
 
+/* The orange tint lowers contrast; faint text would fall below 4.5:1 on it. */
+.map-file.agent .mf-sub {
+  color: var(--muted);
+}
+
 .map-file.pending {
   opacity: 0.45;
   box-shadow: none;

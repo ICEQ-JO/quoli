@@ -161,8 +161,34 @@ export interface Commit {
   sessions?: string[];
 }
 
+export interface Remote {
+  name: string;
+  /** `host/owner/repo`, never credentials. Null when the URL could not be read as a host path. */
+  display: string | null;
+  /** Browser link for GitHub, GitLab and Bitbucket remotes; null for anything else. */
+  web: string | null;
+}
+
+export interface CommitFile {
+  path: string;
+  /** Null for binary files. */
+  added: number | null;
+  removed: number | null;
+}
+
+export interface CommitDetail {
+  sha: string;
+  files: CommitFile[];
+  /** Unified diff, clipped to `DIFF_LIMIT` characters; null when git could not produce it. */
+  diff: string | null;
+  truncated: boolean;
+}
+
 export interface GitState {
   branches: Branch[];
+  remotes: Remote[];
+  /** When remote-tracking refs were last updated by a fetch (FETCH_HEAD mtime); null if never. */
+  lastFetch: string | null;
   /** Newest first, in `--topo-order` (children before parents) so lanes are stable. */
   commits: Commit[];
   changed: number;
@@ -194,9 +220,29 @@ export interface Service {
   sourceDir: string | null;
   ports: string[];
   basis: Basis;
-  /** The file that told us this service exists. */
+  /** The file that told us this service exists, or "added by you" for a service added by hand. */
   evidence: string;
   metrics: ServiceMetrics | null;
+  /** Dashboard link the user gave; Quoli never fetches it. */
+  url: string | null;
+  /** Id of the hand-made entry that added or edits this service; null when none does. */
+  manual: string | null;
+}
+
+/**
+ * A service the user added or edited by hand. Stored locally per project; no credentials,
+ * no connection, so it never carries live status or metrics.
+ */
+export interface ManualService {
+  id: string;
+  /** Detected service this entry renames or links; null for a service added from scratch. */
+  of: string | null;
+  name: string;
+  kind: ServiceKind;
+  /** A provider id from shared/providers.ts or free text for any other host. */
+  provider: string;
+  url: string | null;
+  sourceDir: string | null;
 }
 
 export interface ServiceMetrics {

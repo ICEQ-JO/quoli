@@ -314,6 +314,15 @@
   flex-direction: column;
   gap: 12px;
   padding: 4px 12px 12px 48px;
+  animation: ag-open 160ms ease-out;
+}
+
+/* Opening a call settles the detail in place rather than popping it. */
+@keyframes ag-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .ag-block-title {

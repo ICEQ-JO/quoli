@@ -68,8 +68,14 @@ function Inner(p: BoardProps) {
     if (!p.nodes.length || fitted.current === p.fitKey) return;
     fitted.current = p.fitKey;
     const focus = p.focus?.length ? p.focus.map((id) => ({ id })) : undefined;
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     requestAnimationFrame(() =>
-      flow.fitView({ nodes: focus, padding: 0.12, duration: 350, maxZoom: focus ? 1.1 : 1 }),
+      flow.fitView({
+        nodes: focus,
+        padding: 0.12,
+        duration: still ? 0 : 350,
+        maxZoom: focus ? 1.1 : 1,
+      }),
     );
   }, [p.fitKey, p.nodes.length, p.focus, flow]);
 
