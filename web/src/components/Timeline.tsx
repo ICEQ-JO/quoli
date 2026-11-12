@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SessionDetail, ToolCall } from "../../../shared/model.ts";
 import { CATEGORY, clock, compact, tokenSum } from "../format.ts";
 import type { Selection } from "../state.ts";
+import { Icon } from "./ui.tsx";
 
 interface Props {
   session: SessionDetail;
@@ -74,42 +75,58 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
     setPlaying(!playing);
   };
   return (
-    <footer className="timeline">
+    <section className="timeline" aria-label="Replay">
       <div className="tl-controls">
         <button
           type="button"
+          className="tl-play"
           onClick={togglePlay}
-          aria-label={playing ? "Pause replay" : "Replay session"}
-          title={playing ? "Pause replay (Space)" : "Replay the session (Space)"}
+          aria-label={playing ? "Pause replay" : "Replay the session"}
+          title={playing ? "Pause (Space)" : "Replay the session step by step (Space)"}
           disabled={!n}
         >
-          {playing ? "❚❚" : "▶"}
+          {playing ? Icon.pause : Icon.play}
         </button>
         <button
           type="button"
           onClick={() => step(at - 1)}
           aria-label="Previous step"
           title="Previous step (←)"
-          disabled={!n}
+          disabled={!n || at <= 0}
         >
-          ‹
+          {Icon.prev}
         </button>
         <button
           type="button"
           onClick={() => step(at + 1)}
           aria-label="Next step"
           title="Next step (→)"
-          disabled={!n}
+          disabled={!n || cursor === null}
         >
-          ›
+          {Icon.next}
         </button>
-        <div className="tl-label">
-          <b>{cursor === null ? (session.live ? "Live" : "End") : `Step ${at + 1}`}</b>
-          <span>
-            {n ? `${at + 1} / ${n}` : "no tool calls"}
-            {current ? ` · ${clock(current.startedAt)}` : ""}
-          </span>
-        </div>
+      </div>
+      <div className="tl-label" aria-live="polite">
+        {cursor === null ? (
+          <>
+            <b>{session.live ? "Live: showing everything so far" : "Showing the whole session"}</b>
+            <span>
+              {n
+                ? `${n} ${n === 1 ? "step" : "steps"} · play or drag the strip to rewind`
+                : "No tool calls were recorded."}
+            </span>
+          </>
+        ) : (
+          <>
+            <b>
+              Replaying step {at + 1} of {n}
+              {current ? ` · ${clock(current.startedAt)}` : ""}
+            </b>
+            <span title={current ? `${current.name}: ${current.summary}` : undefined}>
+              {current ? `${current.name.replace(/^mcp__/, "")} · ${current.summary}` : ""}
+            </span>
+          </>
+        )}
       </div>
       <div
         className="tl-track"
@@ -197,10 +214,25 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
           />
         </svg>
       </div>
-      <div className="tl-tokens-label" title="Tokens reported up to this step">
+      <div
+        className="tl-tokens-label"
+        title="The grey line on the strip is the tokens reported up to each step"
+      >
         <b>{compact(cumulative[at] ?? 0)}</b>
-        <span>of {compact(tokenSum(session.tokens))} tokens</span>
+        <span>{cursor === null ? "tokens" : `of ${compact(tokenSum(session.tokens))} tokens`}</span>
       </div>
-    </footer>
+      {cursor !== null && (
+        <button
+          type="button"
+          className="btn tl-end"
+          onClick={() => {
+            setPlaying(false);
+            setCursor(null);
+          }}
+        >
+          {session.live ? "Back to live" : "Show all"}
+        </button>
+      )}
+    </section>
   );
 }

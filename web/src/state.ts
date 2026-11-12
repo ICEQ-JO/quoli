@@ -25,6 +25,7 @@ export interface Touch {
 
 /** Everything a lens needs. All lenses share one selection and one timeline cursor. */
 export interface LensContext {
+  projectId: string;
   root: string | null;
   session: SessionDetail | null;
   /** Tool calls up to the timeline cursor, in time order. */
@@ -36,6 +37,8 @@ export interface LensContext {
   code: CodeMap | null;
   git: GitState | null;
   infra: InfraMap | null;
+  /** Reload the infra map, e.g. after a service was added by hand. */
+  refreshInfra: () => void;
   sessions: SessionSummary[];
   openSession: (id: string) => void;
 }

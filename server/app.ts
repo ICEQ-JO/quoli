@@ -13,9 +13,10 @@ import type {
 import { codeMap } from "./code.ts";
 import { connect, hooksInstalled, validateRepo } from "./connect.ts";
 import { home, projectId, type Store } from "./db.ts";
-import { gitState, parseLimit } from "./gitstate.ts";
+import { commitDetail, gitState, parseLimit } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
 import { git, ingest, redact } from "./ingest.ts";
+import { addManual, loadManual, mergeManual, saveManual, validateManual } from "./manual.ts";
 import {
   costOf,
   defaultPrices,
@@ -24,7 +25,8 @@ import {
   savePrices,
   validatePrices,
 } from "./prices.ts";
-import { deriveSession, summarizeSession } from "./sessions.ts";
+import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
+import { usageReport } from "./usage.ts";
 
 const version: string = JSON.parse(
   readFileSync(resolve(fileURLToPath(import.meta.url), "../../package.json"), "utf8"),
@@ -72,6 +74,11 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
         throw new BadRequest("retentionDays must be null or a whole number from 1 to 3650");
       }
       next.retentionDays = value as number | null;
+    } else if (key === "budgetDailyUsd" || key === "budgetMonthlyUsd") {
+      if (value !== null && !(typeof value === "number" && value > 0 && value <= 1_000_000)) {
+        throw new BadRequest(`${key} must be null or a number above 0 and at most 1000000`);
+      }
+      next[key] = value as number | null;
     } else if (key === "redact") {
       if (typeof value !== "boolean") throw new BadRequest("redact must be true or false");
       next.redact = value;
@@ -117,11 +124,29 @@ export function createApp(store: Store, port: () => number) {
       );
   }
 
+  // Derived sessions are reused until the session is written to or the price table changes.
+  // Without this, every hook event re-read and re-derived up to 500 sessions for Home.
+  const cache = new Map<
+    string,
+    { revision: number; prices: string; lastAt: string; detail: SessionDetail }
+  >();
+  const derive = (id: string, prices: PriceTable, pricesKey: string): SessionDetail | null => {
+    const revision = store.revision(id);
+    const hit = cache.get(id);
+    if (hit && hit.revision === revision && hit.prices === pricesKey) {
+      return { ...hit.detail, live: isLive(hit.detail.endedAt, hit.lastAt) };
+    }
+    const events = store.events(id);
+    const detail = deriveSession(events, store.usage(id), prices);
+    if (detail) {
+      cache.set(id, { revision, prices: pricesKey, lastAt: events.at(-1)?.at ?? "", detail });
+    } else cache.delete(id);
+    return detail;
+  };
   const details = (ids: string[]) => {
     const prices = loadPrices(store);
-    return ids
-      .map((id) => deriveSession(store.events(id), store.usage(id), prices))
-      .filter((d): d is SessionDetail => d !== null);
+    const key = JSON.stringify(prices);
+    return ids.map((id) => derive(id, prices, key)).filter((d): d is SessionDetail => d !== null);
   };
 
   function overview(): Overview {
@@ -218,9 +243,16 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
     if (path === "/api/prices") return json(res, 200, loadPrices(store));
+    if (path === "/api/usage") {
+      const days = Number(url.searchParams.get("days") ?? 30);
+      if (!Number.isInteger(days) || days < 1 || days > 365) {
+        return json(res, 400, { error: "days must be a whole number from 1 to 365" });
+      }
+      return json(res, 200, usageReport(store, days, details));
+    }
     if (path === "/api/session") {
       const id = url.searchParams.get("id") ?? "";
-      const detail = deriveSession(store.events(id), store.usage(id), loadPrices(store));
+      const [detail = null] = details([id]);
       return json(res, detail ? 200 : 404, detail);
     }
     if (path === "/api/sessions") {
@@ -243,9 +275,14 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/code") return json(res, 200, codeMap(root));
     if (path === "/api/git") {
       const limit = parseLimit(url.searchParams.get("limit"));
-      return json(res, 200, gitState(root, limit, details(store.sessionIds(root))));
+      return json(res, 200, gitState(root, limit, details(store.commitSessionIds(root))));
     }
-    if (path === "/api/infra") return json(res, 200, infraMap(root));
+    if (path === "/api/commit") {
+      const detail = commitDetail(root, url.searchParams.get("sha") ?? "");
+      return detail ? json(res, 200, detail) : json(res, 404, { error: "Unknown commit" });
+    }
+    if (path === "/api/infra")
+      return json(res, 200, mergeManual(infraMap(root), loadManual(store, projectId(root))));
     if (path === "/api/file") {
       const rel = normalize(url.searchParams.get("path") ?? "");
       const full = resolve(root, rel);
@@ -293,6 +330,41 @@ export function createApp(store: Store, port: () => number) {
       broadcast({ type: "projects" });
       return json(res, 200, projectFor(projectId(root)));
     }
+    const sv = path.match(/^\/api\/projects\/([0-9a-f]{12})\/services(?:\/(m-[0-9a-f]{8}))?$/);
+    if (sv) {
+      const project = projectFor(sv[1]);
+      if (!project) return json(res, 404, { error: "Unknown project" });
+      const list = loadManual(store, project.id);
+      const check = (run: () => typeof list) => {
+        try {
+          return run();
+        } catch (error) {
+          throw new BadRequest((error as Error).message);
+        }
+      };
+      if (method === "POST" && !sv[2]) {
+        const input = await payload();
+        const next = check(() => addManual(list, validateManual(input)));
+        saveManual(store, project.id, next);
+        return json(res, 200, next);
+      }
+      const at = list.findIndex((x) => x.id === sv[2]);
+      if (sv[2] && at < 0) return json(res, 404, { error: "Unknown service" });
+      if (method === "PUT" && sv[2]) {
+        const input = await payload();
+        const next = check(() => {
+          const entry = validateManual({ ...input, of: list[at].of }, list[at].id);
+          return list.map((x, i) => (i === at ? entry : x));
+        });
+        saveManual(store, project.id, next);
+        return json(res, 200, next);
+      }
+      if (method === "DELETE" && sv[2]) {
+        const next = list.filter((_, i) => i !== at);
+        saveManual(store, project.id, next);
+        return json(res, 200, next);
+      }
+    }
     const m = path.match(/^\/api\/projects\/([0-9a-f]{12})(\/disconnect)?$/);
     if (m) {
       const project = projectFor(m[1]);
@@ -306,6 +378,7 @@ export function createApp(store: Store, port: () => number) {
         removeProject(project.root);
         const removed = store.deleteSessions(store.rootSessionIds(project.root));
         store.unregisterProject(project.root);
+        saveManual(store, project.id, []);
         store.checkpoint();
         broadcast({ type: "projects" });
         return json(res, 200, removed);

@@ -57,5 +57,126 @@ export function runLabel(run: ToolCall[]): string {
 /** The Graph view fits everything when small, else only the most recent calls. */
 export const GRAPH_FIT_ALL = 25;
 export const GRAPH_RECENT = 8;
-/** Sessions up to this many calls open on the Timeline, larger ones on the Graph. */
-export const TIMELINE_MAX = 60;
+
+export type CallFilter = "all" | "failed" | "edits" | "commands" | "subagents";
+
+/** Which calls each filter keeps. */
+export function matchesFilter(call: ToolCall, filter: CallFilter, mainId: string): boolean {
+  switch (filter) {
+    case "failed":
+      return call.status === "failed";
+    case "edits":
+      return call.category === "edit";
+    case "commands":
+      return call.category === "run";
+    case "subagents":
+      return call.category === "agent" || call.agentId !== mainId;
+    default:
+      return true;
+  }
+}
+
+const tag = (text: string, name: string) =>
+  text.match(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`))?.[1]?.trim() ?? null;
+
+export type PromptView =
+  | { kind: "user"; text: string }
+  | { kind: "notice"; title: string; detail: string | null };
+
+/**
+ * Claude Code records some non-human turns as prompts: background-task notifications and
+ * slash-command expansions arrive as XML-ish text. Show those as a short notice instead of a
+ * wall of tags; anything else is the user's own words, shown as written.
+ */
+export function readPrompt(text: string): PromptView {
+  const t = text.trim();
+  if (t.startsWith("<task-notification>")) {
+    const status = tag(t, "status");
+    return {
+      kind: "notice",
+      title: tag(t, "summary") ?? `Background task ${status ?? "update"}`,
+      detail: status,
+    };
+  }
+  const command = tag(t, "command-name");
+  if (t.startsWith("<command-") && command) {
+    const args = tag(t, "command-args");
+    return { kind: "notice", title: `Ran ${command}${args ? ` ${args}` : ""}`, detail: null };
+  }
+  return { kind: "user", text };
+}
+
+/** Duration worth showing: nothing under a second, which is most calls and only noise. */
+export function took(call: ToolCall): string {
+  if (!call.endedAt) return "";
+  const ms = Date.parse(call.endedAt) - Date.parse(call.startedAt);
+  if (!(ms >= 1000)) return "";
+  const s = ms / 1000;
+  if (s < 60) return `${s < 10 ? s.toFixed(1) : Math.round(s)}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
+  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+}
+
+const s = (v: unknown) => (typeof v === "string" && v.trim() ? v : null);
+
+/**
+ * The call's whole text for the row: the full command, pattern or request as recorded, not the
+ * 140-character summary the server keeps for lists.
+ */
+export function callText(call: ToolCall): string {
+  const i = (call.input && typeof call.input === "object" ? call.input : {}) as Record<
+    string,
+    unknown
+  >;
+  if (call.files.length) return call.summary;
+  const command = s(i.command);
+  if (command) return command;
+  const pattern = s(i.pattern);
+  if (pattern) {
+    const where = [s(i.path), s(i.glob) && `files ${i.glob}`].filter(Boolean).join(", ");
+    return where ? `${pattern}  in ${where}` : pattern;
+  }
+  if (call.category === "agent") {
+    return [s(i.subagent_type), s(i.description)].filter(Boolean).join(" · ") || call.summary;
+  }
+  return s(i.url) ?? s(i.query) ?? call.summary;
+}
+
+const texts = (v: unknown): string | null => {
+  if (!Array.isArray(v)) return null;
+  const parts = v
+    .map((p) => (p && typeof p === "object" ? (p as Record<string, unknown>).text : null))
+    .filter((t): t is string => typeof t === "string");
+  return parts.length ? parts.join("\n\n") : null;
+};
+
+/**
+ * A tool result as people read it. Claude Code records some results as JSON (a Read returns the
+ * file text inside `file.content`; subagents and MCP tools return text blocks); show the text,
+ * not the envelope. Anything unrecognised is shown as recorded.
+ */
+export function readableOutput(
+  output: string | null,
+): { text: string; note: string | null } | null {
+  if (output === null) return null;
+  const t = output.trim();
+  if (!t.startsWith("{") && !t.startsWith("[")) return { text: output, note: null };
+  let v: unknown;
+  try {
+    v = JSON.parse(t);
+  } catch {
+    return { text: output, note: null };
+  }
+  const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  const file = o.file && typeof o.file === "object" ? (o.file as Record<string, unknown>) : null;
+  if (file && typeof file.content === "string") {
+    const start = Number(file.startLine) || 1;
+    const n = Number(file.numLines);
+    const total = Number(file.totalLines);
+    const note = n && total ? `Lines ${start}–${start + n - 1} of ${total}` : null;
+    return { text: file.content, note };
+  }
+  const blocks = texts(v) ?? texts(o.content);
+  if (blocks) return { text: blocks, note: null };
+  return { text: JSON.stringify(v, null, 2), note: null };
+}

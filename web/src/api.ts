@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   CodeMap,
+  CommitDetail,
   GitState,
   InfraMap,
+  ManualService,
   Overview,
   PriceTable,
   Project,
@@ -10,6 +12,7 @@ import type {
   SessionDetail,
   SessionSummary,
   Settings,
+  UsageReport,
 } from "../../shared/model.ts";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -56,6 +59,7 @@ export const api = {
   settings: () => get<SettingsResponse>("/api/settings"),
   saveSettings: (patch: Partial<Settings>) => send<SettingsResponse>("PUT", "/api/settings", patch),
   prices: () => get<PriceTable>("/api/prices"),
+  usage: (days: number) => get<UsageReport>(`/api/usage?days=${days}`),
   savePrices: (table: PriceTable) => send<PriceTable>("PUT", "/api/prices", table),
   resetPrices: () => send<PriceTable>("DELETE", "/api/prices"),
   redactPreview: (text: string) => send<{ text: string }>("POST", "/api/redact-preview", { text }),
@@ -63,6 +67,14 @@ export const api = {
   git: (root: string, limit?: number) =>
     get<GitState>(`/api/git?${q(root)}${limit ? `&limit=${limit}` : ""}`),
   infra: (root: string) => get<InfraMap>(`/api/infra?${q(root)}`),
+  addService: (projectId: string, entry: Omit<ManualService, "id">) =>
+    send<ManualService[]>("POST", `/api/projects/${id(projectId)}/services`, entry),
+  updateService: (projectId: string, sid: string, entry: Omit<ManualService, "id" | "of">) =>
+    send<ManualService[]>("PUT", `/api/projects/${id(projectId)}/services/${id(sid)}`, entry),
+  removeService: (projectId: string, sid: string) =>
+    send<ManualService[]>("DELETE", `/api/projects/${id(projectId)}/services/${id(sid)}`),
+  commit: (root: string, sha: string) =>
+    get<CommitDetail>(`/api/commit?${q(root)}&sha=${encodeURIComponent(sha)}`),
   file: (root: string, path: string) =>
     get<{ path: string; content: string | null; diff: string | null }>(
       `/api/file?${q(root)}&path=${encodeURIComponent(path)}`,
@@ -114,6 +126,13 @@ let source: EventSource | null = null;
 function connect() {
   if (source) return;
   source = new EventSource("/api/stream");
+  // After the server restarts the browser reconnects on its own; reload what we show, since
+  // anything fetched while it was down failed.
+  let opened = false;
+  source.onopen = () => {
+    if (opened) for (const l of listeners) l({ type: "projects" });
+    opened = true;
+  };
   source.onmessage = (m) => {
     try {
       const msg = JSON.parse(m.data);

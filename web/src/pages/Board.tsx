@@ -9,8 +9,9 @@ import { SessionHeader } from "../components/SessionHeader.tsx";
 import { Sidebar } from "../components/Sidebar.tsx";
 import { Summary } from "../components/Summary.tsx";
 import { Timeline } from "../components/Timeline.tsx";
-import { ErrorState, Loading, projectName } from "../components/ui.tsx";
+import { ErrorState, Icon, Loading, projectName } from "../components/ui.tsx";
 import { AgentsLens } from "../lenses/AgentsLens.tsx";
+import { useAgentsView } from "../lenses/agents/view.ts";
 import { CodeLens } from "../lenses/CodeLens.tsx";
 import { GitLens } from "../lenses/GitLens.tsx";
 import { InfraLens } from "../lenses/InfraLens.tsx";
@@ -76,6 +77,17 @@ export function BoardPage({
 
   const [cursor, setCursor] = useState<number | null>(null);
   const [palette, setPalette] = useState(false);
+  // The sessions list is open when you arrive at a project and folds away once a session is open.
+  const [listOpen, setListOpen] = useState(!sessionId);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fold the list when a session opens
+  useEffect(() => setListOpen(!sessionId), [Boolean(sessionId)]);
+  // Details without a selection (lens overview lists) are opt-in; a selection always opens them.
+  const agentsView = useAgentsView();
+  const [details, setDetails] = useState(() => remember("quoli.details") === "open");
+  const toggleDetails = () => {
+    remember("quoli.details", details ? null : "open");
+    setDetails(!details);
+  };
 
   // Navigation helpers: the URL is the source of truth for session, lens and selection.
   const go = useCallback(
@@ -173,6 +185,7 @@ export function BoardPage({
   }
 
   const ctx: LensContext = {
+    projectId,
     root,
     session: (sessionId ? session : null) as SessionDetail | null,
     calls: visibleCalls,
@@ -182,6 +195,7 @@ export function BoardPage({
     code,
     git,
     infra,
+    refreshInfra,
     sessions: sessions ?? [],
     openSession,
   };
@@ -197,13 +211,27 @@ export function BoardPage({
   const fetched = lens === "code" || lens === "git" || lens === "infra" ? lensFetch[lens] : null;
   const blocked = fetched && !fetched.data && fetched.error ? fetched : null;
 
+  // In the Agents lens' Steps view a selected call opens in place, so it needs no side panel.
+  const inPlace = lens === "agents" && agentsView === "timeline" && selection?.kind === "tool";
+  const panelOpen = !summary && (details || (!!selection && !inPlace));
+
   return (
-    <div className={`app ${summary ? "is-summary" : ""}`}>
+    <div
+      className={`app ${summary ? "is-summary" : ""} ${listOpen ? "" : "no-list"} ${
+        panelOpen ? "" : "no-details"
+      } ${sessionId && session && !summary ? "" : "no-replay"}`}
+    >
       <header className="topbar">
-        <Link to={paths.projects()} className="crumb" title="Back to Projects">
-          Projects
-        </Link>
-        <span className="sep">/</span>
+        <button
+          type="button"
+          className={`icon-btn ${listOpen ? "on" : ""}`}
+          onClick={() => setListOpen(!listOpen)}
+          aria-pressed={listOpen}
+          aria-label="Sessions list"
+          title={listOpen ? "Hide the sessions list" : "Show the sessions list"}
+        >
+          {Icon.panel}
+        </button>
         <select
           className="project-select"
           value={project.id}
@@ -263,21 +291,43 @@ export function BoardPage({
         <button
           type="button"
           className="search-button"
-          title={`Search (${modKey()}+K)`}
+          title={`Search this board (${modKey()}+K)`}
           onClick={() => setPalette(true)}
         >
-          Search <kbd>{modKey() === "⌘" ? "⌘K" : "Ctrl K"}</kbd>
+          {Icon.search}
+          <span className="sr-only">Search this board</span>
         </button>
+        {!summary && (
+          <button
+            type="button"
+            className={`icon-btn ${panelOpen ? "on" : ""}`}
+            onClick={() => (selection && !inPlace ? select(null) : toggleDetails())}
+            aria-pressed={panelOpen}
+            aria-label="Details panel"
+            title={
+              selection && !inPlace
+                ? "Close details (Esc)"
+                : details
+                  ? "Hide the details panel"
+                  : "Show the details panel"
+            }
+          >
+            {Icon.inspector}
+          </button>
+        )}
       </header>
 
-      <Sidebar
-        sessions={sessions}
-        activeId={sessionId}
-        hrefFor={sessionHref}
-        projectPath={project.root}
-        error={sessionsError}
-        retry={refreshSessions}
-      />
+      {listOpen && (
+        <Sidebar
+          sessions={sessions}
+          activeId={sessionId}
+          hrefFor={sessionHref}
+          projectPath={project.root}
+          total={project.sessions}
+          error={sessionsError}
+          retry={refreshSessions}
+        />
+      )}
 
       {sessionId && session && (
         <SessionHeader
@@ -326,7 +376,7 @@ export function BoardPage({
       </main>
       {session && <LiveAnnouncer session={session} />}
 
-      {!summary && (
+      {panelOpen && (
         <Inspector
           {...ctx}
           hookStatus={project.hookStatus}

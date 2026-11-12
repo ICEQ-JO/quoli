@@ -8,6 +8,7 @@ import {
   type SessionSummary,
   type TokenTotals,
   type ToolCall,
+  TRACE_CODES,
   type Turn,
   zeroTokens,
 } from "../shared/model.ts";
@@ -16,6 +17,10 @@ import { costOf } from "./prices.ts";
 import { buildReport } from "./report.ts";
 
 const LIVE_WINDOW_MS = 10 * 60_000;
+
+/** A session is live until it ends, or until it has been quiet for ten minutes. */
+export const isLive = (endedAt: string | null, lastAt: string, now = Date.now()) =>
+  !endedAt && now - Date.parse(lastAt) < LIVE_WINDOW_MS;
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
@@ -141,10 +146,15 @@ export function deriveSession(
     branch,
     startedAt: first.at,
     endedAt,
-    live: !endedAt && now - Date.parse(last) < LIVE_WINDOW_MS,
+    live: isLive(endedAt, last, now),
     toolCount: toolCalls.length,
     filesTouched: Object.keys(files).length,
     failures: toolCalls.filter((c) => c.status === "failed").length,
+    trace: [...toolCalls]
+      .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
+      .slice(0, 400)
+      .map((c) => (c.status === "failed" ? "f" : TRACE_CODES[c.category]))
+      .join(""),
     tokens,
     models: [...models],
     cost: costOf(costByModel, prices),

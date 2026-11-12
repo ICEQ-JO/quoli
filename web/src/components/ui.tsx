@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { Project, SessionSummary } from "../../../shared/model.ts";
 import { api } from "../api.ts";
-import { ago, compact } from "../format.ts";
+import { ago, compact, money, plural } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import { useDialog } from "./Dialog.tsx";
+import { Trace } from "./Trace.tsx";
 
 /** Re-render every `ms` so relative times ("2m ago") stay honest. */
 export function useNow(ms = 30_000) {
@@ -92,30 +93,39 @@ export const projectName = (projects: Project[] | null, id: string) =>
 export function SessionRow({
   session,
   projects,
+  showProject = true,
 }: {
   session: SessionSummary;
   projects: Project[] | null;
+  showProject?: boolean;
 }) {
   const name = projectName(projects, session.projectId);
   return (
     <li className="srow">
       <LiveDot live={session.live} />
-      <Link
-        to={paths.board(session.projectId, session.id)}
-        className="srow-title"
-        title={session.title}
-      >
-        {session.title}
-      </Link>
-      <span className="srow-meta">
-        <span title={name}>{name}</span>
-        {session.branch && (
-          <span className="mono" title={session.branch}>
-            {session.branch}
-          </span>
-        )}
-        <span>{session.live ? "live now" : ago(session.startedAt)}</span>
-        {session.failures > 0 && <span className="fail">{session.failures} failed</span>}
+      <div className="srow-main">
+        <Link
+          to={paths.board(session.projectId, session.id)}
+          className="srow-title"
+          title={session.title}
+        >
+          {session.title}
+        </Link>
+        <span className="srow-meta">
+          {showProject && <span title={session.root}>{name}</span>}
+          {session.branch && (
+            <span className="mono" title={session.branch}>
+              {session.branch}
+            </span>
+          )}
+          <span>{session.live ? "live now" : ago(session.startedAt)}</span>
+          <span>{plural(session.toolCount, "call")}</span>
+          {session.failures > 0 && <span className="fail">{session.failures} failed</span>}
+        </span>
+      </div>
+      <Trace trace={session.trace} max={32} />
+      <span className="srow-cost num" title="Estimate from list prices">
+        {money(session.cost, session.tokens)}
       </span>
     </li>
   );
@@ -241,6 +251,34 @@ const svg = (d: React.ReactNode) => (
 );
 
 export const Icon = {
+  dashboard: svg(
+    <>
+      <rect x="4" y="4" width="7" height="9" rx="1.5" />
+      <rect x="13" y="4" width="7" height="5" rx="1.5" />
+      <rect x="13" y="11" width="7" height="9" rx="1.5" />
+      <rect x="4" y="15" width="7" height="5" rx="1.5" />
+    </>,
+  ),
+  usage: svg(<path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />),
+  plus: svg(<path d="M12 5v14M5 12h14" />),
+  panel: svg(
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+    </>,
+  ),
+  inspector: svg(
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M15 4v16" />
+    </>,
+  ),
+  close: svg(<path d="M6 6l12 12M18 6L6 18" />),
+  play: svg(<path d="M7 5l12 7-12 7z" />),
+  pause: svg(<path d="M8 5v14M16 5v14" />),
+  prev: svg(<path d="M15 6l-6 6 6 6" />),
+  next: svg(<path d="M9 6l6 6-6 6" />),
+  live: svg(<circle cx="12" cy="12" r="4" />),
   home: svg(
     <>
       <path d="M4 11l8-7 8 7" />

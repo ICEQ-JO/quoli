@@ -1,187 +1,63 @@
----
-name: Quoli landing
-description: A recording garden on dotted paper, connecting agent work through original pixel mechanisms.
-colors:
-  paper: "#fff"
-  ink: "#17232d"
-  muted: "#56626b"
-  brand: "#4f7d00"
-  accent: "#78b400"
-  tint: "#edf4df"
-  border: "#e4e9e5"
-  dot: "#e7ede8"
-  blue-brand: "#086f94"
-  blue-accent: "#008fba"
-  blue-tint: "#e1f3f8"
-  night-paper: "#121916"
-  night-ink: "#e7eee8"
-  night-muted: "#b5c2b9"
-  night-border: "#344139"
-  night-dot: "#27362b"
-  night-tint: "#263c27"
-typography:
-  display:
-    fontFamily: "Quoli Sans, system-ui, sans-serif"
-    fontSize: "clamp(30px, 3vw, 45px)"
-    fontWeight: 650
-    lineHeight: 1.12
-    letterSpacing: "-1.5px"
-  headline:
-    fontFamily: "Quoli Pixel, monospace"
-    fontSize: "38px"
-    fontWeight: 400
-    lineHeight: 1.05
-    letterSpacing: "-0.015em"
-  brand:
-    fontFamily: "Quoli Pixel, monospace"
-    fontSize: "34px"
-    fontWeight: 400
-    lineHeight: 1
-    letterSpacing: "-0.7px"
-  body:
-    fontFamily: "Quoli Sans, system-ui, sans-serif"
-    fontSize: "16px"
-    lineHeight: 1.7
-  label:
-    fontFamily: "Quoli Sans, system-ui, sans-serif"
-    fontSize: "12px"
-    fontWeight: 500
-rounded:
-  control: "6px"
-  navigation: "9px"
-  field: "10px"
-  hero: "20px"
-  frame: "22px"
-components:
-  button-primary:
-    backgroundColor: "{colors.brand}"
-    textColor: "#fff"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    padding: "13px 15px"
-  navigation-cta:
-    backgroundColor: "{colors.brand}"
-    textColor: "#fff"
-    rounded: "{rounded.navigation}"
-    padding: "11px 17px"
-  hero-cta:
-    backgroundColor: "#fff"
-    textColor: "#17262b"
-    rounded: "{rounded.navigation}"
-    padding: "13px 20px"
-  email-input:
-    textColor: "{colors.ink}"
-    padding: "12px 9px"
-  signup-success:
-    backgroundColor: "{colors.tint}"
-    rounded: "{rounded.field}"
-    padding: "20px"
----
+# Design
 
-# Design System: Quoli landing
+Recorded from the built system after the 2026-11 redesign (docs/redesign.md, R1–R6). The tokens live in `web/src/styles.css` and the layout in `web/src/redesign.css`; this file says why they are what they are. Product context is in PRODUCT.md.
 
-## Overview
+## Character
 
-**Creative North Star: "The Recording Garden"**
+Quoli is a tool for working, not a showcase. Scanning comes first: a developer next to a terminal should get "what changed, what did it cost, what do I review" in under a minute. The look is in the spirit of Linear: quiet, neutral chrome, dense but calm rows, and colour only where it means something.
 
-The Recording Garden makes agent work tangible through original pixel forests, contour fields and a working twin-reel recorder. Dotted white paper and compact paired panels carry a lively green-to-blue progression. Rounded framing contains the pixel geometry; precise sans-serif explanation keeps the product legible.
+## Colour
 
-This system applies only to /landing and its Mission, Roadmap and Privacy views. The reference site is the owner-pinned structural and material reference; the scenery, mechanisms, content and product demonstration are original Quoli work. The former city, robot and cottage direction is rejected and has no visual authority.
+- **The chrome is neutral.** Surfaces go up one step per layer: `--bg` → `--panel` → `--raised` → `--hover`. Dividers are `--line` and `--line-strong`. The accent is near-white on dark and near-black on light, never a brand hue.
+- **Hue is reserved for meaning.** The same meanings hold in every lens, in the legend and on the timeline:
 
-**Key Characteristics:**
+  | Token | Meaning |
+  | --- | --- |
+  | `--read` blue | read a file |
+  | `--edit` orange | edited a file; an orange glow or border always means "the agent changed this" |
+  | `--run` teal | ran a command |
+  | `--search` yellow | searched |
+  | `--agent` purple | subagent |
+  | `--web` pink | web or MCP |
+  | `--fail` red | failed |
+  | `--ok` green | succeeded, live |
 
-- Compact equal hero panels over dotted white paper.
-- Jost hero and body; Jersey 10 section headings and brand.
-- Vivid lime-green and blue pixel fields with mechanical, state-driven motion.
-- Real controls and clearly labeled synthetic evidence.
+  `--brand` (orange) appears only in the logo.
+- **Text pairs** `--text`, `--text-2`, `--muted` and `--faint` meet WCAG AA on their surfaces in both themes. `tests/theme-contrast.test.ts` enforces this. Tinted surfaces (for example the orange "changed" cards) use `--muted` rather than `--faint` for secondary text.
+- **Themes.** Dark is the default, and Light is a full theme rather than an inversion. System follows the OS. The choice is applied before first paint.
 
-## Colors
+## Type
 
-Bright chapter fields sit against neutral paper; frontmatter is normative for reusable CSS root tokens. Illustration palettes remain in `PixelScene.tsx` rather than becoming interface tokens.
+- **Inter Variable** is the UI face. **JetBrains Mono** is used for paths, branches, shas, commands, numbers in tables and code.
+- Scale: 11 / 12 / 13 / 15 / 18 / 22px (`--fs-xs` … `--fs-2xl`). Body text is 13px.
+- Page titles are 22px at weight ~640 with slight negative tracking. Section titles are 13px semibold. Labels never use all caps, except the small column headers on canvases.
+- Numbers use tabular figures (`.num`).
 
-### Primary
+## Space and shape
 
-- **Recording Green** (`brand`), **Lime Signal** (`accent`) and **Leaf Wash** (`tint`): actions, emphasis and supporting surfaces in the opening chapter.
+- **Spacing** uses a 4px base: `--sp-1` … `--sp-6` = 4–32px.
+- **Radii** are 6px (`--radius`) for controls and rows, and 10px (`--radius-lg`) for panels.
+- **Borders and shadow.** Panels are separated by a 1px line rather than shadow. Only floating things (palette, menus, toasts, canvas legends) carry `--float-shadow`.
+- **Shell.** A 232px navigation sidebar (Dashboard, Sessions, Usage, Projects, Settings) sits beside the page. The project board has a top bar (project, branch, lens tabs, search, details toggle), the session list, the lens canvas and an optional inspector. The replay bar runs along the bottom.
 
-### Secondary
+## Components and patterns
 
-- **Connection Blue** (`blue-brand`), **Blue Signal** (`blue-accent`) and **Sky Wash** (`blue-tint`): the root chapter overrides. The product frame, mission link and footer also use their established local blues.
+- **Session rows.** Each row has a live dot, a title, and a meta line (project, branch, time, calls, failures). Next to them sit the call strip (one bar per tool call, coloured by kind) and the estimated cost. In the meta line, only the branch name truncates.
+- **Segmented controls** switch views inside a lens (Steps/Lanes, Changes/All files, This session/Uncommitted, Direct imports/Two steps).
+- **Canvases** (React Flow) show a dotted background, fixed-size cards, a legend at the bottom left and zoom controls at the bottom right. Declared edges are solid and inferred edges are dashed.
+- **The inspector** is the details panel on the right. In the Agents Steps view, a call's details open in place instead.
+- **Empty states** say what is missing and why, plus what makes it appear. Nothing is invented to fill a canvas.
+- **Honesty markers.** Values Quoli lacks are shown as missing ("not connected", "No live status", "inferred"), never estimated silently. Hosted providers are always marked not connected until phase 4.
+- **Icons** are inline SVG at 16px, using `currentColor`. No glyph icons and no emoji.
 
-### Neutral
+## Motion
 
-- **White Paper**, **Blue-black Ink**, **Quiet Slate**, **Fine Border** and **Paper Dot**: page, text, secondary copy, separators and the dotted ground.
-- The `night-*` tokens replace paper, ink, muted, border, dot and tint in dark mode. Brand and accent still follow the chapter; the dark tint remains the dark-mode override.
+- Motion is short and functional. Hover backgrounds take 120ms. A call detail settles open in 160ms. The canvas camera moves in 350ms when it fits to a selection. Live dots pulse.
+- `prefers-reduced-motion: reduce` turns all CSS motion off and makes canvas camera moves instant.
 
-**The Chapter Color Rule.** Green introduces recording; blue introduces connected understanding. Chapter changes update brand, accent and tint together.
+## Accessibility
 
-## Typography
-
-**Hero / Body Font:** Quoli Sans, locally hosted Jost variable (weights 100–900), with system-ui and sans-serif fallbacks.
-**Section / Brand Font:** Quoli Pixel, locally hosted Jersey 10 (weight 400), with monospace fallback.
-**Evidence Font:** native monospace for terminal output, paths and selected evidence values.
-
-The compact sans hero follows the pinned reference precisely; pixel lettering gives section titles and the brand their character. The display, base section, brand and body roles are recorded above. Contextual section headings range from the recorder’s 36px to the product title’s 46px; the mission invitation uses its own large responsive pixel scale. Navigation, evidence and captions use smaller contextual sizes rather than a universal body token.
-
-At the narrow breakpoint the hero is 33px / 1.14, section headings remain prominent, and the product board switches to readable single-column content: 23px title, 12px tabs and explanation, and 11px paths. Preserve the final mobile overrides rather than earlier compact board values.
-
-**The Two Type Voices Rule.** Keep the hero headline and explanatory text in Quoli Sans; section headings and brand lettering use Quoli Pixel.
-
-## Layout
-
-A slim sticky header (77px desktop) caps its content at 1090px. The equal two-column hero uses a 14px gap and outer gutter, compact 280px minimum panels and centered landscape type. The page ground repeats tiny radial dots on a 12px grid. The narrow identity strip introduces the four lenses without invented trust logos.
-
-The recording section pairs the mechanical figure and copy with a tall terminal on green backing. A blue signal chapter leads to the product board on the left and three explanations on the right. A restrained waitlist, oversized mission link and full blue multi-column footer complete the page. Informational views use the same header, type, tokens and footer.
-
-Responsive thresholds are 1600px minimum and 1100px, 780px and 520px maximum. The recording/product layouts stack at 780px; the hero stacks at 520px. The narrow board hides its sidebar, retains all four accessible tabs, and increases its evidence type. The smallest layout uses 8px outer gutters, wraps footer columns and keeps theme and waitlist controls available. Spacing is contextual, not an invented global scale.
-
-## Elevation & Depth
-
-Depth comes from overlapping contour bands, shaded fitted recorder parts and inset product frames. Rounded frames hold the art; the paper remains largely flat. Shadows are local and faint: a small lift under the hero action, a shallow form shadow, and stronger structural shadows beneath terminal and product surfaces. Do not promote every text block into a card.
-
-Motion performs a mechanism: the shared synthetic session advances reels, tape, paper marks, lamps and terminal steps. Contour bands, forest details and blue signals move on low-resolution canvases with crisp scaling. Each canvas owns a cancellable animation loop, pauses offscreen or in a hidden document, and limits painting frequency. Pause and replay remain real buttons; reduced motion shows a readable still with terminal evidence visible. Do not infer product recording from the illustration.
-
-## Shapes
-
-Rounded outer panels and frames contrast with integer-grid contours, square signals and stepped brand geometry. Controls are softly rectangular; the frontmatter records their actual radii. One-pixel borders define evidence, tab rails and form groups. Circles are reserved for reel geometry, terminal window controls and small state indicators, rather than a general pill language.
-
-## Components
-
-### Buttons
-
-Brand-filled waitlist controls use white sans labels, a compact arrow and the primary dimensions above. Navigation uses its own larger radius; the hero action reverses to white against the dark green field. Brand buttons darken with a brightness filter on hover; the hero action turns pale green. Focus uses a visible brand outline (3px, offset 5px); disabled submits reduce opacity and show a wait cursor.
-
-### Inputs / Fields
-
-A rounded, thinly bordered email/submit group uses 5px padding and a faint shadow. The flexible transparent input stays legible in both themes. Errors sit beneath the group; confirmed success uses a tinted status panel. Preserve the existing submission states and show success only after the API confirms it.
-
-### Navigation
-
-Pixel wordmark and stepped Q anchor a sans-serif navigation row. Links acquire the chapter brand on hover. Narrow layouts progressively remove middle links, retaining brand, theme control and waitlist. Mission, Roadmap and Privacy open real local informational views; the footer supplies full navigation.
-
-### Cards / Containers
-
-Equal rounded hero panels pair a bright original forest with a dark contour explanation field. The terminal’s charcoal surface is inset into green pixel backing; the interactive product board is inset into blue backing. The signup success panel and compact status tags remain contextual patterns, not generic cards.
-
-### Product Board
-
-Four tabs share one synthetic session. Blue text and a bottom rule mark the selected lens; arrow keys, Home and End move focus and selection. Selectable evidence rows use a pale mixed-blue fill and update the inspector. Keep tab relationships, explicit synthetic labels and the recorded/derived/inferred distinctions intact. The mobile board gives evidence the full available width.
-
-### Recording Instrument
-
-The original twin-reel canvas shows a continuous tape path, fitted head, guides, counter, transport buttons, indicator and paper feed. Recorded marks and terminal stages share the synthetic session clock. Canvas descriptions explain meaningful illustrations; decorative field canvases stay hidden from assistive technology. No external artwork or generated scene asset is required.
-
-## Do's and Don'ts
-
-### Do:
-
-- Do keep this system scoped to /landing and its informational views.
-- Do preserve the compact paired hero, dotted paper and crisp code-native pixel rendering.
-- Do keep keyboard focus, pause/replay controls and readable reduced-motion states.
-- Do retain synthetic, recorded, derived, inferred and planned labels where applicable.
-
-### Don’t:
-
-- Don’t restore the rejected city, robot mascot, cottage or game-world direction.
-- Don’t use pixel lettering for the hero headline, paragraphs or evidence text.
-- Don’t replace the working recorder with static generated scenery or floating image loops.
-- Don’t apply these tokens to the existing application or invent customer proof, pricing or availability claims.
+- axe-core reports 0 violations on every page in both themes. Last checked on the synthetic large demo at 1280px and 1600px.
+- No page scrolls horizontally at 1280px.
+- All controls are keyboard reachable: a skip link, visible focus rings, roving focus on canvas cards, and `?` for the shortcuts.
+- Colour is never the only signal: kinds have icons and labels, failures have text, legends name every mark.

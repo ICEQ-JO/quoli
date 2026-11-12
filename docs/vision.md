@@ -86,7 +86,7 @@ Each phase is something a developer can use on its own.
 | Phase | Outcome | Status |
 | --- | --- | --- |
 | **0 — Foundation** | Claude Code hooks → local server; sessions, tool calls, tokens; four lenses; replay; demo | **Built** (proof of concept) |
-| **1 — MVP** | App shell with Home, Projects, Sessions and Settings; session Summary with cost in dollars and a review checklist; lenses that stay readable on real repos; polish and light theme. See the [MVP plan](mvp.md) | **Next** |
+| **1 — MVP** | App shell with Home, Projects, Sessions and Settings; session Summary with cost in dollars and a review checklist; lenses that stay readable on real repos; polish and light theme. See the [MVP plan](mvp.md) | **Built** |
 | **2 — Deeper code** | Symbol-level code map (functions, routes, tables) for TS/Python | |
 | **3 — More agents** | Codex, OpenCode and Pi adapters on the same event model; MCP/skill/plugin usage per session | |
 | **4 — Live infra** | Provider connections (Vercel, Railway, Fly, AWS) for real deploys and metrics; link a deploy back to the commit and the session that produced it | |
@@ -103,7 +103,7 @@ Each phase is something a developer can use on its own.
 1. **Pricing and audience** — free local tool with paid hosted teams, or paid from day one?
 2. **Symbol-level map** — invest in a real call graph (compiler/tree-sitter, full-depth) or stay file-level with smarter grouping?
 3. **Which second agent** matters most to you: Codex, OpenCode or Pi?
-4. **Infra providers** — which one do you deploy to today? That decides Phase 3's first integration.
+4. **Infra providers** — which one do you deploy to today? That decides Phase 4's first integration. Until then any provider can be added by hand on the Infra board (#114), without a connection.
 
 ## Landing presentation
 

@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage } from "node:http";
 import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyRetention, createApp, json } from "./app.ts";
+import { refreshHooks } from "./connect.ts";
 import { Store } from "./db.ts";
 import { waitlistRequest } from "./waitlist.ts";
 
@@ -75,6 +76,14 @@ const server = createServer(async (req, res) => {
 });
 
 applyRetention(store);
+const roots = [
+  ...new Set([
+    ...store.registeredProjects().map((p) => p.root),
+    ...store.roots().map((r) => r.root),
+  ]),
+];
+for (const root of refreshHooks(roots))
+  console.log(`  Updated Quoli's hook in ${root} to port ${PORT}`);
 setInterval(() => applyRetention(store), 3_600_000).unref();
 
 server.listen(PORT, HOST, () => {

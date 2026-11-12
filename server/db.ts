@@ -9,7 +9,12 @@ import type { Settings, TokenTotals } from "../shared/model.ts";
 export const projectId = (root: string) =>
   createHash("sha256").update(root).digest("hex").slice(0, 12);
 
-export const DEFAULT_SETTINGS: Settings = { retentionDays: null, redact: true };
+export const DEFAULT_SETTINGS: Settings = {
+  retentionDays: null,
+  redact: true,
+  budgetDailyUsd: null,
+  budgetMonthlyUsd: null,
+};
 
 export const home = () => process.env.QUOLI_HOME ?? join(homedir(), ".quoli");
 
@@ -37,6 +42,8 @@ export interface UsageRow {
 /** Append-only hook events plus deduplicated token usage read from transcripts. */
 export class Store {
   readonly db: DatabaseSync;
+  /** Bumped on every write to a session, so derived views can be cached until it changes. */
+  private readonly revisions = new Map<string, number>();
 
   constructor(file = join(home(), "quoli.db")) {
     if (file !== ":memory:") mkdirSync(join(file, ".."), { recursive: true });
@@ -82,7 +89,17 @@ export class Store {
     `);
   }
 
+  /** In-memory change counter for a session; only this process writes events and usage. */
+  revision(sessionId: string): number {
+    return this.revisions.get(sessionId) ?? 0;
+  }
+
+  private touch(sessionId: string) {
+    this.revisions.set(sessionId, this.revision(sessionId) + 1);
+  }
+
   append(e: Omit<RawEvent, "seq">) {
+    this.touch(e.sessionId);
     this.db
       .prepare("INSERT INTO events (session_id, root, event, at, payload) VALUES (?, ?, ?, ?, ?)")
       .run(e.sessionId, e.root, e.event, e.at, JSON.stringify(e.payload));
@@ -99,6 +116,20 @@ export class Store {
     return this.db
       .prepare(
         "SELECT session_id FROM events WHERE root = ? GROUP BY session_id ORDER BY MAX(at) DESC LIMIT 200",
+      )
+      .all(root)
+      .map((r) => String(r.session_id));
+  }
+
+  /**
+   * Every session in the project with a tool result that mentions "commit": a cheap, exact
+   * superset of the sessions whose recorded `git commit` output can name a commit.
+   */
+  commitSessionIds(root: string): string[] {
+    return this.db
+      .prepare(
+        `SELECT DISTINCT session_id FROM events WHERE root = ?
+         AND event IN ('PostToolUse', 'PostToolUseFailure') AND payload LIKE '%commit%'`,
       )
       .all(root)
       .map((r) => String(r.session_id));
@@ -171,6 +202,7 @@ export class Store {
     this.db.exec("BEGIN");
     try {
       for (const id of ids) {
+        this.touch(id);
         events += Number(
           this.db.prepare("DELETE FROM events WHERE session_id = ?").run(id).changes,
         );
@@ -252,6 +284,30 @@ export class Store {
     this.db.prepare("DELETE FROM settings WHERE key = ?").run(key);
   }
 
+  /** Usage rows at or after a time, with the project root of their session. */
+  usageSince(since: string): (UsageRow & { root: string })[] {
+    return this.db
+      .prepare(
+        `SELECT u.*, r.root FROM usage u
+         JOIN (SELECT session_id, MIN(root) AS root FROM events GROUP BY session_id) r
+           ON r.session_id = u.session_id
+         WHERE u.at >= ? ORDER BY u.at`,
+      )
+      .all(since)
+      .map((r) => ({
+        messageId: String(r.message_id),
+        sessionId: String(r.session_id),
+        agentId: String(r.agent_id),
+        model: r.model === null ? null : String(r.model),
+        at: String(r.at),
+        input: Number(r.input),
+        output: Number(r.output),
+        cacheRead: Number(r.cache_read),
+        cacheWrite: Number(r.cache_write),
+        root: String(r.root),
+      }));
+  }
+
   /** Usage since a time, grouped by model (null = no model id). */
   usageByModelSince(since: string): { model: string | null; tokens: TokenTotals }[] {
     return this.db
@@ -273,6 +329,7 @@ export class Store {
 
   /** Keeps the largest value per field: transcripts repeat a message once per content block. */
   upsertUsage(u: UsageRow) {
+    this.touch(u.sessionId);
     this.db
       .prepare(
         `INSERT INTO usage VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
