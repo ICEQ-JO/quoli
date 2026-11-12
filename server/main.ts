@@ -90,6 +90,7 @@ for (const root of refreshHooks(roots))
 if (!landing) {
   for (const agent of refreshSetup()) console.log(`  Updated Quoli's user-level ${agent} install`);
   startLivePrices(() => store.settings().livePrices);
+  setInterval(() => void app.sync(), 60_000).unref();
   const queued = drainSpool(store, spoolFile());
   if (queued) console.log(`  Recorded ${queued} events sent while Quoli was closed`);
 }
