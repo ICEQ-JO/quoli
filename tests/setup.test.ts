@@ -126,6 +126,15 @@ test("refreshSetup rewrites the install when the port changes and leaves other a
     assert.match(readFileSync(globalTarget("pi").file, "utf8"), /Number\("4555"\)/);
     assert.equal(isSetUp("codex"), false);
     assert.deepEqual(refreshSetup(), []);
+
+    // A second Quoli with its own home and port (a test, a demo) never takes the install over.
+    const before = readFileSync(globalTarget("claude-code").file, "utf8");
+    const pi = readFileSync(globalTarget("pi").file, "utf8");
+    process.env.QUOLI_HOME = join(box.root, "elsewhere");
+    process.env.QUOLI_PORT = "4721";
+    assert.deepEqual(refreshSetup(), []);
+    assert.equal(readFileSync(globalTarget("claude-code").file, "utf8"), before);
+    assert.equal(readFileSync(globalTarget("pi").file, "utf8"), pi);
   } finally {
     box.done();
   }
