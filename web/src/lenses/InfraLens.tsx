@@ -12,6 +12,8 @@ import type { Service, ServiceKind } from "../../../shared/model.ts";
 import { bytes } from "../format.ts";
 import { editedUnder, isSelected, type LensContext } from "../state.ts";
 import { Board } from "./Board.tsx";
+import { InfraGuide } from "./infra/InfraGuide.tsx";
+import "./infra/infra.css";
 
 const TIER: Record<ServiceKind, number> = {
   pipeline: 0,
@@ -85,8 +87,13 @@ export function InfraLens(ctx: LensContext) {
               selected: isSelected(selection, "service", s.id),
             },
             style: { width: W },
+            width: W,
+            height: s.basis === "inferred" ? 150 : 128,
           });
-          y += s.basis === "inferred" ? 172 : 150;
+          // Long names wrap onto extra lines, so leave room for them.
+          y +=
+            (s.basis === "inferred" ? 172 : 150) +
+            Math.max(0, Math.ceil(s.name.length / 16) - 1) * 20;
         }
         y += 28;
       }
@@ -109,42 +116,38 @@ export function InfraLens(ctx: LensContext) {
   }, [infra, touched, selection, moved]);
 
   return (
-    <Board
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      draggable
-      variant={BackgroundVariant.Dots}
-      fitKey={`infra:${root}:${infra?.services.length ?? 0}:${session?.id ?? ""}`}
-      onNodeClick={(n) => n.type === "service" && select({ kind: "service", id: n.id })}
-      onNodeDragStop={(n) => {
-        const next = { ...moved, [n.id]: n.position };
-        setMoved(next);
-        try {
-          localStorage.setItem(`quoli.infra.${root}`, JSON.stringify(next));
-        } catch {}
-      }}
-      onPaneClick={() => select(null)}
-      empty={
-        infra ? (
-          <>
-            No infrastructure found. Quoli reads docker-compose, Dockerfiles, Vercel, Netlify, Fly,
-            Railway, Render, Cloudflare, Serverless, Terraform and GitHub Actions files.
-          </>
-        ) : (
-          "Reading infrastructure files…"
-        )
-      }
-      legend={
-        <>
-          <span className="lg line">declared in config</span>
-          <span className="lg dashed">inferred</span>
-          <span className="lg deploys">deploys</span>
-          <span className="lg changed">code changed by this session</span>
-          <span>Drag cards to arrange</span>
-        </>
-      }
-    />
+    <div className="infra-lens">
+      <div className="infra-board">
+        <Board
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          draggable
+          variant={BackgroundVariant.Dots}
+          fitKey={`infra:${root}:${infra?.services.length ?? 0}:${session?.id ?? ""}`}
+          onNodeClick={(n) => n.type === "service" && select({ kind: "service", id: n.id })}
+          onNodeDragStop={(n) => {
+            const next = { ...moved, [n.id]: n.position };
+            setMoved(next);
+            try {
+              localStorage.setItem(`quoli.infra.${root}`, JSON.stringify(next));
+            } catch {}
+          }}
+          onPaneClick={() => select(null)}
+          empty={infra ? null : "Reading infrastructure files…"}
+          legend={
+            <>
+              <span className="lg line">declared in config</span>
+              <span className="lg dashed">inferred</span>
+              <span className="lg deploys">deploys</span>
+              <span className="lg changed">code changed by this session</span>
+              <span>Drag cards to arrange</span>
+            </>
+          }
+        />
+      </div>
+      {infra && infra.services.length <= 2 && <InfraGuide infra={infra} />}
+    </div>
   );
 }
 

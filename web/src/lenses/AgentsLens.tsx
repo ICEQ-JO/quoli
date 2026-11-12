@@ -1,16 +1,40 @@
 import { type Edge, Handle, MarkerType, type Node, type NodeProps, Position } from "@xyflow/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { AgentNode, ToolCall } from "../../../shared/model.ts";
 import { CATEGORY, compact, duration, tokenSum } from "../format.ts";
 import { isSelected, type LensContext } from "../state.ts";
+import { GRAPH_FIT_ALL, GRAPH_RECENT, TIMELINE_MAX } from "./agents/helpers.ts";
+import { Timeline } from "./agents/Timeline.tsx";
 import { Board } from "./Board.tsx";
+import "./agents/agents.css";
 
 const COL = 210;
 const LANE = 150;
 const LABEL_W = 210;
 
+type View = "timeline" | "graph";
+const VIEW_KEY = "quoli.agents.view";
+
+function storedView(): View | null {
+  try {
+    const v = localStorage.getItem(VIEW_KEY);
+    return v === "timeline" || v === "graph" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AgentsLens(ctx: LensContext) {
   const { session, calls, selection, select } = ctx;
+  const [chosen, setChosen] = useState<View | null>(storedView);
+  const view: View =
+    chosen ?? ((session?.toolCalls.length ?? 0) <= TIMELINE_MAX ? "timeline" : "graph");
+  const choose = (v: View) => {
+    setChosen(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {}
+  };
 
   const { nodes, edges } = useMemo(() => {
     if (!session) return { nodes: [], edges: [] };
@@ -109,33 +133,61 @@ export function AgentsLens(ctx: LensContext) {
     return { nodes, edges };
   }, [session, calls, selection]);
 
-  // Large sessions open on the latest activity instead of a zoomed-out overview.
-  const recent = calls.slice(-4).map((c) => c.id);
+  // Small graphs fit whole; larger ones open on the latest activity.
+  const total = session?.toolCalls.length ?? 0;
+  const recent = calls.slice(-GRAPH_RECENT).map((c) => c.id);
+  const switcher = (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset would need resets for a two-button switch
+    <div className="view-switch" role="group" aria-label="Agents view">
+      {(["timeline", "graph"] as const).map((v) => (
+        <button key={v} type="button" aria-pressed={view === v} onClick={() => choose(v)}>
+          {v === "timeline" ? "Timeline" : "Graph"}
+        </button>
+      ))}
+    </div>
+  );
+  if (view === "timeline" && session) {
+    return (
+      <div className="agents-lens">
+        <Timeline
+          session={session}
+          visible={new Set(calls.map((c) => c.id))}
+          selection={selection}
+          cursorId={calls.at(-1)?.id ?? null}
+          select={select}
+        />
+        <div className="ag-head">{switcher}</div>
+      </div>
+    );
+  }
   return (
-    <Board
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      fitKey={`agents:${session?.id ?? ""}`}
-      focus={(session?.toolCalls.length ?? 0) > 10 ? recent : undefined}
-      onNodeClick={(n) => n.type === "tool" && select({ kind: "tool", id: n.id })}
-      onPaneClick={() => select(null)}
-      empty="Pick a session on the left to see what the agent did."
-      legend={
-        <>
-          {(["read", "edit", "run", "search", "agent", "web"] as const).map((c) => (
-            <span
-              key={c}
-              className="lg"
-              style={{ "--c": CATEGORY[c].color } as React.CSSProperties}
-            >
-              {CATEGORY[c].label}
-            </span>
-          ))}
-          <span className="lg failed">failed</span>
-        </>
-      }
-    />
+    <div className="agents-lens">
+      {switcher}
+      <Board
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitKey={`agents:${session?.id ?? ""}`}
+        focus={total > GRAPH_FIT_ALL ? recent : undefined}
+        onNodeClick={(n) => n.type === "tool" && select({ kind: "tool", id: n.id })}
+        onPaneClick={() => select(null)}
+        empty="Pick a session on the left to see what the agent did."
+        legend={
+          <>
+            {(["read", "edit", "run", "search", "agent", "web"] as const).map((c) => (
+              <span
+                key={c}
+                className="lg"
+                style={{ "--c": CATEGORY[c].color } as React.CSSProperties}
+              >
+                {CATEGORY[c].label}
+              </span>
+            ))}
+            <span className="lg failed">failed</span>
+          </>
+        }
+      />
+    </div>
   );
 }
 

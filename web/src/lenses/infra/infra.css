@@ -1,0 +1,103 @@
+.infra-lens {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.infra-board {
+  position: relative;
+  flex: 1;
+  min-height: 200px;
+}
+
+/* Names are never cut off: they wrap, and the platform badge drops to its own line if needed. */
+.service-node .svc-head {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.service-node .svc-name {
+  flex: 1 1 110px;
+  min-width: 0;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+.service-node .svc-sub .mono,
+.service-node .svc-basis {
+  overflow-wrap: anywhere;
+}
+
+.infra-guide {
+  flex: none;
+  max-height: 50%;
+  overflow-y: auto;
+  padding: 16px 20px 20px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px 24px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.infra-guide h3 {
+  margin: 0 0 6px;
+  font: 600 12px var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+.infra-guide p {
+  margin: 0;
+}
+
+.infra-guide ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.infra-guide li {
+  overflow-wrap: anywhere;
+}
+
+.infra-guide .guide-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.infra-guide .guide-kind {
+  color: var(--muted);
+}
+
+.infra-guide .guide-file {
+  display: block;
+  font: 12px var(--mono);
+  color: var(--faint);
+}
+
+.infra-guide .guide-files {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.infra-guide .guide-files li {
+  font: 11.5px var(--mono);
+  color: var(--muted);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 6px;
+}

@@ -1,0 +1,251 @@
+.agents-lens {
+  position: absolute;
+  inset: 0;
+}
+
+.view-switch {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 6;
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+}
+
+.view-switch button {
+  font: 600 12px var(--sans);
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.view-switch button:hover {
+  color: var(--text);
+}
+
+.view-switch button[aria-pressed="true"] {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.ag {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 56px 16px 32px;
+}
+
+.ag-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ag-prompt {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  margin: 18px 0 6px;
+  padding: 8px 12px;
+  font: 500 13px / 1.4 var(--sans);
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+}
+
+.ag-prompt:first-child {
+  margin-top: 0;
+}
+
+.ag-prompt-n {
+  flex: none;
+  font: 600 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.ag-prompt-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.ag-sub {
+  margin: 4px 0 4px 22px;
+  padding: 4px 0 4px 10px;
+  border-left: 2px solid var(--agent);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ag-sub > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 8px;
+  font: 600 12px var(--sans);
+  color: var(--agent);
+}
+
+.ag-row {
+  display: grid;
+  grid-template-columns: 4px auto minmax(70px, 130px) minmax(0, 1fr) auto auto 56px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 30px;
+  padding: 3px 10px 3px 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font: 12.5px var(--sans);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* a row without the optional caret keeps the same columns */
+.ag-row:not(.ag-run) {
+  grid-template-columns: 4px minmax(70px, 130px) minmax(0, 1fr) auto auto 56px;
+}
+
+.ag-run {
+  grid-template-columns: 4px auto minmax(0, 1fr) 56px;
+}
+
+.ag-row:hover {
+  background: var(--hover);
+}
+
+.ag-row:focus-visible {
+  outline: 2px solid var(--read);
+  outline-offset: -2px;
+}
+
+.ag-row.selected {
+  background: var(--hover);
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+}
+
+.ag-row.future {
+  opacity: 0.3;
+}
+
+.ag-bar {
+  align-self: stretch;
+  background: var(--c);
+  border-radius: 2px;
+}
+
+.ag-caret {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.ag-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ag-summary {
+  color: var(--muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ag-files {
+  display: inline-flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ag-chip {
+  font: 11px var(--mono);
+  color: var(--text);
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  padding: 1px 6px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ag-chip:hover {
+  border-color: var(--muted);
+}
+
+.ag-more {
+  font: 11px var(--mono);
+  color: var(--faint);
+}
+
+.ag-status {
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.ag-status.running {
+  color: var(--ok);
+}
+
+.ag-meta {
+  font-size: 11.5px;
+  color: var(--faint);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ag-row.failed {
+  background: rgb(255 92 92 / 9%);
+}
+
+.ag-row.failed .ag-bar {
+  background: var(--fail);
+}
+
+.ag-row.failed .ag-name,
+.ag-row.failed .ag-status {
+  color: var(--fail);
+  font-weight: 700;
+}
+
+.ag-run-body {
+  margin-left: 18px;
+  padding-left: 8px;
+  border-left: 1px dashed var(--line-strong);
+}
+
+.ag-head {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 48px;
+  z-index: 5;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.ag-head .view-switch {
+  top: 8px;
+}
