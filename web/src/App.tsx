@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { isTypingTarget, modalOpen, modKey } from "./a11y.ts";
 import { api, useData, useLiveEvents } from "./api.ts";
+import { ShortcutOverlay } from "./components/Dialog.tsx";
 import { type PaletteItem, PaletteView, pageItems } from "./components/Palette.tsx";
 import { Icon } from "./components/ui.tsx";
 import { BoardPage } from "./pages/Board.tsx";
@@ -42,8 +44,28 @@ export function App() {
   }, [refreshOverview]);
   const live = overview?.live.length ?? 0;
 
+  // After moving to another page, start reading at its content rather than at the nav rail.
+  const page = useRef(route.name);
+  useEffect(() => {
+    if (page.current === route.name) return;
+    page.current = route.name;
+    document.getElementById("main")?.focus({ preventScroll: true });
+  }, [route.name]);
+  const Main = route.name === "board" ? "div" : "main";
+
   return (
     <div className="shell">
+      {/* biome-ignore lint/a11y/useValidAnchor: a real in-page link that also moves focus */}
+      <a
+        href="#main"
+        className="skip-link"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
+        Skip to content
+      </a>
       <nav className="rail" aria-label="Main">
         <Link to={paths.home()} className="rail-brand" aria-label="Quoli home" title="Quoli">
           <span className="logo" aria-hidden />
@@ -69,11 +91,20 @@ export function App() {
           <button
             type="button"
             className="rail-link"
-            title="Search (⌘K)"
+            title={`Search (${modKey()}+K)`}
             onClick={() => window.dispatchEvent(new Event("quoli:palette"))}
           >
             {Icon.search}
             <span>Search</span>
+          </button>
+          <button
+            type="button"
+            className="rail-link"
+            title="Keyboard shortcuts (?)"
+            onClick={() => window.dispatchEvent(new Event("quoli:shortcuts"))}
+          >
+            {Icon.keyboard}
+            <span>Shortcuts</span>
           </button>
           {live > 0 && (
             <Link
@@ -87,7 +118,11 @@ export function App() {
           )}
         </div>
       </nav>
-      <div className="shell-main">
+      <Main
+        className="shell-main"
+        id={route.name === "board" ? undefined : "main"}
+        tabIndex={route.name === "board" ? undefined : -1}
+      >
         {route.name === "home" && <HomePage />}
         {route.name === "projects" && <ProjectsPage />}
         {route.name === "sessions" && <SessionsPage />}
@@ -100,10 +135,32 @@ export function App() {
           />
         )}
         {route.name === "notfound" && <NotFound />}
-      </div>
+      </Main>
+      <ShortcutsHost />
       {route.name !== "board" && <GlobalPalette />}
     </div>
   );
+}
+
+/** `?` opens the shortcut overlay from anywhere, unless the user is typing or a dialog is open. */
+function ShortcutsHost() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "?" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (isTypingTarget(e.target as HTMLElement) || modalOpen()) return;
+      e.preventDefault();
+      setOpen(true);
+    };
+    const show = () => setOpen(true);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("quoli:shortcuts", show);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("quoli:shortcuts", show);
+    };
+  }, []);
+  return open ? <ShortcutOverlay close={() => setOpen(false)} /> : null;
 }
 
 function NotFound() {

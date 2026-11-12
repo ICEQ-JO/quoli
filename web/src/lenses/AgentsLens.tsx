@@ -1,6 +1,7 @@
 import { type Edge, Handle, MarkerType, type Node, type NodeProps, Position } from "@xyflow/react";
 import { useMemo, useState } from "react";
 import type { AgentNode, ToolCall } from "../../../shared/model.ts";
+import { nodeA11y, quietNode, toolLabel } from "../a11y.ts";
 import { CATEGORY, compact, duration, tokenSum } from "../format.ts";
 import { isSelected, type LensContext } from "../state.ts";
 import { GRAPH_FIT_ALL, GRAPH_RECENT, TIMELINE_MAX } from "./agents/helpers.ts";
@@ -58,6 +59,7 @@ export function AgentsLens(ctx: LensContext) {
           models: session.models,
         },
         style: { width: LABEL_W - 30 },
+        ...quietNode,
       });
     });
 
@@ -73,6 +75,10 @@ export function AgentsLens(ctx: LensContext) {
           selected: isSelected(selection, "tool", call.id),
           future: !visible.has(call.id),
         },
+        ...nodeA11y(
+          toolLabel(call, call.status === "running" ? "" : duration(call.startedAt, call.endedAt)),
+          i === 0,
+        ),
       });
       const prev = lastInLane.get(call.agentId) ?? `lane:${call.agentId}`;
       edges.push({
@@ -80,6 +86,7 @@ export function AgentsLens(ctx: LensContext) {
         source: prev,
         target: call.id,
         type: "smoothstep",
+        focusable: false,
         style: { stroke: "var(--line-strong)", strokeWidth: 1.2 },
       });
       lastInLane.set(call.agentId, call.id);
@@ -95,6 +102,7 @@ export function AgentsLens(ctx: LensContext) {
         type: "prompt",
         position: { x: LABEL_W + Math.max(0, index) * COL - 10, y: -LANE * 0.95 },
         data: { text: turn.prompt, n: t + 1 },
+        ...quietNode,
       });
       if (firstId) {
         edges.push({
@@ -102,6 +110,7 @@ export function AgentsLens(ctx: LensContext) {
           source: id,
           target: firstId,
           targetHandle: "top",
+          focusable: false,
           style: { stroke: "var(--text)", strokeWidth: 1.2, strokeDasharray: "3 3" },
           markerEnd: { type: MarkerType.ArrowClosed, color: "var(--text)" },
         });
@@ -123,6 +132,7 @@ export function AgentsLens(ctx: LensContext) {
           target: first.id,
           targetHandle: "top",
           type: "smoothstep",
+          focusable: false,
           label: "spawned",
           labelStyle: { fill: "var(--agent)", fontSize: 11 },
           labelBgStyle: { fill: "var(--bg)" },

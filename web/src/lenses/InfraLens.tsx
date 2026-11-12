@@ -9,6 +9,7 @@ import {
 } from "@xyflow/react";
 import { useMemo, useState } from "react";
 import type { Service, ServiceKind } from "../../../shared/model.ts";
+import { nodeA11y, plural, quietNode } from "../a11y.ts";
 import { bytes } from "../format.ts";
 import { editedUnder, isSelected, type LensContext } from "../state.ts";
 import { Board } from "./Board.tsx";
@@ -61,6 +62,7 @@ export function InfraLens(ctx: LensContext) {
     if (!infra) return { nodes: [], edges: [] };
     // Three columns read left → right: how code ships, what runs it, what it depends on.
     const nodes: Node[] = [];
+    let first = true;
     const used = [...new Set(infra.services.map((s) => TIER[s.kind]))].sort();
     const columns = [[0], [1, 2], [3, 4]]
       .map((tiers) => tiers.filter((t) => used.includes(t)))
@@ -74,6 +76,7 @@ export function InfraLens(ctx: LensContext) {
           position: { x: col * (W + GAP), y },
           data: { label: TIER_NAMES[tier] },
           draggable: false,
+          ...quietNode,
         });
         y += 32;
         for (const s of infra.services.filter((x) => TIER[x.kind] === tier)) {
@@ -89,7 +92,9 @@ export function InfraLens(ctx: LensContext) {
             style: { width: W },
             width: W,
             height: s.basis === "inferred" ? 150 : 128,
+            ...nodeA11y(serviceLabel(s, editedUnder(touched, s.sourceDir).length), first),
           });
+          first = false;
           // Long names wrap onto extra lines, so leave room for them.
           y +=
             (s.basis === "inferred" ? 172 : 150) +
@@ -105,6 +110,7 @@ export function InfraLens(ctx: LensContext) {
         id: `${l.from}->${l.to}`,
         source: l.from,
         target: l.to,
+        focusable: false,
         style: {
           stroke: color,
           strokeWidth: 1.4,
@@ -150,6 +156,15 @@ export function InfraLens(ctx: LensContext) {
       {infra && infra.services.length <= 2 && <InfraGuide infra={infra} />}
     </div>
   );
+}
+
+function serviceLabel(s: Service, changed: number): string {
+  const parts = [s.name, `${s.kind} on ${s.platform}`];
+  if (s.metrics) parts.push(`${s.metrics.state}`);
+  if (s.sourceDir !== null) parts.push(`source ${s.sourceDir || "repository root"}`);
+  if (changed) parts.push(`${plural(changed, "file")} changed by this session`);
+  if (s.basis === "inferred") parts.push("inferred");
+  return parts.join(", ");
 }
 
 function ServiceNode({ data }: NodeProps) {

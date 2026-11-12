@@ -1,6 +1,7 @@
 import type { SessionSummary } from "../../../shared/model.ts";
 import { ago, compact, money, tokenSum } from "../format.ts";
 import { Link } from "../router.ts";
+import { ErrorState, LiveDot } from "./ui.tsx";
 
 interface Props {
   sessions: SessionSummary[] | null;
@@ -8,9 +9,12 @@ interface Props {
   /** The board URL with this session selected (null clears the selection). */
   hrefFor: (id: string | null) => string;
   projectPath: string;
+  /** Message of the latest failed load, and a way to try again. */
+  error?: string | null;
+  retry?: () => void;
 }
 
-export function Sidebar({ sessions, activeId, hrefFor, projectPath }: Props) {
+export function Sidebar({ sessions, activeId, hrefFor, projectPath, error, retry }: Props) {
   return (
     <nav className="sidebar" aria-label="Agent sessions">
       <div className="side-head">
@@ -21,7 +25,14 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath }: Props) {
           </Link>
         )}
       </div>
-      {sessions === null && <p className="faint pad">Loading…</p>}
+      {sessions === null &&
+        (error ? (
+          <ErrorState title="Could not load sessions" message={error} retry={retry} />
+        ) : (
+          <p className="faint pad" role="status">
+            Loading…
+          </p>
+        ))}
       {sessions?.length === 0 && (
         <div className="side-empty">
           <p>No agent sessions recorded for this project yet.</p>
@@ -34,13 +45,10 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath }: Props) {
             <Link
               to={hrefFor(s.id === activeId ? null : s.id)}
               className={`session-item ${s.id === activeId ? "active" : ""}`}
-              aria-current={s.id === activeId ? "page" : undefined}
+              aria-current={s.id === activeId ? "true" : undefined}
             >
               <span className="row">
-                <span
-                  className={`live-dot ${s.live ? "on" : ""}`}
-                  title={s.live ? "Live" : "Not running"}
-                />
+                <LiveDot live={s.live} />
                 <span className="when">{s.live ? "Live now" : ago(s.startedAt)}</span>
                 {s.branch && (
                   <span className="branch" title={s.branch}>

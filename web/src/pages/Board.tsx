@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SessionDetail, ToolCall } from "../../../shared/model.ts";
+import { isTypingTarget, modalOpen, modKey, roveTarget } from "../a11y.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { Inspector } from "../components/Inspector.tsx";
+import { LiveAnnouncer } from "../components/LiveAnnouncer.tsx";
 import { Palette } from "../components/Palette.tsx";
 import { SessionHeader } from "../components/SessionHeader.tsx";
 import { Sidebar } from "../components/Sidebar.tsx";
@@ -58,15 +60,19 @@ export function BoardPage({
   const project = projects?.find((p) => p.id === projectId) ?? null;
   const root = project?.root ?? null;
 
-  const [sessions, refreshSessions] = useData(`sessions:${projectId}`, () =>
+  const [sessions, refreshSessions, sessionsError] = useData(`sessions:${projectId}`, () =>
     api.sessions(projectId),
   );
   const [session, refreshSession, sessionError] = useData(sessionId, () =>
     api.session(sessionId as string),
   );
-  const [code, refreshCode] = useData(root && `code:${root}`, () => api.code(root as string));
-  const [git, refreshGit] = useData(root && `git:${root}`, () => api.git(root as string));
-  const [infra, refreshInfra] = useData(root && `infra:${root}`, () => api.infra(root as string));
+  const [code, refreshCode, codeError] = useData(root && `code:${root}`, () =>
+    api.code(root as string),
+  );
+  const [git, refreshGit, gitError] = useData(root && `git:${root}`, () => api.git(root as string));
+  const [infra, refreshInfra, infraError] = useData(root && `infra:${root}`, () =>
+    api.infra(root as string),
+  );
 
   const [cursor, setCursor] = useState<number | null>(null);
   const [palette, setPalette] = useState(false);
@@ -116,7 +122,7 @@ export function BoardPage({
         setPalette((p) => !p);
         return;
       }
-      if ((e.target as HTMLElement)?.closest("input, textarea, select")) return;
+      if (isTypingTarget(e.target as HTMLElement) || modalOpen()) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const n = Number(e.key);
       if (n >= 1 && n <= LENSES.length && (sessionId || LENSES[n - 1].id !== "summary"))
@@ -183,6 +189,13 @@ export function BoardPage({
   const href = (l: Lens, s: Selection) =>
     paths.board(projectId, sessionId, { lens: l, selection: s });
   const summary = lens === "summary";
+  const lensFetch = {
+    code: { data: code, error: codeError, retry: refreshCode, what: "repository files" },
+    git: { data: git, error: gitError, retry: refreshGit, what: "Git history" },
+    infra: { data: infra, error: infraError, retry: refreshInfra, what: "infrastructure files" },
+  };
+  const fetched = lens === "code" || lens === "git" || lens === "infra" ? lensFetch[lens] : null;
+  const blocked = fetched && !fetched.data && fetched.error ? fetched : null;
 
   return (
     <div className={`app ${summary ? "is-summary" : ""}`}>
@@ -212,24 +225,48 @@ export function BoardPage({
             {(git?.changed ?? 0) > 0 && <em>{git?.changed} changed</em>}
           </span>
         )}
-        <nav className="lenses" aria-label="Lens">
+        <div
+          className="lenses"
+          role="tablist"
+          aria-label="Lens"
+          onKeyDown={(e) => {
+            const tabs = LENSES.filter((l) => sessionId || l.id !== "summary");
+            const to = roveTarget(
+              e.key,
+              tabs.findIndex((l) => l.id === lens),
+              tabs.length,
+            );
+            if (to === null || e.key === "ArrowUp" || e.key === "ArrowDown") return;
+            e.preventDefault();
+            setLens(tabs[to].id);
+            requestAnimationFrame(() => document.getElementById(`tab-${tabs[to].id}`)?.focus());
+          }}
+        >
           {LENSES.map((l, i) =>
             l.id === "summary" && !sessionId ? null : (
               <button
                 type="button"
+                role="tab"
+                id={`tab-${l.id}`}
                 key={l.id}
                 className={lens === l.id ? "active" : ""}
-                aria-pressed={lens === l.id}
+                aria-selected={lens === l.id}
+                tabIndex={lens === l.id ? 0 : -1}
                 onClick={() => setLens(l.id)}
-                title={`${l.hint} (${i + 1})`}
+                title={`${l.label} (${i + 1}) · ${l.hint}`}
               >
                 {l.label}
               </button>
             ),
           )}
-        </nav>
-        <button type="button" className="search-button" onClick={() => setPalette(true)}>
-          Search <kbd>⌘K</kbd>
+        </div>
+        <button
+          type="button"
+          className="search-button"
+          title={`Search (${modKey()}+K)`}
+          onClick={() => setPalette(true)}
+        >
+          Search <kbd>{modKey() === "⌘" ? "⌘K" : "Ctrl K"}</kbd>
         </button>
       </header>
 
@@ -238,6 +275,8 @@ export function BoardPage({
         activeId={sessionId}
         hrefFor={sessionHref}
         projectPath={project.root}
+        error={sessionsError}
+        retry={refreshSessions}
       />
 
       {sessionId && session && (
@@ -248,19 +287,44 @@ export function BoardPage({
         />
       )}
 
-      <main className="canvas">
+      <main className="canvas" id="main" tabIndex={-1}>
+        {sessionId ? (
+          <h2 className="sr-only">{LENSES.find((l) => l.id === lens)?.label} lens</h2>
+        ) : (
+          <>
+            <h1 className="sr-only">{project.name}</h1>
+            <h2 className="sr-only">{LENSES.find((l) => l.id === lens)?.label} lens</h2>
+          </>
+        )}
         {sessionId && sessionError && !session && (
           <div className="board-notice">
-            <ErrorState title="Session not found" message={sessionError} />
+            <ErrorState
+              title="Could not load this session"
+              message={sessionError}
+              retry={refreshSession}
+            />
           </div>
         )}
         {summary && sessionId && !session && !sessionError && <Loading label="Loading session…" />}
         {summary && session && <Summary session={session} href={href} />}
         {lens === "agents" && <AgentsLens {...ctx} />}
-        {lens === "code" && <CodeLens {...ctx} />}
-        {lens === "git" && <GitLens {...ctx} />}
-        {lens === "infra" && <InfraLens {...ctx} />}
+        {blocked ? (
+          <div className="board-notice">
+            <ErrorState
+              title={`Could not read the ${blocked.what}`}
+              message={blocked.error as string}
+              retry={blocked.retry}
+            />
+          </div>
+        ) : (
+          <>
+            {lens === "code" && <CodeLens {...ctx} />}
+            {lens === "git" && <GitLens {...ctx} />}
+            {lens === "infra" && <InfraLens {...ctx} />}
+          </>
+        )}
       </main>
+      {session && <LiveAnnouncer session={session} />}
 
       {!summary && (
         <Inspector

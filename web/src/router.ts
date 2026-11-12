@@ -118,7 +118,7 @@ export function Link(props: {
   className?: string;
   title?: string;
   children?: ReactNode;
-  "aria-current"?: "page";
+  "aria-current"?: "page" | "true";
   "aria-label"?: string;
   onClick?: () => void;
 }) {

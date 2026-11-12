@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { CATEGORY, fileName } from "../format.ts";
 import { navigate, paths } from "../router.ts";
 import type { Lens, LensContext, Selection } from "../state.ts";
+import { useDialog } from "./Dialog.tsx";
 
 export interface PaletteItem {
   group: string;
@@ -85,8 +86,7 @@ export function PaletteView({
 }) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
-  const input = useRef<HTMLInputElement>(null);
-  useEffect(() => input.current?.focus(), []);
+  const dialog = useDialog(close);
 
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -104,10 +104,23 @@ export function PaletteView({
 
   return (
     <div className="palette-backdrop">
-      <button type="button" className="palette-scrim" aria-label="Close search" onClick={close} />
-      <div className="palette" role="dialog" aria-modal="true" aria-label="Search">
+      <button
+        type="button"
+        className="palette-scrim"
+        tabIndex={-1}
+        aria-label="Close search"
+        onClick={close}
+      />
+      <div
+        ref={dialog.ref}
+        className="palette"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
+        onKeyDown={dialog.onKeyDown}
+      >
         <input
-          ref={input}
+          aria-label="Search"
           value={query}
           placeholder={placeholder}
           onChange={(e) => {
@@ -115,7 +128,6 @@ export function PaletteView({
             setActive(0);
           }}
           onKeyDown={(e) => {
-            if (e.key === "Escape") close();
             if (e.key === "ArrowDown") setActive((a) => Math.min(items.length - 1, a + 1));
             if (e.key === "ArrowUp") setActive((a) => Math.max(0, a - 1));
             if (e.key === "Enter" && items[active]) {
@@ -124,6 +136,9 @@ export function PaletteView({
             }
           }}
         />
+        <p className="sr-only" role="status">
+          {items.length ? `${items.length} results` : "No results"}
+        </p>
         <ul>
           {items.map((item, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: labels can repeat (two identical commands)
@@ -134,6 +149,8 @@ export function PaletteView({
               <button
                 type="button"
                 className={i === active ? "active" : ""}
+                tabIndex={-1}
+                aria-current={i === active ? "true" : undefined}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => {
                   item.run();

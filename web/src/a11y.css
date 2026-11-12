@@ -1,0 +1,107 @@
+/* Accessibility layer: skip link, shortcut overlay, focus rings. Tokens only, no literal colors. */
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+main:focus {
+  outline: none;
+}
+
+/* Focus rings for things the global :focus-visible rule cannot reach. */
+.react-flow__node:focus-visible,
+.rove:focus-visible,
+.g-row:focus-visible,
+.ag-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  z-index: 5;
+}
+
+.g-row:focus-visible,
+.ag-row:focus-visible {
+  outline-offset: -2px;
+}
+
+.tl-track:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lenses button[role="tab"]:focus-visible,
+.search-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Shortcut overlay */
+.modal.shortcuts {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.shortcuts h3 {
+  margin: 16px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.kbd-list {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.kbd-list > div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.kbd-list dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.kbd-list dd {
+  margin: 0;
+  color: var(--text);
+}
+
+.shortcuts kbd {
+  min-width: 22px;
+  padding: 1px 6px;
+  text-align: center;
+  font: 12px var(--mono);
+  color: var(--text);
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
+  }
+}

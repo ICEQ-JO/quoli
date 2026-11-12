@@ -1,5 +1,6 @@
 import { type CSSProperties, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { AgentNode, SessionDetail, ToolCall } from "../../../../shared/model.ts";
+import { onRoveKey, toolLabel } from "../../a11y.ts";
 import { CATEGORY, compact, duration, fileName, tokenSum } from "../../format.ts";
 import type { Selection } from "../../state.ts";
 import { collapseRuns, runLabel } from "./helpers.ts";
@@ -54,6 +55,8 @@ export function Timeline({ session, visible, selection, cursorId, select }: Prop
   const root = useRef<HTMLDivElement>(null);
   const selectedId = selection?.kind === "tool" ? selection.id : null;
   const focusId = selectedId ?? cursorId;
+  // One row is in the tab order; arrow keys move between rows.
+  const tabId = all.some((c) => c.id === selectedId) ? selectedId : all[0]?.id;
 
   // Scroll the selected row (or, failing that, the replay cursor) into view.
   useEffect(() => {
@@ -82,6 +85,7 @@ export function Timeline({ session, visible, selection, cursorId, select }: Prop
             key={head.id}
             call={head}
             selected={selectedId === head.id}
+            tabStop={tabId === head.id}
             future={!visible.has(head.id)}
             select={select}
           />
@@ -113,6 +117,7 @@ export function Timeline({ session, visible, selection, cursorId, select }: Prop
                   key={c.id}
                   call={c}
                   selected={selectedId === c.id}
+                  tabStop={tabId === c.id}
                   future={!visible.has(c.id)}
                   select={select}
                 />
@@ -161,31 +166,33 @@ export function Timeline({ session, visible, selection, cursorId, select }: Prop
 function CallRow({
   call,
   selected,
+  tabStop,
   future,
   select,
 }: {
   call: ToolCall;
   selected: boolean;
+  tabStop: boolean;
   future: boolean;
   select: (s: Selection) => void;
 }) {
   const cat = CATEGORY[call.category];
   const shown = call.files.slice(0, 3);
   return (
-    // biome-ignore lint/a11y/useSemanticElements: the row holds nested file buttons
+    // biome-ignore lint/a11y/useSemanticElements: a row that holds file buttons, not a form group
     <div
-      role="button"
-      tabIndex={0}
+      role="group"
+      tabIndex={tabStop ? 0 : -1}
+      aria-label={toolLabel(
+        call,
+        call.status === "running" ? "" : duration(call.startedAt, call.endedAt),
+      )}
+      aria-current={selected ? "true" : undefined}
       data-ids={call.id}
-      className={`ag-row ${call.status} ${selected ? "selected" : ""} ${future ? "future" : ""}`}
+      className={`rove ag-row ${call.status} ${selected ? "selected" : ""} ${future ? "future" : ""}`}
       style={{ "--c": cat.color } as CSSProperties}
       onClick={() => select({ kind: "tool", id: call.id })}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          select({ kind: "tool", id: call.id });
-        }
-      }}
+      onKeyDown={onRoveKey}
     >
       <span className="ag-bar" />
       <span className="ag-name" title={call.name}>
@@ -200,6 +207,7 @@ function CallRow({
             type="button"
             key={f}
             className="ag-chip"
+            tabIndex={-1}
             title={f}
             onClick={(e) => {
               e.stopPropagation();

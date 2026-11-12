@@ -3,6 +3,7 @@ import type { Project, SessionSummary } from "../../../shared/model.ts";
 import { api } from "../api.ts";
 import { ago, compact } from "../format.ts";
 import { Link, paths } from "../router.ts";
+import { useDialog } from "./Dialog.tsx";
 
 /** Re-render every `ms` so relative times ("2m ago") stay honest. */
 export function useNow(ms = 30_000) {
@@ -154,20 +155,29 @@ export function DeleteDataDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cancel = useRef<HTMLButtonElement>(null);
-  useEffect(() => cancel.current?.focus(), []);
+  const dialog = useDialog(close, cancel);
   const n = project.sessions;
   return (
     <div className="modal-backdrop">
-      <button type="button" className="palette-scrim" aria-label="Cancel" onClick={close} />
+      <button
+        type="button"
+        className="palette-scrim"
+        tabIndex={-1}
+        aria-label="Cancel"
+        onClick={close}
+      />
       <div
+        ref={dialog.ref}
         className="modal"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="del-title"
-        onKeyDown={(e) => e.key === "Escape" && close()}
+        aria-describedby="del-body"
+        tabIndex={-1}
+        onKeyDown={dialog.onKeyDown}
       >
         <h2 id="del-title">Delete data for {project.name}?</h2>
-        <p>This permanently deletes, from Quoli's local database:</p>
+        <p id="del-body">This permanently deletes, from Quoli's local database:</p>
         <ul>
           <li>
             every recorded event of the {n} {n === 1 ? "session" : "sessions"} in this project
@@ -245,6 +255,12 @@ export const Icon = {
     <>
       <circle cx="12" cy="12" r="3" />
       <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" />
+    </>,
+  ),
+  keyboard: svg(
+    <>
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
     </>,
   ),
   search: svg(

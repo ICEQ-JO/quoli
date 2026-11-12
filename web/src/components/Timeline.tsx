@@ -62,33 +62,43 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
   };
 
   const current = calls[at];
+  // One step to a call: the replay cursor and the selection move together.
+  const step = (i: number) => {
+    const to = Math.min(n - 1, Math.max(0, i));
+    setPlaying(false);
+    setCursor(to === n - 1 ? null : to);
+    if (calls[to]) select({ kind: "tool", id: calls[to].id });
+  };
+  const togglePlay = () => {
+    if (!playing && cursor === null) setCursor(-1);
+    setPlaying(!playing);
+  };
   return (
     <footer className="timeline">
       <div className="tl-controls">
         <button
           type="button"
-          onClick={() => {
-            if (!playing && cursor === null) setCursor(-1);
-            setPlaying(!playing);
-          }}
+          onClick={togglePlay}
           aria-label={playing ? "Pause replay" : "Replay session"}
-          title="Replay the session"
+          title={playing ? "Pause replay (Space)" : "Replay the session (Space)"}
           disabled={!n}
         >
           {playing ? "❚❚" : "▶"}
         </button>
         <button
           type="button"
-          onClick={() => setCursor(Math.max(0, at - 1))}
+          onClick={() => step(at - 1)}
           aria-label="Previous step"
+          title="Previous step (←)"
           disabled={!n}
         >
           ‹
         </button>
         <button
           type="button"
-          onClick={() => setCursor(at + 1 >= n - 1 ? null : at + 1)}
+          onClick={() => step(at + 1)}
           aria-label="Next step"
+          title="Next step (→)"
           disabled={!n}
         >
           ›
@@ -108,13 +118,33 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
         onPointerMove={(e) => e.buttons === 1 && pick(e.clientX)}
         role="slider"
         aria-label="Session timeline"
-        aria-valuemin={1}
+        aria-valuemin={n ? 1 : 0}
         aria-valuemax={n}
-        aria-valuenow={at + 1}
+        aria-valuenow={n ? at + 1 : 0}
+        aria-valuetext={
+          current
+            ? `Step ${at + 1} of ${n}, ${current.name.replace(/^mcp__/, "")} ${current.summary}${
+                cursor === null ? (session.live ? ", latest" : ", end of session") : ""
+              }`
+            : "No tool calls"
+        }
+        aria-disabled={!n}
+        title="Session timeline (← → step, Home first, End latest, Space play)"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === "ArrowLeft") setCursor(Math.max(0, at - 1));
-          if (e.key === "ArrowRight") setCursor(at + 1 >= n - 1 ? null : at + 1);
+          if (!n) return;
+          const to: Record<string, number> = {
+            ArrowLeft: at - 1,
+            ArrowDown: at - 1,
+            ArrowRight: at + 1,
+            ArrowUp: at + 1,
+            Home: 0,
+            End: n - 1,
+          };
+          if (e.key === " ") togglePlay();
+          else if (e.key in to) step(to[e.key]);
+          else return;
+          e.preventDefault();
         }}
       >
         <svg

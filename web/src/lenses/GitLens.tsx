@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Branch, Commit, GitState, SessionSummary } from "../../../shared/model.ts";
+import { onRoveKey } from "../a11y.ts";
 import { api } from "../api.ts";
 import { ago } from "../format.ts";
 import { isSelected, type LensContext } from "../state.ts";
@@ -134,6 +135,7 @@ export function GitLens(ctx: LensContext) {
         dim={onBranch ? !onBranch.has(c.sha) : false}
         hot={onBranch ? onBranch.has(c.sha) : false}
         titles={titles}
+        tabStop={i === Math.max(first, lead)}
         activeId={session?.id}
         onSelect={() => select({ kind: "commit", id: c.sha })}
         openSession={openSession}
@@ -180,6 +182,15 @@ export function GitLens(ctx: LensContext) {
   );
 }
 
+function commitLabel(c: Commit, titles: Map<string, SessionSummary>): string {
+  const parts = [`${c.parents.length > 1 ? "Merge commit" : "Commit"} ${c.sha}`, c.subject];
+  parts.push(`by ${c.author}, ${ago(c.at)}`);
+  if (c.refs.length) parts.push(`refs ${c.refs.join(", ")}`);
+  const made = (c.sessions ?? []).map((id) => titles.get(id)?.title ?? id);
+  if (made.length) parts.push(`created by session ${made.join(", ")}`);
+  return parts.join(", ");
+}
+
 function CommitRow(p: {
   top: number;
   commit: Commit;
@@ -190,6 +201,7 @@ function CommitRow(p: {
   dim: boolean;
   hot: boolean;
   titles: Map<string, SessionSummary>;
+  tabStop: boolean;
   activeId: string | undefined;
   onSelect: () => void;
   openSession: (id: string) => void;
@@ -201,14 +213,16 @@ function CommitRow(p: {
   const merge = c.parents.length > 1;
   const refs = c.refs.slice(0, 3);
   return (
-    // biome-ignore lint/a11y/useSemanticElements: the row contains other buttons (session chips)
+    // biome-ignore lint/a11y/useSemanticElements: a row that holds other buttons, not a form group
     <div
-      role="button"
-      tabIndex={0}
-      className={`g-row ${p.selected ? "selected" : ""} ${p.hot ? "hot" : ""} ${p.dim ? "dim" : ""}`}
+      role="group"
+      tabIndex={p.tabStop ? 0 : -1}
+      aria-label={commitLabel(c, p.titles)}
+      aria-current={p.selected ? "true" : undefined}
+      className={`rove g-row ${p.selected ? "selected" : ""} ${p.hot ? "hot" : ""} ${p.dim ? "dim" : ""}`}
       style={{ top: p.top }}
       onClick={p.onSelect}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && p.onSelect()}
+      onKeyDown={onRoveKey}
     >
       <svg className="g-lanes" width={p.gutter} height={ROW} aria-hidden="true">
         <title>{`${c.sha} ${merge ? "merge" : "commit"}`}</title>
@@ -291,6 +305,7 @@ function CommitRow(p: {
             <button
               type="button"
               key={id}
+              tabIndex={-1}
               className={`g-session ${id === p.activeId ? "active" : ""}`}
               title={`Session that created this commit: ${label}`}
               onClick={(e) => {

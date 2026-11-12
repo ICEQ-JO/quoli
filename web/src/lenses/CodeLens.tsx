@@ -1,6 +1,7 @@
 import { type Edge, Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { useEffect, useMemo, useState } from "react";
 import type { CodeFile } from "../../../shared/model.ts";
+import { fileLabel, folderLabel, nodeA11y, quietNode } from "../a11y.ts";
 import { compact, fileName } from "../format.ts";
 import { isSelected, type LensContext, type Touch } from "../state.ts";
 import { Board } from "./Board.tsx";
@@ -96,6 +97,12 @@ export function CodeLens(ctx: LensContext) {
     const hiddenCount = sc.folders.length - folders.length + (sc.files.length - files.length);
 
     const out: Node[] = [];
+    let stopTaken = false;
+    const tabStop = () => {
+      const free = !stopTaken;
+      stopTaken = true;
+      return free;
+    };
     const cols = tileColumns(ordered.length);
     ordered.forEach((f, i) => {
       out.push({
@@ -107,6 +114,10 @@ export function CodeLens(ctx: LensContext) {
         },
         data: { folder: f, heat: heat.get(f.path) ?? null },
         style: { width: TILE_W, height: TILE_H },
+        ...nodeA11y(
+          folderLabel(f.path, f.files, heat.get(f.path)?.edited ?? 0, heat.get(f.path)?.read ?? 0),
+          tabStop(),
+        ),
       });
     });
     const tilesW = ordered.length ? Math.min(cols, ordered.length) * (TILE_W + GAP) - GAP : 0;
@@ -135,6 +146,7 @@ export function CodeLens(ctx: LensContext) {
         data: { text: `files in this folder · ${compact(files.length)}` },
         style: { width: 360, height: 18 },
         selectable: false,
+        ...quietNode,
       });
       shown
         .sort((a, b) => a.path.localeCompare(b.path))
@@ -154,6 +166,15 @@ export function CodeLens(ctx: LensContext) {
               dim: false,
             },
             style: { width: FILE_W, height: FILE_H },
+            ...nodeA11y(
+              fileLabel(
+                f.path,
+                touched.get(f.path)?.edited ?? 0,
+                touched.get(f.path)?.read ?? 0,
+                f.status,
+              ),
+              tabStop(),
+            ),
           });
         });
       y += Math.ceil(shown.length / fileCols) * (FILE_H + FILE_GAP);
@@ -269,6 +290,7 @@ function edge(from: string, to: string, dir: "in" | "out"): Edge {
     id: `${from}->${to}`,
     source: `file:${from}`,
     target: `file:${to}`,
+    focusable: false,
     animated: dir === "out",
     style: { stroke: dir === "out" ? "var(--read)" : "var(--muted)", strokeWidth: 1.4 },
   };

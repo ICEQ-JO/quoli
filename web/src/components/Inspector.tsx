@@ -4,6 +4,7 @@ import { api, useData } from "../api.ts";
 import { ago, CATEGORY, clock, duration, fileName } from "../format.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
+import { ErrorState } from "./ui.tsx";
 
 interface Props extends LensContext {
   lens: Lens;
@@ -22,7 +23,7 @@ export function Inspector(p: Props) {
   else if (p.session) body = <LensPanel {...p} session={p.session} />;
   else body = <ProjectPanel {...p} />;
   return (
-    <aside className="inspector">
+    <aside className="inspector" aria-label="Inspector">
       {s && (
         <button type="button" className="back" onClick={() => p.select(null)}>
           ← {p.session ? "Back to list" : "Project"}
@@ -210,8 +211,9 @@ function LensPanel(p: Props & { session: SessionDetail }) {
 }
 
 function FilePanel({ path, root, session, code, goto, select }: Props & { path: string }) {
-  const [file] = useData(root && `${root}:${path}:${session?.toolCalls.length ?? 0}`, () =>
-    api.file(root as string, path),
+  const [file, reloadFile, fileError] = useData(
+    root && `${root}:${path}:${session?.toolCalls.length ?? 0}`,
+    () => api.file(root as string, path),
   );
   const [tab, setTab] = useState<"session" | "git" | "source">("session");
   const meta = code?.files.find((f) => f.path === path);
@@ -232,9 +234,11 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
           {meta && meta.status !== "clean" ? ` · ${meta.status} in git` : ""}
         </p>
       </header>
-      <div className="tabs">
+      <div className="tabs" role="tablist" aria-label="File views">
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === "session"}
           className={activeTab === "session" ? "active" : ""}
           onClick={() => setTab("session")}
           disabled={!calls.length}
@@ -243,6 +247,8 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === "git"}
           className={activeTab === "git" ? "active" : ""}
           onClick={() => setTab("git")}
           disabled={!file?.diff}
@@ -251,6 +257,8 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === "source"}
           className={activeTab === "source" ? "active" : ""}
           onClick={() => setTab("source")}
         >
@@ -280,7 +288,18 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
         </>
       )}
       {activeTab === "git" && file?.diff && <UnifiedDiff text={file.diff} />}
-      {activeTab === "source" && <pre className="source">{file?.content ?? "Loading…"}</pre>}
+      {activeTab === "source" &&
+        (file ? (
+          <pre className="source">
+            {file.content ?? "No preview: the file is binary or too large."}
+          </pre>
+        ) : fileError ? (
+          <ErrorState title="Could not read this file" message={fileError} retry={reloadFile} />
+        ) : (
+          <p className="faint pad" role="status">
+            Loading…
+          </p>
+        ))}
       {meta?.imports.length || importers.length ? (
         <Section title="Connections">
           <ul className="links">
@@ -461,13 +480,18 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
 function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: string }) {
   const loaded = git?.commits.find((x) => x.sha === sha);
   // Commits paged in by the Git lens are not in the board's first page; look them up once.
-  const [deep] = useData(!loaded && root ? `commit:${root}:${sha}` : null, () =>
-    api.git(root as string, 2000),
+  const [deep, reloadDeep, deepError] = useData(
+    !loaded && root ? `commit:${root}:${sha}` : null,
+    () => api.git(root as string, 2000),
   );
   const c = loaded ?? deep?.commits.find((x) => x.sha === sha);
+  if (!c && deepError)
+    return (
+      <ErrorState title="Could not look up this commit" message={deepError} retry={reloadDeep} />
+    );
   if (!c)
     return (
-      <p className="faint pad">
+      <p className="faint pad" role="status">
         {deep ? "Commit not found in the loaded history." : "Loading commit…"}
       </p>
     );
