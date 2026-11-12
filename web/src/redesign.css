@@ -567,6 +567,15 @@
   gap: 10px;
 }
 
+/* Short facts (project, time, calls) stay whole; only the branch name gives way. */
+.srow-meta > span {
+  flex: none;
+}
+
+.srow-meta > .mono {
+  flex: 0 1 auto;
+}
+
 .srow-cost {
   text-align: right;
   font-size: var(--fs-sm);

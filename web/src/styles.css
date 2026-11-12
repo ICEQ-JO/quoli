@@ -2119,8 +2119,15 @@ a.strong:hover {
   color: var(--muted);
 }
 
-.state strong {
+.state strong,
+.state .state-title {
   color: var(--text);
+}
+
+.state .state-title {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 600;
 }
 
 .state.error {

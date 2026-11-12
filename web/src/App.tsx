@@ -99,7 +99,7 @@ function NotFound() {
   return (
     <div className="page">
       <div className="state empty">
-        <strong>Page not found</strong>
+        <h1 className="state-title">Page not found</h1>
         <span>There is nothing at this address.</span>
         <Link to={paths.home()} className="btn">
           Go Home
