@@ -17,6 +17,7 @@ import {
 import { projectId, type RawEvent, type UsageRow } from "./db.ts";
 import { costOf } from "./prices.ts";
 import { buildReport } from "./report.ts";
+import { turnStats } from "./steps.ts";
 
 const LIVE_WINDOW_MS = 10 * 60_000;
 
@@ -143,6 +144,12 @@ export function deriveSession(
     usd: costOf([{ model, tokens: t }], prices).usd,
   }));
   const last = events.at(-1)?.at ?? first.at;
+  const usagePoints = usage.map((u) => ({
+    at: u.at,
+    agentId: u.agentId,
+    model: u.model,
+    tokens: { input: u.input, output: u.output, cacheRead: u.cacheRead, cacheWrite: u.cacheWrite },
+  }));
   const title = promptTitle(turns.map((t) => t.prompt)) ?? `Session ${first.sessionId.slice(0, 8)}`;
   return {
     id: first.sessionId,
@@ -166,22 +173,17 @@ export function deriveSession(
     tokens,
     models: [...models],
     cost: costOf(costByModel, prices),
-    report: buildReport(toolCalls, costByModel, prices.version),
+    report: buildReport(
+      toolCalls,
+      costByModel,
+      prices.version,
+      turnStats(turns, toolCalls, usagePoints, prices, last),
+    ),
     agents: [...agents.values()],
     turns,
     toolCalls,
     files,
-    usage: usage.map((u) => ({
-      at: u.at,
-      agentId: u.agentId,
-      model: u.model,
-      tokens: {
-        input: u.input,
-        output: u.output,
-        cacheRead: u.cacheRead,
-        cacheWrite: u.cacheWrite,
-      },
-    })),
+    usage: usagePoints,
   };
 }
 

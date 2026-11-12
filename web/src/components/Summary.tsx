@@ -1,5 +1,6 @@
+import { useState } from "react";
 import type { CommandRun, SessionDetail } from "../../../shared/model.ts";
-import { clock, compact, fileName, usd } from "../format.ts";
+import { clock, compact, fileName, span, tokenSum, usd } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import type { Lens, Selection } from "../state.ts";
 
@@ -168,6 +169,8 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
           )}
         </Sec>
 
+        <TimeAndMoney session={session} href={href} />
+
         <Sec id="sum-cost" title="What it cost" aside={usd(totalCost.usd)}>
           {totalCost.unpriced.length > 0 && (
             <p className="sum-warn" role="note">
@@ -293,5 +296,167 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
         </Sec>
       </div>
     </div>
+  );
+}
+
+const TURNS_SHOWN = 12;
+
+/** First line of a prompt, for a table cell. */
+const firstLine = (text: string) =>
+  text
+    .split("\n")
+    .map((l) => l.trim())
+    .find(Boolean) ?? "(empty prompt)";
+
+/**
+ * Per-prompt time, calls, failures, tokens and cost, and the slowest calls. Tokens and cost are
+ * attributed to a prompt by the time each model request was reported, so they are derived.
+ */
+function TimeAndMoney({ session, href }: { session: SessionDetail; href: Href }) {
+  const { turns, slowest } = session.report;
+  const [all, setAll] = useState(false);
+  if (!turns.length && !slowest.length) return null;
+  const total = turns.reduce((n, t) => n + t.ms, 0);
+  const longest = Math.max(1, ...turns.map((t) => t.ms));
+  const priced = turns.filter((t) => t.cost.usd !== null);
+  // Marking the top three only means something when there are more than three prompts.
+  const costliest = new Set(
+    [...(turns.length > 3 ? priced : [])]
+      .sort((a, b) => (b.cost.usd ?? 0) - (a.cost.usd ?? 0))
+      .slice(0, 3)
+      .filter((t) => (t.cost.usd ?? 0) > 0)
+      .map((t) => t.index),
+  );
+  const calls = new Map(session.toolCalls.map((c) => [c.id, c]));
+  const shown = all ? turns : turns.slice(0, TURNS_SHOWN);
+  return (
+    <Sec
+      id="sum-time"
+      title="Where the time and money went"
+      aside={
+        total > 0
+          ? `${span(total)} across ${turns.length} ${turns.length === 1 ? "prompt" : "prompts"}`
+          : undefined
+      }
+    >
+      {turns.length > 0 && (
+        <>
+          <table className="sum-table sum-turns">
+            <caption className="sr-only">
+              Time, tool calls, tokens and estimated cost after each prompt
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Prompt</th>
+                <th scope="col">Time</th>
+                <th scope="col" className="num" title="Time with a tool call running">
+                  In tools
+                </th>
+                <th scope="col" className="num">
+                  Calls
+                </th>
+                <th scope="col" className="num">
+                  Failed
+                </th>
+                <th scope="col" className="num">
+                  Tokens
+                </th>
+                <th scope="col" className="num">
+                  Cost
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((t) => {
+                const prompt = session.turns[t.index]?.prompt ?? "";
+                const first = session.turns[t.index]?.toolCallIds[0];
+                const label = `${t.index + 1}. ${firstLine(prompt)}`;
+                return (
+                  <tr key={t.index} className={costliest.has(t.index) ? "costly" : undefined}>
+                    <td className="ellip" title={prompt}>
+                      {first ? (
+                        <Link to={href("agents", { kind: "tool", id: first })}>{label}</Link>
+                      ) : (
+                        label
+                      )}
+                    </td>
+                    <td className="c-bar" title={`${clock(t.at)} to ${clock(t.endAt)}`}>
+                      <span className="bar" aria-hidden="true">
+                        <i style={{ width: `${(t.ms / longest) * 100}%` }} />
+                      </span>
+                      <span className="num">{span(t.ms)}</span>
+                    </td>
+                    <td className="num">
+                      {t.calls ? span(t.toolMs) : <span className="faint">—</span>}
+                    </td>
+                    <td className="num">{t.calls}</td>
+                    <td className={`num ${t.failures ? "fail" : "faint"}`}>{t.failures}</td>
+                    <td className="num" title={tokenSum(t.tokens).toLocaleString()}>
+                      {tokenSum(t.tokens) ? (
+                        compact(tokenSum(t.tokens))
+                      ) : (
+                        <span className="faint">—</span>
+                      )}
+                    </td>
+                    <td
+                      className="num strong"
+                      title={
+                        t.cost.unpriced.length
+                          ? `No price for ${t.cost.unpriced.join(", ")}`
+                          : costliest.has(t.index)
+                            ? "One of the most expensive prompts"
+                            : undefined
+                      }
+                    >
+                      {tokenSum(t.tokens) ? usd(t.cost.usd) : <span className="faint">—</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {turns.length > TURNS_SHOWN && (
+            <p className="sum-note">
+              <button type="button" className="btn" onClick={() => setAll((v) => !v)}>
+                {all ? "Show fewer" : `Show all ${turns.length} prompts`}
+              </button>
+            </p>
+          )}
+          <p className="sum-note">
+            Time runs from each prompt to the next. Tokens and cost are matched to a prompt by when
+            each model request was reported, so they are derived, not recorded per prompt. Time
+            outside tools includes the model thinking and any wait for you.
+          </p>
+        </>
+      )}
+
+      {slowest.length > 0 && (
+        <>
+          <h3 className="sum-sub">Slowest tool calls</h3>
+          <ol className="sum-slow">
+            {slowest.map((s) => {
+              const c = calls.get(s.toolCallId);
+              if (!c) return null;
+              return (
+                <li key={s.toolCallId}>
+                  <Link
+                    to={href("agents", { kind: "tool", id: c.id })}
+                    className="ellip"
+                    title={c.summary}
+                  >
+                    <span className="mono">{c.name}</span>{" "}
+                    <span className="faint">{c.summary}</span>
+                  </Link>
+                  <span className={`num ${c.status === "failed" ? "fail" : ""}`}>
+                    {span(s.ms)}
+                    {c.status === "failed" && " · failed"}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </>
+      )}
+    </Sec>
   );
 }

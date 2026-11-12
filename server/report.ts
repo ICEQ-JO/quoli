@@ -5,6 +5,7 @@ import type {
   SessionReport,
   ToolCall,
 } from "../shared/model.ts";
+import { slowestCalls } from "./steps.ts";
 
 const LARGE_DELETION = 40;
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
@@ -183,12 +184,15 @@ export function buildReport(
   calls: ToolCall[],
   costByModel: SessionReport["costByModel"],
   priceVersion: string,
+  turns: SessionReport["turns"] = [],
 ): SessionReport {
   const commands = commandRuns(calls);
   return {
     changes: fileChanges(calls),
     commands,
     checklist: checklist(calls, commands),
+    turns,
+    slowest: slowestCalls(calls),
     costByModel,
     priceVersion,
   };

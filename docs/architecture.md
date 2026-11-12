@@ -28,6 +28,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `server/adapters.ts` | One adapter per coding agent, mapping its hook payload into the shared Claude Code-shaped event and, where the agent reports it in hooks, a token usage row. Claude Code (identity), Codex and OpenCode are registered |
 | `server/ingest.ts` | Runs the agent's adapter, resolves repo root, records the branch at session start, redacts secrets, stores (stamping `quoli_agent` on non-Claude events), reads Claude Code transcripts |
 | `server/sessions.ts` | Pure derivation: raw events + usage + price table → session view (turns, tool calls, agents, files, tokens, cost, report) |
+| `server/steps.ts` | Pure functions behind the Summary's "Where the time and money went": per-prompt time, tool time, calls, failures, tokens and cost; the slowest calls |
 | `server/report.ts` | Pure functions behind the Summary: command classification, line counting, changes, review checklist |
 | `server/prices.ts` | Built-in list-price table, model matching, `costOf`, PUT validation, load/save via the `settings` table (key `prices`) |
 | `server/transcript.ts` | Token usage from Claude Code transcript JSONL, read incrementally |
@@ -92,6 +93,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - Large repos: the code map lists up to 50,000 paths and reads line counts/imports for up to 5,000 files (≤ 512 KB); the Code lens opens at folder level. Git history pages 200 commits at a time (max 2,000 per request).
 - Session lists show the newest 200 sessions per project (board sidebar) and 500 overall (Sessions, Home), and say so when older ones exist. Older sessions are kept, and the Git lens still attributes their commits.
 - Transcripts are read in blocks of 8 MB. A single transcript line longer than that (a pasted image, a huge tool result) is skipped, so any usage on it is not counted.
+- Per-prompt tokens and cost are attributed by time: each usage row (one model request or step) belongs to the prompt it falls after. Agents report usage per request, not per tool call, so Quoli never shows a cost per call. Time outside tool calls mixes model time and waiting for the user, so it is not labelled as either.
 - Usage and budgets are estimates from transcript usage at list prices, bucketed by the server's local time zone. A budget is a display threshold, not an alert channel or a spending limit.
 - The Git lens reads the local repository only. Remote branches are what the last `git fetch` saw, and commits that exist only on a remote are not drawn (the history follows local branches). A commit is tagged with a session only when that session's recorded `git commit` output printed its sha; `git commit -q` prints nothing, so such commits stay untagged.
 - Themes: dark and light (System follows the OS). Contrast is enforced by `tests/theme-contrast.test.ts`; accessibility was checked with axe-core (0 violations on every page in both themes on the synthetic large demo at 1280 and 1600 px) and keyboard walkthroughs, not a real screen reader. `prefers-reduced-motion` turns motion off. The design system is recorded in DESIGN.md.

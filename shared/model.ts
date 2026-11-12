@@ -373,10 +373,31 @@ export interface ReviewItem {
   files: string[];
 }
 
+/** One prompt and what followed it, until the next prompt (derived; see server/steps.ts). */
+export interface TurnStat {
+  /** Index into SessionDetail.turns. */
+  index: number;
+  at: string;
+  endAt: string;
+  /** Prompt to next prompt (or the session's last event). */
+  ms: number;
+  calls: number;
+  failures: number;
+  /** Time with at least one of the turn's tool calls running; parallel calls count once. */
+  toolMs: number;
+  /** Usage whose time falls in the turn (usage is per model request, not per call). */
+  tokens: TokenTotals;
+  cost: Cost;
+}
+
 export interface SessionReport {
   changes: FileChange[];
   commands: CommandRun[];
   checklist: ReviewItem[];
+  /** Per prompt: time, calls, failures, tokens and estimated cost. */
+  turns: TurnStat[];
+  /** The longest finished tool calls, longest first (up to 5). */
+  slowest: { toolCallId: string; ms: number }[];
   /** Cost per model; model null = usage without a model id. */
   costByModel: { model: string | null; tokens: TokenTotals; usd: number | null }[];
   priceVersion: string;

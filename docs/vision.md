@@ -90,6 +90,7 @@ Each phase is something a developer can use on its own.
 | **2 — Deeper code** | Symbol-level code map (functions, routes, tables) for TS/Python | |
 | **3 — More agents** | Codex, OpenCode and Pi adapters on the same event model; MCP/skill/plugin usage per session | |
 | **4 — Live infra** | Provider connections (Vercel, Railway, Fly, AWS) for real deploys and metrics; link a deploy back to the commit and the session that produced it | |
+| **Observability** (owner direction 2026-11-12, alongside phase 3) | Per-step time and cost, failure and loop detection, cross-session trends, a live session panel with local alerts (#127–#130) | In progress |
 | **5 — Hosted** | Opt-in sync to a hosted dashboard; teams; shared sessions and review links | |
 
 ## Non-goals (for now)
