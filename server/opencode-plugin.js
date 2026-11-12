@@ -1,0 +1,126 @@
+// quoli-opencode-plugin — installed by `pnpm connect <repo> --agent opencode`.
+// OpenCode 2 loads this from <repo>/.opencode/plugins/. It forwards what OpenCode reports
+// (prompts, tool calls, model steps with tokens) to the local Quoli server. It never changes,
+// blocks or delays the agent: hooks return at once, posts run in order in the background, and
+// every failure is swallowed. It does not read credentials or OpenCode's database.
+const PORT = Number("__QUOLI_PORT__");
+const URL = `http://127.0.0.1:${PORT}/ingest?agent=opencode`;
+const MAX_TEXT = 100_000;
+
+const clip = (v, depth = 0) => {
+  if (typeof v === "string") return v.length > MAX_TEXT ? `${v.slice(0, MAX_TEXT)}…` : v;
+  if (Array.isArray(v)) return depth > 8 ? [] : v.map((x) => clip(x, depth + 1));
+  if (v && typeof v === "object") {
+    if (depth > 8) return {};
+    const out = {};
+    for (const [k, x] of Object.entries(v))
+      if (typeof x !== "function") out[k] = clip(x, depth + 1);
+    return out;
+  }
+  return v;
+};
+
+let queue = Promise.resolve();
+function post(payload) {
+  const body = JSON.stringify(clip(payload));
+  queue = queue
+    .then(() =>
+      fetch(URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+        signal: AbortSignal.timeout(1500),
+      }),
+    )
+    .catch(() => {});
+}
+
+export default {
+  id: "quoli",
+  setup: async (ctx) => {
+    const cwd = ctx.location?.directory;
+    const version = ctx.app?.version ?? null;
+    if (typeof cwd !== "string") return () => {};
+    const started = new Set();
+    const models = new Map();
+    const send = (sessionID, fields) => {
+      if (typeof sessionID !== "string") return;
+      if (!started.has(sessionID)) {
+        started.add(sessionID);
+        post({ opencode_event: "session.start", sessionID, cwd, version });
+      }
+      post({ ...fields, sessionID, cwd, version });
+    };
+    const safe = (fn) => async (x) => {
+      try {
+        fn(x);
+      } catch {}
+    };
+
+    await ctx.session?.hook?.(
+      "prompt",
+      safe((x) => send(x.sessionID, { opencode_event: "prompt", text: x.prompt?.text ?? "" })),
+    );
+    await ctx.tool?.hook?.(
+      "execute.before",
+      safe((x) =>
+        send(x.sessionID, {
+          opencode_event: "tool.before",
+          id: x.id,
+          tool: x.tool,
+          agent: x.agent,
+          input: x.input,
+        }),
+      ),
+    );
+    await ctx.tool?.hook?.(
+      "execute.after",
+      safe((x) =>
+        send(x.sessionID, {
+          opencode_event: "tool.after",
+          id: x.id,
+          tool: x.tool,
+          agent: x.agent,
+          input: x.input,
+          status: x.status,
+          output: x.result?.output,
+          content: x.result?.content,
+          error: x.error?.message ?? null,
+        }),
+      ),
+    );
+
+    const controller = new AbortController();
+    const types = [
+      "session.step.started",
+      "session.step.ended",
+      "session.execution.succeeded",
+      "session.execution.failed",
+    ];
+    (async () => {
+      try {
+        for await (const e of ctx.event.subscribe({ signal: controller.signal, types })) {
+          const d = e?.data ?? {};
+          // OpenCode 2 runs one shared service: keep only this directory's sessions.
+          if (e?.location?.directory && e.location.directory !== cwd) continue;
+          if (!started.has(d.sessionID)) continue;
+          if (e.type === "session.step.started") {
+            models.set(d.assistantMessageID, d.model?.id ?? null);
+          } else if (e.type === "session.step.ended") {
+            send(d.sessionID, {
+              opencode_event: "step.ended",
+              messageID: d.assistantMessageID,
+              model: models.get(d.assistantMessageID) ?? null,
+              tokens: d.tokens,
+              cost: d.cost,
+            });
+            models.delete(d.assistantMessageID);
+          } else {
+            send(d.sessionID, { opencode_event: "turn.ended", outcome: e.type.split(".").pop() });
+          }
+        }
+      } catch {}
+    })();
+    return () => controller.abort();
+  },
+};

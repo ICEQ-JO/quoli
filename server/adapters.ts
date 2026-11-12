@@ -1,4 +1,4 @@
-import type { AgentKind } from "../shared/model.ts";
+import { type AgentKind, categorize } from "../shared/model.ts";
 import type { UsageRow } from "./db.ts";
 
 /**
@@ -72,7 +72,112 @@ const codex: Adapter = {
   },
 };
 
-/** Agents with a live capture adapter. OpenCode (#118) is added here. */
-const ADAPTERS: Partial<Record<AgentKind, Adapter>> = { "claude-code": claudeCode, codex };
+const text = (v: unknown) => (typeof v === "string" ? v : null);
+
+/** What a tool returned, as text: shell output, or the text parts OpenCode shows the model. */
+function opencodeResult(p: Record<string, unknown>): string | null {
+  const out = p.output as Record<string, unknown> | undefined;
+  if (out && typeof out === "object" && typeof out.output === "string") return out.output;
+  if (Array.isArray(p.content)) {
+    const parts = p.content
+      .map((c) => (c && typeof c === "object" ? text((c as { text?: unknown }).text) : null))
+      .filter((t): t is string => t !== null);
+    if (parts.length) return parts.join("\n");
+  }
+  return text(p.output);
+}
+
+/**
+ * OpenCode 2 has no hook commands; Quoli's plugin (`server/opencode-plugin.js`, installed into
+ * `.opencode/plugins/`) forwards `opencode_event` records built from the documented plugin API:
+ * the session `prompt` hook, `tool.execute.before/after`, and the `session.step.*` and
+ * `session.execution.*` events. Fields observed on OpenCode 2.0.32 are recorded in
+ * docs/architecture.md. The original OpenCode fields are kept next to the mapped ones.
+ */
+const opencode: Adapter = {
+  agent: "opencode",
+  normalize(p) {
+    const base = {
+      session_id: p.sessionID,
+      cwd: p.cwd,
+      quoli_agent_version: text(p.version),
+      opencode_event: p.opencode_event,
+    };
+    switch (p.opencode_event) {
+      case "session.start":
+        return { ...base, hook_event_name: "SessionStart", source: "startup" };
+      case "prompt":
+        return { ...base, hook_event_name: "UserPromptSubmit", prompt: text(p.text) ?? "" };
+      case "tool.before":
+      case "tool.after": {
+        const name = text(p.tool) ?? "unknown";
+        const input = (p.input && typeof p.input === "object" ? p.input : {}) as Record<
+          string,
+          unknown
+        >;
+        // OpenCode names a file `path`; for search tools `path` is the folder searched.
+        const fileTool = ["read", "edit"].includes(categorize(name));
+        const tool_input =
+          fileTool && typeof input.path === "string" ? { ...input, file_path: input.path } : input;
+        const call = {
+          ...base,
+          tool_name: name,
+          tool_use_id: p.id,
+          tool_input,
+          opencode_agent: p.agent,
+        };
+        if (p.opencode_event === "tool.before") return { ...call, hook_event_name: "PreToolUse" };
+        const exit = (p.output as { exit?: unknown } | undefined)?.exit;
+        const failed = p.status === "error" || (typeof exit === "number" && exit !== 0);
+        const result = opencodeResult(p);
+        return failed
+          ? {
+              ...call,
+              hook_event_name: "PostToolUseFailure",
+              error: text(p.error) ?? result ?? "failed",
+            }
+          : { ...call, hook_event_name: "PostToolUse", tool_response: result ?? "" };
+      }
+      case "step.ended":
+        return {
+          ...base,
+          hook_event_name: "PostModelRequest",
+          model: text(p.model),
+          message_id: p.messageID,
+          token_usage: p.tokens,
+          opencode_cost: p.cost,
+        };
+      case "turn.ended":
+        return { ...base, hook_event_name: "Stop", outcome: p.outcome };
+      default:
+        return null;
+    }
+  },
+  usage(p, at) {
+    const t = p.token_usage as Record<string, unknown> | null | undefined;
+    if (p.hook_event_name !== "PostModelRequest" || !t || typeof t !== "object") return null;
+    if (typeof p.session_id !== "string" || typeof p.message_id !== "string") return null;
+    const cache = (t.cache ?? {}) as Record<string, unknown>;
+    return {
+      messageId: `opencode:${p.message_id}`,
+      sessionId: p.session_id,
+      agentId: "main",
+      model: text(p.model),
+      at,
+      // OpenCode reports uncached input; reasoning is billed as output.
+      input: num(t.input),
+      output: num(t.output) + num(t.reasoning),
+      cacheRead: num(cache.read),
+      cacheWrite: num(cache.write),
+    };
+  },
+};
+
+/** Agents with a live capture adapter. */
+const ADAPTERS: Partial<Record<AgentKind, Adapter>> = {
+  "claude-code": claudeCode,
+  codex,
+  opencode,
+};
 
 export const adapterFor = (agent: AgentKind): Adapter | null => ADAPTERS[agent] ?? null;
