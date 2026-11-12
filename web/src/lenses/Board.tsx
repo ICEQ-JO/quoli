@@ -4,12 +4,13 @@ import {
   Controls,
   type Edge,
   type Node,
+  type NodeChange,
   type NodeTypes,
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react";
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "../theme.ts";
 import "@xyflow/react/dist/style.css";
 
@@ -41,6 +42,28 @@ function Inner(p: BoardProps) {
   const flow = useReactFlow();
   const theme = useTheme();
   const fitted = useRef<string | null>(null);
+  // Lenses rebuild their node objects on every selection change. React Flow forgets a node's
+  // measured size when its object changes and keeps it hidden until measured again, which never
+  // happens when the size did not change. Remember sizes and hand them back.
+  const sizes = useRef(new Map<string, { width: number; height: number }>());
+  const [sized, setSized] = useState(0);
+  const nodes = useMemo(() => {
+    void sized;
+    return p.nodes.map((n) => {
+      const m = sizes.current.get(n.id);
+      return m && !n.measured ? { ...n, measured: m } : n;
+    });
+  }, [p.nodes, sized]);
+  const onNodesChange = useCallback((changes: NodeChange[]) => {
+    let changed = false;
+    for (const c of changes) {
+      if (c.type === "dimensions" && c.dimensions) {
+        sizes.current.set(c.id, c.dimensions);
+        changed = true;
+      }
+    }
+    if (changed) setSized((v) => v + 1);
+  }, []);
   useEffect(() => {
     if (!p.nodes.length || fitted.current === p.fitKey) return;
     fitted.current = p.fitKey;
@@ -53,8 +76,9 @@ function Inner(p: BoardProps) {
   return (
     <div className="board">
       <ReactFlow
-        nodes={p.nodes}
+        nodes={nodes}
         edges={p.edges}
+        onNodesChange={onNodesChange}
         nodeTypes={p.nodeTypes}
         colorMode={theme}
         minZoom={0.05}

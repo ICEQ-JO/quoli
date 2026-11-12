@@ -127,6 +127,8 @@ export interface CodeFile {
   /** False when contents were not read (unknown type, over 512 KB, or over the scan budget). */
   scanned: boolean;
   status: "clean" | "modified" | "added" | "untracked";
+  /** Uncommitted lines added/removed against HEAD (`git diff --numstat`); null when clean or binary. */
+  diff: { added: number; removed: number } | null;
 }
 
 export interface CodeMap {

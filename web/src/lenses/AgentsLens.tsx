@@ -2,10 +2,18 @@ import { type Edge, Handle, MarkerType, type Node, type NodeProps, Position } fr
 import { useMemo, useState } from "react";
 import type { AgentNode, ToolCall } from "../../../shared/model.ts";
 import { nodeA11y, quietNode, toolLabel } from "../a11y.ts";
-import { CATEGORY, compact, duration, plural, tokenSum } from "../format.ts";
+import { CATEGORY, compact, plural, tokenSum } from "../format.ts";
 import { isSelected, type LensContext } from "../state.ts";
-import { GRAPH_FIT_ALL, GRAPH_RECENT, TIMELINE_MAX } from "./agents/helpers.ts";
-import { Timeline } from "./agents/Timeline.tsx";
+import {
+  type CallFilter,
+  GRAPH_FIT_ALL,
+  GRAPH_RECENT,
+  matchesFilter,
+  readPrompt,
+  took,
+} from "./agents/helpers.ts";
+import { KindIcon, Timeline } from "./agents/Timeline.tsx";
+import { setAgentsView, useAgentsView } from "./agents/view.ts";
 import { Board } from "./Board.tsx";
 import "./agents/agents.css";
 
@@ -13,29 +21,10 @@ const COL = 210;
 const LANE = 150;
 const LABEL_W = 210;
 
-type View = "timeline" | "graph";
-const VIEW_KEY = "quoli.agents.view";
-
-function storedView(): View | null {
-  try {
-    const v = localStorage.getItem(VIEW_KEY);
-    return v === "timeline" || v === "graph" ? v : null;
-  } catch {
-    return null;
-  }
-}
-
 export function AgentsLens(ctx: LensContext) {
   const { session, calls, selection, select } = ctx;
-  const [chosen, setChosen] = useState<View | null>(storedView);
-  const view: View =
-    chosen ?? ((session?.toolCalls.length ?? 0) <= TIMELINE_MAX ? "timeline" : "graph");
-  const choose = (v: View) => {
-    setChosen(v);
-    try {
-      localStorage.setItem(VIEW_KEY, v);
-    } catch {}
-  };
+  const view = useAgentsView();
+  const [filter, setFilter] = useState<CallFilter>("all");
 
   const { nodes, edges } = useMemo(() => {
     if (!session) return { nodes: [], edges: [] };
@@ -75,10 +64,7 @@ export function AgentsLens(ctx: LensContext) {
           selected: isSelected(selection, "tool", call.id),
           future: !visible.has(call.id),
         },
-        ...nodeA11y(
-          toolLabel(call, call.status === "running" ? "" : duration(call.startedAt, call.endedAt)),
-          i === 0,
-        ),
+        ...nodeA11y(toolLabel(call, took(call)), i === 0),
       });
       const prev = lastInLane.get(call.agentId) ?? `lane:${call.agentId}`;
       edges.push({
@@ -146,60 +132,116 @@ export function AgentsLens(ctx: LensContext) {
   // Small graphs fit whole; larger ones open on the latest activity.
   const total = session?.toolCalls.length ?? 0;
   const recent = calls.slice(-GRAPH_RECENT).map((c) => c.id);
-  const switcher = (
-    // biome-ignore lint/a11y/useSemanticElements: a fieldset would need resets for a two-button switch
-    <div className="view-switch" role="group" aria-label="Agents view">
-      {(["timeline", "graph"] as const).map((v) => (
-        <button key={v} type="button" aria-pressed={view === v} onClick={() => choose(v)}>
-          {v === "timeline" ? "Timeline" : "Graph"}
-        </button>
-      ))}
+  const mainId = session?.agents.find((a) => a.kind === "main")?.id ?? "main";
+  const counts = useMemo(() => {
+    const all = session?.toolCalls ?? [];
+    const n = (f: CallFilter) => all.filter((c) => matchesFilter(c, f, mainId)).length;
+    return {
+      all: all.length,
+      failed: n("failed"),
+      edits: n("edits"),
+      commands: n("commands"),
+      subagents: n("subagents"),
+    };
+  }, [session, mainId]);
+
+  const toolbar = session && (
+    <div className="ag-toolbar">
+      {view === "timeline" ? (
+        <fieldset className="segmented ag-filters">
+          <legend className="sr-only">Show</legend>
+          {FILTERS.map(([f, label]) => (
+            <button
+              type="button"
+              key={f}
+              aria-pressed={filter === f}
+              className={`${filter === f ? "active" : ""} ${f === "failed" && counts.failed ? "has-fail" : ""}`}
+              disabled={f !== "all" && counts[f] === 0}
+              onClick={() => setFilter(f)}
+            >
+              {label}
+              <span className="seg-count">{counts[f]}</span>
+            </button>
+          ))}
+        </fieldset>
+      ) : (
+        <span className="faint ag-toolbar-note">
+          One lane per agent; scroll sideways through time
+        </span>
+      )}
+      <fieldset className="segmented">
+        <legend className="sr-only">Agents view</legend>
+        {(["timeline", "graph"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={view === v}
+            className={view === v ? "active" : ""}
+            onClick={() => setAgentsView(v)}
+          >
+            {v === "timeline" ? "Steps" : "Lanes"}
+          </button>
+        ))}
+      </fieldset>
     </div>
   );
   if (view === "timeline" && session) {
     return (
       <div className="agents-lens">
-        <Timeline
-          session={session}
-          visible={new Set(calls.map((c) => c.id))}
-          selection={selection}
-          cursorId={calls.at(-1)?.id ?? null}
-          select={select}
-        />
-        <div className="ag-head">{switcher}</div>
+        {toolbar}
+        <div className="ag-body">
+          <Timeline
+            session={session}
+            visible={new Set(calls.map((c) => c.id))}
+            selection={selection}
+            cursorId={calls.at(-1)?.id ?? null}
+            select={select}
+            filter={filter}
+          />
+        </div>
       </div>
     );
   }
   return (
     <div className="agents-lens">
-      {switcher}
-      <Board
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        fitKey={`agents:${session?.id ?? ""}`}
-        focus={total > GRAPH_FIT_ALL ? recent : undefined}
-        onNodeClick={(n) => n.type === "tool" && select({ kind: "tool", id: n.id })}
-        onPaneClick={() => select(null)}
-        empty="Pick a session on the left to see what the agent did."
-        legend={
-          <>
-            {(["read", "edit", "run", "search", "agent", "web"] as const).map((c) => (
-              <span
-                key={c}
-                className="lg"
-                style={{ "--c": CATEGORY[c].color } as React.CSSProperties}
-              >
-                {CATEGORY[c].label}
-              </span>
-            ))}
-            <span className="lg failed">failed</span>
-          </>
-        }
-      />
+      {toolbar}
+      <div className="ag-body">
+        <Board
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          fitKey={`agents:${session?.id ?? ""}`}
+          focus={total > GRAPH_FIT_ALL ? recent : undefined}
+          onNodeClick={(n) => n.type === "tool" && select({ kind: "tool", id: n.id })}
+          onPaneClick={() => select(null)}
+          empty="Pick a session on the left to see what the agent did."
+          legend={
+            <>
+              {(["read", "edit", "run", "search", "agent", "web"] as const).map((c) => (
+                <span
+                  key={c}
+                  className="lg"
+                  style={{ "--c": CATEGORY[c].color } as React.CSSProperties}
+                >
+                  {CATEGORY[c].label}
+                </span>
+              ))}
+              <span className="lg failed">failed</span>
+            </>
+          }
+        />
+      </div>
     </div>
   );
 }
+
+const FILTERS: [CallFilter, string][] = [
+  ["all", "All"],
+  ["failed", "Failed"],
+  ["edits", "Edits"],
+  ["commands", "Commands"],
+  ["subagents", "Subagents"],
+];
 
 function ToolNode({ data }: NodeProps) {
   const { call, selected, future } = data as { call: ToolCall; selected: boolean; future: boolean };
@@ -212,15 +254,12 @@ function ToolNode({ data }: NodeProps) {
       <Handle type="target" position={Position.Left} className="h" />
       <Handle type="target" position={Position.Top} id="top" className="h" />
       <div className="tool-head">
+        <KindIcon category={call.category} />
         <span className="tool-name" title={call.name}>
           {call.name.replace(/^mcp__/, "")}
         </span>
         <span className="tool-status">
-          {call.status === "running"
-            ? "running"
-            : call.status === "failed"
-              ? "failed"
-              : duration(call.startedAt, call.endedAt)}
+          {call.status === "running" ? "running" : call.status === "failed" ? "failed" : took(call)}
         </span>
       </div>
       <div className="tool-summary">{call.summary}</div>
@@ -247,10 +286,12 @@ function LaneNode({ data }: NodeProps) {
 
 function PromptNode({ data }: NodeProps) {
   const { text, n } = data as { text: string; n: number };
+  const view = readPrompt(text);
+  const shown = view.kind === "user" ? text : view.title;
   return (
-    <div className="prompt-node" title={text}>
-      <span className="prompt-n">Prompt {n}</span>
-      <span className="prompt-text">{text}</span>
+    <div className={`prompt-node ${view.kind}`} title={shown}>
+      <span className="prompt-n">{view.kind === "user" ? `Prompt ${n}` : "Notice"}</span>
+      <span className="prompt-text">{shown}</span>
       <Handle type="source" position={Position.Bottom} className="h" />
     </div>
   );
