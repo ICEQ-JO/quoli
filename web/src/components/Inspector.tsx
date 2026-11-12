@@ -228,7 +228,7 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
         </h2>
         <p className="meta mono">{path}</p>
         <p className="meta">
-          {meta ? `${meta.lines} lines` : ""}
+          {meta ? (meta.scanned ? `${meta.lines} lines` : "not scanned (size or count limit)") : ""}
           {meta && meta.status !== "clean" ? ` · ${meta.status} in git` : ""}
         </p>
       </header>
