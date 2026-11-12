@@ -60,7 +60,8 @@ test("the OpenCode adapter maps plugin records to the shared hook shape", () => 
     id: "c",
     input: { pattern: "x", path: "/w/src" },
   });
-  assert.equal((grep?.tool_input as Record<string, unknown>).file_path, undefined);
+  assert.ok(grep);
+  assert.equal((grep.tool_input as Record<string, unknown>).file_path, undefined);
 
   const shellOk = opencode.normalize({
     ...base,
