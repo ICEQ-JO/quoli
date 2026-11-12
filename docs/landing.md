@@ -44,8 +44,34 @@ progresses while the mechanical drawing is above the viewport. Other scenes stop
 offscreen, and all stop in hidden tabs. The page pause control reaches every canvas
 and CSS animation; replay restarts the demonstration. Reduced motion draws a
 readable final recorder state and stops continuous updates. Terminal and product
-data are synthetic and labeled. The product board supports tab arrows/Home/End,
-explicit row selection, and a compact readable phone layout.
+data are synthetic and labeled. The terminal shows only the steps reached so far, so it
+fills as the session plays; reduced motion shows every step.
+
+## Product tour and screenshots
+
+The blue chapter is a tour of the real app: six tabs (Review, Agents, Code, Git, Infra,
+Dashboard) switch a screenshot in the blue frame, with a caption saying what it shows.
+Tabs support arrow keys, Home and End, and the lens links under the hero (`#tour-tab-code`
+and so on) open the matching tab. The screenshot itself links to the full-size image.
+
+The images in `web/public/landing/product/<view>-<light|dark>.webp` come from
+`pnpm demo --large` only (synthetic data, never a real session), captured at 1440×900
+at 2× and resized to 1600 px wide WebP. The landing theme toggle picks the matching
+set. Retake them whenever the app's look changes noticeably; the page says they are
+screenshots of the synthetic demo.
+
+## Collaborate
+
+The "Work on it with us" section invites research, student projects and course pilots.
+Its contact button uses `VITE_PUBLIC_CONTACT_EMAIL`; without it the button falls back to
+the waitlist and no address is shown. The footer adds a Contact link when it is set.
+
+## Link previews
+
+`web/landing/index.html` carries Open Graph and Twitter tags with `web/public/landing/og.png`
+(1200×630, the hero forest and headline). Vite replaces `%SITE%` with
+`VITE_PUBLIC_SITE_URL`, or on Vercel with `https://$VERCEL_PROJECT_PRODUCTION_URL` (the
+production domain, including a custom one), so previews get an absolute image URL.
 
 ## Waitlist
 
@@ -62,7 +88,7 @@ The form reports success only after the address is stored; otherwise it shows a 
 - No analytics are included, and no automatic email is sent.
 
 Before sending launch updates, the operator still needs to:
-- publish a contact address for removal requests;
+- publish a contact address for removal requests (setting `VITE_PUBLIC_CONTACT_EMAIL` shows one in the Collaborate section and footer);
 - connect an email provider with an unsubscribe link in every message.
 
 - Repository links (Docs, GitHub, Development) appear only when `VITE_PUBLIC_REPO_URL` is set at build time. While the repository is private they are hidden, so visitors never land on a GitHub 404.

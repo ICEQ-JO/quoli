@@ -122,15 +122,15 @@ Bright chapter fields sit against neutral paper; frontmatter is normative for re
 
 The compact sans hero follows the pinned reference precisely; pixel lettering gives section titles and the brand their character. The display, base section, brand and body roles are recorded above. Contextual section headings range from the recorder’s 36px to the product title’s 46px; the mission invitation uses its own large responsive pixel scale. Navigation, evidence and captions use smaller contextual sizes rather than a universal body token.
 
-At the narrow breakpoint the hero is 33px / 1.14, section headings remain prominent, and the product board switches to readable single-column content: 23px title, 12px tabs and explanation, and 11px paths. Preserve the final mobile overrides rather than earlier compact board values.
+At the narrow breakpoint the hero is 33px / 1.14 and section headings remain prominent. Text never goes below 11px anywhere (2026-11 completion pass; earlier 7–9px labels were unreadable), form inputs are 16px on phones so iOS does not zoom, and the product tour's tabs become a wrapping row of chips above the screenshot.
 
 **The Two Type Voices Rule.** Keep the hero headline and explanatory text in Quoli Sans; section headings and brand lettering use Quoli Pixel.
 
 ## Layout
 
-A slim sticky header (77px desktop) caps its content at 1090px. The equal two-column hero uses a 14px gap and outer gutter, compact 280px minimum panels and centered landscape type. The page ground repeats tiny radial dots on a 12px grid. The narrow identity strip introduces the four lenses without invented trust logos.
+A slim sticky header (77px desktop) caps its content at 1090px. The equal two-column hero uses a 14px gap and outer gutter, compact 280px minimum panels and centered landscape type. The page ground repeats tiny radial dots on a 12px grid. Under the hero, a four-column lens index names each lens with one line of explanation; each entry opens its tab in the product tour.
 
-The recording section pairs the mechanical figure and copy with a tall terminal on green backing. A blue signal chapter leads to the product board on the left and three explanations on the right. A restrained waitlist, oversized mission link and full blue multi-column footer complete the page. Informational views use the same header, type, tokens and footer.
+The recording section pairs the mechanical figure and copy with a tall terminal on green backing. A blue signal chapter introduces the product tour: a column of tabs on the left and real app screenshots in the blue frame on the right. "Work on it with us" follows (an intro with one action beside a ruled list of three ways to collaborate), then a restrained waitlist, oversized mission link and full blue multi-column footer. Informational views use the same header, type, tokens and footer.
 
 Responsive thresholds are 1600px minimum and 1100px, 780px and 520px maximum. The recording/product layouts stack at 780px; the hero stacks at 520px. The narrow board hides its sidebar, retains all four accessible tabs, and increases its evidence type. The smallest layout uses 8px outer gutters, wraps footer columns and keeps theme and waitlist controls available. Spacing is contextual, not an invented global scale.
 
@@ -160,11 +160,11 @@ Pixel wordmark and stepped Q anchor a sans-serif navigation row. Links acquire t
 
 ### Cards / Containers
 
-Equal rounded hero panels pair a bright original forest with a dark contour explanation field. The terminal’s charcoal surface is inset into green pixel backing; the interactive product board is inset into blue backing. The signup success panel and compact status tags remain contextual patterns, not generic cards.
+Equal rounded hero panels pair a bright original forest with a dark contour explanation field. The terminal’s charcoal surface is inset into green pixel backing; the product tour's screenshot window is inset into blue backing. The signup success panel and compact status tags remain contextual patterns, not generic cards.
 
-### Product Board
+### Product Tour
 
-Four tabs share one synthetic session. Blue text and a bottom rule mark the selected lens; arrow keys, Home and End move focus and selection. Selectable evidence rows use a pale mixed-blue fill and update the inspector. Keep tab relationships, explicit synthetic labels and the recorded/derived/inferred distinctions intact. The mobile board gives evidence the full available width.
+Six tabs (Review, Agents, Code, Git, Infra, Dashboard), each a name plus one line, select a real screenshot of the app running its synthetic demo, in the current landing theme. The selected tab uses a brand-tinted fill and brand-coloured name; arrow keys, Home and End move focus and selection. A caption under the image says what the view shows, and a note under the tour says the screens are synthetic. Do not replace these with mock-ups or images of real sessions.
 
 ### Recording Instrument
 

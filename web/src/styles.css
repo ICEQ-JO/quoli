@@ -1083,12 +1083,17 @@ kbd {
 
 .svc-metrics {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 2px 12px;
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid var(--line);
   font: var(--fs-sm) var(--mono);
   color: var(--muted);
+}
+
+.svc-metrics > span {
+  white-space: nowrap;
 }
 
 .svc-metrics .state {

@@ -9,46 +9,70 @@ import { Waitlist } from "./Waitlist.tsx";
  */
 const github = (import.meta.env.VITE_PUBLIC_REPO_URL as string | undefined)?.replace(/\/+$/, "");
 const docs = github ? `${github}/blob/main/docs/` : null;
-const names = ["Agents", "Code", "Git", "Infra"] as const;
-const features = [
-  [
-    "Follow the agent.",
-    "Prompts, tool calls, subagents, and failures. Read the session in order, then replay the moment you want to understand.",
-  ],
-  [
-    "Put every edit in context.",
-    "See the files the agent read and changed, the branch it worked on, and the infrastructure your repository declares.",
-  ],
-  [
-    "Know what needs a look.",
-    "Review command results, estimated spend, and a derived checklist. Evidence you can inspect. Gaps you can see.",
-  ],
-];
-const lensRows = [
-  [
-    ["Read", "src/checkout.ts", "09:41:06"],
-    ["Edit", "src/checkout.ts", "+18 −4"],
-    ["Run", "pnpm test", "exit 0"],
-    ["Edit", "tests/checkout.test.ts", "+12"],
-  ],
-  [
-    ["src", "checkout.ts", "edited"],
-    ["src", "orders.ts", "read"],
-    ["tests", "checkout.test.ts", "edited"],
-    ["config", "compose.yaml", "unchanged"],
-  ],
-  [
-    ["branch", "feat/order-tracking", "HEAD"],
-    ["commit", "Add order lookup", "recorded"],
-    ["parent", "Extract checkout handler", "Git"],
-    ["working tree", "checkout.test.ts", "modified"],
-  ],
-  [
-    ["service", "web", "compose.yaml"],
-    ["depends on", "api", "declared"],
-    ["depends on", "postgres", "declared"],
-    ["source", "src/checkout.ts", "edited"],
-  ],
+/** Contact address for collaboration, set at build time with VITE_PUBLIC_CONTACT_EMAIL. */
+const contact = (import.meta.env.VITE_PUBLIC_CONTACT_EMAIL as string | undefined)?.trim() || null;
+
+const LENS_ICONS = {
+  Agents: "M4 5h12v10H4zM8 2h4v3H8zM7 8h2v3H7zm4 0h2v3h-2z",
+  Code: "M4 2h8l4 4v12H4zM7 8h6v2H7zm0 4h6v2H7z",
+  Git: "M4 2h4v4H7v5h6V6h-1V2h4v4h-1v7H9v3h1v3H6v-3h1V6H4z",
+  Infra: "M2 2h6v6H2zm10 0h6v6h-6zM7 12h6v6H7zM4 8v3h6v1h2V9H6V8z",
+} as const;
+
+const lenses = [
+  ["Agents", "Every prompt, tool call and subagent, in order."],
+  ["Code", "The files it read and changed, and what imports them."],
+  ["Git", "The branch it worked on and the commits around it."],
+  ["Infra", "The services your repository declares, and which ones it touched."],
+] as const;
+
+/**
+ * Real screenshots of the app running its built-in synthetic demo (`pnpm demo --large`).
+ * Each view's id names its image: /landing/product/<id>-<light|dark>.webp.
+ */
+const views = [
+  {
+    id: "summary",
+    name: "Review",
+    line: "What it was asked, what changed, what ran, what it cost.",
+    caption:
+      "One page per session: the prompts, every file it changed with line counts, the commands it ran with their exit status, and an estimated cost by model.",
+  },
+  {
+    id: "agents",
+    name: "Agents",
+    line: "Every step, including subagents and failures.",
+    caption:
+      "The session in order. Subagents nest under the call that started them, failures are marked, and the strip at the bottom replays it step by step.",
+  },
+  {
+    id: "code",
+    name: "Code",
+    line: "Changed files, and the code around them.",
+    caption:
+      "Files the agent changed glow orange; files it only read are outlined blue. Import edges show what the change depends on and what depends on it.",
+  },
+  {
+    id: "git",
+    name: "Git",
+    line: "The branch and commits it worked on.",
+    caption:
+      "Read from your local repository with git: branches, commits and the uncommitted changes the session left behind.",
+  },
+  {
+    id: "infra",
+    name: "Infra",
+    line: "Where the changed code runs.",
+    caption:
+      "Services declared in compose files, workflows and platform configs, plus any you add by hand. Hosted providers are shown as not connected, because they aren't yet.",
+  },
+  {
+    id: "dashboard",
+    name: "Dashboard",
+    line: "What's running, what needs review, what it cost.",
+    caption:
+      "Across every connected repository: live sessions, sessions worth reviewing, and estimated spend over the last two weeks.",
+  },
 ] as const;
 
 function Terminal({
@@ -137,122 +161,75 @@ function Terminal({
   );
 }
 
-function ProductBoard({ paused }: { paused: boolean }) {
-  const [lens, setLens] = useState(0);
-  const [selectedRow, setSelectedRow] = useState(1);
+function ProductTour({
+  paused,
+  dark,
+  view,
+  onView,
+}: {
+  paused: boolean;
+  dark: boolean;
+  view: number;
+  onView: (i: number) => void;
+}) {
+  const current = views[view];
+  const src = `/landing/product/${current.id}-${dark ? "dark" : "light"}.webp`;
   return (
-    <div className="board-frame">
-      <PixelScene kind="field" blue paused={paused} />
-      <div className="product-board">
-        <div className="board-sidebar">
-          <span className="board-brand">
-            <Mark small />
-            Quoli
-          </span>
-          <span className="board-label">PROJECT</span>
-          <strong>checkout</strong>
-          <span className="board-label">SESSIONS</span>
-          <div className="board-session active">
-            <span className="session-dot" />
-            Add order tracking<small>Claude Code · illustrative</small>
-          </div>
-          <div className="board-session">
-            Extract checkout handler<small>Synthetic history</small>
-          </div>
-          <div className="sidebar-local">
-            <span />
-            Local workspace
-          </div>
-        </div>
-        <div className="board-main">
-          <div className="board-top">
-            <span>
-              checkout <span aria-hidden="true">/</span> session
-            </span>
-            <span className="demo-tag">SYNTHETIC DEMO</span>
-          </div>
-          <h3>Add order tracking</h3>
-          <p className="board-subtitle">One session. Four connected viewpoints.</p>
-          <div className="board-tabs" role="tablist" aria-label="Product demonstration lenses">
-            {names.map((name, i) => (
-              <button
-                type="button"
-                role="tab"
-                key={name}
-                id={`product-tab-${i}`}
-                tabIndex={i === lens ? 0 : -1}
-                aria-selected={i === lens}
-                aria-controls="product-panel"
-                onClick={() => {
-                  setLens(i);
-                  setSelectedRow(1);
-                }}
-                onKeyDown={(e) => {
-                  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
-                  e.preventDefault();
-                  const next =
-                    e.key === "Home"
-                      ? 0
-                      : e.key === "End"
-                        ? 3
-                        : (lens + (e.key === "ArrowRight" ? 1 : 3)) % 4;
-                  setLens(next);
-                  setSelectedRow(1);
-                  document.getElementById(`product-tab-${next}`)?.focus();
-                }}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
-          <div
-            className="board-panel"
-            id="product-panel"
-            role="tabpanel"
-            aria-labelledby={`product-tab-${lens}`}
+    <div className="tour">
+      <div className="tour-tabs" role="tablist" aria-label="Parts of the Quoli app">
+        {views.map((v, i) => (
+          <button
+            type="button"
+            role="tab"
+            key={v.id}
+            id={`tour-tab-${v.id}`}
+            tabIndex={i === view ? 0 : -1}
+            aria-selected={i === view}
+            aria-controls="tour-panel"
+            onClick={() => onView(i)}
+            onKeyDown={(e) => {
+              const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"];
+              if (!keys.includes(e.key)) return;
+              e.preventDefault();
+              const last = views.length - 1;
+              const back = e.key === "ArrowUp" || e.key === "ArrowLeft";
+              const next =
+                e.key === "Home"
+                  ? 0
+                  : e.key === "End"
+                    ? last
+                    : (view + (back ? last : 1)) % views.length;
+              onView(next);
+              document.getElementById(`tour-tab-${views[next].id}`)?.focus();
+            }}
           >
-            <div className="connection-line" aria-hidden="true">
-              {names.map((name, i) => (
-                <span key={name} className={i === lens ? "selected" : ""}>
-                  <i />
-                  {name}
-                </span>
-              ))}
-            </div>
-            <div className="board-rows">
-              {lensRows[lens].map((row, i) => (
-                <button
-                  className={selectedRow === i ? "selected" : ""}
-                  aria-pressed={selectedRow === i}
-                  type="button"
-                  key={row.join("-")}
-                  onClick={() => setSelectedRow(i)}
-                >
-                  <span className={`row-kind kind-${row[0].toLowerCase()}`}>{row[0]}</span>
-                  <code>{row[1]}</code>
-                  <span>{row[2]}</span>
-                </button>
-              ))}
-            </div>
-            <div className="board-inspector">
-              <span>SELECTED EVIDENCE</span>
-              <strong>{lensRows[lens][selectedRow][1]}</strong>
-              <p>
-                {lens === 0
-                  ? "A recorded step in this illustrative session. Select a different event to inspect its place in the story."
-                  : lens === 1
-                    ? "File-level context for the same session. Highlights represent the example's reads and edits."
-                    : lens === 2
-                      ? "Repository history connects work to its branch. Real commit links require recorded commit output."
-                      : "Services come from repository configuration. This is not evidence of a live deployment."}
-              </p>
-            </div>
-          </div>
-          <div className="board-bottom">
-            <span>Recorded / derived / inferred</span>
-            <span>Local by default</span>
-          </div>
-        </div>
+            <strong>{v.name}</strong>
+            <span>{v.line}</span>
+          </button>
+        ))}
+      </div>
+      <div className="board-frame">
+        <PixelScene kind="field" blue paused={paused} />
+        <figure
+          className="tour-window"
+          id="tour-panel"
+          role="tabpanel"
+          aria-labelledby={`tour-tab-${current.id}`}
+        >
+          <a href={src} target="_blank" rel="noreferrer" className="tour-image">
+            <img
+              key={`${current.id}-${dark}`}
+              src={src}
+              width={1600}
+              height={1000}
+              alt={`The Quoli app, ${current.name} view, showing a synthetic demo session.`}
+              loading="lazy"
+              decoding="async"
+            />
+            <span className="sr-only"> (opens the full-size screenshot)</span>
+          </a>
+          <figcaption>{current.caption}</figcaption>
+        </figure>
       </div>
     </div>
   );
@@ -278,7 +255,7 @@ function SiteFooter({ paused }: { paused: boolean }) {
         </div>
         <div className="footer-column">
           <h3>Product</h3>
-          <a href="/landing/#product">Four lenses</a>
+          <a href="/landing/#product">The app</a>
           <a href="/landing/?page=roadmap">Roadmap</a>
           <a
             href={docs ? `${docs}architecture.md` : "/landing/#product"}
@@ -308,6 +285,8 @@ function SiteFooter({ paused }: { paused: boolean }) {
         <div className="footer-column">
           <h3>Quoli</h3>
           <a href="/landing/?page=mission">Our mission</a>
+          <a href="/landing/#collaborate">Collaborate</a>
+          {contact && <a href={`mailto:${contact}`}>Contact</a>}
           <a href="/landing/?page=roadmap">What's next</a>
           <a href="/landing/#waitlist">Join the waitlist</a>
         </div>
@@ -452,6 +431,19 @@ export function Landing() {
   const [paused, setPaused] = useState(false);
   const [step, setStep] = useState(0);
   const [replay, setReplay] = useState(0);
+  const [view, setView] = useState(0);
+  // Lens links point at their tab in the product tour (#tour-tab-code); select it on arrival.
+  useEffect(() => {
+    const pick = () => {
+      const i = views.findIndex((v) => location.hash === `#tour-tab-${v.id}`);
+      if (i < 0) return;
+      setView(i);
+      document.getElementById(`tour-tab-${views[i].id}`)?.scrollIntoView({ block: "center" });
+    };
+    pick();
+    window.addEventListener("hashchange", pick);
+    return () => window.removeEventListener("hashchange", pick);
+  }, []);
   const [dark, setDark] = useState(() => {
     try {
       return localStorage.getItem("quoli.landing.theme") === "dark";
@@ -510,14 +502,15 @@ export function Landing() {
         <div className="nav-inner">
           <Brand />
           <nav aria-label="Main navigation">
+            <a href="/landing/#product">Product</a>
+            <a href="/landing/#collaborate">Collaborate</a>
             <a href="/landing/?page=roadmap">Roadmap</a>
+            <a href="/landing/?page=mission">Mission</a>
             {docs && (
               <a href={`${docs}vision.md`} target="_blank" rel="noreferrer">
                 Docs
               </a>
             )}
-            <a href="/landing/?page=mission">Mission</a>
-            <a href="/landing/#product">Demo</a>
           </nav>
           <button
             className="theme-toggle"
@@ -549,40 +542,36 @@ export function Landing() {
               <PixelScene kind="field" paused={paused} />
               <div>
                 <p>
-                  Quoli connects your coding agents' activity to the code they changed, the branch
-                  they worked on, and the systems it touches. One board. Four lenses. A story you
-                  can actually follow.
+                  Quoli connects your coding agents' work to the code they changed, the branch they
+                  worked on and the services that run it. One board, four lenses, one story you can
+                  actually follow.
                 </p>
-                <a className="hero-cta" href="#waitlist">
-                  Join the waitlist <Arrow />
-                </a>
-                <small>A clearer view for developers and teams.</small>
+                <div className="hero-actions">
+                  <a className="hero-cta" href="#waitlist">
+                    Join the waitlist <Arrow />
+                  </a>
+                  <a className="hero-link" href="#product">
+                    See the app
+                  </a>
+                </div>
+                <small>Runs on your machine. Claude Code today; Codex and OpenCode are next.</small>
               </div>
             </div>
           </section>
-          <nav className="lens-strip" aria-label="The four connected lenses">
-            <span>ONE CONNECTED VIEW</span>
-            <div>
-              {names.map((name, i) => (
-                <a href="#product" key={name}>
-                  <svg viewBox="0 0 20 20" aria-hidden="true">
-                    <path
-                      d={
-                        [
-                          "M4 5h12v10H4zM8 2h4v3H8zM7 8h2v3H7zm4 0h2v3h-2z",
-                          "M4 2h8l4 4v12H4zM7 8h6v2H7zm0 4h6v2H7z",
-                          "M4 2h4v4H7v5h6V6h-1V2h4v4h-1v7H9v3h1v3H6v-3h1V6H4z",
-                          "M2 2h6v6H2zm10 0h6v6h-6zM7 12h6v6H7zM4 8v3h6v1h2V9H6V8z",
-                        ][i]
-                      }
-                      fill="currentColor"
-                      fillRule="evenodd"
-                    />
-                  </svg>
-                  {name}
-                </a>
+          <nav className="lens-index" aria-label="The four lenses">
+            <ul>
+              {lenses.map(([name, line]) => (
+                <li key={name}>
+                  <a href={`#tour-tab-${name.toLowerCase()}`}>
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                      <path d={LENS_ICONS[name]} fill="currentColor" fillRule="evenodd" />
+                    </svg>
+                    <strong>{name}</strong>
+                    <span>{line}</span>
+                  </a>
+                </li>
               ))}
-            </div>
+            </ul>
           </nav>
           <section className="recording-section" aria-labelledby="recorder-title">
             <div className="recorder-column">
@@ -605,7 +594,7 @@ export function Landing() {
                 </div>
               </div>
               <div className="recorder-copy">
-                <h2>
+                <h2 id="recorder-title">
                   A flight recorder.
                   <br />
                   <em>For your coding agent.</em>
@@ -629,49 +618,83 @@ export function Landing() {
               }}
             />
           </section>
-          <section className="blue-chapter" ref={chapter} aria-labelledby="connected-title">
-            <div className="chapter-animation">
+          <section
+            className="blue-chapter"
+            ref={chapter}
+            id="product"
+            aria-labelledby="product-title"
+          >
+            <div className="chapter-signal">
               <PixelScene kind="signal" paused={paused} blue />
-              <span>Quoli connects it.</span>
             </div>
-            <h2 id="connected-title">
+            <h2 id="product-title">
               The activity is only
               <br />
               <em>part of the story.</em>
             </h2>
             <p>
-              Follow the same session across your code, Git history,
-              <br className="desktop-break" /> and declared infrastructure. The context moves with
-              you.
+              Follow one session from the prompt to the files it changed, the branch it landed on
+              and the services that run that code. These are screenshots of the real app.
+            </p>
+            <ProductTour paused={paused} dark={dark} view={view} onView={setView} />
+            <p className="tour-note">
+              Every screen above is Quoli running its built-in synthetic demo: no real sessions, no
+              real company. Unknown values stay unknown, and inferred ones are labelled.
             </p>
           </section>
-          <section className="product-section" id="product" aria-labelledby="product-title">
-            <h2 id="product-title">
-              Give your agent work
-              <br />
-              <em>the bigger picture.</em>
-            </h2>
-            <div className="product-layout">
-              <ProductBoard paused={paused} />
-              <div className="product-features">
-                {features.map(([title, copy], i) => (
-                  <article key={title}>
-                    <div className={`mini-mechanism mechanism-${i}`} aria-hidden="true">
-                      <span />
-                      <span />
-                      <span />
-                      <i />
-                    </div>
-                    <h3>{title}</h3>
-                    <p>{copy}</p>
-                  </article>
-                ))}
-                <p className="product-caveat">
-                  Illustrative interface, synthetic data. Claude Code is supported locally today.
-                  More agents and shared team views are planned.
-                </p>
-              </div>
+          <section className="collaborate" id="collaborate" aria-labelledby="collaborate-title">
+            <div className="collaborate-intro">
+              <h2 id="collaborate-title">
+                Work on it
+                <br />
+                <em>with us.</em>
+              </h2>
+              <p>
+                Quoli is early: a working local app with a public roadmap. Coding agents are
+                changing how software is written, and how people review it. We'd like to study and
+                build that with researchers, students and teaching teams.
+              </p>
+              {contact ? (
+                <a
+                  className="button collaborate-cta"
+                  href={`mailto:${contact}?subject=Quoli%20collaboration`}
+                >
+                  Get in touch <Arrow />
+                </a>
+              ) : (
+                <a className="button collaborate-cta" href="#waitlist">
+                  Join the waitlist to hear from us <Arrow />
+                </a>
+              )}
+              {contact && (
+                <small className="collaborate-address">
+                  Or write to <a href={`mailto:${contact}`}>{contact}</a>
+                </small>
+              )}
             </div>
+            <ul className="collaborate-list">
+              <li>
+                <h3>Research</h3>
+                <p>
+                  How do developers review, trust and learn from an agent's work? Quoli records that
+                  evidence on each participant's own machine, so studies can stay opt-in and local.
+                </p>
+              </li>
+              <li>
+                <h3>Student projects</h3>
+                <p>
+                  Bounded pieces with a real user: adapters for Codex and OpenCode, function-level
+                  code maps, failure and cost analysis, accessible graph views.
+                </p>
+              </li>
+              <li>
+                <h3>Course and lab pilots</h3>
+                <p>
+                  Run Quoli beside Claude Code on a course or lab project and tell us what was
+                  unclear. Nothing leaves the machine unless you choose to share it.
+                </p>
+              </li>
+            </ul>
           </section>
           <section className="waitlist-section" id="waitlist" aria-labelledby="waitlist-title">
             <div>

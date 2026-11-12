@@ -93,7 +93,15 @@ The waitlist form posts to a Vercel Function, `api/waitlist.ts`, which stores em
 
 Until a database is connected, the form says "The waitlist isn't open yet", and it never claims to have saved an address. Signups live in the Redis hash `quoli:waitlist` (email → joined time). You can read them in the Upstash console.
 
-The repository is private for now, so the site hides its Docs and GitHub links. If you make it public, set `VITE_PUBLIC_REPO_URL=https://github.com/ICEQ-JO/quoli` in the Vercel project and redeploy to show them.
+Optional settings (Vercel → Settings → Environment Variables, then redeploy):
+
+| Variable | What it does |
+| --- | --- |
+| `VITE_PUBLIC_CONTACT_EMAIL` | The address behind "Get in touch" in the Collaborate section and the footer's Contact link. Without it, the button points to the waitlist. |
+| `VITE_PUBLIC_SITE_URL` | Your site's address, for example `https://quoli.dev`, used for link previews. On Vercel the production domain is picked up automatically, so this is only needed elsewhere. |
+| `VITE_PUBLIC_REPO_URL` | Shows the Docs and GitHub links. The repository is private for now, so leave it unset until it is public. |
+
+To use your own domain, add it under the Vercel project's **Settings → Domains** and follow the DNS instructions there; the redirect from `/` to `/landing/` works on any domain.
 
 See [docs/landing.md](docs/landing.md) for the design, motion and launch notes.
 
