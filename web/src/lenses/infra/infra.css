@@ -101,3 +101,183 @@
   border-radius: 4px;
   padding: 1px 6px;
 }
+
+/* ---- Redesign: services on the board, pipelines and connections beside it ---- */
+
+.infra-lens {
+  container-type: size;
+}
+
+.infra-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "board side"
+    "guide side";
+}
+
+.infra-board {
+  grid-area: board;
+}
+
+.infra-guide {
+  grid-area: guide;
+  /* Percentages do not resolve inside an auto grid row; size against the lens instead. */
+  max-height: 45cqh;
+}
+
+.infra-side {
+  grid-area: side;
+  overflow-y: auto;
+  padding: 16px;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-size: var(--fs-sm);
+}
+
+.infra-side h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 4px;
+  font: 600 var(--fs-sm) var(--sans);
+  color: var(--text);
+}
+
+.side-note {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+.pipes,
+.providers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pipe {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+
+.pipe:hover {
+  border-color: var(--muted);
+}
+
+.pipe.selected {
+  border-color: var(--text);
+}
+
+.pipe-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pipe-main b {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.pipe-main .mono {
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+.pipe-what {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.providers li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.providers li:last-child {
+  border-bottom: 0;
+}
+
+.prov-name {
+  font-weight: 500;
+}
+
+.prov-state {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.prov-state > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prov-tag {
+  flex: none;
+  color: var(--faint);
+}
+
+.infra-lens .svc-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: none;
+  border: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--muted);
+}
+
+.pipe .svc-icon {
+  margin-top: 2px;
+}
+
+@container (max-width: 760px) {
+  .infra-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(200px, 1fr) auto auto;
+    grid-template-areas:
+      "board"
+      "guide"
+      "side";
+  }
+  .infra-guide {
+    max-height: 28cqh;
+  }
+  .infra-side {
+    max-height: 28cqh;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}

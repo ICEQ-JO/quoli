@@ -18,16 +18,20 @@ export const INFRA_FILES = [
 
 /** Shown beside the board when few or no services were detected. */
 export function InfraGuide({ infra }: { infra: InfraMap }) {
-  const n = infra.services.length;
+  // Pipelines are listed beside the board, not here.
+  const services = infra.services.filter((s) => s.kind !== "pipeline");
+  const n = services.length;
   return (
     <aside className="infra-guide" aria-label="What Quoli detected">
       <section>
-        <h3>{n === 0 ? "Nothing detected" : `Detected (${n})`}</h3>
+        <h3>{n === 0 ? "No running services found" : `Detected (${n})`}</h3>
         {n === 0 ? (
-          <p>No service definitions were found in this repository, so the board is empty.</p>
+          <p>
+            No service definitions were found in this repository's files, so the board is empty.
+          </p>
         ) : (
           <ul>
-            {infra.services.map((s) => (
+            {services.map((s) => (
               <li key={s.id}>
                 <span className="guide-name">{s.name}</span>{" "}
                 <span className="guide-kind">

@@ -31,5 +31,5 @@ Each piece is a GitHub issue and its own PR, built in order. Every piece keeps `
 | R2 | Agents lens: conversation-style rows, full commands, inline detail, filters | #101 | PR open |
 | R3 | Code lens: change map with code and diff | #102 | PR open |
 | R4 | Git lens: local vs remote clarity, legend, session tags, commit detail | #103 | PR open |
-| R5 | Infra lens: services vs pipelines, honest Connections section | #104 | |
+| R5 | Infra lens: services vs pipelines, honest Connections section | #104 | PR open |
 | R6 | Final pass: motion, empty states, both themes, accessibility, large-demo check | #105 | |
