@@ -137,12 +137,25 @@ export function isSetUp(agent: HookAgent): boolean {
   }
 }
 
+/** The user-level install for `agent` runs from this Quoli home (not one started elsewhere). */
+function ownedHere(agent: HookAgent): boolean {
+  try {
+    const text = readFileSync(globalTarget(agent).file, "utf8");
+    return isPluginAgent(agent)
+      ? text.includes(spoolFile().split("\\").join("/"))
+      : text.includes(JSON.stringify(hookCopy()).slice(1, -1));
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Rewrites the user-level install where it no longer matches this Quoli (another port, or an
- * older hook or plugin after an update). Agents without it are left alone. Returns those updated.
+ * older hook or plugin after an update). Agents without it, or set up from another Quoli home
+ * (a test or second copy with QUOLI_HOME), are left alone. Returns those updated.
  */
 export function refreshSetup(): HookAgent[] {
-  const agents = HOOK_AGENTS.filter(isSetUp);
+  const agents = HOOK_AGENTS.filter((agent) => isSetUp(agent) && ownedHere(agent));
   if (!agents.length) return [];
   let hookStale = true;
   try {

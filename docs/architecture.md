@@ -11,7 +11,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
                                                                      │
    repo on disk ──git / files──▶ code.ts · gitstate.ts · infra.ts    │
                                                                      ▼
-                                 GET /api/* + /api/stream (SSE) ──▶ web/ (React + React Flow)
+                                 GET /api/* + /api/changes (poll) ──▶ web/ (React + React Flow)
 ```
 
 ## Layout

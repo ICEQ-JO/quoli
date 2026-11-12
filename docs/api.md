@@ -30,7 +30,7 @@ Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: a
 | `POST /api/redact-preview` | `{ "text": "..." }` | `{ "text": "..." }`, the text after redaction |
 | `GET /api/code\|git\|infra?root=` | | unchanged, except `infra` merges the project's hand-added services: `Service.url` (dashboard link) and `Service.manual` (entry id, or null). Hand-added cards have id `manual:<sid>`, `evidence: "added by you"` and never carry metrics. |
 | `GET /api/file?root=&path=` | | unchanged |
-| `GET /api/stream` | | SSE: `{ type: "event", sessionId }` on ingest, `{ type: "projects" }` when projects change |
+| `GET /api/changes?after=N` | | Live updates, polled about once a second by each page: `{ seq, changes }` with the changes after `N` (`{ type: "event", sessionId }` on ingest, `{ type: "projects" }` when projects change). Without `after`, only the current `seq`; a page that fell behind or is ahead of a restarted server gets `{ type: "projects" }` (reload everything). Replaces the earlier SSE stream, which held one connection per tab and hit the browser's six-per-address limit |
 
 Retention runs at startup, hourly, and when settings change.
 
