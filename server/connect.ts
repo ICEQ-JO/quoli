@@ -7,13 +7,15 @@ import { git } from "./ingest.ts";
 /**
  * `pnpm connect <repo>` adds Quoli's hook to <repo>/.claude/settings.local.json
  * (machine-local, not committed); `--agent codex` adds it to <repo>/.codex/hooks.json instead,
- * and `--agent opencode` installs Quoli's plugin as <repo>/.opencode/plugins/quoli.js; both are
- * kept out of Git through .git/info/exclude. `--remove` takes it out again. Other hooks in
+ * `--agent opencode` installs Quoli's plugin as <repo>/.opencode/plugins/quoli.js, and
+ * `--agent pi` installs Quoli's extension as <repo>/.pi/extensions/quoli.ts; all are kept out of Git through .git/info/exclude. `--remove` takes it out again. Other hooks in
  * those files are kept.
  */
-export type HookAgent = "claude-code" | "codex" | "opencode";
-export const HOOK_AGENTS: HookAgent[] = ["claude-code", "codex", "opencode"];
-type HookFileAgent = Exclude<HookAgent, "opencode">;
+export type HookAgent = "claude-code" | "codex" | "opencode" | "pi";
+export const HOOK_AGENTS: HookAgent[] = ["claude-code", "codex", "opencode", "pi"];
+type PluginAgent = "opencode" | "pi";
+type HookFileAgent = Exclude<HookAgent, PluginAgent>;
+const isPluginAgent = (a: HookAgent): a is PluginAgent => a === "opencode" || a === "pi";
 
 const TARGETS: Record<HookFileAgent, { file: string; events: string[] }> = {
   "claude-code": {
@@ -52,13 +54,24 @@ const hook = join(here, "hook.mjs");
 const port = () => Number(process.env.QUOLI_PORT ?? 4400);
 
 // OpenCode 2 has no hook commands; it loads plugins from .opencode/plugins/ (opencode.ai/docs/plugins).
-const PLUGIN_FILE = join(".opencode", "plugins", "quoli.js");
-const PLUGIN_MARK = "quoli-opencode-plugin";
-const pluginSource = () =>
-  readFileSync(join(here, "opencode-plugin.js"), "utf8").replace("__QUOLI_PORT__", String(port()));
-const pluginText = (root: string) => {
+// Pi auto-discovers project extensions in .pi/extensions/ (pi docs/extensions.md).
+const PLUGINS: Record<PluginAgent, { file: string; mark: string; source: string }> = {
+  opencode: {
+    file: join(".opencode", "plugins", "quoli.js"),
+    mark: "quoli-opencode-plugin",
+    source: "opencode-plugin.js",
+  },
+  pi: {
+    file: join(".pi", "extensions", "quoli.ts"),
+    mark: "quoli-pi-extension",
+    source: "pi-extension.ts",
+  },
+};
+const pluginSource = (agent: PluginAgent) =>
+  readFileSync(join(here, PLUGINS[agent].source), "utf8").replace("__QUOLI_PORT__", String(port()));
+const pluginText = (root: string, agent: PluginAgent) => {
   try {
-    return readFileSync(join(resolve(root), PLUGIN_FILE), "utf8");
+    return readFileSync(join(resolve(root), PLUGINS[agent].file), "utf8");
   } catch {
     return null;
   }
@@ -88,8 +101,8 @@ function ourCommands(root: string, agent: HookFileAgent): string[] | null {
 /** The agents whose hook files in `root` contain Quoli's hook. */
 export function installedAgents(root: string): HookAgent[] {
   return HOOK_AGENTS.filter((a) =>
-    a === "opencode"
-      ? (pluginText(root)?.includes(PLUGIN_MARK) ?? false)
+    isPluginAgent(a)
+      ? (pluginText(root, a)?.includes(PLUGINS[a].mark) ?? false)
       : (ourCommands(root, a)?.length ?? 0) > 0,
   );
 }
@@ -108,9 +121,9 @@ export function refreshHooks(roots: string[]): string[] {
   for (const root of roots) {
     let changed = false;
     for (const agent of HOOK_AGENTS) {
-      if (agent === "opencode") {
-        const text = pluginText(root);
-        if (!text?.includes(PLUGIN_MARK) || text === pluginSource()) continue;
+      if (isPluginAgent(agent)) {
+        const text = pluginText(root, agent);
+        if (!text?.includes(PLUGINS[agent].mark) || text === pluginSource(agent)) continue;
       } else {
         const ours = ourCommands(root, agent);
         if (!ours?.length || ours.every((c) => c === commandFor(agent))) continue;
@@ -139,7 +152,7 @@ export function validateRepo(path: unknown): string {
 }
 
 export function connect(repo: string, remove = false, agent: HookAgent = "claude-code") {
-  if (agent === "opencode") return connectPlugin(repo, remove);
+  if (isPluginAgent(agent)) return connectPlugin(repo, remove, agent);
   const file = settingsFile(repo, agent);
   if (remove && !existsSync(file)) return file;
   const settings = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {};
@@ -167,20 +180,23 @@ export function connect(repo: string, remove = false, agent: HookAgent = "claude
   return file;
 }
 
-/** Writes or removes Quoli's OpenCode plugin. A file without Quoli's mark is never touched. */
-function connectPlugin(repo: string, remove: boolean) {
-  const file = join(resolve(repo), PLUGIN_FILE);
-  const current = pluginText(repo);
-  if (current !== null && !current.includes(PLUGIN_MARK)) {
-    throw new Error(`${file} exists and is not Quoli's plugin; leaving it alone`);
+/** Writes or removes Quoli's OpenCode plugin or Pi extension. A file without Quoli's mark is never touched. */
+function connectPlugin(repo: string, remove: boolean, agent: PluginAgent) {
+  const { file: rel, mark } = PLUGINS[agent];
+  const file = join(resolve(repo), rel);
+  const current = pluginText(repo, agent);
+  if (current !== null && !current.includes(mark)) {
+    throw new Error(
+      `${file} exists and is not Quoli's ${agent === "pi" ? "extension" : "plugin"}; leaving it alone`,
+    );
   }
   if (remove) {
     if (current !== null) rmSync(file);
     return file;
   }
   mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, pluginSource());
-  excludeFromGit(repo, PLUGIN_FILE);
+  writeFileSync(file, pluginSource(agent));
+  excludeFromGit(repo, rel);
   return file;
 }
 
@@ -203,7 +219,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
   const repo = args.find((a, i) => !a.startsWith("--") && i !== agentAt + 1);
   if (!repo || !HOOK_AGENTS.includes(agent)) {
     console.log(
-      "Usage: pnpm connect <path-to-repo> [--agent claude-code|codex|opencode] [--remove]",
+      "Usage: pnpm connect <path-to-repo> [--agent claude-code|codex|opencode|pi] [--remove]",
     );
     process.exit(1);
   }
@@ -222,14 +238,16 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     store.db.close();
   }
   const next =
-    agent === "opencode"
-      ? "Start Quoli with `pnpm dev`, then run `opencode` in that repo. OpenCode loads the plugin on its next start (or reloads it if it is already running)."
-      : agent === "codex"
-        ? "Start Quoli with `pnpm dev`, then run `codex` in that repo and approve Quoli's hooks with /hooks.\nCodex runs project hooks only after you trust them."
-        : "Start Quoli with `pnpm dev`, then start a new Claude Code session in that repo.";
+    agent === "pi"
+      ? "Start Quoli with `pnpm dev`, then run `pi` in that repo. Pi loads the extension on its next start (or after /reload)."
+      : agent === "opencode"
+        ? "Start Quoli with `pnpm dev`, then run `opencode` in that repo. OpenCode loads the plugin on its next start (or reloads it if it is already running)."
+        : agent === "codex"
+          ? "Start Quoli with `pnpm dev`, then run `codex` in that repo and approve Quoli's hooks with /hooks.\nCodex runs project hooks only after you trust them."
+          : "Start Quoli with `pnpm dev`, then start a new Claude Code session in that repo.";
   console.log(
     remove
       ? `Removed Quoli hooks from ${file}`
-      : `Connected. ${{ "claude-code": "Claude Code", codex: "Codex", opencode: "OpenCode" }[agent]} sessions in ${root} now stream to Quoli.\nHooks: ${file}\n${next}`,
+      : `Connected. ${{ "claude-code": "Claude Code", codex: "Codex", opencode: "OpenCode", pi: "Pi" }[agent]} sessions in ${root} now stream to Quoli.\nHooks: ${file}\n${next}`,
   );
 }

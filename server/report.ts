@@ -73,6 +73,13 @@ function editPieces(call: ToolCall): EditPiece[] {
     callId: call.id,
   });
   if (name === "write") return [piece(countLines(text(i.content)), 0, true)];
+  // MultiEdit (Claude Code) and Pi's edit carry a list of replacements.
+  if ((name === "multiedit" || name === "edit") && Array.isArray(i.edits)) {
+    return i.edits.map((e) => {
+      const o = (e && typeof e === "object" ? e : {}) as Record<string, unknown>;
+      return piece(countLines(text(o.new_string)), countLines(text(o.old_string)));
+    });
+  }
   if (name === "edit") {
     // Claude Code uses snake_case fields, OpenCode camelCase.
     const added = text(i.new_string ?? i.newString);
@@ -84,12 +91,6 @@ function editPieces(call: ToolCall): EditPiece[] {
     return patchPieces(text(body)).flatMap((p) => {
       const file = call.files.find((f) => p.path === f || p.path.endsWith(`/${f}`));
       return file ? [{ ...piece(p.added, p.removed, p.add), path: file }] : [];
-    });
-  }
-  if (name === "multiedit" && Array.isArray(i.edits)) {
-    return i.edits.map((e) => {
-      const o = (e && typeof e === "object" ? e : {}) as Record<string, unknown>;
-      return piece(countLines(text(o.new_string)), countLines(text(o.old_string)));
     });
   }
   return [];

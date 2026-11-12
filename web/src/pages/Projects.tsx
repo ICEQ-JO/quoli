@@ -29,13 +29,19 @@ export function HookBadge({ project }: { project: Project }) {
   );
 }
 
-/** Agents Quoli can connect: hooks for Claude Code and Codex, a plugin for OpenCode. */
-const HOOK_AGENTS: AgentKind[] = ["claude-code", "codex", "opencode"];
+/** Agents Quoli can connect: hooks for Claude Code and Codex, a plugin for OpenCode, an extension for Pi. */
+const HOOK_AGENTS: AgentKind[] = ["claude-code", "codex", "opencode", "pi"];
 
 const WAITING: Record<AgentKind, string> = {
   "claude-code": "waiting for the first event: start claude in the repo",
   codex: "waiting for trust: run codex in the repo and approve Quoli's hooks with /hooks",
   opencode: "waiting for the first event: start opencode in the repo",
+  pi: "waiting for the first event: start pi in the repo",
+};
+
+const PLUGIN_NOTE: Partial<Record<AgentKind, string>> = {
+  opencode: " The plugin is .opencode/plugins/quoli.js, kept out of Git.",
+  pi: " The extension is .pi/extensions/quoli.ts, kept out of Git.",
 };
 
 /** One line per agent with hooks installed: receiving, or what the user still has to do. */
@@ -70,7 +76,7 @@ export function ProjectsPage() {
       setNotice(
         agent === "codex"
           ? `Added Codex hooks to ${p.name} (.codex/hooks.json, kept out of Git). Run codex there and approve them with /hooks.`
-          : `Added ${AGENT_NAMES[agent]} to ${p.name}.${agent === "opencode" ? " The plugin is .opencode/plugins/quoli.js, kept out of Git." : ""}`,
+          : `Added ${AGENT_NAMES[agent]} to ${p.name}.${PLUGIN_NOTE[agent] ?? ""}`,
       );
       refresh();
     } catch (e) {
@@ -279,8 +285,9 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
       </fieldset>
       <p id="connect-help" className="faint">
         The top level of a git repository. Quoli adds its hooks to .claude/settings.local.json
-        (Claude Code) or .codex/hooks.json (Codex), or its plugin to .opencode/plugins/quoli.js
-        (OpenCode), and keeps the Codex and OpenCode files out of Git. Same as pnpm connect.
+        (Claude Code) or .codex/hooks.json (Codex), its plugin to .opencode/plugins/quoli.js
+        (OpenCode) or its extension to .pi/extensions/quoli.ts (Pi), and keeps the Codex, OpenCode
+        and Pi files out of Git. Same as pnpm connect.
       </p>
       {error && (
         <p className="form-error" role="alert">
@@ -301,6 +308,9 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
           )}
           {done.agents.some((a) => a.agent === "opencode") && (
             <code className="path"> cd {done.root} && opencode</code>
+          )}
+          {done.agents.some((a) => a.agent === "pi") && (
+            <code className="path"> cd {done.root} && pi</code>
           )}
         </p>
       )}

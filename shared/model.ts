@@ -36,14 +36,15 @@ export interface Project {
 }
 
 /** The coding agents Quoli can record. Events without an agent stamp are Claude Code's. */
-export type AgentKind = "claude-code" | "codex" | "opencode";
+export type AgentKind = "claude-code" | "codex" | "opencode" | "pi";
 
-export const AGENT_KINDS: AgentKind[] = ["claude-code", "codex", "opencode"];
+export const AGENT_KINDS: AgentKind[] = ["claude-code", "codex", "opencode", "pi"];
 
 export const AGENT_NAMES: Record<AgentKind, string> = {
   "claude-code": "Claude Code",
   codex: "Codex",
   opencode: "OpenCode",
+  pi: "Pi",
 };
 
 export const isAgentKind = (v: unknown): v is AgentKind =>
@@ -595,6 +596,7 @@ const TOOL_CATEGORIES: Record<string, ToolCategory> = {
   glob: "search",
   codesearch: "search",
   file_search: "search",
+  find: "search",
   // agent
   task: "agent",
   agent: "agent",
