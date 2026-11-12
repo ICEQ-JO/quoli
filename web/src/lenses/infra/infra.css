@@ -42,14 +42,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px 24px;
-  font-size: 13px;
+  font-size: var(--fs-md);
   line-height: 1.5;
   color: var(--muted);
 }
 
 .infra-guide h3 {
   margin: 0 0 6px;
-  font: 600 12px var(--sans);
+  font: 600 var(--fs-sm) var(--sans);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text);
@@ -83,7 +83,7 @@
 
 .infra-guide .guide-file {
   display: block;
-  font: 12px var(--mono);
+  font: var(--fs-sm) var(--mono);
   color: var(--faint);
 }
 
@@ -94,7 +94,7 @@
 }
 
 .infra-guide .guide-files li {
-  font: 11.5px var(--mono);
+  font: var(--fs-xs) var(--mono);
   color: var(--muted);
   background: var(--raised);
   border: 1px solid var(--line);

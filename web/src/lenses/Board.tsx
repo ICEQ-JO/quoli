@@ -10,6 +10,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { type ReactNode, useEffect, useRef } from "react";
+import { useTheme } from "../theme.ts";
 import "@xyflow/react/dist/style.css";
 
 interface BoardProps {
@@ -38,6 +39,7 @@ export function Board(props: BoardProps) {
 
 function Inner(p: BoardProps) {
   const flow = useReactFlow();
+  const theme = useTheme();
   const fitted = useRef<string | null>(null);
   useEffect(() => {
     if (!p.nodes.length || fitted.current === p.fitKey) return;
@@ -54,7 +56,7 @@ function Inner(p: BoardProps) {
         nodes={p.nodes}
         edges={p.edges}
         nodeTypes={p.nodeTypes}
-        colorMode="dark"
+        colorMode={theme}
         minZoom={0.05}
         maxZoom={2.5}
         nodesDraggable={p.draggable ?? false}
@@ -66,12 +68,7 @@ function Inner(p: BoardProps) {
         proOptions={{ hideAttribution: true }}
         fitView
       >
-        <Background
-          variant={p.variant ?? BackgroundVariant.Dots}
-          gap={22}
-          size={1.2}
-          color="#2a2a30"
-        />
+        <Background variant={p.variant ?? BackgroundVariant.Dots} gap={22} size={1.2} />
         <Controls showInteractive={false} position="bottom-right" />
       </ReactFlow>
       {p.legend && <div className="legend">{p.legend}</div>}

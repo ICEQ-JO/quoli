@@ -3,6 +3,7 @@ import type { Project } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { PricesSection } from "../components/Prices.tsx";
 import { DeleteDataDialog, ErrorState, Loading, PageHead } from "../components/ui.tsx";
+import { setThemePref, type ThemePref, useThemePref } from "../theme.ts";
 
 const PRESETS = [7, 30, 90];
 const EXAMPLE =
@@ -14,6 +15,7 @@ const toChoice = (days: number | null): Retention =>
   days === null ? "forever" : PRESETS.includes(days) ? (String(days) as Retention) : "custom";
 
 export function SettingsPage() {
+  const themePref = useThemePref();
   const [data, refresh, error] = useData("settings", api.settings);
   const [projects, refreshProjects, projectsError] = useData("projects", api.projects);
   useLiveEvents(refreshProjects);
@@ -80,6 +82,28 @@ export function SettingsPage() {
                 <dd className="mono">{data.info.version}</dd>
               </div>
             </dl>
+          </section>
+
+          <section className="card" aria-labelledby="set-look">
+            <h2 id="set-look">Appearance</h2>
+            <div className="field">
+              <label htmlFor="set-theme">Theme</label>
+              <div className="field-row">
+                <select
+                  id="set-theme"
+                  className="input"
+                  value={themePref}
+                  onChange={(e) => setThemePref(e.target.value as ThemePref)}
+                >
+                  <option value="system">System</option>
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+              <p className="faint">
+                Saved in this browser only. System follows your operating system setting.
+              </p>
+            </div>
           </section>
 
           <form

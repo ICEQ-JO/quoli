@@ -10,13 +10,13 @@ const ROW = 28;
 const OVERSCAN = 12;
 const PAGE = 200;
 export const LANE_COLORS = [
-  "#ececef",
-  "#ff6a2b",
-  "#4da3ff",
-  "#3ecf8e",
-  "#a78bfa",
-  "#f5c451",
-  "#f472b6",
+  "var(--text)",
+  "var(--edit)",
+  "var(--read)",
+  "var(--ok)",
+  "var(--agent)",
+  "var(--search)",
+  "var(--web)",
 ];
 
 const hasBranches = (g: GitState | null) => (g?.branches.length ?? 0) > 0;

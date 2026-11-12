@@ -103,7 +103,7 @@ export function AgentsLens(ctx: LensContext) {
           target: firstId,
           targetHandle: "top",
           style: { stroke: "var(--text)", strokeWidth: 1.2, strokeDasharray: "3 3" },
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#ececef" },
+          markerEnd: { type: MarkerType.ArrowClosed, color: "var(--text)" },
         });
       }
     });
@@ -124,10 +124,10 @@ export function AgentsLens(ctx: LensContext) {
           targetHandle: "top",
           type: "smoothstep",
           label: "spawned",
-          labelStyle: { fill: "#a78bfa", fontSize: 11 },
-          labelBgStyle: { fill: "#0b0b0c" },
+          labelStyle: { fill: "var(--agent)", fontSize: 11 },
+          labelBgStyle: { fill: "var(--bg)" },
           style: { stroke: "var(--agent)", strokeWidth: 1.4, strokeDasharray: "5 4" },
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#a78bfa" },
+          markerEnd: { type: MarkerType.ArrowClosed, color: "var(--agent)" },
         });
       });
     return { nodes, edges };

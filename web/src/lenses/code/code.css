@@ -23,9 +23,9 @@
   gap: 2px;
   min-width: 0;
   padding: 4px 6px;
-  font: 12px var(--mono);
+  font: var(--fs-sm) var(--mono);
   color: var(--muted);
-  background: rgb(15 15 17 / 88%);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
   border: 1px solid var(--line);
   border-radius: 8px;
 }
@@ -92,8 +92,15 @@
   border-radius: 10px;
   border: 1px solid var(--line-strong);
   background:
-    linear-gradient(rgb(255 106 43 / calc(var(--heat-e) * 26%)), transparent 140%),
-    linear-gradient(rgb(77 163 255 / calc(var(--heat-r) * 22%)), transparent 140%), var(--panel);
+    linear-gradient(
+      color-mix(in srgb, var(--edit) calc(var(--heat-e) * 26%), transparent),
+      transparent 140%
+    ),
+    linear-gradient(
+      color-mix(in srgb, var(--read) calc(var(--heat-r) * 22%), transparent),
+      transparent 140%
+    ),
+    var(--panel);
   transition:
     border-color 0.25s,
     opacity 0.25s,
@@ -114,15 +121,15 @@
 }
 
 .tile-node.edited {
-  border-color: rgb(255 106 43 / calc(30% + var(--heat-e) * 70%));
+  border-color: color-mix(in srgb, var(--edit) calc(30% + var(--heat-e) * 70%), transparent);
 }
 
 .tile-node.read:not(.edited) {
-  border-color: rgb(77 163 255 / calc(30% + var(--heat-r) * 70%));
+  border-color: color-mix(in srgb, var(--read) calc(30% + var(--heat-r) * 70%), transparent);
 }
 
 .tile-name {
-  font: 600 14px var(--mono);
+  font: 600 var(--fs-lg) var(--mono);
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -132,7 +139,7 @@
 .tile-meta {
   display: flex;
   gap: 10px;
-  font: 11.5px var(--mono);
+  font: var(--fs-xs) var(--mono);
   color: var(--faint);
   white-space: nowrap;
 }
@@ -154,7 +161,7 @@
   display: flex;
   height: 5px;
   margin: 0 -14px;
-  background: rgb(255 255 255 / 4%);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
 }
 
 .tile-bar i:first-child {
@@ -166,7 +173,7 @@
 }
 
 .label-node {
-  font: 11.5px var(--mono);
+  font: var(--fs-xs) var(--mono);
   color: var(--faint);
   letter-spacing: 0.02em;
   white-space: nowrap;

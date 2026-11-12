@@ -99,7 +99,8 @@ export function InfraLens(ctx: LensContext) {
       }
     });
     const edges: Edge[] = infra.links.map((l) => {
-      const color = l.kind === "deploys" ? "#3ecf8e" : l.kind === "calls" ? "#8b8b93" : "#c9c9cf";
+      const color =
+        l.kind === "deploys" ? "var(--ok)" : l.kind === "calls" ? "var(--muted)" : "var(--text-2)";
       return {
         id: `${l.from}->${l.to}`,
         source: l.from,

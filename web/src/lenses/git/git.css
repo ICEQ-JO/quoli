@@ -30,7 +30,7 @@
   gap: 6px;
   max-width: 260px;
   padding: 3px 9px;
-  font: 12px var(--mono);
+  font: var(--fs-sm) var(--mono);
   color: var(--text);
   background: var(--raised);
   border: 1px solid var(--line);
@@ -64,7 +64,7 @@
 }
 
 .g-tag {
-  font-size: 10px;
+  font-size: var(--fs-xs);
   color: var(--accent);
   letter-spacing: 0.04em;
 }
@@ -98,7 +98,7 @@
   align-items: center;
   gap: 10px;
   padding: 0 14px 0 8px;
-  font-size: 13px;
+  font-size: var(--fs-md);
   cursor: pointer;
   outline-offset: -2px;
 }
@@ -153,7 +153,7 @@
   flex: none;
   width: 58px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .g-main {
@@ -182,7 +182,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   padding: 0 7px;
-  font: 11px var(--mono);
+  font: var(--fs-xs) var(--mono);
   line-height: 18px;
   color: var(--read);
   border: 1px solid color-mix(in srgb, var(--read) 40%, transparent);
@@ -207,7 +207,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   padding: 0 8px;
-  font: 11px var(--mono);
+  font: var(--fs-xs) var(--mono);
   line-height: 18px;
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
@@ -228,7 +228,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .g-time {
@@ -236,7 +236,7 @@
   width: 64px;
   text-align: right;
   color: var(--faint);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .g-more {
@@ -249,7 +249,7 @@
 
 .g-more-btn {
   padding: 6px 16px;
-  font: 12px var(--mono);
+  font: var(--fs-sm) var(--mono);
   color: var(--text);
   background: var(--raised);
   border: 1px solid var(--line-strong);
@@ -263,7 +263,7 @@
 
 .g-end {
   color: var(--faint);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 @container (max-width: 760px) {
