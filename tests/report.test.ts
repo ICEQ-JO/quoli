@@ -37,7 +37,13 @@ test("price matching: exact, prefix, longest prefix, unknown", () => {
   assert.equal(priceFor("claude-opus-4-1-20250805", t)?.model, "claude-opus-4-1");
   assert.equal(priceFor("claude-opus-4-20250514", t)?.model, "claude-opus-4");
   assert.equal(priceFor("gpt-x", t), null);
-  assert.equal(t.prices.length, 18);
+  // OpenAI: dated snapshots match, other models sharing a prefix stay unpriced.
+  assert.equal(priceFor("gpt-6.1-sol", t)?.input, 2);
+  assert.equal(priceFor("gpt-5-2025-08-07", t)?.model, "gpt-5");
+  assert.equal(priceFor("gpt-5.3-codex", t)?.model, "gpt-5.3-codex");
+  assert.equal(priceFor("gpt-5-codex", t), null);
+  assert.equal(priceFor("gpt-5.7", t), null);
+  assert.equal(t.prices.length, 36);
   assert.match(t.version, /derived/);
 });
 

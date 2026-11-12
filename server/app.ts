@@ -12,7 +12,7 @@ import {
   type Settings,
 } from "../shared/model.ts";
 import { codeMap } from "./code.ts";
-import { connect, hooksInstalled, validateRepo } from "./connect.ts";
+import { connect, HOOK_AGENTS, type HookAgent, installedAgents, validateRepo } from "./connect.ts";
 import { home, projectId, type Store } from "./db.ts";
 import { commitDetail, gitState, parseLimit } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
@@ -106,7 +106,13 @@ export function createApp(store: Store, port: () => number) {
     return [...roots]
       .map((root): Project => {
         const info = seen.get(root);
-        const installed = hooksInstalled(root);
+        const agents = installedAgents(root).map((agent) => ({
+          agent,
+          status: store.hasAgentEvents(root, agent)
+            ? ("receiving" as const)
+            : ("installed" as const),
+        }));
+        const installed = agents.length > 0;
         return {
           id: projectId(root),
           root,
@@ -114,6 +120,7 @@ export function createApp(store: Store, port: () => number) {
           sessions: info?.sessions ?? 0,
           lastActivity: info?.last ?? null,
           hookStatus: installed ? (info ? "receiving" : "installed") : "not_connected",
+          agents,
           connectedAt: registered.get(root) ?? null,
         };
       })
@@ -188,7 +195,7 @@ export function createApp(store: Store, port: () => number) {
   });
 
   function removeProject(root: string) {
-    connect(root, true);
+    for (const agent of HOOK_AGENTS) connect(root, true, agent);
   }
 
   async function api(req: IncomingMessage, res: ServerResponse, url: URL): Promise<boolean> {
@@ -323,14 +330,20 @@ export function createApp(store: Store, port: () => number) {
     const projectFor = (id: string) => projects().find((p) => p.id === id);
 
     if (method === "POST" && path === "/api/projects") {
-      const { path: repo } = await payload();
+      const { path: repo, agents } = await payload();
+      const chosen: unknown = agents === undefined ? ["claude-code"] : agents;
+      const valid = (v: unknown): v is HookAgent[] =>
+        Array.isArray(v) && v.length > 0 && v.every((a) => HOOK_AGENTS.includes(a));
+      if (!valid(chosen)) {
+        throw new BadRequest(`agents must list one or more of: ${HOOK_AGENTS.join(", ")}`);
+      }
       let root: string;
       try {
         root = validateRepo(repo);
       } catch (error) {
         throw new BadRequest((error as Error).message);
       }
-      connect(root);
+      for (const agent of new Set(chosen)) connect(root, false, agent);
       store.registerProject(root);
       broadcast({ type: "projects" });
       return json(res, 200, projectFor(projectId(root)));

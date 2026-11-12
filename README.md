@@ -28,7 +28,7 @@ A replay bar steps through any session call by call, and every lens follows alon
 
 **Honest by design:** every fact is marked as recorded, derived or inferred. Unknown values stay empty, and costs are estimates at list prices, not invoices.
 
-**Supported agents:** Claude Code today. Codex and OpenCode adapters are next (roadmap phase 3).
+**Supported agents:** Claude Code and Codex. OpenCode is next (roadmap phase 3).
 
 ## Try it in two minutes
 
@@ -57,7 +57,9 @@ pnpm dev                          # start Quoli on http://127.0.0.1:4400
 cd /path/to/your/repo && claude   # sessions appear live
 ```
 
-You can also connect a repository from **Projects → Connect** in the app. `pnpm connect /path/to/your/repo --remove` removes the hooks again.
+For Codex, run `pnpm connect /path/to/your/repo --agent codex`, then start `codex` in the repo and approve Quoli's hooks with `/hooks` (Codex runs project hooks only once you trust them). The hook file, `.codex/hooks.json`, is kept out of Git. Hosted tools such as Codex's web search don't fire hooks, so they don't appear.
+
+You can also connect a repository from **Projects → Connect** in the app and choose the agents there. `pnpm connect /path/to/your/repo --remove` (with `--agent codex` for Codex) removes the hooks again.
 
 Press `?` in the app for all keyboard shortcuts. The main ones:
 - `1`–`5` switch lenses;

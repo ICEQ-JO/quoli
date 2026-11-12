@@ -21,11 +21,30 @@ const ROWS: [string, number, number, number, number][] = [
   ["claude-sonnet-4", 3, 15, 0.3, 3.75],
   ["claude-haiku-5-5", 0.1, 0.5, 0.01, 0.125],
   ["claude-haiku-4-5", 1, 5, 0.1, 1.25],
+  // OpenAI standard tier, up to 272K input. OpenAI does not bill cache writes separately.
+  ["gpt-6-astra", 10, 50, 1, 10],
+  ["gpt-6.1-sol", 2, 10, 0.1, 2],
+  ["gpt-6.1-terra", 1, 5, 0.05, 1],
+  ["gpt-6-sol", 2, 10, 0.2, 2],
+  ["gpt-6-luna", 0.1, 0.5, 0.01, 0.1],
+  ["gpt-5.6-sol", 4, 20, 0.4, 4],
+  ["gpt-5.6-terra", 2, 12, 0.2, 2],
+  ["gpt-5.6-luna", 0.2, 1.2, 0.02, 0.2],
+  ["gpt-5.5", 5, 30, 0.5, 5],
+  ["gpt-5.4", 2.5, 15, 0.25, 2.5],
+  ["gpt-5.4-mini", 0.75, 4.5, 0.075, 0.75],
+  ["gpt-5.4-nano", 0.2, 1.25, 0.02, 0.2],
+  ["gpt-5.3-codex", 1.75, 14, 0.175, 1.75],
+  ["gpt-5.2", 1.75, 14, 0.175, 1.75],
+  ["gpt-5.1", 1.25, 10, 0.125, 1.25],
+  ["gpt-5", 1.25, 10, 0.125, 1.25],
+  ["gpt-5-mini", 0.25, 2, 0.025, 0.25],
+  ["gpt-5-nano", 0.05, 0.4, 0.005, 0.05],
 ];
 
 export const defaultPrices = (): PriceTable => ({
   version:
-    "Anthropic list prices as of 2026-11-03; cache writes and older cache reads derived (read 0.1× input, write 1.25× input)",
+    "Anthropic list prices as of 2026-11-03 (cache writes and older cache reads derived: read 0.1× input, write 1.25× input); OpenAI standard-tier prices up to 272K input as of 2026-11-12 (cache writes at the input price)",
   currency: "USD",
   prices: ROWS.map(([model, input, output, cacheRead, cacheWrite]) => ({
     model,
@@ -36,12 +55,17 @@ export const defaultPrices = (): PriceTable => ({
   })),
 });
 
-/** Exact model id first, then the longest price `model` that prefixes it. */
+/**
+ * Exact model id first, then the longest price `model` followed by a dash and a digit, as in a
+ * dated snapshot (`claude-opus-5-5-20261001`, `gpt-5-2025-08-07`). `gpt-5` never prices
+ * `gpt-5.3-codex` or `gpt-5-codex`: a different model stays unpriced rather than guessed.
+ */
 export function priceFor(model: string, table: PriceTable): ModelPrice | null {
   let best: ModelPrice | null = null;
   for (const p of table.prices) {
     if (p.model === model) return p;
-    if (model.startsWith(p.model) && (!best || p.model.length > best.model.length)) best = p;
+    const snapshot = model.startsWith(p.model) && /^-\d/.test(model.slice(p.model.length));
+    if (snapshot && (!best || p.model.length > best.model.length)) best = p;
   }
   return best;
 }

@@ -360,6 +360,17 @@ export class Store {
     return new Map(rows.map((r) => [r.session_id, r.agent ?? "claude-code"]));
   }
 
+  /** Whether `root` has any event from `agent` (Claude Code events carry no agent stamp). */
+  hasAgentEvents(root: string, agent: string): boolean {
+    const stamp = "json_extract(payload, '$.quoli_agent')";
+    const sql =
+      agent === "claude-code"
+        ? `SELECT 1 FROM events WHERE root = ? AND ${stamp} IS NULL LIMIT 1`
+        : `SELECT 1 FROM events WHERE root = ? AND ${stamp} = ? LIMIT 1`;
+    const args = agent === "claude-code" ? [root] : [root, agent];
+    return this.db.prepare(sql).get(...args) !== undefined;
+  }
+
   usage(sessionId: string): UsageRow[] {
     return this.db
       .prepare("SELECT * FROM usage WHERE session_id = ? ORDER BY at")

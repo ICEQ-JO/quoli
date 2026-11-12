@@ -26,6 +26,11 @@ export interface Project {
   sessions: number;
   lastActivity: string | null;
   hookStatus: HookStatus;
+  /**
+   * Agents whose hooks are installed in the repository, and whether each has sent an event yet.
+   * Codex runs project hooks only after the user trusts them with /hooks.
+   */
+  agents: { agent: AgentKind; status: "receiving" | "installed" }[];
   /** When the project was connected through Quoli, if it was. */
   connectedAt: string | null;
 }
