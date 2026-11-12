@@ -60,7 +60,8 @@ export const api = {
   resetPrices: () => send<PriceTable>("DELETE", "/api/prices"),
   redactPreview: (text: string) => send<{ text: string }>("POST", "/api/redact-preview", { text }),
   code: (root: string) => get<CodeMap>(`/api/code?${q(root)}`),
-  git: (root: string) => get<GitState>(`/api/git?${q(root)}`),
+  git: (root: string, limit?: number) =>
+    get<GitState>(`/api/git?${q(root)}${limit ? `&limit=${limit}` : ""}`),
   infra: (root: string) => get<InfraMap>(`/api/infra?${q(root)}`),
   file: (root: string, path: string) =>
     get<{ path: string; content: string | null; diff: string | null }>(

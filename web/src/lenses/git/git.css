@@ -1,0 +1,273 @@
+.git-lens {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+  background: var(--bg);
+}
+
+.git-empty {
+  margin: 48px auto;
+  color: var(--muted);
+}
+
+.g-branches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  max-height: 84px;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex: none;
+}
+
+.g-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  padding: 3px 9px;
+  font: 12px var(--mono);
+  color: var(--text);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.g-branch:hover {
+  border-color: var(--line-strong);
+}
+
+.g-branch.selected {
+  border-color: var(--accent);
+}
+
+.g-branch.active {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.g-branch .swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.g-bname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-tag {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.g-meta {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.g-meta.agent {
+  color: var(--accent);
+}
+
+.g-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.g-body {
+  position: relative;
+}
+
+.g-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px 0 8px;
+  font-size: 13px;
+  cursor: pointer;
+  outline-offset: -2px;
+}
+
+.g-row:hover {
+  background: var(--hover);
+}
+
+.g-row.hot {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.g-row.dim .g-subject,
+.g-row.dim .g-sha {
+  opacity: 0.55;
+}
+
+.g-row.selected {
+  background: var(--raised);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.g-row.worktree {
+  cursor: default;
+  color: var(--muted);
+}
+
+.g-row.worktree:hover {
+  background: transparent;
+}
+
+.g-lanes {
+  flex: none;
+  display: block;
+  overflow: visible;
+}
+
+.g-lanes line,
+.g-lanes path {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.g-dot.dashed {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-dasharray: 3 2;
+}
+
+.g-sha {
+  flex: none;
+  width: 58px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.g-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.g-subject {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-main .g-subject {
+  flex: 0 1 auto;
+}
+
+.g-ref {
+  flex: none;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 7px;
+  font: 11px var(--mono);
+  line-height: 18px;
+  color: var(--read);
+  border: 1px solid color-mix(in srgb, var(--read) 40%, transparent);
+  border-radius: 4px;
+}
+
+.g-ref.tag {
+  color: var(--search);
+  border-color: color-mix(in srgb, var(--search) 40%, transparent);
+}
+
+.g-ref.head {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.g-session {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+  font: 11px var(--mono);
+  line-height: 18px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.g-session:hover,
+.g-session.active {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.g-author {
+  flex: none;
+  width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.g-time {
+  flex: none;
+  width: 64px;
+  text-align: right;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.g-more {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.g-more-btn {
+  padding: 6px 16px;
+  font: 12px var(--mono);
+  color: var(--text);
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.g-more-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.g-end {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+@container (max-width: 760px) {
+  .g-author {
+    display: none;
+  }
+}

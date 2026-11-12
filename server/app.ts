@@ -13,7 +13,7 @@ import type {
 import { codeMap } from "./code.ts";
 import { connect, hooksInstalled, validateRepo } from "./connect.ts";
 import { home, projectId, type Store } from "./db.ts";
-import { gitState } from "./gitstate.ts";
+import { gitState, parseLimit } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
 import { git, ingest, redact } from "./ingest.ts";
 import {
@@ -241,7 +241,10 @@ export function createApp(store: Store, port: () => number) {
     const root = url.searchParams.get("root");
     if (!root || !hasRoot(root)) return json(res, 404, { error: "Unknown project" });
     if (path === "/api/code") return json(res, 200, codeMap(root));
-    if (path === "/api/git") return json(res, 200, gitState(root));
+    if (path === "/api/git") {
+      const limit = parseLimit(url.searchParams.get("limit"));
+      return json(res, 200, gitState(root, limit, details(store.sessionIds(root))));
+    }
     if (path === "/api/infra") return json(res, 200, infraMap(root));
     if (path === "/api/file") {
       const rel = normalize(url.searchParams.get("path") ?? "");

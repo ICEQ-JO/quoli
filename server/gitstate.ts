@@ -1,7 +1,62 @@
 import type { Branch, Commit, GitState } from "../shared/model.ts";
 import { git } from "./ingest.ts";
 
-export function gitState(root: string): GitState {
+export const DEFAULT_LIMIT = 200;
+export const MAX_LIMIT = 2000;
+
+/** Parse the `limit` query parameter: default 200, clamped to 1..2000. */
+export function parseLimit(raw: string | null): number {
+  const n = Number(raw);
+  if (!raw || !Number.isFinite(n)) return DEFAULT_LIMIT;
+  return Math.min(MAX_LIMIT, Math.max(1, Math.floor(n)));
+}
+
+/** The minimal slice of a session that commit attribution needs. */
+export interface CommitSource {
+  id: string;
+  toolCalls: { name: string; input: unknown; output: string | null }[];
+}
+
+/**
+ * Commit shas a Bash tool output reports creating: `[main abc1234] msg`,
+ * `[feature/x (root-commit) abc1234] msg`. Recorded basis only.
+ */
+export function reportedCommits(output: string): string[] {
+  const out: string[] = [];
+  for (const m of output.matchAll(/\[[^\][\n]*? ([0-9a-f]{7,40})\]/g)) out.push(m[1]);
+  return out;
+}
+
+const commandOf = (input: unknown): string =>
+  typeof input === "object" && input !== null && "command" in input
+    ? String((input as { command: unknown }).command)
+    : "";
+
+/** Attach `sessions` to commits whose creation a recorded `git commit` call reported. */
+export function attachSessions(commits: Commit[], sessions: CommitSource[]): void {
+  for (const s of sessions) {
+    for (const call of s.toolCalls) {
+      if (
+        call.name !== "Bash" ||
+        !call.output ||
+        !/\bgit\b[^\n]*\bcommit\b/.test(commandOf(call.input))
+      )
+        continue;
+      for (const sha of reportedCommits(call.output)) {
+        const c = commits.find((x) => x.sha.startsWith(sha) || sha.startsWith(x.sha));
+        if (!c) continue;
+        c.sessions ??= [];
+        if (!c.sessions.includes(s.id)) c.sessions.push(s.id);
+      }
+    }
+  }
+}
+
+export function gitState(
+  root: string,
+  limit = DEFAULT_LIMIT,
+  sessions: CommitSource[] = [],
+): GitState {
   const branches: Branch[] = [];
   const refs = git(root, [
     "for-each-ref",
@@ -26,9 +81,9 @@ export function gitState(root: string): GitState {
   const log = git(root, [
     "log",
     "--branches",
-    "--date-order",
+    "--topo-order",
     "-n",
-    "120",
+    String(limit + 1),
     "--format=%h%x09%p%x09%an%x09%aI%x09%D%x09%s",
   ]);
   for (const line of (log ?? "").split("\n")) {
@@ -48,6 +103,9 @@ export function gitState(root: string): GitState {
       subject: subject.join("\t"),
     });
   }
+  const hasMore = commits.length > limit;
+  if (hasMore) commits.length = limit;
+  attachSessions(commits, sessions);
   const changed = (git(root, ["status", "--porcelain"]) ?? "").split("\n").filter(Boolean).length;
-  return { branches, commits, changed };
+  return { branches, commits, changed, hasMore };
 }

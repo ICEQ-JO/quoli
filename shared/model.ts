@@ -150,12 +150,17 @@ export interface Commit {
   author: string;
   at: string;
   refs: string[];
+  /** Recorded sessions whose `git commit` tool output reported creating this commit. */
+  sessions?: string[];
 }
 
 export interface GitState {
   branches: Branch[];
+  /** Newest first, in `--topo-order` (children before parents) so lanes are stable. */
   commits: Commit[];
   changed: number;
+  /** True when older commits exist beyond the requested `limit`. */
+  hasMore: boolean;
 }
 
 /* ---------- Infra ---------- */
