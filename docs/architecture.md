@@ -67,5 +67,5 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - File-level code map; imports are resolved for relative JS/TS only.
 - Infra is what config files declare; hosted metrics need provider connections that do not exist yet.
 - Large repos: the code map lists up to 50,000 paths and reads line counts/imports for up to 5,000 files (≤ 512 KB); the Code lens opens at folder level. Git history pages 200 commits at a time (max 2,000 per request).
-- Dark theme only.
+- Themes: dark and light (System follows the OS). Contrast is enforced by `tests/theme-contrast.test.ts`; accessibility was checked with axe-core and keyboard walkthroughs, not a real screen reader.
 - Cost and the Summary report are heuristics: commands are classified from their text, line counts come from recorded Edit/MultiEdit/Write inputs (a Write's removed lines are unknown), failed edits are ignored, and only edits inside the project root are counted. Edits made through Bash (sed, formatters, generators) are not seen. The checklist lists things worth a look and never says the work is correct.

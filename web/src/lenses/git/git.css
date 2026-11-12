@@ -113,7 +113,8 @@
 
 .g-row.dim .g-subject,
 .g-row.dim .g-sha {
-  opacity: 0.55;
+  /* De-emphasised but still readable (faint passes 4.5:1); opacity would fail contrast. */
+  color: var(--faint);
 }
 
 .g-row.selected {

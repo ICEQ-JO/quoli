@@ -132,7 +132,17 @@ Limits: the Graph view of a large session is still dense (Timeline is the defaul
 
 ## Increment 4: Product polish (M)
 
-Issue: #94 · Status: **not started**
+Issue: #94 · Status: **done** (on branch `claude/stoic-bardeen-5zymlb`)
+
+Delivered:
+- **Design tokens** for colour, type (11/12/13/15/18/24) and spacing; stray literal colours replaced in CSS and lens code.
+- **Light theme** plus Settings → Appearance (System / Dark / Light, per viewer, applied before first paint; React Flow follows it).
+- **Contrast:** a unit test checks token pairs in both themes (text and secondary text ≥ 4.5:1, faint small labels ≥ 4.5:1, accents ≥ 3:1). An axe-core scan (`axe-core` 4.11.0) of Home, Projects, Sessions, Settings and the five session tabs reports **0 violations in both themes** on the demo.
+- **Keyboard:** `?` shortcut overlay, lens tabs as a real tablist with arrow keys, one tab stop per canvas/list with arrow-key movement, timeline slider keys (←/→, Home/End, Space), skip link, focus moved to the main region on navigation, dialogs that trap and restore focus; shortcuts never fire while typing or under an open dialog.
+- **Screen readers:** labels on file chips, folder tiles, tool calls, commit rows and service cards; polite live region announcing new tool calls in a live session (batched every 4 s).
+- **States:** error-with-retry where a fetch can fail on every lens, the session board, sidebar and inspector; empty and loading states everywhere.
+
+Limits: loading states are text, not skeletons; tested with axe and keyboard walkthroughs, not with a real screen reader; the spacing scale exists but most padding is still literal.
 
 **User value:** It feels finished and trustworthy.
 

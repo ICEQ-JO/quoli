@@ -29,9 +29,9 @@ for (const [name, t] of Object.entries(themes)) {
         assert.ok(ratio(fg, bg) >= 4.5, `${fg} on ${bg} = ${ratio(fg, bg).toFixed(2)}`);
   });
 
-  test(`${name}: faint labels reach 3:1 and semantic colors read as text`, () => {
+  test(`${name}: faint labels reach 4.5:1 (they are small text) and semantic colors read as text`, () => {
     for (const bg of surfaces) {
-      assert.ok(ratio("--faint", bg) >= 3, `--faint on ${bg} = ${ratio("--faint", bg).toFixed(2)}`);
+      assert.ok(ratio("--faint", bg) >= 4.5, `--faint on ${bg} = ${ratio("--faint", bg).toFixed(2)}`);
       for (const fg of accents)
         assert.ok(ratio(fg, bg) >= 3, `${fg} on ${bg} = ${ratio(fg, bg).toFixed(2)}`);
     }
