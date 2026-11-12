@@ -380,6 +380,8 @@ export interface SyncStatus {
   lastError: string | null;
   /** Summaries sent so far (an updated session counts again). */
   sent: number;
+  /** A browser approval started from Settings (POST /api/sync/connect), until it completes. */
+  linking?: { pair: string; url: string; error: string | null } | null;
 }
 
 /** Live prices from models.dev: used for models the price table does not have. */

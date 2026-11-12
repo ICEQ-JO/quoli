@@ -1,4 +1,4 @@
-/* Quoli Classes (hosted): the app's tokens and components, laid out as one page. */
+/* The Quoli account page (hosted at /app/): the app's tokens and components, laid out as one page. */
 body {
   background: var(--bg);
 }
@@ -211,4 +211,73 @@ body {
   .class-page {
     padding: 16px;
   }
+}
+
+/* Sign-in, connecting a computer, the computers card (#154) */
+.class-signin {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.class-hero .notice {
+  width: 100%;
+}
+.class-section {
+  margin: 8px 0 -4px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-2);
+}
+.class-approve,
+.class-computers {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.class-computers .class-command,
+.class-computers .class-more {
+  justify-self: stretch;
+}
+.class-approve h2,
+.class-computers h2,
+.class-approve p,
+.class-computers p {
+  margin: 0;
+}
+.class-approve {
+  border-color: var(--accent, #ff6a2b);
+}
+.class-pair {
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+}
+.class-command {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.class-command code {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2, var(--bg));
+  font-size: var(--fs-sm);
+}
+.class-more summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.class-more[open] summary {
+  margin-bottom: 10px;
+}
+.class-keys {
+  display: grid;
+  gap: 10px;
 }

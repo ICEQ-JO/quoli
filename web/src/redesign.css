@@ -1743,14 +1743,37 @@ ul.reasons li {
   margin: 4px 0 0 24px;
 }
 
-/* Settings → Class sync */
-.sync .sync-steps {
-  margin: 8px 0 12px;
-  padding-left: 20px;
+/* Settings → Team sync */
+.sync-connect {
+  margin: 12px 0 4px;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.sync-connect p,
+.sync-link p {
+  margin: 0;
+}
+.sync-link {
+  margin: 12px 0 4px;
+  display: grid;
+  gap: 8px;
+}
+.sync-pair {
+  font-size: var(--fs-lg, 1.125rem);
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+}
+.sync-manual {
+  margin-top: 12px;
+}
+.sync-manual summary {
+  cursor: pointer;
   color: var(--text-2);
   font-size: var(--fs-sm);
-  display: grid;
-  gap: 4px;
+}
+.sync-manual .field-row {
+  margin-top: 8px;
 }
 .sync .field-row {
   max-width: 640px;

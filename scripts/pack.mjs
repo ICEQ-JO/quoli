@@ -84,14 +84,15 @@ One local map of what your coding agents did: every Claude Code, Codex, OpenCode
 what it changed, what it cost, what failed and where it looped.
 
 \`\`\`sh
-npx https://iceq.best/quoli-${pkg.version}.tgz setup   # once: records every repository for the agents on this machine
-npx https://iceq.best/quoli-${pkg.version}.tgz         # open http://127.0.0.1:4400
+npx https://iceq.best/quoli-${pkg.version}.tgz connect   # once: set up the agents, link your Quoli account, start
+npx https://iceq.best/quoli-${pkg.version}.tgz setup     # or: set up the agents without an account
+npx https://iceq.best/quoli-${pkg.version}.tgz           # open http://127.0.0.1:4400
 \`\`\`
 
 - Requires Node.js 22.13 or newer.
 - Everything stays on your machine in \`~/.quoli\`. The only outbound request is a daily download of
-  public model prices from models.dev, and, only if you turn it on, Team sync, which shares
-  session summaries (never prompts or code) with your team.
+  public model prices from models.dev and, only once you connect a Quoli account, Team sync,
+  which shares session summaries (never prompts or code) with your account and teams.
 - \`setup --remove\` takes Quoli out of every agent again; \`--help\` lists the rest.
 
 More: https://iceq.best

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
@@ -17,9 +18,15 @@ const siteUrl = (): Plugin => ({
   transformIndexHtml: (html) => html.replaceAll("%SITE%", site),
 });
 
+/** The account page shows the install command for this version of the package. */
+const version: string = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8"),
+).version;
+
 export default defineConfig({
   root: "web",
   plugins: [react(), siteUrl()],
+  define: { "import.meta.env.VITE_QUOLI_VERSION": JSON.stringify(version) },
   build: {
     outDir: "../dist",
     emptyOutDir: true,

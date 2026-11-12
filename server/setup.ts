@@ -162,7 +162,7 @@ export const START = process.env.QUOLI_BUNDLED === "1" ? PACKAGE : "pnpm dev";
 const SETUP = process.env.QUOLI_BUNDLED === "1" ? `${PACKAGE} setup` : "pnpm quoli-setup";
 
 /** `quoli setup [agent…] [--remove]`; returns the exit code. */
-export function setupCli(args: string[]): number {
+export function setupCli(args: string[], hint = true): number {
   const remove = args.includes("--remove");
   const named = args.filter((a) => !a.startsWith("--")) as HookAgent[];
   const unknown = named.filter((a) => !HOOK_AGENTS.includes(a));
@@ -186,7 +186,7 @@ export function setupCli(args: string[]): number {
         : `  ✓ ${name} ${remove ? "removed from" : "→"} ${r.file}`,
     );
   }
-  if (!remove) {
+  if (!remove && hint) {
     console.log(
       `\nEvery repository you open with these agents is now recorded. Start Quoli with \`${START}\`.`,
     );

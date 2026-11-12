@@ -17,6 +17,34 @@ const SUPABASE_URL =
   (import.meta.env.VITE_SUPABASE_URL as string | undefined) || HOSTED_SUPABASE.url;
 const KEY =
   (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || HOSTED_SUPABASE.publishableKey;
+/** One command sets up Quoli, links the computer through this page, and starts it (#154). */
+const CONNECT = `npx https://${location.hostname === "localhost" || location.hostname === "127.0.0.1" ? "iceq.best" : location.host}/quoli-${import.meta.env.VITE_QUOLI_VERSION}.tgz connect`;
+/** A code from `quoli connect` waiting for approval, kept across the sign-in redirect. */
+const PENDING = "quoli.connect";
+
+interface Account {
+  computers: number;
+  lastUploadAt: string | null;
+  sessions: number;
+}
+
+function takeConnectCode(): string | null {
+  const fromUrl = new URLSearchParams(location.search).get("connect");
+  try {
+    if (fromUrl && /^[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(fromUrl)) {
+      sessionStorage.setItem(PENDING, fromUrl.toUpperCase());
+      history.replaceState(null, "", location.pathname);
+    }
+    return sessionStorage.getItem(PENDING);
+  } catch {
+    return fromUrl;
+  }
+}
+const dropConnectCode = () => {
+  try {
+    sessionStorage.removeItem(PENDING);
+  } catch {}
+};
 
 interface ClassRow {
   id: string;
@@ -60,6 +88,7 @@ export function ClassApp() {
   const client = useMemo(() => (SUPABASE_URL && KEY ? createClient(SUPABASE_URL, KEY) : null), []);
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
+  const [pending, setPending] = useState<string | null>(takeConnectCode);
 
   useEffect(() => {
     if (!client) return;
@@ -91,9 +120,17 @@ export function ClassApp() {
         {!client ? (
           <p className="notice">Quoli accounts are not set up for this site yet.</p>
         ) : !ready ? null : session ? (
-          <SignedIn client={client} session={session} />
+          <SignedIn
+            client={client}
+            session={session}
+            pending={pending}
+            clearPending={() => {
+              dropConnectCode();
+              setPending(null);
+            }}
+          />
         ) : (
-          <SignIn client={client} />
+          <SignIn client={client} pending={pending} />
         )}
       </main>
     </div>
@@ -101,31 +138,52 @@ export function ClassApp() {
 }
 
 const login = (s: Session) =>
-  (s.user.user_metadata?.user_name as string | undefined) ?? s.user.email ?? "signed in";
+  (s.user.user_metadata?.user_name as string | undefined) ??
+  (s.user.user_metadata?.full_name as string | undefined) ??
+  s.user.email ??
+  "signed in";
 
-function SignIn({ client }: { client: SupabaseClient }) {
+function SignIn({ client, pending }: { client: SupabaseClient; pending: string | null }) {
   const [error, setError] = useState<string | null>(null);
+  const [google, setGoogle] = useState(false);
+  useEffect(() => {
+    // The Google button appears once Google sign-in is turned on in Supabase.
+    fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: KEY } })
+      .then((r) => r.json())
+      .then((s: { external?: { google?: boolean } }) => setGoogle(!!s.external?.google))
+      .catch(() => {});
+  }, []);
+  const signIn = async (provider: "github" | "google") => {
+    const { error } = await client.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${location.origin}/app/` },
+    });
+    if (error) setError(error.message);
+  };
   return (
     <section className="class-hero">
+      {pending && (
+        <p className="notice" role="status">
+          Sign in to connect your computer (code <code>{pending}</code>).
+        </p>
+      )}
       <h1>See how your team uses coding agents</h1>
       <p>
         Quoli runs on each person's own machine. In a team (a class, a company, a group of friends)
         members can share a summary of each session: which agent and model, how long, what it cost,
         how many calls failed or looped. Never their prompts or code.
       </p>
-      <button
-        type="button"
-        className="btn primary"
-        onClick={async () => {
-          const { error } = await client.auth.signInWithOAuth({
-            provider: "github",
-            options: { redirectTo: location.href },
-          });
-          if (error) setError(error.message);
-        }}
-      >
-        Sign in with GitHub
-      </button>
+      <div className="class-signin">
+        <button type="button" className="btn primary" onClick={() => signIn("github")}>
+          Sign in with GitHub
+        </button>
+        {google && (
+          <button type="button" className="btn" onClick={() => signIn("google")}>
+            Sign in with Google
+          </button>
+        )}
+      </div>
+      <p className="faint">Free. Your account is created the first time you sign in.</p>
       {error && (
         <p className="form-error" role="alert">
           {error}
@@ -135,8 +193,28 @@ function SignIn({ client }: { client: SupabaseClient }) {
   );
 }
 
-function SignedIn({ client, session }: { client: SupabaseClient; session: Session }) {
+function SignedIn({
+  client,
+  session,
+  pending,
+  clearPending,
+}: {
+  client: SupabaseClient;
+  session: Session;
+  pending: string | null;
+  clearPending: () => void;
+}) {
   const me = session.user.id;
+  const [account, setAccount] = useState<Account | null>(null);
+  const loadAccount = useCallback(async () => {
+    const { data } = await client.rpc("my_account");
+    if (data) setAccount(data as Account);
+  }, [client]);
+  useEffect(() => {
+    loadAccount();
+    const t = setInterval(loadAccount, 60_000);
+    return () => clearInterval(t);
+  }, [loadAccount]);
   const [classes, setClasses] = useState<ClassRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(async () => {
@@ -157,14 +235,139 @@ function SignedIn({ client, session }: { client: SupabaseClient; session: Sessio
           {error}
         </p>
       )}
+      {pending && (
+        <Approve
+          client={client}
+          pair={pending}
+          onDone={() => {
+            clearPending();
+            // The computer collects its key within a couple of seconds.
+            setTimeout(loadAccount, 4000);
+          }}
+        />
+      )}
+      <Computers client={client} me={me} account={account} />
+      <h2 className="class-section">Teams</h2>
       {/* Someone who owns a team sees it first; everyone else starts with joining. */}
       {teaching.length > 0 && <Teaching client={client} classes={teaching} onChange={load} />}
       <div className="class-grid">
         <Joined client={client} me={me} classes={joined} onChange={load} />
-        <SyncKey client={client} me={me} />
+        {classes && !teaching.length && <Teaching client={client} classes={[]} onChange={load} />}
       </div>
-      {classes && !teaching.length && <Teaching client={client} classes={[]} onChange={load} />}
     </>
+  );
+}
+
+/* ---------- This account's computers (#154) ---------- */
+
+function Approve({
+  client,
+  pair,
+  onDone,
+}: {
+  client: SupabaseClient;
+  pair: string;
+  onDone: () => void;
+}) {
+  const [state, setState] = useState<"ask" | "done">("ask");
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <section className="card class-approve" aria-labelledby="approve-h">
+      {state === "done" ? (
+        <>
+          <h2 id="approve-h">Computer connected</h2>
+          <p>Your terminal continues by itself in a few seconds. You can close this tab.</p>
+          <button type="button" className="btn" onClick={onDone}>
+            Done
+          </button>
+        </>
+      ) : (
+        <>
+          <h2 id="approve-h">Connect this computer to your account?</h2>
+          <p>
+            Check that your terminal shows the same code: <code className="class-pair">{pair}</code>
+          </p>
+          <p className="faint">
+            Only approve a code from a <code>connect</code> you just ran yourself. Approving lets
+            that computer share session summaries as you.
+          </p>
+          <div className="field-row">
+            <button
+              type="button"
+              className="btn primary"
+              onClick={async () => {
+                setError(null);
+                const { error } = await client.rpc("link_approve", { p_pair: pair });
+                if (error) return setError(error.message);
+                dropConnectCode();
+                setState("done");
+              }}
+            >
+              Approve
+            </button>
+            <button type="button" className="btn" onClick={onDone}>
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Computers({
+  client,
+  me,
+  account,
+}: {
+  client: SupabaseClient;
+  me: string;
+  account: Account | null;
+}) {
+  if (!account) return null;
+  const command = (
+    <div className="class-command">
+      <code>{CONNECT}</code>
+      <CopyButton text={CONNECT} />
+    </div>
+  );
+  return (
+    <section className="card class-computers" aria-labelledby="computers-h">
+      {account.computers === 0 ? (
+        <>
+          <h2 id="computers-h">Connect your computer</h2>
+          <p>
+            Quoli runs on your computer and records what your coding agents do. Run this in a
+            terminal: it sets up Claude Code, Codex, OpenCode and Pi, links the computer to this
+            account (you approve a code here), and opens Quoli.
+          </p>
+          {command}
+          <p className="faint">Needs Node.js 22.13 or newer. Your prompts and code stay on it.</p>
+        </>
+      ) : (
+        <>
+          <h2 id="computers-h">Your computers</h2>
+          <p>
+            {account.computers} {account.computers === 1 ? "connection" : "connections"} ·{" "}
+            {account.lastUploadAt ? `last upload ${ago(account.lastUploadAt)}` : "no uploads yet"} ·{" "}
+            {compact(account.sessions)} {account.sessions === 1 ? "session" : "sessions"} shared
+          </p>
+          <details className="class-more">
+            <summary>Connect another computer</summary>
+            {command}
+          </details>
+        </>
+      )}
+      <details className="class-more">
+        <summary>Sync keys and shared data</summary>
+        <SyncKey client={client} me={me} />
+      </details>
+    </section>
   );
 }
 
@@ -642,11 +845,10 @@ function SyncKey({ client, me }: { client: SupabaseClient; me: string }) {
     count();
   }, [count]);
   return (
-    <section className="card" aria-labelledby="key-h">
-      <h2 id="key-h">Your sync key</h2>
+    <div className="class-keys">
       <p className="faint">
-        Paste it into Quoli on your computer: Settings → Team sync. Then turn on “Send session
-        summaries to my teams”.
+        If connecting does not work, create a sync key and paste it into Quoli on your computer:
+        Settings → Team sync → Use a sync key instead.
       </p>
       {key ? (
         <div className="class-key">
@@ -710,7 +912,7 @@ function SyncKey({ client, me }: { client: SupabaseClient; me: string }) {
           {notice}
         </p>
       )}
-    </section>
+    </div>
   );
 }
 

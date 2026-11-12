@@ -3,10 +3,10 @@ import { createServer, type IncomingMessage } from "node:http";
 import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyRetention, createApp, json } from "./app.ts";
-import { refreshHooks } from "./connect.ts";
+import { HOOK_AGENTS, refreshHooks } from "./connect.ts";
 import { Store } from "./db.ts";
 import { startLivePrices } from "./liveprices.ts";
-import { refreshSetup, START, spoolFile } from "./setup.ts";
+import { isSetUp, refreshSetup, START, spoolFile } from "./setup.ts";
 import { drainSpool } from "./spool.ts";
 import { waitlistRequest } from "./waitlist.ts";
 
@@ -98,7 +98,11 @@ setInterval(() => applyRetention(store), 3_600_000).unref();
 
 server.listen(PORT, HOST, () => {
   console.log(`\n  Quoli → http://${HOST}:${PORT}${landing ? "/landing/" : ""}\n`);
-  if (!landing && !store.roots().length) {
+  if (!landing && !store.roots().length && HOOK_AGENTS.some(isSetUp)) {
+    console.log(
+      "  No sessions yet: start your coding agent in any repository and it appears here.\n",
+    );
+  } else if (!landing && !store.roots().length) {
     console.log(
       `  No sessions yet. Run \`${START === "pnpm dev" ? "pnpm quoli-setup" : `${START} setup`}\` once, or \`${START === "pnpm dev" ? "pnpm demo" : `${START} demo`}\` to explore sample data.\n`,
     );
