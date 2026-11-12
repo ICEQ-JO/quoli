@@ -129,13 +129,14 @@ export function InfraLens(ctx: LensContext) {
             },
             style: { width: W },
             width: W,
-            height: s.basis === "inferred" || isAdded(s) ? 150 : 128,
+            height: (s.basis === "inferred" || isAdded(s) ? 150 : 128) + (s.metrics ? 24 : 0),
             ...nodeA11y(serviceLabel(s, editedUnder(touched, s.sourceDir).length), first),
           });
           first = false;
-          // Long names wrap onto extra lines, so leave room for them.
+          // Long names and the live metrics row wrap onto extra lines, so leave room for them.
           y +=
             (s.basis === "inferred" || isAdded(s) ? 172 : 150) +
+            (s.metrics ? 24 : 0) +
             Math.max(0, Math.ceil(s.name.length / 16) - 1) * 20;
         }
         y += 28;

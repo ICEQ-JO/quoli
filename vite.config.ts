@@ -1,9 +1,25 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+/**
+ * Link previews need an absolute image URL. On Vercel the production domain (including a custom
+ * one) is known at build time; VITE_PUBLIC_SITE_URL overrides it. Without either, the tags keep a
+ * root-relative path, which most previewers still resolve.
+ */
+const site = (
+  process.env.VITE_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "")
+).replace(/\/+$/, "");
+const siteUrl = (): Plugin => ({
+  name: "quoli-site-url",
+  transformIndexHtml: (html) => html.replaceAll("%SITE%", site),
+});
 
 export default defineConfig({
   root: "web",
-  plugins: [react()],
+  plugins: [react(), siteUrl()],
   build: {
     outDir: "../dist",
     emptyOutDir: true,
