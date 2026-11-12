@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
+import { drawOptics, drawWorkbench } from "./pixel-art.ts";
 import { SESSION_STEPS, sessionAt } from "./scene-model.ts";
 
-type Scene = "forest" | "field" | "recorder" | "signal";
+type Scene = "forest" | "field" | "recorder" | "signal" | "workbench" | "panorama";
 const hash = (n: number) => {
   const value = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return value - Math.floor(value);
@@ -221,47 +222,6 @@ function recorder(ctx: CanvasRenderingContext2D, w: number, h: number, seconds: 
   for (let i = 0; i < 17; i++) ctx.fillRect(x + 94 + i * 3, y + 131 + (i % 2), 3, 1);
 }
 
-function signals(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
-  const state = sessionAt(time);
-  const middle = w / 2;
-  const cy = h * 0.52;
-  ctx.fillStyle = "#477da8";
-  const cell = 3;
-  for (let x = 0; x < w; x += cell) {
-    for (let y = 0; y < h; y += cell) {
-      const dx = x - middle,
-        dy = y - cy;
-      const spread = Math.abs(Math.sin(time * 0.18)) * 75 + 20;
-      const distance = Math.hypot(dx * 0.7, dy);
-      const phase = Math.sin(distance / 10 - time * 1.3);
-      const probability = Math.max(0, 1 - distance / spread) * 0.55;
-      if (hash(x * 311 + y) < probability && phase > -0.2) {
-        ctx.globalAlpha = 0.08 + Math.max(0, phase) * 0.42;
-        ctx.fillRect(x, y, cell - 1, cell - 1);
-      }
-    }
-  }
-  ctx.globalAlpha = 1;
-  const xs = [middle - 105, middle - 35, middle + 35, middle + 105];
-  ctx.strokeStyle = "#a9d8f2";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(xs[0], cy);
-  ctx.lineTo(xs[3], cy);
-  ctx.stroke();
-  xs.forEach((x, i) => {
-    ctx.fillStyle = i <= state.step % 4 ? "#477da8" : "#c7e6f7";
-    ctx.fillRect(x - 9, cy - 9, 18, 18);
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(x - 4, cy - 4, 8, 8);
-    ctx.fillStyle = "#477da8";
-    ctx.fillRect(x - 2, cy - 2, 4, 4);
-  });
-  const packet = xs[0] + state.progress * (xs[3] - xs[0]);
-  ctx.fillStyle = "#172d43";
-  ctx.fillRect(Math.round(packet), cy - 2, 4, 4);
-}
-
 export function PixelScene({
   kind,
   paused = false,
@@ -282,9 +242,14 @@ export function PixelScene({
     if (!element) return;
     const context = element.getContext("2d");
     if (!context) return;
-    const width = kind === "recorder" ? 350 : kind === "signal" ? 480 : 420;
-    const height =
-      kind === "recorder" ? 220 : kind === "signal" ? 160 : kind === "forest" ? 340 : 190;
+    const [width, height] = {
+      forest: [420, 340],
+      field: [420, 190],
+      recorder: [350, 220],
+      signal: [480, 240],
+      workbench: [400, 240],
+      panorama: [960, 190],
+    }[kind];
     element.width = width;
     element.height = height;
     context.imageSmoothingEnabled = false;
@@ -299,10 +264,11 @@ export function PixelScene({
     function draw() {
       if (!context) return;
       context.clearRect(0, 0, width, height);
-      if (kind === "forest" || kind === "field")
+      if (kind === "forest" || kind === "field" || kind === "panorama")
         landscape(context, width, height, time, kind === "field");
       else if (kind === "recorder") recorder(context, width, height, time);
-      else signals(context, width, height, time);
+      else if (kind === "workbench") drawWorkbench(context, time);
+      else drawOptics(context, time);
     }
     function tick(now: number) {
       frame = 0;
@@ -365,8 +331,10 @@ export function PixelScene({
       : kind === "forest"
         ? "An original animated pixel forest with layered blue contours, drifting light, and distant trees."
         : kind === "signal"
-          ? "Recorded activity passes through four connected viewpoints."
-          : undefined;
+          ? "An original pixel optical instrument: four fitted lenses on one rail, linked by stepped cables and a moving signal."
+          : kind === "workbench"
+            ? "A pixel workbench with a connected map on its monitor, a reading lamp, notebooks, a fern and steam rising from a cup."
+            : undefined;
   return (
     <canvas
       ref={canvas}

@@ -9,7 +9,7 @@ related_targets: ["web/src/landing/landing.css","web/src/landing/PixelScene.tsx"
 
 Mode: Persuade. Audience: developers using coding agents. Job: understand how Quoli connects an agent session to code, Git and repository infrastructure; inspect synthetic product evidence; join the waitlist.
 
-Owner-approved baby-blue pixel identity (#159) supersedes the reference-site structural reference. Preserve original pixel scenery and working recorder; ice/baby blue/denim/midnight/cream, stepped open Q with connected pixel. One continuous sky-field hero, readable promise and actions left, original scenery and four-lens trace right. Horizontal product tabs above wide synthetic screenshots; collaboration, signup, small mission link, flat pale-blue footer. No chapter color switch.
+Owner-approved baby-blue pixel identity (#159) supersedes the reference-site structural reference. Preserve original pixel scenery and working recorder; ice/baby blue/denim/midnight/cream, stepped open Q with connected pixel. One continuous sky-field hero, readable promise and actions left, original scenery and four-lens trace right. Left-side product tabs beside wide synthetic screenshots; collaboration, signup, small mission link, pale-blue footer with a panoramic pixel forest. No chapter color switch.
 
 Keep the separate app's semantic activity colors unchanged. Current local support: Claude Code, Codex, OpenCode and Pi. Hosted sync and live provider capabilities stay distinguished. Demonstrations never read private evidence; waitlist behavior stays unchanged. Accessibility, mobile, dark theme, keyboard tabs, motion pause and reduced-motion reading remain required.
 

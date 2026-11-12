@@ -650,14 +650,30 @@ main {
 }
 .blue-chapter {
   max-width: 1240px;
-  text-align: center;
-  margin: 115px auto 0;
+  text-align: left;
+  margin: 95px auto 0;
   padding: 0 32px;
 }
+.product-intro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 42px;
+}
+.product-intro-copy p {
+  font-size: 18px;
+  color: var(--muted);
+  margin-top: 22px;
+  max-width: 560px;
+  text-wrap: pretty;
+}
 .chapter-signal {
-  aspect-ratio: 3 / 1;
-  max-width: 400px;
-  margin: 0 auto 24px;
+  aspect-ratio: 2 / 1;
+  width: 100%;
+  max-width: 520px;
+  justify-self: end;
+  background-image: radial-gradient(var(--dot) 0.8px, transparent 0.9px);
+  background-size: 12px 12px;
 }
 .blue-chapter h2 {
   font-size: 50px;
@@ -675,14 +691,17 @@ main {
   max-width: 700px;
 }
 .tour {
-  margin-top: 40px;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  margin-top: 42px;
   text-align: left;
 }
 .tour-tabs {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 20px;
+  grid-template-columns: 1fr;
+  gap: 6px;
 }
 .tour-tabs button {
   display: grid;
@@ -814,6 +833,14 @@ main {
 .collaborate-address a {
   color: var(--brand);
 }
+.workbench-art {
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 5 / 3;
+  margin-top: 25px;
+  background-image: radial-gradient(var(--dot) 0.8px, transparent 0.9px);
+  background-size: 12px 12px;
+}
 .collaborate-list {
   list-style: none;
   margin: 0;
@@ -944,6 +971,16 @@ main {
   width: 18px;
   height: 18px;
   color: var(--brand);
+}
+.footer-landscape {
+  height: 220px;
+  overflow: hidden;
+  background: var(--paper);
+}
+.footer-landscape canvas {
+  object-fit: cover;
+  object-position: center bottom;
+  mask-image: linear-gradient(180deg, transparent, #000 50px);
 }
 .site-footer {
   background: var(--tint);
@@ -1150,11 +1187,12 @@ main {
   .recorder-copy p {
     font-size: 16px;
   }
-  .tour-tabs span {
-    display: none;
+  .tour {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 20px;
   }
-  .tour-tabs button {
-    text-align: center;
+  .product-intro {
+    gap: 24px;
   }
   .collaborate {
     gap: 44px;
@@ -1282,14 +1320,29 @@ main {
   .blue-chapter h2 {
     font-size: 42px;
   }
-  .blue-chapter > p {
+  .product-intro {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  .product-intro-copy p {
     font-size: 16px;
+  }
+  .chapter-signal {
+    justify-self: center;
+    max-width: 480px;
+  }
+  .tour {
+    grid-template-columns: 1fr;
+  }
+  .tour-tabs span {
+    display: none;
   }
   .tour-tabs {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
   .tour-tabs button {
+    text-align: center;
     border-color: var(--border);
     padding: 10px;
   }

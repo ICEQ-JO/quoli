@@ -251,9 +251,12 @@ function ProductTour({
   );
 }
 
-function SiteFooter() {
+function SiteFooter({ paused }: { paused: boolean }) {
   return (
     <footer className="site-footer">
+      <div className="footer-landscape">
+        <PixelScene kind="panorama" paused={paused} />
+      </div>
       <div className="footer-content">
         <div className="footer-description">
           <Brand />
@@ -627,18 +630,22 @@ export function Landing() {
             />
           </section>
           <section className="blue-chapter" id="product" aria-labelledby="product-title">
-            <div className="chapter-signal">
-              <PixelScene kind="signal" paused={paused} />
+            <div className="product-intro">
+              <div className="product-intro-copy">
+                <h2 id="product-title">
+                  The activity is only
+                  <br />
+                  <em>part of the story.</em>
+                </h2>
+                <p>
+                  Follow one session from the prompt to the files it changed, the branch it landed
+                  on and the services that run that code. These are screenshots of the real app.
+                </p>
+              </div>
+              <div className="chapter-signal">
+                <PixelScene kind="signal" paused={paused} />
+              </div>
             </div>
-            <h2 id="product-title">
-              The activity is only
-              <br />
-              <em>part of the story.</em>
-            </h2>
-            <p>
-              Follow one session from the prompt to the files it changed, the branch it landed on
-              and the services that run that code. These are screenshots of the real app.
-            </p>
             <ProductTour paused={paused} dark={dark} view={view} onView={setView} />
             <p className="tour-note">
               Every screen above is Quoli running its built-in synthetic demo: no real sessions, no
@@ -674,6 +681,9 @@ export function Landing() {
                   Or write to <a href={`mailto:${contact}`}>{contact}</a>
                 </small>
               )}
+              <div className="workbench-art">
+                <PixelScene kind="workbench" paused={paused} />
+              </div>
             </div>
             <ul className="collaborate-list">
               <li>
@@ -720,7 +730,7 @@ export function Landing() {
           </a>
         </main>
       )}
-      <SiteFooter />
+      <SiteFooter paused={paused} />
       <button
         className="motion-control"
         type="button"

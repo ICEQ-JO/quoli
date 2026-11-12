@@ -87,9 +87,11 @@ main marketing sections are bounded between 1140px and 1240px. Navigation is
 follows the copy inside the same clipped frame.
 
 The recording section leads with explanation above the working recorder, beside
-an entirely inset terminal. Six horizontal product tabs sit above a wide screenshot;
-they become two rows of three on mobile. Collaboration uses a ruled list, followed
-by the waitlist, a small mission link and a flat pale-blue footer. There is no
+an entirely inset terminal. The product introduction is left-aligned beside a detailed four-lens optical
+instrument. Six product tabs sit to the left of the screenshot on desktop;
+they become two rows of three above it on mobile. Collaboration pairs a ruled list with a pixel workbench (monitor, lamp,
+notebooks, fern and steaming cup), followed
+by the waitlist, a small mission link and a pale-blue footer beneath a panoramic animated forest. There is no
 full-page dotted ground, oversized mission banner or contour-textured footer.
 A 1440px rule adds hero side margins; breakpoints at 1000, 760 and 440px
 reflow content rather than clipping it.
@@ -100,8 +102,8 @@ Depth is local: the hero trace, terminal and screenshot use soft offset shadows.
 The page, text sections and footer stay flat. Borders distinguish controls and
 selected tabs. Pixel canvases render at low resolution without smoothing; the
 hero uses object-fit cover to preserve its pixel proportions and a short edge
-mask to merge scenery into the copy field. The chapter signal preserves a 3:1
-aspect ratio. Trace points and connector share one bordered row.
+mask to merge scenery into the copy field. The optical instrument preserves a 2:1
+aspect ratio; the workbench preserves 5:3. Trace points and connector share one bordered row.
 
 ## Shapes
 
@@ -137,3 +139,12 @@ The same geometry appears in the favicon, header, recorder summary and signup.
   capabilities. Do not invent customers, benchmarks, prices or availability.
 - Do not recreate the reference site's paired green panels, chapter color switch, or textured
   blue footer. Do not apply landing colors to the app's semantic activity tokens.
+
+## Owner refinement — more artwork
+
+The owner asked to restore life and left-side product navigation after reviewing
+the initial blue pass. `pixel-art.ts` supplies the original optical rail and
+workbench; `PixelScene.tsx` supplies the footer panorama through the existing
+landscape painter. The same bounded canvas lifecycle handles visibility, pause
+and reduced motion. Art does not claim actual capture or infrastructure status.
+Deterministic drawing tests exercise both new scenes with no browser dependency.

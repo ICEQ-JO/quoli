@@ -54,8 +54,8 @@ structure is superseded. Keep the working recorder; avoid rabbit/robot mascots,
 game-world treatment, paired green panels and a green-to-blue chapter switch.
 
 The landing mark is a stepped open Q with a connected square endpoint. One sky-field
-hero pairs the promise and action with original pixel scenery. Product tabs sit above
-real synthetic-demo screenshots. The app's activity colors remain semantic and separate.
+hero pairs the promise and action with original pixel scenery. Product tabs sit to the left of
+real synthetic-demo screenshots on desktop, with a compact mobile grid. The app's activity colors remain semantic and separate.
 
 The current app supports Claude Code, Codex, OpenCode and Pi locally. Future hosted
 sync and live provider capabilities must remain distinguished from local support.

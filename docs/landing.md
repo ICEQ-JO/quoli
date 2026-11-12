@@ -8,8 +8,9 @@ The owner-approved baby-blue identity in [#159](https://github.com/ICEQ-JO/quoli
 supersedes the earlier reference-site structural direction. Original pixel scenery and the
 working recorder remain, recolored in ice blue, baby blue, denim, midnight and cream.
 A continuous hero places the promise and actions beside the scenery; a stepped open Q
-and connected pixel form the landing mark. Horizontal tabs introduce a wide product
-tour, and a flat pale-blue footer closes the page. See [landing-design.md](landing-design.md).
+and connected pixel form the landing mark. Left-side tabs introduce the product
+tour. A four-lens optical instrument, illustrated workbench and panoramic footer
+forest add original pixel artwork throughout the page. See [landing-design.md](landing-design.md).
 
 Jost sans carries explanation and the hero; Jersey 10 carries section headings and
 the wordmark. Both are self-hosted under their included OFL licenses.
@@ -47,7 +48,7 @@ fills as the session plays; reduced motion shows every step.
 
 ## Product tour and screenshots
 
-The product section is a tour of the real app: six horizontal tabs (Review, Agents, Code, Git, Infra,
+The product section is a tour of the real app: six side tabs (a compact grid on mobile) (Review, Agents, Code, Git, Infra,
 Dashboard) switch a screenshot in the baby-blue frame, with a caption saying what it shows.
 Tabs support arrow keys, Home and End, and the lens links under the hero (`#tour-tab-code`
 and so on) open the matching tab. The screenshot itself links to the full-size image.
@@ -100,3 +101,9 @@ verified no horizontal overflow at 320, 390, 760, 1000 and 1440px in both themes
 keyboard tab navigation, reduced-motion evidence visibility, and axe-core reported
 no WCAG A/AA violations in either theme at 1440px. Synthetic screenshots only; no
 real emails submitted, private evidence read, deployment or real-screen-reader test.
+
+Owner refinement in PR #160 restores left-side desktop tour tabs and left-aligned
+product copy, and adds original optical-instrument and workbench scenes plus a
+panoramic forest footer. The two new drawing tests bring the suite to 167 passing
+tests. Browser checks confirm animation progresses, freezes on pause, and stays
+static under reduced motion; both themes pass axe and 320–1440px overflow checks.
