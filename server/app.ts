@@ -28,6 +28,7 @@ import {
   validatePrices,
 } from "./prices.ts";
 import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
+import { liveSession } from "./steps.ts";
 import { usageReport } from "./usage.ts";
 
 const version: string = JSON.parse(
@@ -171,7 +172,7 @@ export function createApp(store: Store, port: () => number) {
       .filter((r) => r.reasons.length)
       .slice(0, 20);
     return {
-      live: all.filter((d) => d.live).map(summarizeSession),
+      live: all.filter((d) => d.live).map((d) => liveSession(d, prices, now)),
       needsReview,
       recent: all.slice(0, 10).map(summarizeSession),
       tokens: {

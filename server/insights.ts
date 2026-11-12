@@ -6,6 +6,7 @@ import {
   type SessionDetail,
   type ToolCategory,
 } from "../shared/model.ts";
+import { lastActivityAt } from "./steps.ts";
 import { localDate } from "./usage.ts";
 
 const DAY = 86_400_000;
@@ -30,11 +31,7 @@ export function sessionMs(d: SessionDetail): number | null {
   if (d.live) return null;
   const hit = lengths.get(d);
   if (hit !== undefined) return hit;
-  let last = ms(d.endedAt ?? d.startedAt);
-  for (const t of d.turns) last = Math.max(last, ms(t.at));
-  for (const c of d.toolCalls) last = Math.max(last, ms(c.endedAt ?? c.startedAt));
-  for (const u of d.usage) last = Math.max(last, ms(u.at));
-  const length = Math.max(0, last - ms(d.startedAt));
+  const length = Math.max(0, ms(lastActivityAt(d)) - ms(d.startedAt));
   lengths.set(d, length);
   return length;
 }

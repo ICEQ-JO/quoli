@@ -1,6 +1,7 @@
 import type { Overview, Project } from "../../../shared/model.ts";
 import { modKey } from "../a11y.ts";
 import { Link, paths } from "../router.ts";
+import { LiveStrip } from "./Live.tsx";
 import { Icon } from "./ui.tsx";
 
 interface Props {
@@ -114,6 +115,7 @@ export function NavSidebar({ pathname, projects, overview }: Props) {
         })}
       </ul>
 
+      <LiveStrip live={live} />
       <ul className="nav-list nav-bottom">
         {item(paths.settings(), "Settings", Icon.settings, pathname.startsWith("/settings"))}
         <li>

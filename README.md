@@ -12,6 +12,7 @@ Everything runs locally. Nothing leaves your machine.
 - **Dashboard:** spend today, this week and this month, plus live sessions, sessions that need a review, recent sessions and projects.
 - **Sessions:** every recorded session across projects, with filters (project, agent, status, failures).
 - **Usage:** spend over time, by model and by project; how much prompt caching saved; the most expensive sessions; optional daily and monthly budgets.
+- **Live sessions:** the Dashboard and the sidebar show what each running agent is doing right now, for how long, and what it has spent (also in the last 10 minutes). Optional local alerts (Settings → Alerts, off by default) tell you when a session passes a cost, the daily budget is reached, a possible loop appears, a session goes quiet or ends, in Quoli and optionally as a system notification.
 - **Insights:** is it getting better or worse? Sessions per day, median and 90th-percentile cost per session, failure rate, tool mix, session length and possible loops, by agent and model. Click a day to see its sessions.
 - **Projects and Settings:** connect repositories, edit model prices, set data retention and redaction, choose the theme.
 

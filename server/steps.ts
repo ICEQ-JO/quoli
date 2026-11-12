@@ -1,6 +1,8 @@
 import type {
   Cost,
+  LiveSession,
   PriceTable,
+  SessionDetail,
   TokenTotals,
   ToolCall,
   Turn,
@@ -86,6 +88,45 @@ export function turnStats(
       cost,
     };
   });
+}
+
+/** The last recorded activity: a prompt, a call starting or ending, usage, or the end event. */
+export function lastActivityAt(d: SessionDetail): string {
+  let last = ms(d.endedAt ?? d.startedAt);
+  for (const t of d.turns) last = Math.max(last, ms(t.at));
+  for (const c of d.toolCalls) last = Math.max(last, ms(c.endedAt ?? c.startedAt));
+  for (const u of d.usage) last = Math.max(last, ms(u.at));
+  return new Date(last).toISOString();
+}
+
+export const RECENT_MS = 10 * 60_000;
+
+/** What the live panel shows for a running session: its current step and recent spend. */
+export function liveSession(d: SessionDetail, prices: PriceTable, now = Date.now()): LiveSession {
+  const { agents: _a, turns: _t, toolCalls, files: _f, usage, report: _r, ...summary } = d;
+  const running = toolCalls.filter((c) => c.status === "running").at(-1);
+  const step = running ?? toolCalls.at(-1) ?? null;
+  const recent = new Map<string | null, TokenTotals>();
+  for (const u of usage) {
+    if (now - ms(u.at) > RECENT_MS) continue;
+    if (!recent.has(u.model)) recent.set(u.model, zeroTokens());
+    add(recent.get(u.model) as TokenTotals, u.tokens);
+  }
+  return {
+    ...summary,
+    lastAt: lastActivityAt(d),
+    step: step && {
+      name: step.name,
+      category: step.category,
+      summary: step.summary,
+      status: step.status,
+      startedAt: step.startedAt,
+    },
+    recentUsd: costOf(
+      [...recent].map(([model, tokens]) => ({ model, tokens })),
+      prices,
+    ).usd,
+  };
 }
 
 /** The `n` longest finished calls, longest first. Running calls are left out. */
