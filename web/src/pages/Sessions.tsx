@@ -230,7 +230,7 @@ function Row({ s, name }: { s: SessionSummary; name: string }) {
             : "Estimate from list prices"
         }
       >
-        {money(s.cost)}
+        {money(s.cost, s.tokens)}
         {s.cost.unpriced.length > 0 && <span className="warn"> ⚠</span>}
       </td>
       <td className={`num ${s.failures ? "fail" : "faint"}`}>{s.failures}</td>

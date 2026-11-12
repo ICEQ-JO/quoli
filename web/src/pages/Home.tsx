@@ -133,7 +133,8 @@ function TokenCard({
               : "Estimate from list prices, not an invoice"
           }
         >
-          {money(cost)} est.
+          {money(cost, tokens)}
+          {cost.usd !== null && " est."}
           {cost.unpriced.length > 0 && " ⚠"}
         </span>
       </p>

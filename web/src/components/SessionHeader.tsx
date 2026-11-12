@@ -1,5 +1,5 @@
 import type { SessionDetail } from "../../../shared/model.ts";
-import { ago, duration, money } from "../format.ts";
+import { ago, duration, money, tokenSum } from "../format.ts";
 import { Link } from "../router.ts";
 import { useNow } from "./ui.tsx";
 
@@ -35,11 +35,11 @@ export function SessionHeader({
             )
           }
         >
-          {session.cost.usd === null ? (
+          {session.cost.usd === null && tokenSum(session.tokens) > 0 ? (
             "price unknown"
           ) : (
             <>
-              <b>{money(session.cost)}</b> est.
+              <b>{money(session.cost, session.tokens)}</b> est.
             </>
           )}
         </Link>

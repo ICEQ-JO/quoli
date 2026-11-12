@@ -1,9 +1,10 @@
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { ToolCall } from "../../shared/model.ts";
+import { plural } from "./format.ts";
 
 /** Pure helpers and small DOM utilities for keyboard use and screen readers. */
 
-export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+export { plural };
 
 /** "⌘" on Apple platforms, "Ctrl" elsewhere. */
 export const modKey = (platform = typeof navigator === "undefined" ? "" : navigator.platform) =>

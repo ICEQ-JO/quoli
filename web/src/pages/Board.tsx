@@ -329,6 +329,7 @@ export function BoardPage({
       {!summary && (
         <Inspector
           {...ctx}
+          hookStatus={project.hookStatus}
           lens={lens}
           onRefresh={() => {
             refreshCode();

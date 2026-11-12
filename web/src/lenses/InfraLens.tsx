@@ -206,7 +206,9 @@ function ServiceNode({ data }: NodeProps) {
         )}
       </div>
       {changed.length > 0 && (
-        <div className="svc-changed">✎ {changed.length} files changed by this session</div>
+        <div className="svc-changed">
+          ✎ {plural(changed.length, "file")} changed by this session
+        </div>
       )}
       {s.basis === "inferred" && (
         <div className="svc-basis" title={`inferred from ${s.evidence}`}>

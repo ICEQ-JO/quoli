@@ -9,7 +9,7 @@ import {
   PageHead,
   useNow,
 } from "../components/ui.tsx";
-import { ago } from "../format.ts";
+import { ago, plural } from "../format.ts";
 import { Link, paths } from "../router.ts";
 
 export function hookLabel(p: Project): string {
@@ -146,7 +146,7 @@ export function ProjectsPage() {
           close={() => setDeleting(null)}
           done={(r) => {
             setNotice(
-              `Deleted ${r.events} events from ${r.sessions} ${r.sessions === 1 ? "session" : "sessions"} of ${deleting.name}.`,
+              `Deleted ${plural(r.events, "event")} from ${plural(r.sessions, "session")} of ${deleting.name}.`,
             );
             setDeleting(null);
             refresh();

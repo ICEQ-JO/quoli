@@ -1,7 +1,7 @@
 import { type CSSProperties, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { AgentNode, SessionDetail, ToolCall } from "../../../../shared/model.ts";
 import { onRoveKey, toolLabel } from "../../a11y.ts";
-import { CATEGORY, compact, duration, fileName, tokenSum } from "../../format.ts";
+import { CATEGORY, compact, duration, fileName, plural, tokenSum } from "../../format.ts";
 import type { Selection } from "../../state.ts";
 import { collapseRuns, runLabel } from "./helpers.ts";
 
@@ -148,7 +148,7 @@ export function Timeline({ session, visible, selection, cursorId, select }: Prop
                 <header>
                   <span>Subagent · {b.agent.type ?? b.agent.id}</span>
                   <span className="ag-meta">
-                    {b.calls.length} calls · {compact(tokenSum(b.agent.tokens))} tokens
+                    {plural(b.calls.length, "call")} · {compact(tokenSum(b.agent.tokens))} tokens
                   </span>
                 </header>
                 {renderCalls(b.calls)}

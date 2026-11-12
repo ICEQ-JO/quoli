@@ -2,7 +2,7 @@ import { type Edge, Handle, MarkerType, type Node, type NodeProps, Position } fr
 import { useMemo, useState } from "react";
 import type { AgentNode, ToolCall } from "../../../shared/model.ts";
 import { nodeA11y, quietNode, toolLabel } from "../a11y.ts";
-import { CATEGORY, compact, duration, tokenSum } from "../format.ts";
+import { CATEGORY, compact, duration, plural, tokenSum } from "../format.ts";
 import { isSelected, type LensContext } from "../state.ts";
 import { GRAPH_FIT_ALL, GRAPH_RECENT, TIMELINE_MAX } from "./agents/helpers.ts";
 import { Timeline } from "./agents/Timeline.tsx";
@@ -238,7 +238,7 @@ function LaneNode({ data }: NodeProps) {
         {agent.kind === "main" ? "Main agent" : `Subagent · ${agent.type ?? agent.id}`}
       </div>
       <div className="lane-meta">
-        {calls} tool calls · {compact(tokenSum(agent.tokens))} tokens
+        {plural(calls, "tool call")} · {compact(tokenSum(agent.tokens))} tokens
       </div>
       <Handle type="source" position={Position.Right} className="h" />
     </div>

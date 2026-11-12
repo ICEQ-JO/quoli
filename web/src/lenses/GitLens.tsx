@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Branch, Commit, GitState, SessionSummary } from "../../../shared/model.ts";
 import { onRoveKey } from "../a11y.ts";
 import { api } from "../api.ts";
-import { ago } from "../format.ts";
+import { ago, plural } from "../format.ts";
 import { isSelected, type LensContext } from "../state.ts";
 import "./git/git.css";
 import { assignLanes, type LaneRow, reachable } from "./git/lanes.ts";
@@ -107,15 +107,13 @@ export function GitLens(ctx: LensContext) {
           key="worktree"
           className="g-row worktree"
           style={{ top: i * ROW }}
-          title={`${git.changed} uncommitted files${current ? ` on ${current.name}` : ""}`}
+          title={`${plural(git.changed, "uncommitted file")}${current ? ` on ${current.name}` : ""}`}
         >
           <svg className="g-lanes" width={gutter} height={ROW} aria-hidden="true">
             <title>Uncommitted changes</title>
             <circle cx={5 + step / 2} cy={ROW / 2} r={4} className="g-dot dashed" />
           </svg>
-          <span className="g-subject">
-            Uncommitted changes · {git.changed} {git.changed === 1 ? "file" : "files"}
-          </span>
+          <span className="g-subject">Uncommitted changes · {plural(git.changed, "file")}</span>
           {current && <span className="g-ref head">{current.name}</span>}
         </div>,
       );
@@ -173,7 +171,7 @@ export function GitLens(ctx: LensContext) {
                 {loading ? "Loading…" : `Load more (showing ${git.commits.length})`}
               </button>
             ) : (
-              <span className="g-end">Full history · {git.commits.length} commits</span>
+              <span className="g-end">Full history · {plural(git.commits.length, "commit")}</span>
             )}
           </div>
         </div>
@@ -336,39 +334,173 @@ function BranchList(p: {
   activeBranch: string | null;
   onSelect: (name: string) => void;
 }) {
-  const ordered = [...p.branches].sort((a, b) => Number(b.current) - Number(a.current));
+  const ordered = useMemo(
+    () => [...p.branches].sort((a, b) => Number(b.current) - Number(a.current)),
+    [p.branches],
+  );
+  const row = useRef<HTMLDivElement>(null);
+  const moreBtn = useRef<HTMLButtonElement>(null);
+  const opts = useRef<(HTMLButtonElement | null)[]>([]);
+  // Every chip stays rendered so its width can be read; chips past `fit` are hidden and clipped.
+  const [fit, setFit] = useState(ordered.length);
+  const [, setWidth] = useState(0);
+  const [open, setOpen] = useState(false);
+  const listId = useId();
+
+  useEffect(() => {
+    const el = row.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // Runs after every render (one cheap pass over the chips); setFit bails out when unchanged.
+  useLayoutEffect(() => {
+    const el = row.current;
+    if (!el) return;
+    const kids = [...el.querySelectorAll<HTMLElement>(".g-branch")];
+    const gap = 6;
+    const reserve = 104; // room for the "+N more" button
+    let used = 0;
+    let n = 0;
+    for (const k of kids) {
+      const w = k.offsetWidth + (n ? gap : 0);
+      const room = el.clientWidth - (n === kids.length - 1 ? 0 : reserve);
+      if (used + w > room) break;
+      used += w;
+      n++;
+    }
+    setFit(Math.max(1, n));
+  });
+
+  const hidden = ordered.slice(fit);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: focus the current branch only when the list opens
+  useEffect(() => {
+    if (!open) return;
+    const sel = ordered.findIndex((b) => isSelected(p.selection, "branch", b.name));
+    opts.current[Math.max(0, sel)]?.focus();
+    const away = (e: MouseEvent) => {
+      if (!(e.target as Element).closest(".g-branches")) setOpen(false);
+    };
+    document.addEventListener("mousedown", away);
+    return () => document.removeEventListener("mousedown", away);
+  }, [open]);
+  useEffect(() => {
+    if (!hidden.length) setOpen(false);
+  }, [hidden.length]);
+
+  const choose = (name: string) => {
+    setOpen(false);
+    p.onSelect(name);
+  };
+  const onListKey = (e: React.KeyboardEvent, i: number) => {
+    const go = (n: number) => {
+      e.preventDefault();
+      opts.current[(n + ordered.length) % ordered.length]?.focus();
+    };
+    if (e.key === "ArrowDown") go(i + 1);
+    else if (e.key === "ArrowUp") go(i - 1);
+    else if (e.key === "Home") go(0);
+    else if (e.key === "End") go(ordered.length - 1);
+    else if (e.key === "Escape" || e.key === "Tab") {
+      e.preventDefault();
+      setOpen(false);
+      moreBtn.current?.focus();
+    }
+  };
+
   return (
     <div className="g-branches">
-      {ordered.map((b) => {
-        const ran = p.sessions.filter((s) => s.branch === b.name);
-        return (
+      <div className="g-chips" ref={row}>
+        {ordered.map((b, bi) => {
+          const ran = p.sessions.filter((s) => s.branch === b.name);
+          return (
+            <button
+              type="button"
+              key={b.name}
+              inert={bi >= fit}
+              className={`g-branch ${bi >= fit ? "off" : ""} ${isSelected(p.selection, "branch", b.name) ? "selected" : ""} ${
+                b.name === p.activeBranch ? "active" : ""
+              }`}
+              onClick={() => p.onSelect(b.name)}
+              title={`${b.name}${b.upstream ? ` → ${b.upstream}` : ""}${
+                ran.length ? `\nSessions: ${ran.map((s) => s.title).join("; ")}` : ""
+              }`}
+            >
+              <span
+                className="swatch"
+                style={{
+                  background: LANE_COLORS[(p.colors.get(b.head) ?? 0) % LANE_COLORS.length],
+                }}
+              />
+              <span className="g-bname">{b.name}</span>
+              {b.current && <span className="g-tag">HEAD</span>}
+              {b.ahead > 0 && <span className="g-meta">↑{b.ahead}</span>}
+              {b.behind > 0 && <span className="g-meta">↓{b.behind}</span>}
+              {ran.length > 0 && (
+                <span className="g-meta agent">{plural(ran.length, "session")}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {hidden.length > 0 && (
+        <>
           <button
             type="button"
-            key={b.name}
-            className={`g-branch ${isSelected(p.selection, "branch", b.name) ? "selected" : ""} ${
-              b.name === p.activeBranch ? "active" : ""
-            }`}
-            onClick={() => p.onSelect(b.name)}
-            title={`${b.name}${b.upstream ? ` → ${b.upstream}` : ""}${
-              ran.length ? `\nSessions: ${ran.map((s) => s.title).join("; ")}` : ""
-            }`}
+            ref={moreBtn}
+            className="g-branch g-morebtn"
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            aria-controls={open ? listId : undefined}
+            onClick={() => setOpen((o) => !o)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setOpen(true);
+              }
+            }}
           >
-            <span
-              className="swatch"
-              style={{ background: LANE_COLORS[(p.colors.get(b.head) ?? 0) % LANE_COLORS.length] }}
-            />
-            <span className="g-bname">{b.name}</span>
-            {b.current && <span className="g-tag">HEAD</span>}
-            {b.ahead > 0 && <span className="g-meta">↑{b.ahead}</span>}
-            {b.behind > 0 && <span className="g-meta">↓{b.behind}</span>}
-            {ran.length > 0 && (
-              <span className="g-meta agent">
-                {ran.length} {ran.length === 1 ? "session" : "sessions"}
-              </span>
-            )}
+            +{hidden.length} more
           </button>
-        );
-      })}
+          {open && (
+            <div
+              id={listId}
+              className="g-pop"
+              role="listbox"
+              aria-label={`All ${p.branches.length} branches`}
+            >
+              {ordered.map((b, i) => {
+                return (
+                  <button
+                    type="button"
+                    role="option"
+                    key={b.name}
+                    ref={(el) => {
+                      opts.current[i] = el;
+                    }}
+                    tabIndex={-1}
+                    aria-selected={isSelected(p.selection, "branch", b.name)}
+                    className={`g-opt ${isSelected(p.selection, "branch", b.name) ? "selected" : ""}`}
+                    onClick={() => choose(b.name)}
+                    onKeyDown={(e) => onListKey(e, i)}
+                  >
+                    <span
+                      className="swatch"
+                      style={{
+                        background: LANE_COLORS[(p.colors.get(b.head) ?? 0) % LANE_COLORS.length],
+                      }}
+                    />
+                    <span className="g-bname">{b.name}</span>
+                    {b.current && <span className="g-tag">HEAD</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

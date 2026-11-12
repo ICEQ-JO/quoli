@@ -2,7 +2,7 @@ import { type Edge, Handle, type Node, type NodeProps, Position } from "@xyflow/
 import { useEffect, useMemo, useState } from "react";
 import type { CodeFile } from "../../../shared/model.ts";
 import { fileLabel, folderLabel, nodeA11y, quietNode } from "../a11y.ts";
-import { compact, fileName } from "../format.ts";
+import { compact, fileName, plural } from "../format.ts";
 import { isSelected, type LensContext, type Touch } from "../state.ts";
 import { Board } from "./Board.tsx";
 import "./code/code.css";
@@ -272,11 +272,18 @@ export function CodeLens(ctx: LensContext) {
             <span className="lg edit">edited</span>
             <span className="lg read">read</span>
             <span className="lg git">M · changed in git</span>
-            {code && <span>{compact(code.files.length)} files</span>}
+            {code && (
+              <span>
+                {compact(code.files.length)} {code.files.length === 1 ? "file" : "files"}
+              </span>
+            )}
             {hidden > 0 && !showAll && <span>{hidden} untouched hidden</span>}
             {capped > 0 && <span>{capped} more files not drawn</span>}
             {code?.truncated ? (
-              <span>{compact(code.truncated)} files beyond the listing cap</span>
+              <span>
+                {compact(code.truncated)} {code.truncated === 1 ? "file" : "files"} beyond the
+                listing cap
+              </span>
             ) : null}
           </>
         }
@@ -312,7 +319,10 @@ function FileNode({ data }: NodeProps) {
     dim ? "dim" : "",
   ].join(" ");
   return (
-    <div className={cls} title={file.scanned ? `${file.path} · ${file.lines} lines` : file.path}>
+    <div
+      className={cls}
+      title={file.scanned ? `${file.path} · ${plural(file.lines, "line")}` : file.path}
+    >
       <Handle type="target" position={Position.Left} className="h" />
       <span className="name" title={file.path}>
         {fileName(file.path)}
@@ -345,7 +355,7 @@ function TileNode({ data }: NodeProps) {
     <div
       className={cls}
       style={style}
-      title={`${folder.path}/ · ${folder.files} files · ${e} edited · ${r} read`}
+      title={`${folder.path}/ · ${plural(folder.files, "file")} · ${e} edited · ${r} read`}
     >
       <Handle type="target" position={Position.Left} className="h" />
       <span className="tile-name">{folder.name}/</span>
@@ -353,7 +363,9 @@ function TileNode({ data }: NodeProps) {
         {e > 0 && <span className="e">✎ {e} edited</span>}
         {r > 0 && <span className="r">{r} read</span>}
         {!e && !r && <span>untouched</span>}
-        <span className="n">{compact(folder.files)} files</span>
+        <span className="n">
+          {compact(folder.files)} {folder.files === 1 ? "file" : "files"}
+        </span>
       </span>
       <span className="tile-bar" aria-hidden="true">
         <i style={{ width: `${Math.max(e ? 2 : 0, eShare * 100)}%` }} />

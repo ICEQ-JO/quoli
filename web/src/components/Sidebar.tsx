@@ -1,5 +1,5 @@
 import type { SessionSummary } from "../../../shared/model.ts";
-import { ago, compact, money, tokenSum } from "../format.ts";
+import { ago, compact, money, plural, tokenSum } from "../format.ts";
 import { Link } from "../router.ts";
 import { ErrorState, LiveDot } from "./ui.tsx";
 
@@ -60,12 +60,10 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, error, retry
                 {s.title}
               </span>
               <span className="row meta">
-                <span>{s.toolCount} tools</span>
-                <span>
-                  {s.filesTouched} {s.filesTouched === 1 ? "file" : "files"}
-                </span>
+                <span>{plural(s.toolCount, "tool")}</span>
+                <span>{plural(s.filesTouched, "file")}</span>
                 <span>{compact(tokenSum(s.tokens))} tok</span>
-                <span title="Estimate from list prices">{money(s.cost)}</span>
+                <span title="Estimate from list prices">{money(s.cost, s.tokens)}</span>
                 {s.failures > 0 && <span className="fail">{s.failures} failed</span>}
               </span>
             </Link>

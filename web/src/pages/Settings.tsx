@@ -3,6 +3,7 @@ import type { Project } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { PricesSection } from "../components/Prices.tsx";
 import { DeleteDataDialog, ErrorState, Loading, PageHead } from "../components/ui.tsx";
+import { plural } from "../format.ts";
 import { setThemePref, type ThemePref, useThemePref } from "../theme.ts";
 
 const PRESETS = [7, 30, 90];
@@ -249,7 +250,7 @@ export function SettingsPage() {
           close={() => setDeleting(null)}
           done={(r) => {
             setDeleted(
-              `Deleted ${r.events} events from ${r.sessions} ${r.sessions === 1 ? "session" : "sessions"} of ${deleting.name}.`,
+              `Deleted ${plural(r.events, "event")} from ${plural(r.sessions, "session")} of ${deleting.name}.`,
             );
             setDeleting(null);
             refreshProjects();

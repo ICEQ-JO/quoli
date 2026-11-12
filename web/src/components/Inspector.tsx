@@ -1,7 +1,8 @@
 import { useState } from "react";
-import type { SessionDetail } from "../../../shared/model.ts";
+import type { HookStatus, SessionDetail } from "../../../shared/model.ts";
 import { api, useData } from "../api.ts";
-import { ago, CATEGORY, clock, duration, fileName } from "../format.ts";
+import { ago, CATEGORY, clock, duration, fileName, plural } from "../format.ts";
+import { Link, paths } from "../router.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
 import { ErrorState } from "./ui.tsx";
@@ -10,6 +11,8 @@ interface Props extends LensContext {
   lens: Lens;
   goto: (lens: Lens, s: Selection) => void;
   onRefresh: () => void;
+  /** Hook state of the open project; drives the next steps shown before any session exists. */
+  hookStatus?: HookStatus;
 }
 
 export function Inspector(p: Props) {
@@ -230,7 +233,11 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
         </h2>
         <p className="meta mono">{path}</p>
         <p className="meta">
-          {meta ? (meta.scanned ? `${meta.lines} lines` : "not scanned (size or count limit)") : ""}
+          {meta
+            ? meta.scanned
+              ? plural(meta.lines, "line")
+              : "not scanned (size or count limit)"
+            : ""}
           {meta && meta.status !== "clean" ? ` · ${meta.status} in git` : ""}
         </p>
       </header>
@@ -564,7 +571,7 @@ function BranchPanel({ name, git, sessions, openSession }: Props & { name: strin
   );
 }
 
-function ProjectPanel({ root, sessions, code, git, infra, onRefresh }: Props) {
+function ProjectPanel({ root, sessions, code, git, infra, onRefresh, hookStatus }: Props) {
   return (
     <>
       <header className="panel-head">
@@ -578,9 +585,27 @@ function ProjectPanel({ root, sessions, code, git, infra, onRefresh }: Props) {
         <Stat label="branches" value={git?.branches.length ?? "—"} />
         <Stat label="services" value={infra?.services.length ?? "—"} />
       </div>
-      <p className="note">
-        Pick a session on the left to light up what the agent did across every lens.
-      </p>
+      {sessions.length > 0 ? (
+        <p className="note">
+          Pick a session on the left to light up what the agent did across every lens.
+        </p>
+      ) : (
+        <div className="note">
+          <p>No sessions recorded yet.</p>
+          {hookStatus === "not_connected" ? (
+            <p>
+              Quoli is not connected to this repo. Connect it from{" "}
+              <Link to={paths.projects()}>Projects</Link> or run{" "}
+              <code>pnpm connect {root ?? "<repo>"}</code>.
+            </p>
+          ) : (
+            <p>
+              {hookStatus === "installed" ? "Hooks are installed but no events have arrived. " : ""}
+              Start a new Claude Code session in this repo.
+            </p>
+          )}
+        </div>
+      )}
       <button type="button" className="ghost" onClick={onRefresh}>
         Rescan repository
       </button>

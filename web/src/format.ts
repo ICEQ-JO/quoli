@@ -49,7 +49,17 @@ export function usd(n: number | null): string {
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export const money = (c: Cost) => usd(c.usd);
+/** "1 file", "2 files". Pass `many` for irregular plurals. */
+export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/**
+ * Cost of a session or period. With `tokens`, zero tokens means nothing to price: `$0.00`,
+ * not `—`. `—` stays for usage that exists but could not be priced.
+ */
+export function money(c: Cost, tokens?: TokenTotals): string {
+  if (c.usd === null && tokens && tokenSum(tokens) === 0) return usd(0);
+  return usd(c.usd);
+}
 
 export const fileName = (path: string) => path.split("/").at(-1) ?? path;
 
