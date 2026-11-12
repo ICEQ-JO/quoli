@@ -95,6 +95,15 @@ export interface AgentNode {
 }
 
 export type ToolCategory = "read" | "edit" | "run" | "search" | "agent" | "web" | "other";
+export const CATEGORY_ORDER: ToolCategory[] = [
+  "read",
+  "edit",
+  "run",
+  "search",
+  "agent",
+  "web",
+  "other",
+];
 
 export interface ToolCall {
   id: string;
@@ -427,6 +436,54 @@ export interface UsageDay {
   tokens: TokenTotals;
   /** Estimated cost of priced usage that day; null when nothing could be priced. */
   usd: number | null;
+}
+
+/** One group of sessions in Insights (an agent or a main model). */
+export interface InsightsGroup {
+  key: string;
+  label: string;
+  sessions: number;
+  calls: number;
+  failures: number;
+  loops: number;
+  /** Median cost per session, over sessions whose every model has a price. */
+  medianUsd: number | null;
+  /** Median duration, over sessions that are not live. */
+  medianMs: number | null;
+}
+
+/** GET /api/insights — trends across sessions, bucketed by the local day each session started. */
+export interface InsightsReport {
+  days: {
+    date: string;
+    sessions: number;
+    /** Sessions whose cost is partly or wholly unknown; left out of the cost figures. */
+    unpricedSessions: number;
+    medianUsd: number | null;
+    p90Usd: number | null;
+    calls: number;
+    failures: number;
+    loops: number;
+    mix: Record<ToolCategory, number>;
+  }[];
+  total: {
+    sessions: number;
+    calls: number;
+    failures: number;
+    loops: number;
+    sessionsWithLoops: number;
+    unpricedSessions: number;
+    medianUsd: number | null;
+    p90Usd: number | null;
+    medianMs: number | null;
+    p90Ms: number | null;
+  };
+  durations: { label: string; sessions: number }[];
+  byAgent: InsightsGroup[];
+  /** Grouped by each session's main model (the one that used the most tokens). */
+  byModel: InsightsGroup[];
+  /** Every model seen in the range, for the filter. */
+  models: string[];
 }
 
 /** GET /api/usage?days=N — spend and tokens over the last N days (1–365), all derived from usage rows. */

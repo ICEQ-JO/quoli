@@ -284,6 +284,7 @@ export const Icon = {
     </>,
   ),
   usage: svg(<path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />),
+  insights: svg(<path d="M3 17l6-6 4 4 8-8M15 7h6v6" />),
   plus: svg(<path d="M12 5v14M5 12h14" />),
   panel: svg(
     <>

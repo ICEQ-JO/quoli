@@ -6,6 +6,7 @@ import { NavSidebar } from "./components/NavSidebar.tsx";
 import { type PaletteItem, PaletteView, pageItems } from "./components/Palette.tsx";
 import { BoardPage } from "./pages/Board.tsx";
 import { DashboardPage } from "./pages/Dashboard.tsx";
+import { InsightsPage } from "./pages/Insights.tsx";
 import { ProjectsPage } from "./pages/Projects.tsx";
 import { SessionsPage } from "./pages/Sessions.tsx";
 import { SettingsPage } from "./pages/Settings.tsx";
@@ -56,6 +57,7 @@ export function App() {
       >
         {route.name === "home" && <DashboardPage />}
         {route.name === "usage" && <UsagePage />}
+        {route.name === "insights" && <InsightsPage />}
         {route.name === "projects" && <ProjectsPage />}
         {route.name === "sessions" && <SessionsPage />}
         {route.name === "settings" && <SettingsPage section={route.section} />}

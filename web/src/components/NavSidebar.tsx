@@ -65,6 +65,7 @@ export function NavSidebar({ pathname, projects, overview }: Props) {
           ),
         )}
         {item(paths.usage(), "Usage", Icon.usage, pathname.startsWith("/usage"))}
+        {item(paths.insights(), "Insights", Icon.insights, pathname.startsWith("/insights"))}
       </ul>
 
       <div className="nav-section">

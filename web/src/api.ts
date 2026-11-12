@@ -5,6 +5,7 @@ import type {
   CommitDetail,
   GitState,
   InfraMap,
+  InsightsReport,
   ManualService,
   Overview,
   PriceTable,
@@ -63,6 +64,11 @@ export const api = {
   prices: () => get<PriceTable>("/api/prices"),
   usage: (days: number, agent?: AgentKind) =>
     get<UsageReport>(`/api/usage?days=${days}${agent ? `&agent=${agent}` : ""}`),
+  insights: (days: number, f: { project?: string; agent?: string; model?: string }) => {
+    const q = new URLSearchParams({ days: String(days) });
+    for (const [k, v] of Object.entries(f)) if (v) q.set(k, v);
+    return get<InsightsReport>(`/api/insights?${q}`);
+  },
   savePrices: (table: PriceTable) => send<PriceTable>("PUT", "/api/prices", table),
   resetPrices: () => send<PriceTable>("DELETE", "/api/prices"),
   redactPreview: (text: string) => send<{ text: string }>("POST", "/api/redact-preview", { text }),

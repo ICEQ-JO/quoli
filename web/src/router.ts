@@ -15,6 +15,7 @@ export type Route =
   | { name: "sessions" }
   | { name: "settings"; section: SettingsSection }
   | { name: "usage" }
+  | { name: "insights" }
   | { name: "board"; projectId: string; sessionId: string | null }
   | { name: "notfound" };
 
@@ -37,7 +38,10 @@ export function parseRoute(pathname: string): Route {
     });
   if (parts.length === 0) return { name: "home" };
   const [a, b, c, d] = parts;
-  if (parts.length === 1 && (a === "projects" || a === "sessions" || a === "usage"))
+  if (
+    parts.length === 1 &&
+    (a === "projects" || a === "sessions" || a === "usage" || a === "insights")
+  )
     return { name: a };
   if (a === "settings" && parts.length <= 2) {
     const section = (b ?? "general") as SettingsSection;
@@ -88,6 +92,12 @@ export const paths = {
   settings: (section?: SettingsSection) =>
     section && section !== "general" ? `/settings/${section}` : "/settings",
   usage: () => "/usage",
+  insights: () => "/insights",
+  /** The Sessions list, optionally pre-filtered (Insights links a day to its sessions). */
+  sessionsWhere: (f: { day?: string; agent?: string; project?: string }) => {
+    const q = new URLSearchParams(Object.entries(f).filter((e): e is [string, string] => !!e[1]));
+    return `/sessions${q.size ? `?${q}` : ""}`;
+  },
   board: (projectId: string, sessionId?: string | null, view?: BoardView) =>
     `/projects/${encodeURIComponent(projectId)}${
       sessionId ? `/sessions/${encodeURIComponent(sessionId)}` : ""
