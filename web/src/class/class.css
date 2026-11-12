@@ -281,3 +281,14 @@ body {
   display: grid;
   gap: 10px;
 }
+.class-email {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 520px;
+}
+.class-email .input {
+  flex: 1 1 220px;
+  min-width: 0;
+}

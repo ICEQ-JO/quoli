@@ -22,7 +22,7 @@ Approving shares as you: the page asks to check that the terminal shows the same
 ## One-time setup (owner)
 
 1. **Supabase project** (free tier): create it, then copy the Project URL and the publishable key from **Connect** or **Project Settings → API Keys** into `shared/hosted.ts`. The secret/service-role key is not needed; never put it in the page, the package or a prompt.
-2. **Sign-in**: GitHub (below) and, optionally, Google (Supabase → Authentication → Providers → Google, with a Google Cloud OAuth client; the button appears on the page once it is on).
+2. **Sign-in**: GitHub (below) and email (#156): the page sends a sign-in link with `signInWithOtp`; no password. Supabase's built-in sender only reaches members of the Supabase organization, 2 emails an hour, so email needs custom SMTP: Resend (free: 100 a day, 3,000 a month) with `iceq.best` verified (DKIM `resend._domainkey`, SPF CNAMEs `send` and `rsend`, DMARC `_dmarc`, in Spaceship's DNS), then Supabase → Authentication → Emails → SMTP: host `smtp.resend.com`, port 465, user `resend`, password a Resend API key, sender `login@iceq.best`; and Authentication → Rate Limits → emails per hour about 100. Google is optional (Providers → Google with a Google Cloud OAuth client); its button appears once it is on.
    **GitHub**: GitHub → Settings → Developer settings → OAuth Apps → New. Homepage `https://iceq.best`, callback `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the Client ID and Secret into Supabase → Authentication → Providers → GitHub (free).
 3. **Redirects**: Supabase → Authentication → URL Configuration: Site URL `https://iceq.best/app/`, and add `https://iceq.best/app/` to Redirect URLs.
 4. **Schema**: `supabase link --project-ref <ref>` then `supabase db push` applies `supabase/migrations`.
@@ -46,3 +46,4 @@ Approving shares as you: the page asks to check that the terminal shows the same
 - Members who sign in but never turn on sync appear with no sessions.
 - A sync key sends to every team the member is in; there is no per-team choice yet.
 - Reconnecting the same computer adds a connection; the page counts connections, not machines.
+- Owners see a member by GitHub login, else name, else email address (email-only sign-in), and only for teams the member joined.
