@@ -54,9 +54,9 @@ Dashboard) switch a screenshot in the blue frame, with a caption saying what it 
 Tabs support arrow keys, Home and End, and the lens links under the hero (`#tour-tab-code`
 and so on) open the matching tab. The screenshot itself links to the full-size image.
 
-The images in `web/public/landing/product/<view>-<light|dark>.webp` come from
+The images in `web/public/landing/product/<view>-<light|dark>.webp` (plus a `.jpg` fallback for browsers without WebP) come from
 `pnpm demo --large` only (synthetic data, never a real session), captured at 1440×900
-at 2× and resized to 1600 px wide WebP. The landing theme toggle picks the matching
+at 2× and resized to 1600 px wide WebP and JPEG, with colour profiles stripped (`magick in.png -resize 1600x -strip …`). If a download fails the page retries once, then shows "The screenshot didn't load" with a Try again button instead of a broken image. The landing theme toggle picks the matching
 set. Retake them whenever the app's look changes noticeably; the page says they are
 screenshots of the synthetic demo.
 
