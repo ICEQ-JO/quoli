@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+  AgentKind,
   CodeMap,
   CommitDetail,
   GitState,
@@ -59,7 +60,8 @@ export const api = {
   settings: () => get<SettingsResponse>("/api/settings"),
   saveSettings: (patch: Partial<Settings>) => send<SettingsResponse>("PUT", "/api/settings", patch),
   prices: () => get<PriceTable>("/api/prices"),
-  usage: (days: number) => get<UsageReport>(`/api/usage?days=${days}`),
+  usage: (days: number, agent?: AgentKind) =>
+    get<UsageReport>(`/api/usage?days=${days}${agent ? `&agent=${agent}` : ""}`),
   savePrices: (table: PriceTable) => send<PriceTable>("PUT", "/api/prices", table),
   resetPrices: () => send<PriceTable>("DELETE", "/api/prices"),
   redactPreview: (text: string) => send<{ text: string }>("POST", "/api/redact-preview", { text }),

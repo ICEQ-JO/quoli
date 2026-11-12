@@ -1,5 +1,10 @@
 import { useState } from "react";
-import type { TokenTotals } from "../../../shared/model.ts";
+import {
+  AGENT_KINDS,
+  AGENT_NAMES,
+  type AgentKind,
+  type TokenTotals,
+} from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { SpendChart } from "../components/SpendChart.tsx";
 import { EmptyState, ErrorState, Loading, PageHead } from "../components/ui.tsx";
@@ -25,7 +30,10 @@ const remember = (v?: number) => {
 /** Spend and tokens over time, where they went, and how close you are to your budgets. */
 export function UsagePage() {
   const [days, setDays] = useState(() => remember());
-  const [report, refresh, error] = useData(`usage:${days}`, () => api.usage(days));
+  const [agent, setAgent] = useState<"" | AgentKind>("");
+  const [report, refresh, error] = useData(`usage:${days}:${agent}`, () =>
+    api.usage(days, agent || undefined),
+  );
   const [settings] = useData("settings", api.settings);
   useLiveEvents(refresh);
   const budgets = settings?.settings;
@@ -35,23 +43,42 @@ export function UsagePage() {
       <PageHead
         title="Usage"
         actions={
-          <fieldset className="segmented">
-            <legend className="sr-only">Range</legend>
-            {RANGES.map((r) => (
-              <button
-                type="button"
-                key={r.days}
-                aria-pressed={days === r.days}
-                className={days === r.days ? "active" : ""}
-                onClick={() => setDays(remember(r.days))}
-              >
-                {r.label}
-              </button>
-            ))}
-          </fieldset>
+          <>
+            <label className="sr-only" htmlFor="u-agent">
+              Agent
+            </label>
+            <select
+              id="u-agent"
+              className="input"
+              value={agent}
+              onChange={(e) => setAgent(e.target.value as typeof agent)}
+            >
+              <option value="">All agents</option>
+              {AGENT_KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {AGENT_NAMES[k]}
+                </option>
+              ))}
+            </select>
+            <fieldset className="segmented">
+              <legend className="sr-only">Range</legend>
+              {RANGES.map((r) => (
+                <button
+                  type="button"
+                  key={r.days}
+                  aria-pressed={days === r.days}
+                  className={days === r.days ? "active" : ""}
+                  onClick={() => setDays(remember(r.days))}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </fieldset>
+          </>
         }
       >
-        Estimated at list prices from the token usage Claude Code reports. Not an invoice.
+        Estimated at list prices from the token usage each agent reports. Not an invoice. Models
+        without a price are counted in tokens but not in spend.
       </PageHead>
 
       {!report && (error ? <ErrorState message={error} retry={refresh} /> : <Loading />)}

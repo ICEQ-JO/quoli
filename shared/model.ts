@@ -30,8 +30,26 @@ export interface Project {
   connectedAt: string | null;
 }
 
+/** The coding agents Quoli can record. Events without an agent stamp are Claude Code's. */
+export type AgentKind = "claude-code" | "codex" | "opencode";
+
+export const AGENT_KINDS: AgentKind[] = ["claude-code", "codex", "opencode"];
+
+export const AGENT_NAMES: Record<AgentKind, string> = {
+  "claude-code": "Claude Code",
+  codex: "Codex",
+  opencode: "OpenCode",
+};
+
+export const isAgentKind = (v: unknown): v is AgentKind =>
+  typeof v === "string" && (AGENT_KINDS as string[]).includes(v);
+
 export interface SessionSummary {
   id: string;
+  /** Which coding agent produced the session (recorded by its adapter). */
+  agent: AgentKind;
+  /** The agent's version when it reported one; null otherwise. */
+  agentVersion: string | null;
   projectId: string;
   root: string;
   title: string;
@@ -414,12 +432,51 @@ export const zeroTokens = (): TokenTotals => ({ input: 0, output: 0, cacheRead: 
 
 export const totalTokens = (t: TokenTotals) => t.input + t.output + t.cacheRead + t.cacheWrite;
 
+/**
+ * Tool names from every supported agent, lower-cased, mapped onto the shared categories.
+ * Claude Code uses PascalCase (Read, Edit, Bash), Codex snake_case (apply_patch, exec_command),
+ * OpenCode lower case (read, edit, bash). The original name stays on the tool call.
+ */
+const TOOL_CATEGORIES: Record<string, ToolCategory> = {
+  // read
+  read: "read",
+  notebookread: "read",
+  ls: "read",
+  list: "read",
+  read_file: "read",
+  view_image: "read",
+  // edit
+  edit: "edit",
+  multiedit: "edit",
+  write: "edit",
+  notebookedit: "edit",
+  apply_patch: "edit",
+  patch: "edit",
+  // run
+  bash: "run",
+  bashoutput: "run",
+  killshell: "run",
+  shell: "run",
+  local_shell: "run",
+  exec_command: "run",
+  unified_exec: "run",
+  write_stdin: "run",
+  // search
+  grep: "search",
+  glob: "search",
+  codesearch: "search",
+  file_search: "search",
+  // agent
+  task: "agent",
+  agent: "agent",
+  spawn_agent: "agent",
+  // web
+  webfetch: "web",
+  websearch: "web",
+  web_search: "web",
+};
+
 export function categorize(tool: string): ToolCategory {
-  if (/^(Read|NotebookRead|LS)$/.test(tool)) return "read";
-  if (/^(Edit|MultiEdit|Write|NotebookEdit)$/.test(tool)) return "edit";
-  if (/^(Bash|BashOutput|KillShell)$/.test(tool)) return "run";
-  if (/^(Grep|Glob)$/.test(tool)) return "search";
-  if (/^(Task|Agent)$/.test(tool)) return "agent";
-  if (/^(WebFetch|WebSearch)$/.test(tool) || tool.startsWith("mcp__")) return "web";
-  return "other";
+  if (tool.startsWith("mcp__")) return "web";
+  return TOOL_CATEGORIES[tool.toLowerCase()] ?? "other";
 }

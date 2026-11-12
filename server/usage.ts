@@ -1,5 +1,6 @@
 import { basename } from "node:path";
 import {
+  type AgentKind,
   type SessionDetail,
   type TokenTotals,
   type UsageReport,
@@ -37,13 +38,14 @@ const plus = (a: number | null, b: number | null) => (b === null ? a : round((a 
 /**
  * Spend and tokens over the last `days` calendar days, derived from transcript usage rows and
  * the current price table. Usage without a model id, or with an unpriced model, adds tokens but
- * no cost, exactly like session costs.
+ * no cost, exactly like session costs. With `agent`, only that agent's sessions count.
  */
 export function usageReport(
   store: Store,
   days: number,
   details: (ids: string[]) => SessionDetail[],
   now = new Date(),
+  agent: AgentKind | null = null,
 ): UsageReport {
   const prices = loadPrices(store);
   const start = new Date(now);
@@ -55,7 +57,10 @@ export function usageReport(
   // Daylight-saving shifts can move midnight by an hour; snap back to it.
   start.setHours(0, 0, 0, 0);
   const from = new Date(Math.min(start.getTime(), monthStart.getTime())).toISOString();
-  const rows = store.usageSince(from);
+  const agents = agent ? store.sessionAgents() : null;
+  const rows = store
+    .usageSince(from)
+    .filter((u) => !agents || (agents.get(u.sessionId) ?? "claude-code") === agent);
 
   const priced = (u: UsageRow) => {
     const p = u.model ? priceFor(u.model, prices) : null;

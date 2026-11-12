@@ -1,15 +1,17 @@
 import { execFileSync } from "node:child_process";
 import { statSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
-import type {
-  Branch,
-  Commit,
-  CommitDetail,
-  CommitFile,
-  GitState,
-  Remote,
+import {
+  type Branch,
+  type Commit,
+  type CommitDetail,
+  type CommitFile,
+  categorize,
+  type GitState,
+  type Remote,
 } from "../shared/model.ts";
 import { git } from "./ingest.ts";
+import { commandText } from "./report.ts";
 
 export const DIFF_LIMIT = 300_000;
 const WEB_HOSTS = /^(github\.com|gitlab\.com|bitbucket\.org)$/;
@@ -116,19 +118,14 @@ export function reportedCommits(output: string): string[] {
   return out;
 }
 
-const commandOf = (input: unknown): string =>
-  typeof input === "object" && input !== null && "command" in input
-    ? String((input as { command: unknown }).command)
-    : "";
-
 /** Attach `sessions` to commits whose creation a recorded `git commit` call reported. */
 export function attachSessions(commits: Commit[], sessions: CommitSource[]): void {
   for (const s of sessions) {
     for (const call of s.toolCalls) {
       if (
-        call.name !== "Bash" ||
+        categorize(call.name) !== "run" ||
         !call.output ||
-        !/\bgit\b[^\n]*\bcommit\b/.test(commandOf(call.input))
+        !/\bgit\b[^\n]*\bcommit\b/.test(commandText(call.input) ?? "")
       )
         continue;
       for (const sha of reportedCommits(call.output)) {

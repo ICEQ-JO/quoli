@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Project, SessionSummary } from "../../../shared/model.ts";
+import { AGENT_NAMES, type Project, type SessionSummary } from "../../../shared/model.ts";
 import { api } from "../api.ts";
 import { ago, compact, money, plural } from "../format.ts";
 import { Link, paths } from "../router.ts";
@@ -86,6 +86,29 @@ export function LiveDot({ live }: { live: boolean }) {
   );
 }
 
+/**
+ * Which coding agent recorded a session. Lists show it only for agents other than Claude Code,
+ * so a Claude-only history reads as before; `always` shows it regardless.
+ */
+export function AgentTag({
+  session,
+  always = false,
+}: {
+  session: Pick<SessionSummary, "agent" | "agentVersion">;
+  always?: boolean;
+}) {
+  if (!always && session.agent === "claude-code") return null;
+  const name = AGENT_NAMES[session.agent];
+  return (
+    <span
+      className="agent-tag"
+      title={`Recorded from ${name}${session.agentVersion ? ` ${session.agentVersion}` : ""}`}
+    >
+      {name}
+    </span>
+  );
+}
+
 /** Project name for a session, by id. */
 export const projectName = (projects: Project[] | null, id: string) =>
   projects?.find((p) => p.id === id)?.name ?? "Unknown project";
@@ -113,6 +136,7 @@ export function SessionRow({
         </Link>
         <span className="srow-meta">
           {showProject && <span title={session.root}>{name}</span>}
+          <AgentTag session={session} />
           {session.branch && (
             <span className="mono" title={session.branch}>
               {session.branch}

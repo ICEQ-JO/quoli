@@ -1,9 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import type { AgentKind } from "../shared/model.ts";
 import type { Store } from "./db.ts";
 import { home, projectId } from "./db.ts";
-import { ingest } from "./ingest.ts";
+import { ingest, recordEvent } from "./ingest.ts";
 import { loadManual, saveManual } from "./manual.ts";
 
 /**
@@ -193,6 +194,8 @@ function record(
     steps: Step[];
     end: boolean;
     transcripts: string;
+    /** Another agent's session: events go through `recordEvent`, token usage straight to the store. */
+    agent?: { kind: AgentKind; version: string; model: string };
   },
 ) {
   const { id, root } = opts;
@@ -209,6 +212,20 @@ function record(
     cacheRead: number,
     cacheWrite: number,
   ) => {
+    if (opts.agent) {
+      store.upsertUsage({
+        messageId: `msg_${id}_${msg++}`,
+        sessionId: id,
+        agentId: agent,
+        model: opts.agent.model,
+        at: at(),
+        input,
+        output,
+        cacheRead,
+        cacheWrite,
+      });
+      return;
+    }
     const line = JSON.stringify({
       type: "assistant",
       timestamp: at(),
@@ -232,6 +249,12 @@ function record(
       writeFileSync(join(opts.transcripts, `${id}-${agent}.jsonl`), `${l.join("\n")}\n`);
   };
   const send = (payload: Record<string, unknown>) => {
+    if (opts.agent) {
+      const { kind, version } = opts.agent;
+      const p = { session_id: id, cwd: root, quoli_agent_version: version, ...payload };
+      recordEvent(store, p, kind, at());
+      return;
+    }
     flush();
     ingest(store, { session_id: id, cwd: root, transcript_path: transcript, ...payload }, at());
   };
@@ -498,6 +521,83 @@ export function seedDemo(store: Store) {
         input: { command: "pnpm --filter storefront typecheck" },
         output: { stdout: "", stderr: "" },
         secs: 14,
+      },
+    ],
+  });
+
+  // Synthetic sessions from the other supported agents, in the shape their adapters produce.
+  record(store, {
+    id: "demo-codex-search",
+    root,
+    branch: "feature/search",
+    start: now - 26 * 3_600_000,
+    end: true,
+    transcripts,
+    agent: { kind: "codex", version: "0.163.0", model: "gpt-5-codex" },
+    steps: [
+      { prompt: "Wire the search box into the product grid so it filters by name." },
+      {
+        tool: "shell",
+        input: { command: ["bash", "-lc", 'rg -n "ProductGrid" apps/web'] },
+        output: "apps/web/app/page.tsx:1\napps/web/components/product-grid.tsx:1",
+      },
+      { tool: "shell", input: { command: ["bash", "-lc", "cat apps/web/components/search.tsx"] } },
+      {
+        tool: "apply_patch",
+        input: {
+          input:
+            '*** Begin Patch\n*** Update File: apps/web/components/product-grid.tsx\n@@\n-export function ProductGrid() {\n-  return <section className="grid" />;\n+export function ProductGrid({ query = "" }: { query?: string }) {\n+  return <section className="grid" data-query={query} />;\n*** End Patch',
+        },
+      },
+      {
+        tool: "apply_patch",
+        input: {
+          input:
+            "*** Begin Patch\n*** Update File: apps/web/app/page.tsx\n@@\n-  return <ProductGrid />;\n+  return (\n+    <>\n+      <Search />\n+      <ProductGrid />\n+    </>\n+  );\n*** End Patch",
+        },
+      },
+      {
+        tool: "shell",
+        input: { command: ["bash", "-lc", "pnpm --filter storefront typecheck"] },
+        fail: true,
+        output: "app/page.tsx:5:8 - error TS2304: Cannot find name 'Search'.",
+        secs: 12,
+      },
+      {
+        tool: "apply_patch",
+        input: {
+          input:
+            '*** Begin Patch\n*** Update File: apps/web/app/page.tsx\n@@\n import { ProductGrid } from "../components/product-grid";\n+import { Search } from "../components/search";\n*** End Patch',
+        },
+      },
+      {
+        tool: "shell",
+        input: { command: ["bash", "-lc", "pnpm --filter storefront typecheck"] },
+        output: { stdout: "", stderr: "" },
+        secs: 11,
+      },
+    ],
+  });
+
+  record(store, {
+    id: "demo-opencode-docs",
+    root,
+    branch: "main",
+    start: now - 6 * 3_600_000,
+    end: true,
+    transcripts,
+    agent: { kind: "opencode", version: "2.0.32", model: "claude-sonnet-4-5" },
+    steps: [
+      { prompt: "Document the environment variables the API needs." },
+      { tool: "grep", input: { pattern: "process.env", path: "apps/api" } },
+      { tool: "read", input: { filePath: p("apps/api/src/db/client.ts") } },
+      { tool: "read", input: { filePath: p("apps/api/src/services/payments.ts") } },
+      {
+        tool: "write",
+        input: {
+          filePath: p("apps/api/.env.example"),
+          content: "DATABASE_URL=\nSTRIPE_KEY=\nREDIS_URL=redis://localhost:6379\n",
+        },
       },
     ],
   });

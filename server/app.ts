@@ -2,13 +2,14 @@ import { readFileSync, statSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { basename, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type {
-  Overview,
-  PriceTable,
-  Project,
-  SessionDetail,
-  SessionSummary,
-  Settings,
+import {
+  isAgentKind,
+  type Overview,
+  type PriceTable,
+  type Project,
+  type SessionDetail,
+  type SessionSummary,
+  type Settings,
 } from "../shared/model.ts";
 import { codeMap } from "./code.ts";
 import { connect, hooksInstalled, validateRepo } from "./connect.ts";
@@ -198,9 +199,11 @@ export function createApp(store: Store, port: () => number) {
       // A JSON content type forces a CORS preflight, so web pages cannot post here.
       if (!req.headers["content-type"]?.startsWith("application/json")) return json(res, 415, {});
       try {
+        const agent = url.searchParams.get("agent") ?? "claude-code";
+        if (!isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
         const payload = JSON.parse(await body(req));
         const changed = () => broadcast({ type: "projects" });
-        if (ingest(store, payload, undefined, changed)) {
+        if (ingest(store, payload, undefined, changed, agent)) {
           broadcast({ type: "event", sessionId: payload.session_id });
         }
         json(res, 202, {});
@@ -248,7 +251,9 @@ export function createApp(store: Store, port: () => number) {
       if (!Number.isInteger(days) || days < 1 || days > 365) {
         return json(res, 400, { error: "days must be a whole number from 1 to 365" });
       }
-      return json(res, 200, usageReport(store, days, details));
+      const agent = url.searchParams.get("agent");
+      if (agent !== null && !isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
+      return json(res, 200, usageReport(store, days, details, new Date(), agent));
     }
     if (path === "/api/session") {
       const id = url.searchParams.get("id") ?? "";

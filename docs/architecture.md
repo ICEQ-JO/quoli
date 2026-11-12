@@ -24,7 +24,8 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `server/main.ts` | HTTP server: host guard, static/Vite, hourly retention timer |
 | `server/app.ts` | The API ([docs/api.md](api.md)): ingest, projects, sessions, overview, settings, SSE, mutation guard |
 | `server/db.ts` | SQLite store: append-only `events`, deduplicated `usage`, transcript read offsets, `projects` registry, `settings` |
-| `server/ingest.ts` | Resolves repo root, records the branch at session start, redacts secrets, stores, reads transcripts |
+| `server/adapters.ts` | One adapter per coding agent, mapping its hook payload into the shared Claude Code-shaped event. Only Claude Code's (identity) is registered; Codex and OpenCode follow in #117 and #118 |
+| `server/ingest.ts` | Runs the agent's adapter, resolves repo root, records the branch at session start, redacts secrets, stores (stamping `quoli_agent` on non-Claude events), reads Claude Code transcripts |
 | `server/sessions.ts` | Pure derivation: raw events + usage + price table → session view (turns, tool calls, agents, files, tokens, cost, report) |
 | `server/report.ts` | Pure functions behind the Summary: command classification, line counting, changes, review checklist |
 | `server/prices.ts` | Built-in list-price table, model matching, `costOf`, PUT validation, load/save via the `settings` table (key `prices`) |
@@ -63,11 +64,14 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 
 **2026-11 — Full rebuild.** The previous codebase (Next.js dashboard, collector, four adapters, three Git-host connectors, signed releases, ~150 docs) had broad scope but a UI the owner found unusable and no single clear workflow. It was removed and replaced by this smaller app built around one board with four lenses. The old code remains in git history (`git log` before the rebuild commit). Carried over as ideas, not code: the passive hook bridge, append-only events with derived views, and the recorded/derived/inferred distinction.
 
+**2026-11-12 — Agent-neutral events (#116).** Other agents' hooks are mapped by an adapter into the shape Claude Code already sends, so derivation, the lenses and stored Claude Code history stay unchanged. Non-Claude events carry `quoli_agent` (and optionally `quoli_agent_version`); the absence of the field means Claude Code, so no migration was needed.
+
 **Local content capture is on.** The old MVP defaulted to metadata-only, which made real sessions unreadable ("Content disabled" everywhere). The product's purpose is to show what the agent did, so prompts and tool I/O are stored locally with redaction. Cloud sync, when built, must be explicit opt-in per project.
 
 ## Known limitations
 
-- Claude Code only. Hook payload fields were taken from Claude Code's documented hook contract and exercised with realistic synthetic payloads; verify against your installed version.
+- Claude Code is the only agent connected today. Sessions, usage, tool categories (`categorize` in `shared/model.ts`, lower-cased names for all three agents) and the Summary report are agent-neutral: they read Codex `apply_patch` bodies and argument-list commands and OpenCode's camelCase `filePath`/`oldString`/`newString`. The synthetic demo includes one Codex and one OpenCode session in that shape. Codex and OpenCode sessions get token usage only from what their adapters report (no transcript reading), and a model without a price (for example `gpt-5-codex`) counts in tokens, not in spend.
+- Hook payload fields were taken from Claude Code's documented hook contract and exercised with realistic synthetic payloads; verify against your installed version.
 - Subagent ↔ spawning `Task` call is matched by launch order (drawn dashed), because hooks do not link them by id.
 - Claude Code records some non-human turns as prompts. The Agents lens shows background-task notifications (`<task-notification>`) and slash commands (`<command-name>`) as one-line notices; other injected text still shows as a prompt.
 - File-level code map; imports are resolved for relative JS/TS only, so other languages appear in the change map without connections. The change map draws an import between neighbouring columns or between two changed files; imports between two neighbours in the same column are left out, and each neighbour column keeps its 14 best-connected files ("+N more not drawn"). "Changed by this session" comes from recorded Edit/MultiEdit/Write calls, so files changed through Bash are missing there; "Uncommitted" shows them from git.

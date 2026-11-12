@@ -2,7 +2,7 @@ import type { SessionSummary } from "../../../shared/model.ts";
 import { ago, money, plural } from "../format.ts";
 import { Link } from "../router.ts";
 import { Trace } from "./Trace.tsx";
-import { ErrorState, LiveDot } from "./ui.tsx";
+import { AgentTag, ErrorState, LiveDot } from "./ui.tsx";
 
 interface Props {
   sessions: SessionSummary[] | null;
@@ -57,6 +57,7 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error
               <span className="row meta">
                 <LiveDot live={s.live} />
                 <span className="when">{s.live ? "Live now" : ago(s.startedAt)}</span>
+                <AgentTag session={s} />
                 {s.branch && (
                   <span className="branch" title={s.branch}>
                     {s.branch}

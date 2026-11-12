@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import type { AgentKind } from "../shared/model.ts";
+import { adapterFor } from "./adapters.ts";
 import type { Store } from "./db.ts";
 import { syncTranscript } from "./transcript.ts";
 
@@ -39,13 +41,35 @@ export function redact(text: string): string {
   return SECRETS.reduce((t, re) => t.replace(re, "[redacted]"), text);
 }
 
-/** Stores one Claude Code hook payload. Returns false when it is not a usable hook event. */
+/**
+ * Stores one hook payload from `agent`, after its adapter maps it into the shared shape.
+ * Returns false when the agent has no adapter or the payload is not a usable hook event.
+ */
 export function ingest(
   store: Store,
-  payload: Record<string, unknown>,
+  raw: Record<string, unknown>,
+  at = new Date().toISOString(),
+  onNewRoot?: () => void,
+  agent: AgentKind = "claude-code",
+) {
+  const normalized = adapterFor(agent)?.normalize(raw);
+  return normalized ? recordEvent(store, normalized, agent, at, onNewRoot) : false;
+}
+
+/**
+ * Stores one payload that is already in the shared shape. Used by `ingest` after an adapter
+ * ran, and by the synthetic demo. Claude Code events stay exactly as captured; any other agent's
+ * events carry `quoli_agent`, and an event without it reads as Claude Code.
+ */
+export function recordEvent(
+  store: Store,
+  normalized: Record<string, unknown>,
+  agent: AgentKind,
   at = new Date().toISOString(),
   onNewRoot?: () => void,
 ) {
+  const payload: Record<string, unknown> =
+    agent === "claude-code" ? normalized : { ...normalized, quoli_agent: agent };
   const sessionId = payload.session_id;
   const event = payload.hook_event_name;
   const cwd = payload.cwd;
@@ -60,11 +84,14 @@ export function ingest(
   const fresh = !store.hasRoot(root);
   store.append({ sessionId, root, event, at, payload: clean });
 
-  if (typeof payload.transcript_path === "string") {
-    syncTranscript(store, payload.transcript_path, sessionId, "main");
-  }
-  if (typeof payload.agent_transcript_path === "string" && typeof payload.agent_id === "string") {
-    syncTranscript(store, payload.agent_transcript_path, sessionId, payload.agent_id);
+  // Token usage comes from Claude Code's transcript format; other agents report it their own way.
+  if (agent === "claude-code") {
+    if (typeof payload.transcript_path === "string") {
+      syncTranscript(store, payload.transcript_path, sessionId, "main");
+    }
+    if (typeof payload.agent_transcript_path === "string" && typeof payload.agent_id === "string") {
+      syncTranscript(store, payload.agent_transcript_path, sessionId, payload.agent_id);
+    }
   }
   if (fresh) onNewRoot?.();
   return true;

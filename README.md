@@ -10,7 +10,7 @@ Everything runs locally. Nothing leaves your machine.
 
 **Pages**
 - **Dashboard:** spend today, this week and this month, plus live sessions, sessions that need a review, recent sessions and projects.
-- **Sessions:** every recorded session across projects, with filters.
+- **Sessions:** every recorded session across projects, with filters (project, agent, status, failures).
 - **Usage:** spend over time, by model and by project; how much prompt caching saved; the most expensive sessions; optional daily and monthly budgets.
 - **Projects and Settings:** connect repositories, edit model prices, set data retention and redaction, choose the theme.
 
@@ -36,7 +36,7 @@ Requires Node 24 (Node 22.13+ also works) and pnpm.
 
 ```sh
 pnpm install
-pnpm demo                 # synthetic demo project with three sessions
+pnpm demo                 # synthetic demo project: Claude Code, Codex and OpenCode sessions
 ```
 
 Open http://127.0.0.1:4400.

@@ -2,7 +2,7 @@ import type { SessionDetail } from "../../../shared/model.ts";
 import { ago, duration, money, tokenSum } from "../format.ts";
 import { Link } from "../router.ts";
 import { Trace } from "./Trace.tsx";
-import { useNow } from "./ui.tsx";
+import { AgentTag, useNow } from "./ui.tsx";
 
 /** What the selected session is, at a glance, above every lens. */
 export function SessionHeader({
@@ -49,6 +49,7 @@ export function SessionHeader({
       </div>
       <p className="sh-meta">
         <span title="Project">{projectName}</span>
+        <AgentTag session={session} always />
         {session.branch && (
           <span className="mono" title={`Branch ${session.branch}`}>
             {session.branch}
