@@ -12,6 +12,7 @@
     "demo": "node --import tsx server/main.ts --demo",
     "start": "vite build && NODE_ENV=production node --import tsx server/main.ts",
     "connect": "node --import tsx server/connect.ts",
+    "quoli-setup": "node --import tsx server/setup.ts",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",

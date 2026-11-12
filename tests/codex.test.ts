@@ -205,6 +205,9 @@ test("connecting Codex writes .codex/hooks.json, keeps it out of Git and removes
 
 test("POST /api/projects connects the chosen agents and projects report each agent's status", async () => {
   const dir = repo();
+  // Projects also list agents set up for every repository; keep the real HOME out of it.
+  const savedHome = process.env.HOME;
+  process.env.HOME = dir;
   const store = new Store(":memory:");
   let port = 0;
   const app = createApp(store, () => port);
@@ -229,8 +232,8 @@ test("POST /api/projects connects the chosen agents and projects report each age
     const r = await post({ path: dir, agents: ["claude-code", "codex"] });
     assert.equal(r.status, 200);
     assert.deepEqual(r.body.agents, [
-      { agent: "claude-code", status: "installed" },
-      { agent: "codex", status: "installed" },
+      { agent: "claude-code", everywhere: false, status: "installed" },
+      { agent: "codex", everywhere: false, status: "installed" },
     ]);
     ingest(
       store,
@@ -241,11 +244,12 @@ test("POST /api/projects connects the chosen agents and projects report each age
     );
     const list = await (await fetch(`http://127.0.0.1:${port}/api/projects`)).json();
     assert.deepEqual(list[0].agents, [
-      { agent: "claude-code", status: "installed" },
-      { agent: "codex", status: "receiving" },
+      { agent: "claude-code", everywhere: false, status: "installed" },
+      { agent: "codex", everywhere: false, status: "receiving" },
     ]);
   } finally {
     server.close();
+    process.env.HOME = savedHome;
     rmSync(dir, { recursive: true, force: true });
   }
 });

@@ -3,9 +3,22 @@
 // (prompts, tool calls, model steps with tokens) to the local Quoli server. It never changes,
 // blocks or delays the agent: hooks return at once, posts run in order in the background, and
 // every failure is swallowed. It does not read credentials or OpenCode's database.
+import { appendFileSync, existsSync, statSync } from "node:fs";
+
 const PORT = Number("__QUOLI_PORT__");
 const URL = `http://127.0.0.1:${PORT}/ingest?agent=opencode`;
 const MAX_TEXT = 100_000;
+// Set only by the user-level install: where events wait while Quoli is not running.
+const SPOOL = "__QUOLI_SPOOL__";
+const SPOOL_MAX = 50 * 1024 * 1024;
+
+/** Queues an event for Quoli to read when it next starts; never throws. */
+const spool = (body, at) => {
+  try {
+    if (!SPOOL || (existsSync(SPOOL) && statSync(SPOOL).size >= SPOOL_MAX)) return;
+    appendFileSync(SPOOL, `${JSON.stringify({ agent: "opencode", at, body })}\n`, { mode: 0o600 });
+  } catch {}
+};
 
 const clip = (v, depth = 0) => {
   if (typeof v === "string") return v.length > MAX_TEXT ? `${v.slice(0, MAX_TEXT)}…` : v;
@@ -22,6 +35,7 @@ const clip = (v, depth = 0) => {
 
 let queue = Promise.resolve();
 function post(payload) {
+  const at = new Date().toISOString();
   const body = JSON.stringify(clip(payload));
   queue = queue
     .then(() =>
@@ -32,7 +46,7 @@ function post(payload) {
         signal: AbortSignal.timeout(1500),
       }),
     )
-    .catch(() => {});
+    .catch(() => spool(body, at));
 }
 
 export default {

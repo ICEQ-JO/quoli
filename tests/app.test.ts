@@ -13,6 +13,9 @@ import { ingest } from "../server/ingest.ts";
 import { defaultPrices } from "../server/prices.ts";
 import { deriveSession } from "../server/sessions.ts";
 
+// Projects also list agents set up for every repository (read from HOME): keep the real one out.
+process.env.HOME = realpathSync(mkdtempSync(join(tmpdir(), "quoli-app-home-")));
+
 const DAY = 86_400_000;
 
 function tmp() {

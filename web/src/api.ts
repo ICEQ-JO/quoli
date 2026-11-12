@@ -14,6 +14,7 @@ import type {
   SessionDetail,
   SessionSummary,
   Settings,
+  SetupStatus,
   UsageReport,
 } from "../../shared/model.ts";
 
@@ -51,6 +52,9 @@ export const api = {
   projects: () => get<Project[]>("/api/projects"),
   connectProject: (path: string, agents?: AgentKind[]) =>
     send<Project>("POST", "/api/projects", { path, agents }),
+  setupStatus: () => get<SetupStatus[]>("/api/setup"),
+  setup: (agents: AgentKind[] | undefined, remove = false) =>
+    send<SetupStatus[]>("POST", "/api/setup", { agents, remove }),
   disconnectProject: (projectId: string) =>
     send<Project>("POST", `/api/projects/${id(projectId)}/disconnect`),
   deleteProject: (projectId: string) =>

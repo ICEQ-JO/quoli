@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { applyRetention, createApp, json } from "./app.ts";
 import { refreshHooks } from "./connect.ts";
 import { Store } from "./db.ts";
+import { refreshSetup, spoolFile } from "./setup.ts";
+import { drainSpool } from "./spool.ts";
 import { waitlistRequest } from "./waitlist.ts";
 
 const landing = process.argv.includes("--landing");
@@ -84,13 +86,18 @@ const roots = [
 ];
 for (const root of refreshHooks(roots))
   console.log(`  Updated Quoli's hook in ${root} to port ${PORT}`);
+if (!landing) {
+  for (const agent of refreshSetup()) console.log(`  Updated Quoli's user-level ${agent} install`);
+  const queued = drainSpool(store, spoolFile());
+  if (queued) console.log(`  Recorded ${queued} events sent while Quoli was closed`);
+}
 setInterval(() => applyRetention(store), 3_600_000).unref();
 
 server.listen(PORT, HOST, () => {
   console.log(`\n  Quoli → http://${HOST}:${PORT}${landing ? "/landing/" : ""}\n`);
   if (!landing && !store.roots().length) {
     console.log(
-      "  No sessions yet. Run `pnpm connect /path/to/repo`, or `pnpm demo` to explore sample data.\n",
+      "  No sessions yet. Run `pnpm quoli-setup` once, or `pnpm demo` to explore sample data.\n",
     );
   }
 });
