@@ -15,7 +15,11 @@ test("money shows $0.00 when there are no tokens to price", () => {
   assert.equal(money({ usd: null, unpriced: [] }, zero), "$0.00");
 });
 
-test("money keeps the dash when tokens exist but nothing could be priced", () => {
-  assert.equal(money({ usd: null, unpriced: ["x"] }, { ...zero, input: 5 }), "—");
+test("money shows the tokens when they exist but nothing could be priced", () => {
+  assert.equal(money({ usd: null, unpriced: ["x"] }, { ...zero, input: 5 }), "5 tokens");
+  assert.equal(
+    money({ usd: null, unpriced: ["x"] }, { ...zero, input: 1200, output: 300 }),
+    "1.5k tokens",
+  );
   assert.equal(money({ usd: null, unpriced: [] }), "—");
 });

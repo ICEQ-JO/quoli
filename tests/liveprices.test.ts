@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -36,17 +36,32 @@ const DOC = {
       "gpt-weird": { cost: { input: -1, output: 1 } },
     },
   },
-  // A reseller listing a maker's model at its own price is ignored.
-  "some-reseller": { models: { "claude-new-7": { cost: { input: 1, output: 1 } } } },
+  // A reseller listing a maker's model at its own price is ignored; its own models are kept.
+  "some-reseller": {
+    models: {
+      "claude-new-7": { cost: { input: 1, output: 1 } },
+      "brand-new-1": { cost: { input: 0.5, output: 2 } },
+    },
+  },
   deepseek: { models: { "claude-new-7": { cost: { input: 0.1, output: 0.1 } } } },
+  // OpenCode Zen comes right after the makers, so its free models are priced at zero.
+  opencode: {
+    models: {
+      "gpt-9": { cost: { input: 9, output: 9 } },
+      "minimax-m2.5-free": { cost: { input: 0, output: 0 } },
+    },
+  },
+  "a-reseller": { models: { "minimax-m2.5-free": { cost: { input: 3, output: 3 } } } },
 };
 
-test("models.dev prices come from model makers only, with cache prices defaulting to input", () => {
+test("models.dev prices: makers first, then OpenCode Zen, then anyone else for unseen models", () => {
   const prices = parseModelsDev(DOC);
   assert.deepEqual(
     prices.map((p) => p.model),
-    ["claude-sonnet-4-5", "claude-new-7", "gpt-9"],
+    ["claude-sonnet-4-5", "claude-new-7", "gpt-9", "minimax-m2.5-free", "brand-new-1"],
   );
+  assert.equal(prices[2].input, 2);
+  assert.equal(prices[3].output, 0);
   assert.deepEqual(prices[1], {
     model: "claude-new-7",
     input: 9,
@@ -70,6 +85,8 @@ test("live prices replace built-in rows but never a table the user edited", () =
   assert.equal(priceFor("claude-sonnet-4-5-20250929", builtIn)?.input, 2);
   assert.equal(priceFor("claude-new-7", builtIn)?.output, 45);
   assert.equal(priceFor("claude-opus-4-1", builtIn)?.input, 15);
+  assert.equal(priceFor("opencode/claude-new-7", builtIn)?.output, 45, "provider prefix");
+  assert.equal(priceFor("opencode/unknown", builtIn), null);
 
   const edited = withLive(defaultPrices(), live, true);
   assert.equal(priceFor("claude-sonnet-4-5", edited)?.input, 3);
@@ -148,6 +165,12 @@ test("a refresh fetches at most once a day, caches to disk and rejects bad answe
     setLivePrices(null);
     assert.equal(loadLiveCache(file)?.prices.length, 12);
     assert.equal(loadLiveCache(join(dir, "missing.json")), null);
+    // A cache from an older Quoli, parsed the old way, is fetched again.
+    setLivePrices(null);
+    const old = JSON.parse(readFileSync(file, "utf8"));
+    delete old.format;
+    writeFileSync(file, JSON.stringify(old));
+    assert.equal(loadLiveCache(file), null);
   } finally {
     setLivePrices(null);
     rmSync(dir, { recursive: true, force: true });
