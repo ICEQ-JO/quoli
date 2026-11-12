@@ -13,11 +13,11 @@ import { git } from "./ingest.ts";
  */
 export type HookAgent = "claude-code" | "codex" | "opencode" | "pi";
 export const HOOK_AGENTS: HookAgent[] = ["claude-code", "codex", "opencode", "pi"];
-type PluginAgent = "opencode" | "pi";
-type HookFileAgent = Exclude<HookAgent, PluginAgent>;
-const isPluginAgent = (a: HookAgent): a is PluginAgent => a === "opencode" || a === "pi";
+export type PluginAgent = "opencode" | "pi";
+export type HookFileAgent = Exclude<HookAgent, PluginAgent>;
+export const isPluginAgent = (a: HookAgent): a is PluginAgent => a === "opencode" || a === "pi";
 
-const TARGETS: Record<HookFileAgent, { file: string; events: string[] }> = {
+export const TARGETS: Record<HookFileAgent, { file: string; events: string[] }> = {
   "claude-code": {
     file: join(".claude", "settings.local.json"),
     events: [
@@ -50,12 +50,12 @@ const TARGETS: Record<HookFileAgent, { file: string; events: string[] }> = {
 };
 
 const here = dirname(fileURLToPath(import.meta.url));
-const hook = join(here, "hook.mjs");
+export const hook = join(here, "hook.mjs");
 const port = () => Number(process.env.QUOLI_PORT ?? 4400);
 
 // OpenCode 2 has no hook commands; it loads plugins from .opencode/plugins/ (opencode.ai/docs/plugins).
 // Pi auto-discovers project extensions in .pi/extensions/ (pi docs/extensions.md).
-const PLUGINS: Record<PluginAgent, { file: string; mark: string; source: string }> = {
+export const PLUGINS: Record<PluginAgent, { file: string; mark: string; source: string }> = {
   opencode: {
     file: join(".opencode", "plugins", "quoli.js"),
     mark: "quoli-opencode-plugin",
@@ -67,19 +67,30 @@ const PLUGINS: Record<PluginAgent, { file: string; mark: string; source: string 
     source: "pi-extension.ts",
   },
 };
-const pluginSource = (agent: PluginAgent) =>
-  readFileSync(join(here, PLUGINS[agent].source), "utf8").replace("__QUOLI_PORT__", String(port()));
-const pluginText = (root: string, agent: PluginAgent) => {
+/**
+ * The plugin or extension with the port filled in. `spool` is where it queues events while Quoli
+ * is not running; only the user-level install (`pnpm quoli-setup`) has one.
+ */
+export const pluginSource = (agent: PluginAgent, spool = "") =>
+  readFileSync(join(here, PLUGINS[agent].source), "utf8")
+    .replace("__QUOLI_PORT__", String(port()))
+    .replace("__QUOLI_SPOOL__", spool.split("\\").join("/"));
+const readText = (file: string) => {
   try {
-    return readFileSync(join(resolve(root), PLUGINS[agent].file), "utf8");
+    return readFileSync(file, "utf8");
   } catch {
     return null;
   }
 };
-const commandFor = (agent: HookFileAgent) =>
-  `"${process.execPath}" "${hook}" ${port()}${agent === "claude-code" ? "" : ` ${agent}`}`;
+const pluginText = (root: string, agent: PluginAgent) =>
+  readText(join(resolve(root), PLUGINS[agent].file));
+export const commandFor = (agent: HookFileAgent, script = hook) =>
+  `"${process.execPath}" "${script}" ${port()}${agent === "claude-code" ? "" : ` ${agent}`}`;
+/** Quoli's hook: the repo's `server/hook.mjs`, or the copy the user-level install keeps in its home. */
 const isOurs = (group: { hooks?: { command?: string }[] }) =>
-  group.hooks?.some((h) => h.command?.includes("server/hook.mjs")) ?? false;
+  group.hooks?.some(
+    (h) => h.command?.includes("server/hook.mjs") || h.command?.includes("quoli-hook.mjs"),
+  ) ?? false;
 
 const settingsFile = (repo: string, agent: HookFileAgent = "claude-code") =>
   join(resolve(repo), TARGETS[agent].file);
@@ -152,15 +163,28 @@ export function validateRepo(path: unknown): string {
 }
 
 export function connect(repo: string, remove = false, agent: HookAgent = "claude-code") {
-  if (isPluginAgent(agent)) return connectPlugin(repo, remove, agent);
-  const file = settingsFile(repo, agent);
+  if (isPluginAgent(agent)) {
+    const file = writePlugin(join(resolve(repo), PLUGINS[agent].file), agent, remove);
+    if (!remove) excludeFromGit(repo, PLUGINS[agent].file);
+    return file;
+  }
+  const file = writeHooks(settingsFile(repo, agent), agent, remove);
+  if (agent === "codex" && !remove) excludeFromGit(repo, TARGETS.codex.file);
+  return file;
+}
+
+/**
+ * Adds Quoli's hook to an agent's hook file for every event it forwards, or removes it. Other
+ * hooks and settings in the file are kept.
+ */
+export function writeHooks(file: string, agent: HookFileAgent, remove: boolean, script = hook) {
   if (remove && !existsSync(file)) return file;
   const settings = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {};
   const hooks: Record<string, { hooks?: { command?: string }[] }[]> = settings.hooks ?? {};
   // Codex caps SessionEnd hooks at 3 seconds; the forwarder gives up after 1.5.
   const handler = {
     type: "command",
-    command: commandFor(agent),
+    command: commandFor(agent, script),
     ...(agent === "codex" ? { timeout: 3 } : {}),
   };
   for (const event of TARGETS[agent].events) {
@@ -176,15 +200,13 @@ export function connect(repo: string, remove = false, agent: HookAgent = "claude
   }
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, `${JSON.stringify(settings, null, 2)}\n`);
-  if (agent === "codex" && !remove) excludeFromGit(repo, TARGETS.codex.file);
   return file;
 }
 
 /** Writes or removes Quoli's OpenCode plugin or Pi extension. A file without Quoli's mark is never touched. */
-function connectPlugin(repo: string, remove: boolean, agent: PluginAgent) {
-  const { file: rel, mark } = PLUGINS[agent];
-  const file = join(resolve(repo), rel);
-  const current = pluginText(repo, agent);
+export function writePlugin(file: string, agent: PluginAgent, remove: boolean, spool = "") {
+  const { mark } = PLUGINS[agent];
+  const current = readText(file);
   if (current !== null && !current.includes(mark)) {
     throw new Error(
       `${file} exists and is not Quoli's ${agent === "pi" ? "extension" : "plugin"}; leaving it alone`,
@@ -195,8 +217,7 @@ function connectPlugin(repo: string, remove: boolean, agent: PluginAgent) {
     return file;
   }
   mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, pluginSource(agent));
-  excludeFromGit(repo, rel);
+  writeFileSync(file, pluginSource(agent, spool));
   return file;
 }
 

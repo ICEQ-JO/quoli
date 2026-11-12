@@ -18,6 +18,15 @@ export type Basis = "recorded" | "derived" | "inferred";
  */
 export type HookStatus = "receiving" | "installed" | "not_connected";
 
+/** One agent's user-level install (`pnpm quoli-setup`, or Projects → Record every repository). */
+export interface SetupStatus {
+  agent: AgentKind;
+  /** The agent's user-level folder exists, so it has been used on this machine. */
+  found: boolean;
+  installed: boolean;
+  file: string;
+}
+
 export interface Project {
   /** Stable id: first 12 hex chars of sha256(root). Used in URLs. */
   id: string;
@@ -30,9 +39,16 @@ export interface Project {
    * Agents whose hooks are installed in the repository, and whether each has sent an event yet.
    * Codex runs project hooks only after the user trusts them with /hooks.
    */
-  agents: { agent: AgentKind; status: "receiving" | "installed" }[];
+  agents: {
+    agent: AgentKind;
+    status: "receiving" | "installed";
+    /** Recorded through the user-level install (every repository), not hooks in this one. */
+    everywhere: boolean;
+  }[];
   /** When the project was connected through Quoli, if it was. */
   connectedAt: string | null;
+  /** `owner/repo` when the repository's origin remote is on GitHub. */
+  github: string | null;
 }
 
 /** The coding agents Quoli can record. Events without an agent stamp are Claude Code's. */

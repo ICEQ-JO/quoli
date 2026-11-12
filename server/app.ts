@@ -14,6 +14,7 @@ import {
 import { codeMap } from "./code.ts";
 import { connect, HOOK_AGENTS, type HookAgent, installedAgents, validateRepo } from "./connect.ts";
 import { home, projectId, type Store } from "./db.ts";
+import { githubRepo } from "./github.ts";
 import { commitDetail, gitState, parseLimit } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
 import { git, ingest, redact } from "./ingest.ts";
@@ -28,6 +29,7 @@ import {
   validatePrices,
 } from "./prices.ts";
 import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
+import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
 import { liveSession } from "./steps.ts";
 import { usageReport } from "./usage.ts";
 
@@ -105,15 +107,21 @@ export function createApp(store: Store, port: () => number) {
     const registered = new Map(store.registeredProjects().map((p) => [p.root, p.connectedAt]));
     const seen = new Map(store.roots().map((r) => [r.root, r]));
     const roots = new Set([...registered.keys(), ...seen.keys()]);
+    // Agents set up once for the user (pnpm quoli-setup) record every repository.
+    const everywhere = HOOK_AGENTS.filter(isSetUp);
     return [...roots]
       .map((root): Project => {
         const info = seen.get(root);
-        const agents = installedAgents(root).map((agent) => ({
-          agent,
-          status: store.hasAgentEvents(root, agent)
-            ? ("receiving" as const)
-            : ("installed" as const),
-        }));
+        const here = installedAgents(root);
+        const agents = HOOK_AGENTS.filter((a) => here.includes(a) || everywhere.includes(a)).map(
+          (agent) => ({
+            agent,
+            everywhere: !here.includes(agent),
+            status: store.hasAgentEvents(root, agent)
+              ? ("receiving" as const)
+              : ("installed" as const),
+          }),
+        );
         const installed = agents.length > 0;
         return {
           id: projectId(root),
@@ -124,6 +132,7 @@ export function createApp(store: Store, port: () => number) {
           hookStatus: installed ? (info ? "receiving" : "installed") : "not_connected",
           agents,
           connectedAt: registered.get(root) ?? null,
+          github: githubRepo(root),
         };
       })
       .sort(
@@ -252,6 +261,7 @@ export function createApp(store: Store, port: () => number) {
       return true;
     }
     if (path === "/api/projects") return json(res, 200, projects());
+    if (path === "/api/setup") return json(res, 200, setupStatus());
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
     if (path === "/api/prices") return json(res, 200, loadPrices(store));
@@ -373,6 +383,28 @@ export function createApp(store: Store, port: () => number) {
       store.registerProject(root);
       broadcast({ type: "projects" });
       return json(res, 200, projectFor(projectId(root)));
+    }
+    if (method === "POST" && path === "/api/setup") {
+      const { agents, remove } = await payload();
+      if (
+        agents !== undefined &&
+        (!Array.isArray(agents) || !agents.every((a) => HOOK_AGENTS.includes(a)))
+      ) {
+        throw new BadRequest(`agents must list some of: ${HOOK_AGENTS.join(", ")}`);
+      }
+      const chosen =
+        (agents as HookAgent[] | undefined) ?? (remove ? HOOK_AGENTS : detectedAgents());
+      const roots = [
+        ...new Set([
+          ...store.registeredProjects().map((p) => p.root),
+          ...store.roots().map((r) => r.root),
+        ]),
+      ];
+      const failed = setup(chosen, remove === true, roots).filter((r) => r.error);
+      broadcast({ type: "projects" });
+      if (failed.length)
+        throw new BadRequest(failed.map((r) => `${r.file}: ${r.error}`).join("; "));
+      return json(res, 200, setupStatus());
     }
     const sv = path.match(/^\/api\/projects\/([0-9a-f]{12})\/services(?:\/(m-[0-9a-f]{8}))?$/);
     if (sv) {

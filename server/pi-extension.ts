@@ -3,9 +3,22 @@
 // (prompts, tool calls, assistant messages with token usage) to the local Quoli server. It never
 // changes, blocks or delays the agent: handlers return at once, posts run in order in the
 // background, and every failure is swallowed. It reads no credentials and no session files.
+import { appendFileSync, existsSync, statSync } from "node:fs";
+
 const PORT = Number("__QUOLI_PORT__");
 const URL = `http://127.0.0.1:${PORT}/ingest?agent=pi`;
 const MAX_TEXT = 100_000;
+// Set only by the user-level install: where events wait while Quoli is not running.
+const SPOOL = "__QUOLI_SPOOL__";
+const SPOOL_MAX = 50 * 1024 * 1024;
+
+/** Queues an event for Quoli to read when it next starts; never throws. */
+const spool = (body: string, at: string) => {
+  try {
+    if (!SPOOL || (existsSync(SPOOL) && statSync(SPOOL).size >= SPOOL_MAX)) return;
+    appendFileSync(SPOOL, `${JSON.stringify({ agent: "pi", at, body })}\n`, { mode: 0o600 });
+  } catch {}
+};
 
 type Json = Record<string, unknown>;
 type Ctx = { cwd?: string; sessionManager?: { getSessionId?: () => string | undefined } };
@@ -26,6 +39,7 @@ const clip = (v: unknown, depth = 0): unknown => {
 
 let queue: Promise<unknown> = Promise.resolve();
 function post(payload: Json) {
+  const at = new Date().toISOString();
   let body: string;
   try {
     body = JSON.stringify(clip(payload));
@@ -41,7 +55,7 @@ function post(payload: Json) {
         signal: AbortSignal.timeout(1500),
       }),
     )
-    .catch(() => {});
+    .catch(() => spool(body, at));
 }
 
 /** The text of a tool result: its text parts joined. */

@@ -51,12 +51,29 @@ QUOLI_HOME=/tmp/quoli-demo QUOLI_PORT=4471 pnpm demo -- --large
 
 Then open http://127.0.0.1:4471. The demo data is fully synthetic and needs no API keys.
 
-## Use it with your own repository
+## Use it with your own repositories
+
+```sh
+pnpm quoli-setup        # once: records every repository, for each agent found on this machine
+pnpm dev                # start Quoli on http://127.0.0.1:4400
+cd any/repo && claude   # or codex, opencode, pi: sessions appear live
+```
+
+`pnpm quoli-setup` (or **Projects → Record every repository → Set up** in the app) installs Quoli once per agent in that agent's own user-level location:
+
+| Agent | File |
+| --- | --- |
+| Claude Code | `~/.claude/settings.json` (Quoli's hooks are added; your other settings and hooks are kept) |
+| Codex | `~/.codex/hooks.json` (or `$CODEX_HOME`); run `codex` once and approve Quoli's hooks with `/hooks` |
+| OpenCode | `~/.config/opencode/plugins/quoli.js` |
+| Pi | `~/.pi/agent/extensions/quoli.ts` (or `$PI_CODING_AGENT_DIR`) |
+
+After that, any repository you open with those agents appears under Projects on its first session, named by its GitHub repository when it has one. Sessions run while Quoli is closed are queued in `~/.quoli/spool.jsonl` and recorded when Quoli next starts. `pnpm quoli-setup codex pi` sets up only the agents named; `pnpm quoli-setup --remove` takes all of it out again. A plugin or extension file Quoli did not write is never touched.
+
+### Connecting one repository instead
 
 ```sh
 pnpm connect /path/to/your/repo   # adds Quoli's hooks to <repo>/.claude/settings.local.json
-pnpm dev                          # start Quoli on http://127.0.0.1:4400
-cd /path/to/your/repo && claude   # sessions appear live
 ```
 
 For Codex, run `pnpm connect /path/to/your/repo --agent codex`, then start `codex` in the repo and approve Quoli's hooks with `/hooks` (Codex runs project hooks only once you trust them). The hook file, `.codex/hooks.json`, is kept out of Git. Hosted tools such as Codex's web search don't fire hooks, so they don't appear.

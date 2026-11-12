@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { AGENT_NAMES, type AgentKind, type Project } from "../../../shared/model.ts";
+import {
+  AGENT_NAMES,
+  type AgentKind,
+  type Project,
+  type SetupStatus,
+} from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import {
   DeleteDataDialog,
@@ -49,10 +54,14 @@ function AgentHooks({ project }: { project: Project }) {
   if (!project.agents.length) return null;
   return (
     <ul className="agent-hooks">
-      {project.agents.map(({ agent, status }) => (
+      {project.agents.map(({ agent, status, everywhere }) => (
         <li key={agent}>
           <span className="agent-tag">{AGENT_NAMES[agent]}</span>{" "}
-          {status === "receiving" ? "receiving" : WAITING[agent]}
+          {status === "receiving"
+            ? "receiving"
+            : everywhere
+              ? `set up for every repository: start ${agent === "claude-code" ? "claude" : agent} here`
+              : WAITING[agent]}
         </li>
       ))}
     </ul>
@@ -100,14 +109,20 @@ export function ProjectsPage() {
 
   return (
     <div className="page">
-      <PageHead title="Projects">Repositories Quoli listens to, and what it has recorded.</PageHead>
-      <ConnectForm
-        onConnected={(p) => {
-          setNotice(null);
-          refresh();
-          return p;
-        }}
-      />
+      <PageHead title="Projects">
+        Repositories Quoli has recorded. Projects appear here on their first session.
+      </PageHead>
+      <EveryRepository onChange={refresh} />
+      <details className="connect-one">
+        <summary>Connect one repository instead</summary>
+        <ConnectForm
+          onConnected={(p) => {
+            setNotice(null);
+            refresh();
+            return p;
+          }}
+        />
+      </details>
       {notice && (
         <p className="notice" role="status">
           {notice}
@@ -120,7 +135,10 @@ export function ProjectsPage() {
       )}
       {projects?.length === 0 && (
         <EmptyState title="No projects yet">
-          <span>Connect a repository above, or restart Quoli with pnpm demo for a sample.</span>
+          <span>
+            Set up recording above, then start a session in any repository. Or restart Quoli with
+            pnpm demo for a sample.
+          </span>
         </EmptyState>
       )}
       {projects && projects.length > 0 && (
@@ -146,6 +164,17 @@ export function ProjectsPage() {
                   <Link to={paths.board(p.id)} className="strong" title={p.name}>
                     {p.name}
                   </Link>
+                  {p.github && (
+                    <a
+                      className="gh-repo"
+                      href={`https://github.com/${p.github}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Open on GitHub"
+                    >
+                      {p.github}
+                    </a>
+                  )}
                   <code className="path" title={p.root}>
                     {p.root}
                   </code>
@@ -165,7 +194,7 @@ export function ProjectsPage() {
                   <Link to={paths.board(p.id)} className="btn">
                     Open
                   </Link>
-                  {p.hookStatus !== "not_connected" && p.agents.length < HOOK_AGENTS.length && (
+                  {p.agents.length < HOOK_AGENTS.length && (
                     <select
                       className="input add-agent"
                       aria-label={`Record another agent's sessions in ${p.name}`}
@@ -184,11 +213,13 @@ export function ProjectsPage() {
                   <button
                     type="button"
                     className="btn"
-                    disabled={p.hookStatus === "not_connected" || busy === p.id}
+                    disabled={!p.agents.some((a) => !a.everywhere) || busy === p.id}
                     title={
-                      p.hookStatus === "not_connected"
-                        ? "Hooks are not installed"
-                        : "Remove Quoli's hooks; keep the recorded data"
+                      p.agents.some((a) => !a.everywhere)
+                        ? "Remove Quoli's hooks from this repository; keep the recorded data"
+                        : p.agents.length
+                          ? "Recorded through the setup for every repository; remove that above"
+                          : "Hooks are not installed"
                     }
                     onClick={() => disconnect(p)}
                   >
@@ -315,5 +346,108 @@ function ConnectForm({ onConnected }: { onConnected: (p: Project) => Project }) 
         </p>
       )}
     </form>
+  );
+}
+
+/**
+ * The user-level install: one click records every repository for each agent found on this
+ * machine. Same as `pnpm quoli-setup`.
+ */
+function EveryRepository({ onChange }: { onChange: () => void }) {
+  const [status, refresh, error] = useData("setup", api.setupStatus);
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  if (!status) return error ? <ErrorState message={error} retry={refresh} /> : null;
+  const found = status.filter((s) => s.found);
+  const missing = found.filter((s) => !s.installed);
+  const installed = status.filter((s) => s.installed);
+  const run = async (agents: AgentKind[] | undefined, remove: boolean) => {
+    setBusy(true);
+    setFailure(null);
+    try {
+      await api.setup(agents, remove);
+    } catch (e) {
+      setFailure(e instanceof Error ? e.message : String(e));
+    }
+    refresh();
+    onChange();
+    setBusy(false);
+  };
+  return (
+    <section className="card every-repo" aria-labelledby="every-repo-title">
+      <div className="every-head">
+        <div>
+          <h2 id="every-repo-title">Record every repository</h2>
+          <p className="faint">
+            Set up once per agent and every repository you open with it is recorded, with nothing to
+            connect per project. Sessions run while Quoli is closed appear when it starts.
+          </p>
+        </div>
+        <div className="every-actions">
+          {missing.length > 0 && (
+            <button
+              type="button"
+              className="btn primary"
+              disabled={busy}
+              onClick={() =>
+                run(
+                  missing.map((s) => s.agent),
+                  false,
+                )
+              }
+            >
+              {busy ? "Setting up…" : installed.length ? "Set up the rest" : "Set up"}
+            </button>
+          )}
+          {installed.length > 0 && (
+            <button
+              type="button"
+              className="btn"
+              disabled={busy}
+              onClick={() =>
+                run(
+                  installed.map((s) => s.agent),
+                  true,
+                )
+              }
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+      <ul className="every-list">
+        {status.map((s) => (
+          <SetupRow key={s.agent} s={s} />
+        ))}
+      </ul>
+      {failure && (
+        <p className="form-error" role="alert">
+          {failure}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function SetupRow({ s }: { s: SetupStatus }) {
+  const state = s.installed ? "on" : s.found ? "off" : "absent";
+  return (
+    <li className={`every-row ${state}`}>
+      <i aria-hidden="true" />
+      <span className="every-name">{AGENT_NAMES[s.agent]}</span>
+      <span className="every-state">
+        {s.installed
+          ? s.agent === "codex"
+            ? "Set up · approve Quoli's hooks once with /hooks in codex"
+            : "Set up"
+          : s.found
+            ? "Not set up"
+            : "Not found on this machine"}
+      </span>
+      <code className="path" title={s.file}>
+        {s.file}
+      </code>
+    </li>
   );
 }

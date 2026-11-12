@@ -1629,3 +1629,105 @@ ul.reasons li {
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
+
+/* Projects: record every repository (user-level setup) */
+.every-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.every-head h2 {
+  margin-bottom: 4px;
+}
+.every-head p {
+  margin: 0;
+  max-width: 68ch;
+}
+.every-actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+.every-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+.every-row {
+  display: grid;
+  grid-template-columns: 8px 110px minmax(0, auto) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+.every-row i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.every-row.on i {
+  background: var(--ok, #3fb950);
+}
+.every-row.off i {
+  box-shadow: inset 0 0 0 1.5px var(--muted);
+  background: transparent;
+}
+.every-name {
+  font-weight: 550;
+  color: var(--text);
+}
+.every-row.absent .every-name,
+.every-row.absent .every-state {
+  color: var(--muted);
+}
+.every-state {
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.every-row .path {
+  justify-self: end;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.connect-one > summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  padding: 4px 0 8px;
+  width: max-content;
+}
+.connect-one > summary:hover {
+  color: var(--text);
+}
+.gh-repo {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  text-decoration: none;
+  width: max-content;
+}
+.gh-repo:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+@media (max-width: 900px) {
+  .every-head {
+    flex-direction: column;
+  }
+  .every-row {
+    grid-template-columns: 8px 100px minmax(0, 1fr);
+  }
+  .every-row .path {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+}
