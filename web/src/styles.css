@@ -2376,10 +2376,10 @@ textarea.input {
   width: 34px;
 }
 .table.sessions .c-proj {
-  width: 14%;
+  width: 10%;
 }
 .table.sessions .c-branch {
-  width: 15%;
+  width: 11%;
 }
 .table.sessions .c-when {
   width: 92px;
@@ -2968,4 +2968,27 @@ textarea.input {
 .btn.sm {
   padding: 3px 9px;
   font-size: var(--fs-sm);
+}
+
+/* Which coding agent recorded a session (Claude Code, Codex, OpenCode). */
+.agent-tag {
+  font: 550 var(--fs-xs) var(--sans);
+  color: var(--text-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  padding: 0 5px;
+  line-height: 16px;
+  white-space: nowrap;
+  flex: none;
+}
+.table.sessions .c-agent {
+  width: 96px;
+}
+.page-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }

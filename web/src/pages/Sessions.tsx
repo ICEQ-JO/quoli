@@ -1,7 +1,13 @@
 import { useMemo, useState } from "react";
-import type { SessionSummary } from "../../../shared/model.ts";
+import {
+  AGENT_KINDS,
+  AGENT_NAMES,
+  type AgentKind,
+  type SessionSummary,
+} from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import {
+  AgentTag,
   EmptyState,
   ErrorState,
   LiveDot,
@@ -21,6 +27,7 @@ export function SessionsPage() {
   const [query, setQuery] = useState("");
   const [project, setProject] = useState("");
   const [status, setStatus] = useState<"" | "live" | "ended">("");
+  const [agent, setAgent] = useState<"" | AgentKind>("");
   const [failedOnly, setFailedOnly] = useState(false);
   const [shown, setShown] = useState(PAGE);
   useNow();
@@ -34,25 +41,27 @@ export function SessionsPage() {
     return (sessions ?? []).filter(
       (s) =>
         (!project || s.projectId === project) &&
+        (!agent || s.agent === agent) &&
         (!status || s.live === (status === "live")) &&
         (!failedOnly || s.failures > 0) &&
         (!q || s.title.toLowerCase().includes(q) || (s.branch ?? "").toLowerCase().includes(q)),
     );
-  }, [sessions, query, project, status, failedOnly]);
+  }, [sessions, query, project, status, agent, failedOnly]);
 
-  const filtered = query || project || status || failedOnly;
+  const filtered = query || project || status || agent || failedOnly;
   // The server lists only the newest sessions; projects count all of them.
   const recorded = (projects ?? []).reduce((n, p) => n + p.sessions, 0);
   const reset = () => {
     setQuery("");
     setProject("");
     setStatus("");
+    setAgent("");
     setFailedOnly(false);
   };
 
   return (
     <div className="page wide">
-      <PageHead title="Sessions">Every recorded Claude Code session, across projects.</PageHead>
+      <PageHead title="Sessions">Every recorded agent session, across projects.</PageHead>
 
       <search className="filters">
         <label className="sr-only" htmlFor="s-q">
@@ -82,6 +91,22 @@ export function SessionsPage() {
           {projects?.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
+            </option>
+          ))}
+        </select>
+        <label className="sr-only" htmlFor="s-a">
+          Agent
+        </label>
+        <select
+          id="s-a"
+          className="input"
+          value={agent}
+          onChange={(e) => setAgent(e.target.value as typeof agent)}
+        >
+          <option value="">All agents</option>
+          {AGENT_KINDS.map((k) => (
+            <option key={k} value={k}>
+              {AGENT_NAMES[k]}
             </option>
           ))}
         </select>
@@ -125,7 +150,7 @@ export function SessionsPage() {
       )}
       {sessions?.length === 0 && (
         <EmptyState title="No sessions recorded yet">
-          <span>Start a new Claude Code session in a connected repository.</span>
+          <span>Start a new agent session in a connected repository.</span>
           <Link to={paths.projects()} className="btn">
             Go to Projects
           </Link>
@@ -150,6 +175,9 @@ export function SessionsPage() {
                   <span className="sr-only">Status</span>
                 </th>
                 <th scope="col">Title</th>
+                <th scope="col" className="c-agent">
+                  Agent
+                </th>
                 <th scope="col" className="c-proj">
                   Project
                 </th>
@@ -214,6 +242,9 @@ function Row({ s, name }: { s: SessionSummary; name: string }) {
         <Link to={to} className="strong">
           {s.title}
         </Link>
+      </td>
+      <td className="ellip">
+        <AgentTag session={s} always />
       </td>
       <td className="ellip" title={name}>
         {name}

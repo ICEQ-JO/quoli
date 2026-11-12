@@ -350,6 +350,16 @@ export class Store {
       );
   }
 
+  /** The agent stamped on each session's events; sessions without a stamp are Claude Code's. */
+  sessionAgents(): Map<string, string> {
+    const rows = this.db
+      .prepare(
+        "SELECT session_id, MAX(json_extract(payload, '$.quoli_agent')) AS agent FROM events GROUP BY session_id",
+      )
+      .all() as { session_id: string; agent: string | null }[];
+    return new Map(rows.map((r) => [r.session_id, r.agent ?? "claude-code"]));
+  }
+
   usage(sessionId: string): UsageRow[] {
     return this.db
       .prepare("SELECT * FROM usage WHERE session_id = ? ORDER BY at")

@@ -1,8 +1,10 @@
 import { isAbsolute, relative } from "node:path";
 import {
+  type AgentKind,
   type AgentNode,
   categorize,
   type FileTouch,
+  isAgentKind,
   type PriceTable,
   type SessionDetail,
   type SessionSummary,
@@ -42,9 +44,13 @@ export function deriveSession(
   const files: Record<string, FileTouch> = {};
   let endedAt: string | null = null;
   let branch: string | null = null;
+  let agent: AgentKind = "claude-code";
+  let agentVersion: string | null = null;
 
   for (const e of events) {
     const p = e.payload;
+    if (isAgentKind(p.quoli_agent)) agent = p.quoli_agent;
+    agentVersion = str(p.quoli_agent_version) ?? agentVersion;
     const agentId = str(p.agent_id) ?? "main";
     if (agentId !== "main" && !agents.has(agentId)) {
       agents.set(agentId, {
@@ -140,6 +146,8 @@ export function deriveSession(
   const title = promptTitle(turns.map((t) => t.prompt)) ?? `Session ${first.sessionId.slice(0, 8)}`;
   return {
     id: first.sessionId,
+    agent,
+    agentVersion,
     projectId: projectId(root),
     root,
     title,
@@ -210,19 +218,37 @@ function rel(path: string, root: string): string | null {
   return r && !r.startsWith("..") && !isAbsolute(r) ? r : null;
 }
 
+/** The path field each agent uses: Claude Code `file_path`/`notebook_path`, OpenCode `filePath`. */
+const pathOf = (i: Record<string, unknown>) =>
+  str(i.file_path) ?? str(i.notebook_path) ?? str(i.filePath);
+
+/** Codex `apply_patch` names its files inside the patch text: `*** Update File: src/a.ts`. */
+function patchFiles(i: Record<string, unknown>): string[] {
+  const text = [i.patch, i.input, i.command].find(
+    (v): v is string => typeof v === "string" && v.includes("*** Begin Patch"),
+  );
+  if (!text) return [];
+  return [...text.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)].map((m) => m[1].trim());
+}
+
 function filesOf(input: unknown, root: string): string[] {
   if (!input || typeof input !== "object") return [];
   const i = input as Record<string, unknown>;
-  const path = str(i.file_path) ?? str(i.notebook_path);
-  const r = path ? rel(path, root) : null;
-  return r ? [r] : [];
+  const path = pathOf(i);
+  const paths = path ? [path] : patchFiles(i);
+  return [...new Set(paths.map((p) => rel(p, root)).filter((r): r is string => r !== null))];
 }
 
 function summarize(input: unknown, root: string): string {
   const i = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
-  const path = str(i.file_path) ?? str(i.notebook_path);
+  const path = pathOf(i);
   if (path) return rel(path, root) ?? path;
+  const patched = patchFiles(i);
+  if (patched.length) return clip(patched.join(", "), 140);
   if (str(i.command)) return clip(String(i.command).split("\n")[0], 140);
+  // Codex can send the command as an argument list: ["bash", "-lc", "pnpm test"].
+  if (Array.isArray(i.command) && i.command.every((a) => typeof a === "string"))
+    return clip(i.command.join(" ").split("\n")[0], 140);
   if (str(i.pattern)) return clip(`${i.pattern}${str(i.path) ? `  in ${i.path}` : ""}`, 140);
   if (str(i.description)) return clip(String(i.description), 140);
   if (str(i.url)) return String(i.url);

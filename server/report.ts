@@ -26,12 +26,38 @@ export function classifyCommand(command: string): CommandRun["kind"] {
   return "other";
 }
 
+/** A run call's command line: Claude Code and OpenCode send a string, Codex an argument list. */
+export function commandText(input: unknown): string | null {
+  const c = (input && typeof input === "object" ? input : {}) as { command?: unknown };
+  if (typeof c.command === "string") return c.command;
+  if (Array.isArray(c.command) && c.command.every((a) => typeof a === "string")) {
+    return c.command.join(" ");
+  }
+  return null;
+}
+
+/** Per-file line counts in a Codex `apply_patch` body (`*** Update File: path`, then +/- lines). */
+function patchPieces(
+  patch: string,
+): { path: string; added: number; removed: number; add: boolean }[] {
+  const out: { path: string; added: number; removed: number; add: boolean }[] = [];
+  for (const line of patch.split("\n")) {
+    const head = /^\*\*\* (Add|Update|Delete) File: (.+)$/.exec(line);
+    if (head) out.push({ path: head[2].trim(), added: 0, removed: 0, add: head[1] === "Add" });
+    else if (!out.length || line.startsWith("***")) continue;
+    else if (line.startsWith("+")) out[out.length - 1].added++;
+    else if (line.startsWith("-")) out[out.length - 1].removed++;
+  }
+  return out;
+}
+
 type EditPiece = { path: string; added: number; removed: number; rewrite: boolean; callId: string };
 
 /** Per-edit line counts from the recorded input; failed calls changed nothing and are skipped. */
 function editPieces(call: ToolCall): EditPiece[] {
   const path = call.files[0];
   if (call.category !== "edit" || call.status === "failed" || !path) return [];
+  const name = call.name.toLowerCase();
   const i = (call.input && typeof call.input === "object" ? call.input : {}) as Record<
     string,
     unknown
@@ -44,11 +70,21 @@ function editPieces(call: ToolCall): EditPiece[] {
     rewrite,
     callId: call.id,
   });
-  if (call.name === "Write") return [piece(countLines(text(i.content)), 0, true)];
-  if (call.name === "Edit") {
-    return [piece(countLines(text(i.new_string)), countLines(text(i.old_string)))];
+  if (name === "write") return [piece(countLines(text(i.content)), 0, true)];
+  if (name === "edit") {
+    // Claude Code uses snake_case fields, OpenCode camelCase.
+    const added = text(i.new_string ?? i.newString);
+    const removed = text(i.old_string ?? i.oldString);
+    return [piece(countLines(added), countLines(removed))];
   }
-  if (call.name === "MultiEdit" && Array.isArray(i.edits)) {
+  if (name === "apply_patch" || name === "patch") {
+    const body = [i.input, i.patch, i.command].find((v) => typeof v === "string");
+    return patchPieces(text(body)).flatMap((p) => {
+      const file = call.files.find((f) => p.path === f || p.path.endsWith(`/${f}`));
+      return file ? [{ ...piece(p.added, p.removed, p.add), path: file }] : [];
+    });
+  }
+  if (name === "multiedit" && Array.isArray(i.edits)) {
     return i.edits.map((e) => {
       const o = (e && typeof e === "object" ? e : {}) as Record<string, unknown>;
       return piece(countLines(text(o.new_string)), countLines(text(o.old_string)));
@@ -80,8 +116,8 @@ export function fileChanges(calls: ToolCall[]): FileChange[] {
 
 export function commandRuns(calls: ToolCall[]): CommandRun[] {
   return calls.flatMap((c) => {
-    const command = (c.input as { command?: unknown } | null)?.command;
-    if (c.category !== "run" || typeof command !== "string") return [];
+    const command = commandText(c.input);
+    if (c.category !== "run" || command === null) return [];
     return [
       {
         toolCallId: c.id,

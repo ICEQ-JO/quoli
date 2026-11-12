@@ -2,7 +2,7 @@
 
 All routes are served by `server/main.ts` on `127.0.0.1` only. Types are in `shared/model.ts`.
 
-Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: application/json` and an `Origin` header equal to the server's own origin (`http://127.0.0.1:<port>` or `http://localhost:<port>`); anything else gets `403`. `/ingest` keeps its existing rules (hooks send no Origin).
+Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: application/json` and an `Origin` header equal to the server's own origin (`http://127.0.0.1:<port>` or `http://localhost:<port>`); anything else gets `403`. `/ingest` keeps its existing rules (hooks send no Origin). `POST /ingest?agent=claude-code|codex|opencode` (default `claude-code`) runs the payload through that agent's adapter (`server/adapters.ts`); an unknown agent is `400`. Today only the Claude Code adapter is registered; a known agent without an adapter, like any unusable payload, gets `202` and nothing is stored (hooks must never fail the agent).
 
 | Method & path | Body | Returns |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: a
 | `GET /api/sessions?project=:id` | | `SessionSummary[]`; without `project`, sessions across all projects (newest first, max 500) |
 | `GET /api/session?id=:sid` | | `SessionDetail` |
 | `GET /api/overview` | | `Overview` |
-| `GET /api/usage?days=N` | | `UsageReport` for the last N local calendar days (1–365, default 30; otherwise `400`) |
+| `GET /api/usage?days=N&agent=K` | | `UsageReport` for the last N local calendar days (1–365, default 30; otherwise `400`). Optional `agent` (`claude-code`, `codex`, `opencode`) limits it to that agent's sessions; anything else is `400`. |
 | `GET /api/settings` | | `{ settings: Settings, info: ServerInfo }` |
 | `PUT /api/settings` | `Partial<Settings>` | same as GET; applies retention immediately |
 | `POST /api/redact-preview` | `{ "text": "..." }` | `{ "text": "..." }`, the text after redaction |
@@ -35,6 +35,7 @@ Retention runs at startup, hourly, and when settings change.
 - `PUT /api/settings` rejects unknown keys and out-of-range values with `400 { error }`. Redaction applies at ingest time only; it never rewrites stored events.
 - `Settings.budgetDailyUsd` / `budgetMonthlyUsd`: `null` (no budget) or a number > 0 and ≤ 1,000,000. Budgets are local and only shown against estimated spend; Quoli never stops or throttles an agent.
 - `UsageReport` buckets transcript usage rows by the server's local day and prices each row with the current table: `days` (every day in range, `usd: null` when nothing was priced), `total`, `byModel`, `byProject`, the 10 most expensive `topSessions`, `cacheSavingsUsd` (cache reads × (input price − cache-read price), priced models only) and `spend.today` / `spend.month`, which ignore the range.
+- `SessionSummary.agent`: `claude-code`, `codex` or `opencode`, from the `quoli_agent` field stamped on stored events; events without it (every Claude Code event) read as Claude Code. `agentVersion` is the version an adapter reported, or `null`.
 - `SessionSummary.trace`: one character per tool call in time order (first 400): `r` read, `e` edit, `c` run, `s` search, `a` subagent, `w` web/MCP, `o` other, `f` failed (`TRACE_CODES` in `shared/model.ts`).
 - Retention deletes whole sessions (events, usage rows, transcript offsets) whose last event is older than `retentionDays`, then truncates the WAL.
 - `/api/code|git|infra|file` accept any root that has events or is registered.
