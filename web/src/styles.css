@@ -2982,7 +2982,7 @@ textarea.input {
   flex: none;
 }
 .table.sessions .c-agent {
-  width: 96px;
+  width: 112px;
 }
 .page-actions {
   display: flex;
@@ -3180,4 +3180,11 @@ textarea.input {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 6px;
+}
+
+/* Narrower windows keep the title readable: files and tokens are on the session itself. */
+@media (max-width: 1400px) {
+  .table.sessions .c-opt {
+    display: none;
+  }
 }

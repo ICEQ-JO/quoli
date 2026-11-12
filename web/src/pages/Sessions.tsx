@@ -235,10 +235,10 @@ export function SessionsPage() {
                 <th scope="col" className="num c-n">
                   Tools
                 </th>
-                <th scope="col" className="num c-n">
+                <th scope="col" className="num c-n c-opt">
                   Files
                 </th>
-                <th scope="col" className="num c-n">
+                <th scope="col" className="num c-n c-opt">
                   Tokens
                 </th>
                 <th scope="col" className="num c-n" title="Estimate from list prices">
@@ -307,8 +307,8 @@ function Row({ s, name }: { s: SessionSummary; name: string }) {
       </td>
       <td className="num nowrap">{duration(s.startedAt, s.endedAt)}</td>
       <td className="num">{s.toolCount}</td>
-      <td className="num">{s.filesTouched}</td>
-      <td className="num" title={tokenSum(s.tokens).toLocaleString()}>
+      <td className="num c-opt">{s.filesTouched}</td>
+      <td className="num c-opt" title={tokenSum(s.tokens).toLocaleString()}>
         {compact(tokenSum(s.tokens))}
       </td>
       <td
