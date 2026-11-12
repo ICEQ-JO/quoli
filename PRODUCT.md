@@ -43,18 +43,23 @@ Real local sessions recorded from Claude Code; the synthetic demo (`pnpm demo`, 
 WCAG AA contrast in dark and light themes (enforced by `tests/theme-contrast.test.ts`), full keyboard operation, screen-reader labels on canvas nodes, no horizontal scroll at 1280 px.
 
 ## Landing page (marketing surface)
-Quoli. Owner requests a complete landing-page replacement inspired by the reference site's full pixel-art theme: scenery, characters, typography and motion. Original Quoli art and storytelling. On 2026-11-12 the owner delegated creative decisions and implementation. Main conversion is Join the waitlist; no pricing, testimonials or availability claims may be invented.
 
-## Evidence on Hand
-`docs/vision.md`, `docs/mvp.md`, `docs/architecture.md`; synthetic sessions in `server/demo.ts`. No approved customer testimonials, usage benchmarks, or waitlist provider supplied.
+Mode: Persuade. Audience: developers using coding agents; primary action: Join the
+waitlist, secondary action: explore real screenshots of the synthetic demo.
 
-## Product Principles
-- Local by default; cloud only through explicit opt-in.
-- Glanceable first, precise evidence on demand.
-- Observe passively; never replay captured commands.
-- Label unknowns, derivations and synthetic demonstrations honestly.
+Owner-approved direction (2026-11-12, #159): preserve original pixel artwork and
+playful motion, establish a baby-blue/ice/denim/midnight/cream identity, and give
+Quoli its own composition and logo. The previous instruction to follow the reference site's
+structure is superseded. Keep the working recorder; avoid rabbit/robot mascots,
+game-world treatment, paired green panels and a green-to-blue chapter switch.
 
-## Owner correction — 2026-11-12
-The owner rejected the first pixel-city implementation as game-like and unlike the reference site. Replace it completely. The reference site is the direct structural and material reference: compact equal hero panels, dotted white page, vivid green/blue pixel surfaces, original animated figures that perform their mechanism, terminal demonstration, product display and full website footer. No city, robot mascot, game world or generic stacked landing sections. Existing audience, waitlist goal and product facts stand.
+The landing mark is a stepped open Q with a connected square endpoint. One sky-field
+hero pairs the promise and action with original pixel scenery. Product tabs sit above
+real synthetic-demo screenshots. The app's activity colors remain semantic and separate.
+
+The current app supports Claude Code, Codex, OpenCode and Pi locally. Future hosted
+sync and live provider capabilities must remain distinguished from local support.
+No customer testimonials, benchmarks or pricing may be invented. Demonstrations
+must use synthetic data and never read private captured sessions.
 
 The landing design system lives in `docs/landing-design.md`; `DESIGN.md` is the app.

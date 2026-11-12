@@ -4,17 +4,15 @@ Issue [#107](https://github.com/ICEQ-JO/quoli/issues/107), PR [#111](https://git
 
 ## Direction
 
-The owner rejected the first city/robot/cottage design on 2026-11-12 and requested
-a complete rebuild following the reference site's actual structure, pixel material and
-substantive animation. The rejected assets, components and comps have been removed.
-The original Quoli content and code now follow the reference's compact twin hero
-panels, dotted white ground, green mechanical-demo chapter, blue product chapter,
-large mission link and multi-column footer.
+The owner-approved baby-blue identity in [#159](https://github.com/ICEQ-JO/quoli/issues/159)
+supersedes the earlier reference-site structural direction. Original pixel scenery and the
+working recorder remain, recolored in ice blue, baby blue, denim, midnight and cream.
+A continuous hero places the promise and actions beside the scenery; a stepped open Q
+and connected pixel form the landing mark. Horizontal tabs introduce a wide product
+tour, and a flat pale-blue footer closes the page. See [landing-design.md](landing-design.md).
 
-The reference site is a structural/material reference, not source code or artwork to copy.
-Quoli's forest, contour fields, recorder and signal motion are original code.
-The hero uses Jost sans like the reference; section headings use Jersey 10 pixel
-lettering. Both are self-hosted under their included OFL licenses.
+Jost sans carries explanation and the hero; Jersey 10 carries section headings and
+the wordmark. Both are self-hosted under their included OFL licenses.
 
 ## Run and entries
 
@@ -49,8 +47,8 @@ fills as the session plays; reduced motion shows every step.
 
 ## Product tour and screenshots
 
-The blue chapter is a tour of the real app: six tabs (Review, Agents, Code, Git, Infra,
-Dashboard) switch a screenshot in the blue frame, with a caption saying what it shows.
+The product section is a tour of the real app: six horizontal tabs (Review, Agents, Code, Git, Infra,
+Dashboard) switch a screenshot in the baby-blue frame, with a caption saying what it shows.
 Tabs support arrow keys, Home and End, and the lens links under the hero (`#tour-tab-code`
 and so on) open the matching tab. The screenshot itself links to the full-size image.
 
@@ -69,7 +67,7 @@ the waitlist and no address is shown. The footer adds a Contact link when it is 
 ## Link previews
 
 `web/landing/index.html` carries Open Graph and Twitter tags with `web/public/landing/og.png`
-(1200×630, the hero forest and headline). Vite replaces `%SITE%` with
+(1200×630, the baby-blue hero and headline). Vite replaces `%SITE%` with
 `VITE_PUBLIC_SITE_URL`, or on Vercel with `https://$VERCEL_PROJECT_PRODUCTION_URL` (the
 production domain, including a custom one), so previews get an absolute image URL.
 
@@ -94,3 +92,11 @@ Before sending launch updates, the operator still needs to:
 - Repository links (Docs, GitHub, Development) appear only when `VITE_PUBLIC_REPO_URL` is set at build time. While the repository is private they are hidden, so visitors never land on a GitHub 404.
 
 Never expose the private evidence server publicly.
+
+## Validation of the baby-blue identity (#159)
+
+Typecheck, production build, Biome and all 165 existing tests passed. Playwright
+verified no horizontal overflow at 320, 390, 760, 1000 and 1440px in both themes,
+keyboard tab navigation, reduced-motion evidence visibility, and axe-core reported
+no WCAG A/AA violations in either theme at 1440px. Synthetic screenshots only; no
+real emails submitted, private evidence read, deployment or real-screen-reader test.

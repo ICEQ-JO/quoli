@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { PixelScene, SESSION_STEPS } from "./PixelScene.tsx";
 import { Arrow, Brand, Mark, Moon } from "./ui.tsx";
 import { Waitlist } from "./Waitlist.tsx";
@@ -213,7 +213,7 @@ function ProductTour({
         ))}
       </div>
       <div className="board-frame">
-        <PixelScene kind="field" blue paused={paused} />
+        <PixelScene kind="field" paused={paused} />
         <figure
           className="tour-window"
           id="tour-panel"
@@ -251,10 +251,9 @@ function ProductTour({
   );
 }
 
-function SiteFooter({ paused }: { paused: boolean }) {
+function SiteFooter() {
   return (
     <footer className="site-footer">
-      <PixelScene kind="field" blue paused={paused} />
       <div className="footer-content">
         <div className="footer-description">
           <Brand />
@@ -264,9 +263,9 @@ function SiteFooter({ paused }: { paused: boolean }) {
             {github ? "Building in the open" : "Follow the roadmap"} <Arrow diagonal />
           </a>
           <small>
-            Claude Code locally today.
+            Claude Code · Codex · OpenCode · Pi.
             <br />
-            More agents and teams on the horizon.
+            Local evidence. A connected view.
           </small>
         </div>
         <div className="footer-column">
@@ -377,9 +376,9 @@ function InformationPage({ page }: { page: string }) {
           </p>
           <h2>Agent evidence</h2>
           <p>
-            Quoli stores supported Claude Code hook events, prompts, tool input/output and
-            transcript usage locally. Common credential formats are redacted before persistence;
-            redaction is best-effort. This website demonstration never reads captured sessions.
+            Quoli stores supported agent events, prompts, tool input/output and reported token usage
+            locally. Common credential formats are redacted before persistence; redaction is
+            best-effort. This website demonstration never reads captured sessions.
           </p>
           <h2>The waitlist</h2>
           <p>
@@ -404,7 +403,7 @@ function InformationPage({ page }: { page: string }) {
           </p>
           <div className="roadmap-entry">
             <span>Available locally</span>
-            <h2>Claude Code. Four lenses. One record.</h2>
+            <h2>Four agents. Four lenses. One record.</h2>
             <p>
               Hook capture, session summaries, estimated costs, a derived review checklist,
               file-level code views, Git history, repository-declared infrastructure and replay.
@@ -422,8 +421,8 @@ function InformationPage({ page }: { page: string }) {
             <span>Planned</span>
             <h2>More agents. Deeper code.</h2>
             <p>
-              Codex, OpenCode and Pi adapters, symbol-level maps and provider connections. These are
-              roadmap items, not currently available integrations.
+              Symbol-level code maps and live hosted-provider connections. These are roadmap items;
+              Claude Code, Codex, OpenCode and Pi capture is available locally today.
             </p>
           </div>
           <div className="roadmap-entry">
@@ -470,7 +469,6 @@ export function Landing() {
   useEffect(() => {
     document.documentElement.dataset.paused = String(paused);
   }, [paused]);
-  const chapter = useRef<HTMLElement>(null);
   const page = new URLSearchParams(location.search).get("page");
   useEffect(() => {
     document.title =
@@ -490,24 +488,6 @@ export function Landing() {
       /* Storage may be disabled. */
     }
   }, [dark]);
-  useEffect(() => {
-    const update = () => {
-      const next =
-        (chapter.current?.getBoundingClientRect().top ?? Infinity) < innerHeight * 0.85
-          ? "blue"
-          : "green";
-      if (document.documentElement.dataset.chapter !== next)
-        document.documentElement.dataset.chapter = next;
-    };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-      delete document.documentElement.dataset.chapter;
-    };
-  }, []);
 
   return (
     <>
@@ -546,31 +526,38 @@ export function Landing() {
       ) : (
         <main id="main">
           <section className="hero" aria-labelledby="hero-title">
-            <div className="hero-landscape">
-              <PixelScene kind="forest" paused={paused} />
+            <div className="hero-copy">
               <h1 id="hero-title">
                 See what your
                 <br />
                 <span>coding agents did.</span>
               </h1>
+              <p>
+                From the first prompt to the files it changed. Follow your agent's work across code,
+                Git and infrastructure, in one connected view.
+              </p>
+              <div className="hero-actions">
+                <a className="hero-cta" href="#waitlist">
+                  Join the waitlist <Arrow />
+                </a>
+                <a className="hero-link" href="#product">
+                  Explore the app <Arrow />
+                </a>
+              </div>
+              <small>Works locally with Claude Code, Codex, OpenCode and Pi.</small>
             </div>
-            <div className="hero-explanation">
-              <PixelScene kind="field" paused={paused} />
-              <div>
-                <p>
-                  Quoli connects your coding agents' work to the code they changed, the branch they
-                  worked on and the services that run it. One board, four lenses, one story you can
-                  actually follow.
-                </p>
-                <div className="hero-actions">
-                  <a className="hero-cta" href="#waitlist">
-                    Join the waitlist <Arrow />
-                  </a>
-                  <a className="hero-link" href="#product">
-                    See the app
-                  </a>
-                </div>
-                <small>Runs on your machine. Claude Code today; Codex and OpenCode are next.</small>
+            <div className="hero-art">
+              <PixelScene kind="forest" paused={paused} />
+              <div
+                className="hero-trace"
+                role="img"
+                aria-label="One session connects agents, code, Git and infrastructure"
+              >
+                <Mark />
+                <span>Agents</span>
+                <span>Code</span>
+                <span>Git</span>
+                <span>Infra</span>
               </div>
             </div>
           </section>
@@ -634,14 +621,9 @@ export function Landing() {
               }}
             />
           </section>
-          <section
-            className="blue-chapter"
-            ref={chapter}
-            id="product"
-            aria-labelledby="product-title"
-          >
+          <section className="blue-chapter" id="product" aria-labelledby="product-title">
             <div className="chapter-signal">
-              <PixelScene kind="signal" paused={paused} blue />
+              <PixelScene kind="signal" paused={paused} />
             </div>
             <h2 id="product-title">
               The activity is only
@@ -699,14 +681,14 @@ export function Landing() {
               <li>
                 <h3>Student projects</h3>
                 <p>
-                  Bounded pieces with a real user: adapters for Codex and OpenCode, function-level
-                  code maps, failure and cost analysis, accessible graph views.
+                  Bounded pieces with a real user: deeper agent integrations, function-level code
+                  maps, failure and cost analysis, accessible graph views.
                 </p>
               </li>
               <li>
                 <h3>Course and lab pilots</h3>
                 <p>
-                  Run Quoli beside Claude Code on a course or lab project and tell us what was
+                  Run Quoli beside your coding agent on a course or lab project and tell us what was
                   unclear. Nothing leaves the machine unless you choose to share it.
                 </p>
               </li>
@@ -728,12 +710,12 @@ export function Landing() {
             <Waitlist location="hero" />
           </section>
           <a className="mission-link" href="/landing/?page=mission">
-            Read our <span>mission statement</span>
+            Why we're <span>building Quoli</span>
             <Arrow diagonal />
           </a>
         </main>
       )}
-      <SiteFooter paused={paused} />
+      <SiteFooter />
       <button
         className="motion-control"
         type="button"

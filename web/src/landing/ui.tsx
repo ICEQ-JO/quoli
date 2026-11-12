@@ -14,12 +14,13 @@ export function Mark({ small = false }: { small?: boolean }) {
     <svg
       className={small ? "q-mark small" : "q-mark"}
       aria-hidden="true"
-      viewBox="0 0 28 30"
+      viewBox="0 0 36 36"
       shapeRendering="crispEdges"
     >
-      <path d="M8 0h12v3h4v4h3v16h-4v4h-5v3h-4v-3H7v-3H3V7h3V3h2z" fill="currentColor" />
-      <path d="M9 7h10v3h3v10h-3v3H9v-3H6V10h3z" fill="var(--paper)" />
-      <path d="M15 17h5v5h5v5h-5v-5h-5z" fill="currentColor" />
+      <path
+        d="M10 2h14v4h4v12h-6v-8H12v2h-2v10h2v2h8v6H10v-4H4V8h6zM16 18h6v4h4v4h-6v-4h-4zM28 28h6v6h-6z"
+        fill="currentColor"
+      />
     </svg>
   );
 }

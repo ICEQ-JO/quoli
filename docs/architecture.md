@@ -132,11 +132,13 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 ## Marketing surface
 
 Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) adds a separate Vite
-entry at /landing/ with original pixel artwork and a synthetic four-lens
-explorer. The main application still loads at / with its existing theme.
-The page reads no captured evidence. Its explicit email submission goes to a
-same-origin, size-limited handler, stored separately in waitlist.sqlite;
-it sends no email. This is a loopback preview. Public marketing hosting and
-delivery require a separate acquisition service, never exposing the private
-evidence APIs. See [landing.md](landing.md).
-\nThe owner-directed replacement uses original procedural Canvas scenery and a\nphysical recorder rather than generated city artwork. The scene model drives\nrecorder transport and progressive terminal from one clock. Informational\nmarketing views use query navigation within the isolated landing entry.\n
+entry at `/landing/` with original procedural pixel artwork, a working synthetic
+recorder and real screenshots of the synthetic demo. [#159](https://github.com/ICEQ-JO/quoli/issues/159)
+establishes the baby-blue identity, stepped Q mark, continuous hero, horizontal
+product tabs and flat footer. The app's separate styles and activity colors are unchanged.
+
+The page reads no captured evidence. Explicit email submission uses the existing
+same-origin size-limited waitlist handler: separate local SQLite storage in preview,
+or Upstash Redis on Vercel. No automatic email is sent. Mission, Roadmap and Privacy
+use query navigation within the isolated entry. Public hosting never exposes the
+private evidence APIs. See [landing.md](landing.md) and [landing-design.md](landing-design.md).

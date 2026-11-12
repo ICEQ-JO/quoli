@@ -108,11 +108,10 @@ Each phase is something a developer can use on its own.
 
 ## Landing presentation
 
-Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) presents Quoli's
-connected record through original animated pixel scenery, a physical session
-recorder and an interactive product example. Owner correction 2026-11-12:
-replace the rejected game-like city and follow the reference site's actual page structure
-and animated pixel material. Speak to coding-agent users and engineering teams,
-while separating current Claude Code/local support from planned adapters,
-shared sessions and hosted sync. The marketing page is isolated from the app;
-its demonstrations are synthetic, never evidence of a real captured session.
+Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) introduced the separate
+marketing surface. Owner direction in [#159](https://github.com/ICEQ-JO/quoli/issues/159)
+retains original pixel scenery and the working recorder, while establishing a
+baby-blue Quoli identity and distinct page composition instead of following the reference site.
+Present current local Claude Code, Codex, OpenCode and Pi capture separately from
+planned hosted sync and live provider connections. Demonstrations remain synthetic;
+the landing page never reads captured evidence. See [landing-design.md](landing-design.md).
