@@ -41,6 +41,8 @@ export function SessionsPage() {
   }, [sessions, query, project, status, failedOnly]);
 
   const filtered = query || project || status || failedOnly;
+  // The server lists only the newest sessions; projects count all of them.
+  const recorded = (projects ?? []).reduce((n, p) => n + p.sessions, 0);
   const reset = () => {
     setQuery("");
     setProject("");
@@ -111,6 +113,12 @@ export function SessionsPage() {
         )}
       </search>
 
+      {sessions && recorded > sessions.length && (
+        <p className="faint">
+          Showing the newest {sessions.length} of {recorded} recorded sessions. Older ones are kept
+          but not listed here.
+        </p>
+      )}
       {!sessions && (error ? <ErrorState message={error} retry={refresh} /> : <Loading />)}
       {sessions && error && (
         <ErrorState title="Showing the last data we had" message={error} retry={refresh} />

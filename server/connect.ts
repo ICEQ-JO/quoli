@@ -38,6 +38,33 @@ export function hooksInstalled(root: string): boolean {
   }
 }
 
+/**
+ * Rewrites Quoli's hook in projects that have it installed but point at another port or
+ * another Quoli checkout, which would silently stop events. Returns the roots it updated.
+ */
+export function refreshHooks(roots: string[]): string[] {
+  const updated: string[] = [];
+  for (const root of roots) {
+    let settings: { hooks?: Record<string, unknown> };
+    try {
+      settings = JSON.parse(readFileSync(settingsFile(root), "utf8"));
+    } catch {
+      continue;
+    }
+    const ours = Object.values(settings?.hooks ?? {})
+      .flatMap((groups) => (Array.isArray(groups) ? groups : []))
+      .filter(isOurs)
+      .flatMap((g) => g.hooks ?? [])
+      .map((h: { command?: string }) => h.command);
+    if (!ours.length || ours.every((c) => c === command)) continue;
+    try {
+      connect(root);
+      updated.push(root);
+    } catch {}
+  }
+  return updated;
+}
+
 /** The repository's real top-level directory, or throws a human-readable error. */
 export function validateRepo(path: unknown): string {
   if (typeof path !== "string" || !isAbsolute(path)) throw new Error("Path must be absolute");

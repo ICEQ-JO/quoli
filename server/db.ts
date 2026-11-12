@@ -116,6 +116,20 @@ export class Store {
       .map((r) => String(r.session_id));
   }
 
+  /**
+   * Every session in the project with a tool result that mentions "commit": a cheap, exact
+   * superset of the sessions whose recorded `git commit` output can name a commit.
+   */
+  commitSessionIds(root: string): string[] {
+    return this.db
+      .prepare(
+        `SELECT DISTINCT session_id FROM events WHERE root = ?
+         AND event IN ('PostToolUse', 'PostToolUseFailure') AND payload LIKE '%commit%'`,
+      )
+      .all(root)
+      .map((r) => String(r.session_id));
+  }
+
   roots(): { root: string; sessions: number; last: string }[] {
     return this.db
       .prepare(

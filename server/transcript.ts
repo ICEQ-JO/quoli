@@ -40,8 +40,18 @@ export function usageFromLines(lines: string[], sessionId: string, agentId: stri
   return rows;
 }
 
-/** Reads only the new complete lines since the last call. */
-export function syncTranscript(store: Store, path: string, sessionId: string, agentId: string) {
+/**
+ * Reads only the new complete lines since the last call, in blocks of at most 8 MB, until
+ * caught up. A single line longer than a block (a pasted image, a huge tool result) is
+ * skipped instead of stalling every later line; its usage, if any, is not counted.
+ */
+export function syncTranscript(
+  store: Store,
+  path: string,
+  sessionId: string,
+  agentId: string,
+  maxRead = MAX_READ,
+) {
   if (!path.endsWith(".jsonl")) return;
   let size: number;
   try {
@@ -51,25 +61,39 @@ export function syncTranscript(store: Store, path: string, sessionId: string, ag
   }
   let offset = store.transcriptOffset(path);
   if (size < offset) offset = 0;
-  if (size === offset) return;
-  const length = Math.min(size - offset, MAX_READ);
-  const buffer = Buffer.alloc(length);
   const fd = openSync(path, "r");
   try {
-    readSync(fd, buffer, 0, length, offset);
+    while (offset < size) {
+      const length = Math.min(size - offset, maxRead);
+      const buffer = Buffer.alloc(length);
+      readSync(fd, buffer, 0, length, offset);
+      const end = buffer.lastIndexOf(0x0a);
+      if (end < 0) {
+        // No line ends in this block: either the last line is still being written,
+        // or one line is longer than a block. Skip the latter to its newline.
+        if (length < maxRead) break;
+        const next = nextNewline(fd, offset + length, size, maxRead);
+        if (next < 0) break;
+        offset = next + 1;
+      } else {
+        const lines = buffer.subarray(0, end).toString("utf8").split("\n");
+        for (const row of usageFromLines(lines, sessionId, agentId)) store.upsertUsage(row);
+        offset += end + 1;
+      }
+      store.setTranscriptOffset(path, sessionId, agentId, offset);
+    }
   } finally {
     closeSync(fd);
   }
-  const text = buffer.toString("utf8");
-  const end = text.lastIndexOf("\n");
-  if (end < 0) return;
-  for (const row of usageFromLines(text.slice(0, end).split("\n"), sessionId, agentId)) {
-    store.upsertUsage(row);
+}
+
+/** Byte position of the first newline at or after `from`, or -1 when there is none yet. */
+function nextNewline(fd: number, from: number, size: number, block: number): number {
+  const buffer = Buffer.alloc(block);
+  for (let at = from; at < size; at += block) {
+    const n = readSync(fd, buffer, 0, Math.min(block, size - at), at);
+    const i = buffer.subarray(0, n).indexOf(0x0a);
+    if (i >= 0) return at + i;
   }
-  store.setTranscriptOffset(
-    path,
-    sessionId,
-    agentId,
-    offset + Buffer.byteLength(text.slice(0, end + 1)),
-  );
+  return -1;
 }

@@ -275,6 +275,7 @@ export function BoardPage({
         activeId={sessionId}
         hrefFor={sessionHref}
         projectPath={project.root}
+        total={project.sessions}
         error={sessionsError}
         retry={refreshSessions}
       />

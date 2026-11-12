@@ -261,7 +261,7 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/code") return json(res, 200, codeMap(root));
     if (path === "/api/git") {
       const limit = parseLimit(url.searchParams.get("limit"));
-      return json(res, 200, gitState(root, limit, details(store.sessionIds(root))));
+      return json(res, 200, gitState(root, limit, details(store.commitSessionIds(root))));
     }
     if (path === "/api/infra") return json(res, 200, infraMap(root));
     if (path === "/api/file") {
