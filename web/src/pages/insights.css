@@ -1,0 +1,146 @@
+/* Insights (#129): day charts reuse the Usage chart parts (.sc-col, .sc-bar, .sc-axis). */
+
+.ins-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+  margin-top: 0;
+}
+
+/* Room for two lines, so a long readout never shifts one plot below its neighbour. */
+.ins-chart .sc-readout {
+  min-height: 2.9em;
+  align-items: flex-start;
+}
+
+.ins-plot {
+  position: relative;
+  height: 140px;
+  border-bottom: 1px solid var(--line-strong);
+  border-top: 1px dashed var(--line);
+}
+
+.ins-top {
+  position: absolute;
+  top: -1px;
+  right: 0;
+  transform: translateY(-100%);
+  font-size: var(--fs-xs);
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.ins-plot .sc-col {
+  cursor: pointer;
+}
+
+.sc-bar.fail {
+  background: color-mix(in srgb, var(--fail) 55%, var(--faint));
+}
+
+.sc-col.on .sc-bar.fail {
+  background: var(--fail);
+}
+
+/* Median to 90th percentile: a thin line above the median bar. */
+.ins-range {
+  position: absolute;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--faint);
+  border-radius: 1px;
+}
+
+.sc-col.on .ins-range {
+  background: var(--text-2);
+}
+
+.ins-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  width: min(70%, 18px);
+  height: 100%;
+  gap: 1px;
+  opacity: 0.75;
+}
+
+.sc-col.on .ins-stack {
+  opacity: 1;
+}
+
+.ins-stack i {
+  display: block;
+  min-height: 1px;
+}
+
+.ins-stack i:last-child {
+  border-radius: 3px 3px 0 0;
+}
+
+.ins-legend {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.ins-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ins-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.hbars li.ins-hbar {
+  grid-template-columns: 110px minmax(60px, 1fr) 48px;
+}
+
+.ins-col {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ins-table td.num {
+  white-space: nowrap;
+}
+
+.ins-table .ins-name {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ins-days summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.ins-days[open] summary {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 1440px) {
+  .ins-grid.lower {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .ins-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

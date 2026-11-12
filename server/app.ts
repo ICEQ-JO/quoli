@@ -17,6 +17,7 @@ import { home, projectId, type Store } from "./db.ts";
 import { commitDetail, gitState, parseLimit } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
 import { git, ingest, redact } from "./ingest.ts";
+import { insightsReport } from "./insights.ts";
 import { addManual, loadManual, mergeManual, saveManual, validateManual } from "./manual.ts";
 import {
   costOf,
@@ -261,6 +262,26 @@ export function createApp(store: Store, port: () => number) {
       const agent = url.searchParams.get("agent");
       if (agent !== null && !isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
       return json(res, 200, usageReport(store, days, details, new Date(), agent));
+    }
+    if (path === "/api/insights") {
+      const q = url.searchParams;
+      const days = Number(q.get("days") ?? 30);
+      if (!Number.isInteger(days) || days < 1 || days > 365) {
+        return json(res, 400, { error: "days must be a whole number from 1 to 365" });
+      }
+      const agent = q.get("agent");
+      if (agent !== null && !isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
+      // One day of slack so a session that started just before local midnight is still read.
+      const from = new Date(Date.now() - (days + 1) * DAY).toISOString();
+      return json(
+        res,
+        200,
+        insightsReport(details(store.sessionIdsStartedSince(from)), days, new Date(), {
+          projectId: q.get("project"),
+          agent,
+          model: q.get("model"),
+        }),
+      );
     }
     if (path === "/api/session") {
       const id = url.searchParams.get("id") ?? "";

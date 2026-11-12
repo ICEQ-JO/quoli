@@ -181,6 +181,16 @@ export class Store {
       .map((r) => String(r.session_id));
   }
 
+  /** Sessions that started at or after `from` (their first event), newest first. */
+  sessionIdsStartedSince(from: string): string[] {
+    return this.db
+      .prepare(
+        "SELECT session_id FROM events GROUP BY session_id HAVING MIN(at) >= ? ORDER BY MIN(at) DESC",
+      )
+      .all(from)
+      .map((r) => String(r.session_id));
+  }
+
   rootSessionIds(root: string): string[] {
     return this.db
       .prepare("SELECT DISTINCT session_id FROM events WHERE root = ?")

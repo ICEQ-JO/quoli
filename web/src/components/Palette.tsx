@@ -18,6 +18,8 @@ export const pageItems = (): PaletteItem[] =>
     ["Home", paths.home()],
     ["Projects", paths.projects()],
     ["Sessions", paths.sessions()],
+    ["Usage", paths.usage()],
+    ["Insights", paths.insights()],
     ["Settings", paths.settings()],
   ].map(([label, to]) => ({ group: "Go to", label, detail: to, run: () => navigate(to) }));
 

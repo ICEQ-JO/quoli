@@ -17,17 +17,33 @@ import {
   useNow,
 } from "../components/ui.tsx";
 import { ago, compact, duration, money, tokenSum } from "../format.ts";
-import { Link, navigate, paths } from "../router.ts";
+import { Link, navigate, paths, useLocation } from "../router.ts";
 
 const PAGE = 100;
+
+/** YYYY-MM-DD in the browser's time zone, matching how Insights buckets days. */
+const localDay = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 export function SessionsPage() {
   const [sessions, refresh, error] = useData("sessions:all", () => api.sessions());
   const [projects, refreshProjects] = useData("projects", api.projects);
+  // Insights links here with ?day=YYYY-MM-DD (and its agent/project filters).
+  const { search } = useLocation();
+  const linked = useMemo(() => new URLSearchParams(search), [search]);
   const [query, setQuery] = useState("");
-  const [project, setProject] = useState("");
+  const [project, setProject] = useState(() => linked.get("project") ?? "");
   const [status, setStatus] = useState<"" | "live" | "ended">("");
-  const [agent, setAgent] = useState<"" | AgentKind>("");
+  const [agent, setAgent] = useState<"" | AgentKind>(() => {
+    const a = linked.get("agent");
+    return AGENT_KINDS.find((k) => k === a) ?? "";
+  });
+  const [day, setDay] = useState(() => {
+    const d = linked.get("day") ?? "";
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
+  });
   const [failedOnly, setFailedOnly] = useState(false);
   const [loopsOnly, setLoopsOnly] = useState(false);
   const [shown, setShown] = useState(PAGE);
@@ -46,11 +62,12 @@ export function SessionsPage() {
         (!status || s.live === (status === "live")) &&
         (!failedOnly || s.failures > 0) &&
         (!loopsOnly || s.loops > 0) &&
+        (!day || localDay(s.startedAt) === day) &&
         (!q || s.title.toLowerCase().includes(q) || (s.branch ?? "").toLowerCase().includes(q)),
     );
-  }, [sessions, query, project, status, agent, failedOnly, loopsOnly]);
+  }, [sessions, query, project, status, agent, failedOnly, loopsOnly, day]);
 
-  const filtered = query || project || status || agent || failedOnly || loopsOnly;
+  const filtered = query || project || status || agent || failedOnly || loopsOnly || day;
   // The server lists only the newest sessions; projects count all of them.
   const recorded = (projects ?? []).reduce((n, p) => n + p.sessions, 0);
   const reset = () => {
@@ -60,6 +77,11 @@ export function SessionsPage() {
     setAgent("");
     setFailedOnly(false);
     setLoopsOnly(false);
+    clearDay();
+  };
+  const clearDay = () => {
+    setDay("");
+    if (search) navigate(paths.sessions(), { replace: true });
   };
 
   return (
@@ -142,6 +164,15 @@ export function SessionsPage() {
           />
           Possible loops
         </label>
+        {day && (
+          <span className="filter-chip">
+            Started{" "}
+            {new Date(`${day}T12:00:00`).toLocaleDateString([], { month: "short", day: "numeric" })}
+            <button type="button" onClick={clearDay} aria-label="Clear the day filter">
+              ×
+            </button>
+          </span>
+        )}
         {sessions && (
           <span className="faint count" aria-live="polite">
             {rows.length} of {sessions.length}
