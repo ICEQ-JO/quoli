@@ -69,3 +69,14 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - Large repos: the code map lists up to 50,000 paths and reads line counts/imports for up to 5,000 files (≤ 512 KB); the Code lens opens at folder level. Git history pages 200 commits at a time (max 2,000 per request).
 - Themes: dark and light (System follows the OS). Contrast is enforced by `tests/theme-contrast.test.ts`; accessibility was checked with axe-core and keyboard walkthroughs, not a real screen reader.
 - Cost and the Summary report are heuristics: commands are classified from their text, line counts come from recorded Edit/MultiEdit/Write inputs (a Write's removed lines are unknown), failed edits are ignored, and only edits inside the project root are counted. Edits made through Bash (sed, formatters, generators) are not seen. The checklist lists things worth a look and never says the work is correct.
+
+## Marketing surface
+
+Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) adds a separate Vite
+entry at /landing/ with original pixel artwork and a synthetic four-lens
+explorer. The main application still loads at / with its existing theme.
+The page reads no captured evidence. Its explicit email submission goes to a
+same-origin, size-limited handler, stored separately in waitlist.sqlite;
+it sends no email. This is a loopback preview. Public marketing hosting and
+delivery require a separate acquisition service, never exposing the private
+evidence APIs. See [landing.md](landing.md).

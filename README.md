@@ -55,3 +55,14 @@ pnpm test       # unit tests
 pnpm typecheck
 pnpm lint
 ```
+
+## Landing page
+
+The marketing page is a separate entry at /landing/; the local app remains at /.
+For an isolated preview, including an isolated email list:
+
+    QUOLI_HOME=/tmp/quoli-landing-preview pnpm landing
+
+Open http://127.0.0.1:4420/landing/. The four-lens example is synthetic, with no
+connection to captured sessions. Fonts and original pixel artwork are self-hosted.
+See [the landing-page notes](docs/landing.md) for assets, email storage, and launch limits.

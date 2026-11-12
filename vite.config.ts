@@ -4,5 +4,9 @@ import { defineConfig } from "vite";
 export default defineConfig({
   root: "web",
   plugins: [react()],
-  build: { outDir: "../dist", emptyOutDir: true },
+  build: {
+    outDir: "../dist",
+    emptyOutDir: true,
+    rollupOptions: { input: { app: "web/index.html", landing: "web/landing/index.html" } },
+  },
 });

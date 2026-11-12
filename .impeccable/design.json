@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-12T10:29:58.040118+00:00",
+  "title": "Design System: Quoli landing",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Daylight Paper",
+        "tonalRamp": [
+          "oklch(15% 0.018 145)",
+          "oklch(27% 0.018 145)",
+          "oklch(39% 0.018 145)",
+          "oklch(51% 0.018 145)",
+          "oklch(63% 0.018 145)",
+          "oklch(75% 0.018 145)",
+          "oklch(87% 0.018 145)",
+          "oklch(95% 0.018 145)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Harbor Ink",
+        "tonalRamp": [
+          "oklch(15% 0.035 190)",
+          "oklch(27% 0.035 190)",
+          "oklch(39% 0.035 190)",
+          "oklch(51% 0.035 190)",
+          "oklch(63% 0.035 190)",
+          "oklch(75% 0.035 190)",
+          "oklch(87% 0.035 190)",
+          "oklch(95% 0.035 190)"
+        ]
+      },
+      "green": {
+        "role": "primary",
+        "displayName": "Canal Jade",
+        "tonalRamp": [
+          "oklch(15% 0.07 165)",
+          "oklch(27% 0.07 165)",
+          "oklch(39% 0.07 165)",
+          "oklch(51% 0.07 165)",
+          "oklch(63% 0.07 165)",
+          "oklch(75% 0.07 165)",
+          "oklch(87% 0.07 165)",
+          "oklch(95% 0.07 165)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Quiet Reed",
+        "tonalRamp": [
+          "oklch(15% 0.025 155)",
+          "oklch(27% 0.025 155)",
+          "oklch(39% 0.025 155)",
+          "oklch(51% 0.025 155)",
+          "oklch(63% 0.025 155)",
+          "oklch(75% 0.025 155)",
+          "oklch(87% 0.025 155)",
+          "oklch(95% 0.025 155)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Pale Reed",
+        "tonalRamp": [
+          "oklch(15% 0.025 135)",
+          "oklch(27% 0.025 135)",
+          "oklch(39% 0.025 135)",
+          "oklch(51% 0.025 135)",
+          "oklch(63% 0.025 135)",
+          "oklch(75% 0.025 135)",
+          "oklch(87% 0.025 135)",
+          "oklch(95% 0.025 135)"
+        ]
+      },
+      "copper": {
+        "role": "secondary",
+        "displayName": "Roof Copper",
+        "tonalRamp": [
+          "oklch(15% 0.11 45)",
+          "oklch(27% 0.11 45)",
+          "oklch(39% 0.11 45)",
+          "oklch(51% 0.11 45)",
+          "oklch(63% 0.11 45)",
+          "oklch(75% 0.11 45)",
+          "oklch(87% 0.11 45)",
+          "oklch(95% 0.11 45)"
+        ]
+      },
+      "mint": {
+        "role": "neutral",
+        "displayName": "Mint Wash",
+        "tonalRamp": [
+          "oklch(15% 0.025 130)",
+          "oklch(27% 0.025 130)",
+          "oklch(39% 0.025 130)",
+          "oklch(51% 0.025 130)",
+          "oklch(63% 0.025 130)",
+          "oklch(75% 0.025 130)",
+          "oklch(87% 0.025 130)",
+          "oklch(95% 0.025 130)"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(39% 0 0)",
+          "oklch(51% 0 0)",
+          "oklch(63% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(87% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "green-hover": {
+        "role": "primary",
+        "displayName": "Deep Canal Jade",
+        "tonalRamp": [
+          "oklch(15% 0.07 165)",
+          "oklch(27% 0.07 165)",
+          "oklch(39% 0.07 165)",
+          "oklch(51% 0.07 165)",
+          "oklch(63% 0.07 165)",
+          "oklch(75% 0.07 165)",
+          "oklch(87% 0.07 165)",
+          "oklch(95% 0.07 165)"
+        ]
+      },
+      "document": {
+        "role": "neutral",
+        "displayName": "Warm Document",
+        "tonalRamp": [
+          "oklch(15% 0.01 90)",
+          "oklch(27% 0.01 90)",
+          "oklch(39% 0.01 90)",
+          "oklch(51% 0.01 90)",
+          "oklch(63% 0.01 90)",
+          "oklch(75% 0.01 90)",
+          "oklch(87% 0.01 90)",
+          "oklch(95% 0.01 90)"
+        ]
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Night Jade",
+        "tonalRamp": [
+          "oklch(15% 0.05 165)",
+          "oklch(27% 0.05 165)",
+          "oklch(39% 0.05 165)",
+          "oklch(51% 0.05 165)",
+          "oklch(63% 0.05 165)",
+          "oklch(75% 0.05 165)",
+          "oklch(87% 0.05 165)",
+          "oklch(95% 0.05 165)"
+        ]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Moonlit Text",
+        "tonalRamp": [
+          "oklch(15% 0.035 120)",
+          "oklch(27% 0.035 120)",
+          "oklch(39% 0.035 120)",
+          "oklch(51% 0.035 120)",
+          "oklch(63% 0.035 120)",
+          "oklch(75% 0.035 120)",
+          "oklch(87% 0.035 120)",
+          "oklch(95% 0.035 120)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Pixel display",
+        "purpose": "Hero headline; responsive values are in the landing stylesheet."
+      },
+      "headline": {
+        "displayName": "Pixel headline",
+        "purpose": "Section headings."
+      },
+      "body": {
+        "displayName": "Natural sans",
+        "purpose": "Hero explanation; other copy uses contextual sizes."
+      }
+    },
+    "shadows": [
+      {
+        "name": "city-tag",
+        "value": "0 6px 15px #34512b0a",
+        "purpose": "Subtle separation over scenery."
+      },
+      {
+        "name": "station",
+        "value": "0 3px 7px #2450380a",
+        "purpose": "Map control lift."
+      },
+      {
+        "name": "review-document",
+        "value": "0 15px 35px #36522b08",
+        "purpose": "Paper excerpt depth."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-hover",
+        "value": "background 0.15s",
+        "purpose": "Waitlist hover; disabled for reduced motion."
+      },
+      {
+        "name": "cloud-drift",
+        "value": "12s ease-in-out infinite alternate",
+        "purpose": "Ambient cloud movement."
+      },
+      {
+        "name": "robot-bob",
+        "value": "2.5s steps(3, end) infinite",
+        "purpose": "Tiny courier bob."
+      },
+      {
+        "name": "signal-flow",
+        "value": "3s linear infinite",
+        "purpose": "Station signal movement."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-min",
+        "value": "1550px"
+      },
+      {
+        "name": "compact-max",
+        "value": "1150px"
+      },
+      {
+        "name": "stacked-max",
+        "value": "800px"
+      },
+      {
+        "name": "narrow-max",
+        "value": "540px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Waitlist button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary signup action.",
+      "html": "<button class=\"ds-button\">Join the waitlist <svg aria-hidden=\"true\" viewBox=\"0 0 20 20\" width=\"16\" height=\"16\" fill=\"none\"><path d=\"M3 10h13M10 4l6 6-6 6\" stroke=\"currentColor\" stroke-width=\"1.7\"/></svg></button>",
+      "css": ".ds-button{font-family:Quoli Sans,system-ui,sans-serif;border:0;display:flex;align-items:center;justify-content:center;gap:12px;background:var(--green,#245e4e);color:white;border-radius:2px;font-size:12px;font-weight:600;padding:13px 17px;min-height:44px;cursor:pointer;transition:background .15s}.ds-button:hover{background:#174a3b}.ds-button:focus-visible{outline:3px solid var(--copper,#af5936);outline-offset:5px;}.ds-button:disabled{cursor:wait;opacity:.65}@media(prefers-reduced-motion:reduce){.ds-button{transition:none}}"
+    },
+    {
+      "name": "Navigation waitlist link",
+      "kind": "button",
+      "refersTo": "navigation-cta",
+      "description": "Compact header conversion link.",
+      "html": "<a class=\"ds-nav-cta\" href=\"#waitlist\">Join the waitlist</a>",
+      "css": ".ds-nav-cta{font-family:Quoli Sans,system-ui,sans-serif;display:inline-flex;align-items:center;gap:20px;background:var(--green,#245e4e);color:#fff;padding:12px 19px;text-decoration:none;font-size:13px;font-weight:600;border-radius:3px}.ds-nav-cta:hover{background:#174a3b}.ds-nav-cta:focus-visible{outline:3px solid var(--copper,#af5936);outline-offset:5px;}"
+    },
+    {
+      "name": "Email field",
+      "kind": "input",
+      "refersTo": "email-input",
+      "description": "Email portion of the shared white signup field group.",
+      "html": "<div class=\"ds-field\"><input class=\"ds-email\" type=\"email\" aria-label=\"Email address\" placeholder=\"Your email address\"/></div>",
+      "css": ".ds-field{display:flex;background:white;border:1px solid #cad6c6;border-radius:4px;padding:5px;box-shadow:0 4px 15px #32432c03}.ds-email{font-family:Quoli Sans,system-ui,sans-serif;min-width:0;flex:1;width:100%;font-size:13px;background:transparent;border:0;padding:10px 9px;color:var(--ink,#192f31);border-radius:2px}.ds-email::placeholder{color:#69766c;opacity:1}.ds-email:focus-visible{outline:2px solid var(--copper,#af5936);outline-offset:0}"
+    },
+    {
+      "name": "Navigation anchors",
+      "kind": "nav",
+      "description": "Desktop text links; hidden at the narrow breakpoint.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Landing sections\"><a href=\"#lenses\">The four lenses</a><a href=\"#privacy\">Local by default</a></nav>",
+      "css": ".ds-nav{font-family:Quoli Sans,system-ui,sans-serif;display:flex;gap:36px}.ds-nav a{text-decoration:none;font-size:14px;color:#42554d}.ds-nav a:hover{color:var(--copper,#af5936)}.ds-nav a:focus-visible{outline:3px solid var(--copper,#af5936);outline-offset:5px;}"
+    },
+    {
+      "name": "Station control",
+      "kind": "button",
+      "description": "Warm selection treatment on an illustrated map station.",
+      "html": "<button class=\"ds-station\" aria-pressed=\"true\"><span class=\"ds-dot\"></span>Code</button>",
+      "css": ".ds-station{font-family:Quoli Sans,system-ui,sans-serif;display:flex;align-items:center;gap:7px;border:1px solid #c2d1b4;border-radius:3px;background:#f8fbf7ed;padding:7px 10px;color:#46634b;font-size:11px;min-height:34px;box-shadow:0 3px 7px #2450380a;cursor:pointer}.ds-station:hover{background:#fff}.ds-station[aria-pressed=true]{color:#754428;border-color:#b87b46;background:#fff9eb}.ds-station:focus-visible{outline:3px solid var(--copper,#af5936);outline-offset:5px;}.ds-dot{height:4px;width:4px;background:#7f9d70}.ds-station[aria-pressed=true] .ds-dot{background:#b86e3f}"
+    },
+    {
+      "name": "Lens evidence panel",
+      "kind": "card",
+      "refersTo": "lens-detail",
+      "description": "Warm evidence surface inside the four-lens explorer.",
+      "html": "<section class=\"ds-detail\"><h3>Find the change in the code.</h3><p>See which files the session read and edited.</p><div class=\"ds-evidence\"><span>FILE CHANGES</span><span>SYNTHETIC</span></div></section>",
+      "css": ".ds-detail{font-family:Quoli Sans,system-ui,sans-serif;padding:40px 32px 25px;background:#fffefb;border-left:1px solid #d9e3d0;color:var(--ink,#192f31)}.ds-detail h3{margin:0;font-size:23px;font-weight:500;letter-spacing:-.5px;line-height:1.2}.ds-detail p{font-size:13px;color:var(--muted,#52635d);margin:15px 0 0;max-width:400px;line-height:1.7}.ds-evidence{display:flex;justify-content:space-between;gap:10px;margin-top:25px;border-top:1px solid #dce5d5;border-bottom:1px solid #dce5d5;padding:12px 0;font-size:8px;letter-spacing:1.2px;color:#4e664e}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Living Codebase City",
+    "overview": "A living coastal codebase city makes connected work tangible: jade waterways, copper roofs, a small robot courier and four observation stations. The surrounding interface is quiet daylight paper, crisp pixel display lettering and natural, readable sans-serif text.\n\nThis record applies only to `/landing`, loaded through `web/landing/index.html` and `web/src/landing/landing.css`. It does not redefine the local application\u2019s existing styles. The city is an illustrative metaphor; evidence excerpts retain their synthetic labels, and planned integrations remain visibly distinct from delivered capability.",
+    "keyCharacteristics": [
+      "Original pixel scenery and courier character on a sun-white ground.",
+      "Large pixel headlines paired with readable sans-serif explanations.",
+      "Restrained jade controls, copper focus and selected-station accents.",
+      "Calm ambient movement with offscreen pause and reduced-motion support."
+    ],
+    "rules": [],
+    "dos": [
+      "Do keep this system scoped to /landing.",
+      "Do preserve crisp pixel rendering for scenery and courier assets.",
+      "Do use sans-serif for paragraphs, forms and evidence explanations.",
+      "Do preserve visible keyboard focus, tab keyboard controls and reduced-motion behavior.",
+      "Do retain synthetic, derived and planned labels alongside the relevant content."
+    ],
+    "donts": [
+      "Don\u2019t apply the landing stylesheet or its root tokens to the application.",
+      "Don\u2019t turn illustrative city signals into claims of live captured activity.",
+      "Don\u2019t replace readable body copy with pixel lettering.",
+      "Don\u2019t introduce unapproved customer proof, availability claims or pricing."
+    ]
+  }
+}

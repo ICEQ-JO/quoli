@@ -104,3 +104,12 @@ Each phase is something a developer can use on its own.
 2. **Symbol-level map** — invest in a real call graph (compiler/tree-sitter, full-depth) or stay file-level with smarter grouping?
 3. **Which second agent** matters most to you: Codex, OpenCode or Pi?
 4. **Infra providers** — which one do you deploy to today? That decides Phase 3's first integration.
+
+## Landing presentation
+
+Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) presents the four-lens
+idea as a living pixel codebase city and collects waitlist interest. Owner
+direction 2026-11-12: speak to coding-agent users and engineering teams, while
+clearly separating current Claude Code/local support from planned adapters,
+shared sessions and hosted sync. The page is a separate marketing surface;
+its artwork and demonstration are illustrative, never evidence of a real session.
