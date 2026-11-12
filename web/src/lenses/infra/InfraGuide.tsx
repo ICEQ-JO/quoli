@@ -1,4 +1,5 @@
 import type { InfraMap } from "../../../../shared/model.ts";
+import { isAdded } from "./split.ts";
 
 /** Files Quoli reads to find services. Keep in step with server/infra.ts. */
 export const INFRA_FILES = [
@@ -35,11 +36,13 @@ export function InfraGuide({ infra }: { infra: InfraMap }) {
               <li key={s.id}>
                 <span className="guide-name">{s.name}</span>{" "}
                 <span className="guide-kind">
-                  · {s.kind} · {s.basis}
+                  · {s.kind} · {isAdded(s) ? "added by you" : s.basis}
                 </span>
-                <span className="guide-file" title={s.evidence}>
-                  from {s.evidence}
-                </span>
+                {!isAdded(s) && (
+                  <span className="guide-file" title={s.evidence}>
+                    from {s.evidence}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

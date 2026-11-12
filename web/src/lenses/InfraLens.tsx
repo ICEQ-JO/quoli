@@ -14,7 +14,8 @@ import { bytes } from "../format.ts";
 import { editedUnder, isSelected, type LensContext } from "../state.ts";
 import { Board } from "./Board.tsx";
 import { InfraGuide } from "./infra/InfraGuide.tsx";
-import { type Pipeline, providers, splitInfra } from "./infra/split.ts";
+import { ServiceForm } from "./infra/ServiceForm.tsx";
+import { isAdded, type Pipeline, providers, splitInfra } from "./infra/split.ts";
 import "./infra/infra.css";
 
 const TIER: Record<ServiceKind, number> = {
@@ -85,7 +86,7 @@ const load = (root: string | null): Positions => {
 };
 
 export function InfraLens(ctx: LensContext) {
-  const { infra, touched, selection, select, root, session } = ctx;
+  const { infra, touched, selection, select, root, session, projectId, refreshInfra } = ctx;
   const [moved, setMoved] = useState<Positions>(() => load(root));
 
   const split = useMemo(() => (infra ? splitInfra(infra) : null), [infra]);
@@ -128,13 +129,13 @@ export function InfraLens(ctx: LensContext) {
             },
             style: { width: W },
             width: W,
-            height: s.basis === "inferred" ? 150 : 128,
+            height: s.basis === "inferred" || isAdded(s) ? 150 : 128,
             ...nodeA11y(serviceLabel(s, editedUnder(touched, s.sourceDir).length), first),
           });
           first = false;
           // Long names wrap onto extra lines, so leave room for them.
           y +=
-            (s.basis === "inferred" ? 172 : 150) +
+            (s.basis === "inferred" || isAdded(s) ? 172 : 150) +
             Math.max(0, Math.ceil(s.name.length / 16) - 1) * 20;
         }
         y += 28;
@@ -189,7 +190,7 @@ export function InfraLens(ctx: LensContext) {
               infra
                 ? split?.services.length
                   ? null
-                  : "No running services are declared in this repository's files."
+                  : "No running services found in this repository's files. Add one by hand from the side panel."
                 : "Reading infrastructure files…"
             }
             legend={
@@ -208,6 +209,8 @@ export function InfraLens(ctx: LensContext) {
             infra={infra}
             selectedId={selection?.kind === "service" ? selection.id : null}
             select={(id) => select({ kind: "service", id })}
+            projectId={projectId}
+            onAdded={refreshInfra}
           />
         )}
         {infra && split && split.services.length <= 2 && <InfraGuide infra={infra} />}
@@ -221,13 +224,18 @@ function InfraSide({
   infra,
   selectedId,
   select,
+  projectId,
+  onAdded,
 }: {
   pipelines: Pipeline[];
   infra: NonNullable<LensContext["infra"]>;
   selectedId: string | null;
   select: (id: string) => void;
+  projectId: string;
+  onAdded: () => void;
 }) {
   const list = providers(infra);
+  const [adding, setAdding] = useState(false);
   return (
     <aside className="infra-side" aria-label="Pipelines and connections">
       <section>
@@ -267,18 +275,39 @@ function InfraSide({
         )}
       </section>
       <section>
-        <h3>Hosted connections</h3>
+        <h3>
+          Hosted connections
+          {!adding && (
+            <button type="button" className="btn sm side-add" onClick={() => setAdding(true)}>
+              Add service
+            </button>
+          )}
+        </h3>
         <p className="side-note">
-          Live status and metrics from hosting providers need a connection. None exist yet: they are
-          planned for roadmap phase 4. Until then the board shows what your files declare, plus live
-          CPU and memory for containers running in local Docker.
+          Add any place your app runs by hand: no keys, no connection. Live status and metrics need
+          a provider connection, planned for roadmap phase 4; until then the board shows what your
+          files declare and what you add, plus live CPU and memory for local Docker containers.
         </p>
+        {adding && (
+          <ServiceForm
+            projectId={projectId}
+            onDone={(changed) => {
+              setAdding(false);
+              if (changed) onAdded();
+            }}
+          />
+        )}
         <ul className="providers">
           {list.map((p) => (
             <li key={p.id}>
               <span className="prov-name">{p.name}</span>
               <span className="prov-state">
-                {p.seenIn.length ? (
+                {p.added.length ? (
+                  <span title={p.added.join("\n")}>
+                    added by you: {p.added[0]}
+                    {p.added.length > 1 ? ` +${p.added.length - 1}` : ""}
+                  </span>
+                ) : p.seenIn.length ? (
                   <span title={p.seenIn.join("\n")}>
                     mentioned in {p.seenIn[0]}
                     {p.seenIn.length > 1 ? ` +${p.seenIn.length - 1}` : ""}
@@ -302,6 +331,7 @@ function serviceLabel(s: Service, changed: number): string {
   if (s.sourceDir !== null) parts.push(`source ${s.sourceDir || "repository root"}`);
   if (changed) parts.push(`${plural(changed, "file")} changed by this session`);
   if (s.basis === "inferred") parts.push("inferred");
+  if (isAdded(s)) parts.push("added by you");
   return parts.join(", ");
 }
 
@@ -362,6 +392,11 @@ function ServiceNode({ data }: NodeProps) {
       {s.basis === "inferred" && (
         <div className="svc-basis" title={`inferred from ${s.evidence}`}>
           inferred from {s.evidence}
+        </div>
+      )}
+      {isAdded(s) && (
+        <div className="svc-basis" title="Added by you in Quoli; no file declares it">
+          added by you
         </div>
       )}
       <Handle type="source" position={Position.Right} className="h" />

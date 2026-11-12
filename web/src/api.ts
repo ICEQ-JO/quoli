@@ -4,6 +4,7 @@ import type {
   CommitDetail,
   GitState,
   InfraMap,
+  ManualService,
   Overview,
   PriceTable,
   Project,
@@ -66,6 +67,12 @@ export const api = {
   git: (root: string, limit?: number) =>
     get<GitState>(`/api/git?${q(root)}${limit ? `&limit=${limit}` : ""}`),
   infra: (root: string) => get<InfraMap>(`/api/infra?${q(root)}`),
+  addService: (projectId: string, entry: Omit<ManualService, "id">) =>
+    send<ManualService[]>("POST", `/api/projects/${id(projectId)}/services`, entry),
+  updateService: (projectId: string, sid: string, entry: Omit<ManualService, "id" | "of">) =>
+    send<ManualService[]>("PUT", `/api/projects/${id(projectId)}/services/${id(sid)}`, entry),
+  removeService: (projectId: string, sid: string) =>
+    send<ManualService[]>("DELETE", `/api/projects/${id(projectId)}/services/${id(sid)}`),
   commit: (root: string, sha: string) =>
     get<CommitDetail>(`/api/commit?${q(root)}&sha=${encodeURIComponent(sha)}`),
   file: (root: string, path: string) =>

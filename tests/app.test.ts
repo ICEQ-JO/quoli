@@ -443,3 +443,50 @@ test("sessions list spans projects and filters by project id", async () => {
     close();
   }
 });
+
+test("services added by hand are saved per project, merged into the infra map and removable", async () => {
+  const { call, close } = await start();
+  const dir = repo();
+  try {
+    const pid = (await call("POST", "/api/projects", { path: dir })).body.id;
+    const base = `/api/projects/${pid}/services`;
+    const bad = await call("POST", base, {
+      name: "x",
+      kind: "web",
+      provider: "vercel",
+      url: "javascript:alert(1)",
+    });
+    assert.equal(bad.status, 400);
+    assert.equal(
+      (await call("POST", base, { name: "x", kind: "pipeline", provider: "aws" })).status,
+      400,
+    );
+
+    const added = await call("POST", base, {
+      name: "Production web",
+      kind: "web",
+      provider: "vercel",
+      url: "https://vercel.com/acme/web",
+      sourceDir: "apps/web",
+    });
+    assert.equal(added.status, 200);
+    const entry = added.body[0];
+    let infra = (await call("GET", `/api/infra?root=${encodeURIComponent(dir)}`)).body;
+    const card = infra.services.find((s: { manual: string }) => s.manual === entry.id);
+    assert.equal(card.name, "Production web");
+    assert.equal(card.platform, "vercel");
+    assert.equal(card.evidence, "added by you");
+    assert.equal(card.metrics, null);
+
+    const edited = await call("PUT", `${base}/${entry.id}`, { ...entry, name: "Web" });
+    assert.equal(edited.body[0].name, "Web");
+    assert.equal((await call("PUT", `${base}/m-ffffffff`, entry)).status, 404);
+
+    await call("DELETE", `${base}/${entry.id}`, {});
+    infra = (await call("GET", `/api/infra?root=${encodeURIComponent(dir)}`)).body;
+    assert.ok(infra.services.every((s: { manual: string | null }) => s.manual === null));
+  } finally {
+    close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -9,7 +9,10 @@ Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: a
 | `GET /api/projects` | | `Project[]`, registered projects plus any root that has events, most recent first |
 | `POST /api/projects` | `{ "path": "/abs/path" }` | `Project`. Path must be absolute, exist, and be a git repository top level (`git rev-parse --show-toplevel` equals its real path); otherwise `400 { error }`. Installs hooks exactly like `pnpm connect` and registers the project. |
 | `POST /api/projects/:id/disconnect` | `{}` | `Project`. Removes Quoli's hooks, keeps data. |
-| `DELETE /api/projects/:id` | | `{ events, sessions }` removed. Removes hooks, deletes every event, usage row and transcript offset for the project's sessions, unregisters it, checkpoints the WAL. |
+| `DELETE /api/projects/:id` | | `{ events, sessions }` removed. Removes hooks, deletes every event, usage row and transcript offset for the project's sessions, unregisters it, drops its hand-added services, checkpoints the WAL. |
+| `POST /api/projects/:id/services` | `{ name, kind, provider, url?, sourceDir?, of? }` | `ManualService[]`. Adds a service by hand, or with `of` renames and links a detected service (one entry per detected service). 400 on an invalid kind (`pipeline` is not allowed), a non-http(s) or credential-bearing `url`, a `sourceDir` leaving the repo, or text over 80 characters. Max 100 per project. |
+| `PUT /api/projects/:id/services/:sid` | same fields | `ManualService[]`. Replaces the entry; `of` cannot change. 404 for an unknown entry. |
+| `DELETE /api/projects/:id/services/:sid` | | `ManualService[]` remaining. |
 | `GET /api/sessions?project=:id` | | `SessionSummary[]`; without `project`, sessions across all projects (newest first, max 500) |
 | `GET /api/session?id=:sid` | | `SessionDetail` |
 | `GET /api/overview` | | `Overview` |
@@ -17,7 +20,7 @@ Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: a
 | `GET /api/settings` | | `{ settings: Settings, info: ServerInfo }` |
 | `PUT /api/settings` | `Partial<Settings>` | same as GET; applies retention immediately |
 | `POST /api/redact-preview` | `{ "text": "..." }` | `{ "text": "..." }`, the text after redaction |
-| `GET /api/code\|git\|infra?root=` | | unchanged |
+| `GET /api/code\|git\|infra?root=` | | unchanged, except `infra` merges the project's hand-added services: `Service.url` (dashboard link) and `Service.manual` (entry id, or null). Hand-added cards have id `manual:<sid>`, `evidence: "added by you"` and never carry metrics. |
 | `GET /api/file?root=&path=` | | unchanged |
 | `GET /api/stream` | | SSE: `{ type: "event", sessionId }` on ingest, `{ type: "projects" }` when projects change |
 

@@ -3,6 +3,8 @@ import type { HookStatus, SessionDetail } from "../../../shared/model.ts";
 import { api, useData } from "../api.ts";
 import { ago, CATEGORY, clock, duration, fileName, plural } from "../format.ts";
 import { mergeRefs, refTitle } from "../lenses/git/refs.ts";
+import { ServiceForm } from "../lenses/infra/ServiceForm.tsx";
+import { isAdded } from "../lenses/infra/split.ts";
 import { Link, paths } from "../router.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
@@ -398,9 +400,18 @@ function ToolPanel({ id, session, goto }: Props & { id: string }) {
   );
 }
 
-function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
+function ServicePanel({
+  id,
+  infra,
+  touched,
+  goto,
+  projectId,
+  refreshInfra,
+}: Props & { id: string }) {
+  const [editing, setEditing] = useState<string | null>(null);
   const s = infra?.services.find((x) => x.id === id);
   if (!s) return null;
+  const added = isAdded(s);
   const changed = editedUnder(touched, s.sourceDir);
   const name = (sid: string) => infra?.services.find((x) => x.id === sid)?.name ?? sid;
   const links = infra?.links.filter((l) => l.from === id || l.to === id) ?? [];
@@ -436,6 +447,29 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
           Fly, Railway…) need a provider connection, which is not built yet.
         </p>
       )}
+      {s.kind !== "pipeline" &&
+        (editing === s.id ? (
+          <ServiceForm
+            key={s.id}
+            projectId={projectId}
+            service={s}
+            onDone={(changed) => {
+              setEditing(null);
+              if (changed) refreshInfra();
+            }}
+          />
+        ) : (
+          <div className="svc-actions">
+            {s.url && (
+              <a className="btn sm" href={s.url} target="_blank" rel="noopener noreferrer">
+                Open dashboard
+              </a>
+            )}
+            <button type="button" className="btn sm" onClick={() => setEditing(s.id)}>
+              {added || s.manual ? "Edit" : "Rename or add a dashboard link"}
+            </button>
+          </div>
+        ))}
       {changed.length > 0 && (
         <Section title="Changed by this session" aside={String(changed.length)}>
           <ul className="links">
@@ -479,13 +513,21 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
         )}
       </Section>
       <Section title="How Quoli knows">
-        <p className="note">
-          {s.basis === "inferred" ? "Inferred" : "Declared"} in{" "}
-          <span className="mono">{s.evidence}</span>.{" "}
-          {s.basis === "inferred"
-            ? "A dependency or convention suggests this service; it may not exist in every environment."
-            : "Read directly from a configuration file in the repository."}
-        </p>
+        {added ? (
+          <p className="note">
+            Added by you in Quoli and stored on this machine only. No file declares it, and Quoli
+            has no connection to it.
+          </p>
+        ) : (
+          <p className="note">
+            {s.basis === "inferred" ? "Inferred" : "Declared"} in{" "}
+            <span className="mono">{s.evidence}</span>.{" "}
+            {s.basis === "inferred"
+              ? "A dependency or convention suggests this service; it may not exist in every environment."
+              : "Read directly from a configuration file in the repository."}
+            {s.manual && " You renamed it or added its dashboard link."}
+          </p>
+        )}
       </Section>
     </>
   );

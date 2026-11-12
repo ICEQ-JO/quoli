@@ -13,6 +13,8 @@ const svc = (id: string, kind: Service["kind"], platform: string, evidence: stri
   basis: "derived",
   evidence,
   metrics: null,
+  url: null,
+  manual: null,
 });
 
 const infra: InfraMap = {

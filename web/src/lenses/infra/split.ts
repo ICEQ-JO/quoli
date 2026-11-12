@@ -1,4 +1,5 @@
 import type { InfraMap, Service } from "../../../../shared/model.ts";
+import { PROVIDERS } from "../../../../shared/providers.ts";
 
 export interface Pipeline {
   service: Service;
@@ -28,34 +29,44 @@ export function splitInfra(infra: InfraMap): { services: Service[]; pipelines: P
 export interface Provider {
   id: string;
   name: string;
-  /** Repository files or services that mention this provider; empty when none do. */
+  /** Repository files that mention this provider; empty when none do. */
   seenIn: string[];
+  /** Names of services the user added by hand on this provider. */
+  added: string[];
 }
-
-/** `deps` are the `dep:<id>` services from server/infra.ts that belong to the provider. */
-const PROVIDERS: { id: string; name: string; platforms: RegExp; deps?: string[] }[] = [
-  { id: "vercel", name: "Vercel", platforms: /^vercel$/ },
-  { id: "aws", name: "AWS (incl. S3, Lambda)", platforms: /^aws/, deps: ["s3"] },
-  { id: "azure", name: "Azure", platforms: /^azure/ },
-  { id: "gcp", name: "Google Cloud", platforms: /^google/ },
-  { id: "supabase", name: "Supabase", platforms: /^supabase$/ },
-  { id: "cloudflare", name: "Cloudflare", platforms: /^cloudflare$/ },
-  { id: "fly", name: "Fly.io", platforms: /^fly\.io$/ },
-  { id: "railway", name: "Railway", platforms: /^railway$/ },
-  { id: "render", name: "Render", platforms: /^render$/ },
-  { id: "netlify", name: "Netlify", platforms: /^netlify$/ },
-];
 
 /**
- * Hosted providers and whether this repository's files mention them. None of them is
- * connected: provider connections (live status and metrics) are roadmap Phase 4.
+ * Hosted providers, with the files that mention them and the services added by hand. None is
+ * connected: provider connections (live status and metrics) are roadmap phase 4. Providers typed
+ * as free text by the user are listed after the known ones.
  */
 export function providers(infra: InfraMap): Provider[] {
-  return PROVIDERS.map((p) => {
+  const known = PROVIDERS.map((p) => {
     const hits = infra.services.filter(
-      (s) =>
-        p.platforms.test(s.platform) || [p.id, ...(p.deps ?? [])].some((d) => s.id === `dep:${d}`),
+      (s) => p.match.test(s.platform) || [p.id, ...p.deps].some((d) => s.id === `dep:${d}`),
     );
-    return { id: p.id, name: p.name, seenIn: [...new Set(hits.map((s) => s.evidence))] };
-  }).sort((a, b) => Number(b.seenIn.length > 0) - Number(a.seenIn.length > 0));
+    return {
+      id: p.id,
+      name: p.name,
+      seenIn: [...new Set(hits.filter((s) => !isAdded(s)).map((s) => s.evidence))],
+      added: hits.filter(isAdded).map((s) => s.name),
+    };
+  });
+  const other = new Map<string, Provider>();
+  for (const s of infra.services) {
+    if (!isAdded(s) || PROVIDERS.some((p) => p.match.test(s.platform))) continue;
+    const entry = other.get(s.platform) ?? {
+      id: s.platform,
+      name: s.platform,
+      seenIn: [],
+      added: [],
+    };
+    entry.added.push(s.name);
+    other.set(s.platform, entry);
+  }
+  const used = (p: Provider) => Number(p.seenIn.length + p.added.length > 0);
+  return [...known, ...other.values()].sort((a, b) => used(b) - used(a));
 }
+
+/** A card the user added from scratch (not a detected service they renamed or linked). */
+export const isAdded = (s: Service) => s.manual !== null && s.id.startsWith("manual:");
