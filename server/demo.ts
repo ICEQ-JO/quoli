@@ -89,6 +89,13 @@ const FIXED_TOTAL = `export function total(items: { price: number; qty: number; 
 
 const REFUNDS_ROUTE = `import { Hono } from "hono";\nimport { db } from "../db/client";\nimport { refund } from "../services/payments";\nimport { queue } from "../queue";\n\nexport const refunds = new Hono();\n\nrefunds.post("/:id/refunds", async (c) => {\n  const id = c.req.param("id");\n  const order = (await db.query("select * from orders where id = $1", [id])).rows[0];\n  if (!order) return c.json({ error: "Order not found" }, 404);\n  const result = await refund(order.payment_intent);\n  await db.query("insert into refunds (order_id, stripe_id) values ($1, $2)", [id, result.id]);\n  await queue.add("refund-email", { orderId: id });\n  return c.json({ refunded: true }, 201);\n});\n`;
 
+/** Commit date for the sample repository's history, so it lines up with the sessions' times. */
+let when = "";
+const ago = (ms: number) => {
+  when = new Date(Date.now() - ms).toISOString();
+};
+const DAY = 86_400_000;
+
 function sh(cwd: string, ...args: string[]) {
   execFileSync("git", args, {
     cwd,
@@ -99,6 +106,8 @@ function sh(cwd: string, ...args: string[]) {
       GIT_AUTHOR_EMAIL: "demo@example.com",
       GIT_COMMITTER_NAME: "Demo",
       GIT_COMMITTER_EMAIL: "demo@example.com",
+      GIT_AUTHOR_DATE: when,
+      GIT_COMMITTER_DATE: when,
     },
   });
 }
@@ -123,6 +132,7 @@ function buildRepo(root: string) {
   } = BASE;
   write(root, first);
   sh(root, "add", "-A");
+  ago(10 * DAY);
   sh(root, "commit", "-qm", "Scaffold storefront and orders API");
   write(root, {
     "apps/worker/package.json": w,
@@ -131,12 +141,14 @@ function buildRepo(root: string) {
     "apps/worker/src/jobs/send-receipt.ts": ws,
   });
   sh(root, "add", "-A");
+  ago(9 * DAY);
   sh(root, "commit", "-qm", "Add receipt worker");
   const order = BASE["apps/api/src/services/order.ts"].replace(
     /export function total[\s\S]*?\n}/,
     FIXED_TOTAL,
   );
   write(root, { "apps/api/src/services/order.ts": order });
+  ago(2 * DAY - 3 * 60_000);
   sh(root, "commit", "-qam", "Fix rounding in order totals");
   sh(root, "checkout", "-qb", "feature/search");
   write(root, {
@@ -144,12 +156,14 @@ function buildRepo(root: string) {
       'export function Search() {\n  return <input type="search" />;\n}\n',
   });
   sh(root, "add", "-A");
+  ago(5 * DAY);
   sh(root, "commit", "-qm", "Add search box");
   sh(root, "checkout", "-q", "main");
   sh(root, "checkout", "-qb", "feature/refunds");
   write(root, {
     "apps/api/src/db/schema.sql": `${BASE["apps/api/src/db/schema.sql"]}\nalter table orders add column payment_intent text;\n`,
   });
+  ago(90 * 60_000);
   sh(root, "commit", "-qam", "Store payment intent on orders");
   // Working-tree changes left by the refunds session.
   write(root, {

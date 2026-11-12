@@ -505,6 +505,101 @@ export interface SessionReport {
   priceVersion: string;
 }
 
+/* ---------- Review lens (#171) ---------- */
+
+/** A function or class a file's change touches. Filled by the code engine; null until it exists. */
+export interface ChangedSymbol {
+  name: string;
+  kind: string;
+  change: "added" | "modified" | "removed";
+}
+
+export type ReviewKind = "code" | "test" | "docs" | "config" | "schema" | "lockfile" | "other";
+export type RiskLevel = "high" | "medium" | "low";
+
+export interface ReviewReason {
+  /** Short word for a chip, e.g. "edited after tests". */
+  label: string;
+  /** The same finding as a sentence. */
+  text: string;
+  points: number;
+}
+
+export interface ReviewFile {
+  path: string;
+  /** Package or top folder: "packages/api", "server", "(root)". */
+  group: string;
+  /** Git status against where the session started; null when only recorded edits are known. */
+  status: "added" | "modified" | "deleted" | "renamed" | null;
+  oldPath: string | null;
+  /** Lines from Git when the review is Git-based (null for binary files), else from recorded edits. */
+  added: number | null;
+  removed: number | null;
+  /** Lines counted from the agent's recorded edit inputs; null when it did not edit this file. */
+  editAdded: number | null;
+  editRemoved: number | null;
+  /** Edit calls the agent made to this file. */
+  timesEdited: number;
+  /** The agent has no recorded edit for this file (Git sees a change another tool or person made). */
+  outsideEdits: boolean;
+  editedAfterTest: boolean;
+  failedAfter: boolean;
+  /** A Write replaced a file that existed before. */
+  rewritten: boolean;
+  kind: ReviewKind;
+  /** A source file, with no test file touched and no test command run in the session. */
+  noTest: boolean;
+  risk: number;
+  level: RiskLevel;
+  reasons: ReviewReason[];
+  toolCallIds: string[];
+  /** Indexes into SessionDetail.turns of the prompts that led to edits of this file. */
+  turnIndexes: number[];
+  /** Commands that ran after the file's last edit (up to 4). */
+  after: CommandRun[];
+  /** Function-level changes; null until the code engine provides them. */
+  functions: ChangedSymbol[] | null;
+}
+
+export interface ReviewCommit {
+  sha: string;
+  subject: string;
+  at: string;
+}
+
+export interface ReviewBranch {
+  head: string | null;
+  /** main / master / the remote's default, when it is not the branch itself. */
+  base: string | null;
+  upstream: string | null;
+  /** Commits made while the session ran; null when they could not be read. */
+  commits: ReviewCommit[] | null;
+  uncommitted: number | null;
+  unpushed: number | null;
+}
+
+export interface SessionReview {
+  /** git: files come from Git; edits: only the agent's recorded edits are known. */
+  source: "git" | "edits";
+  /** Why Git was not used, or another caveat. */
+  note: string | null;
+  files: ReviewFile[];
+  /** Recorded edits whose file shows no net change in Git (reverted or ignored). */
+  noNetChange: string[];
+  added: number;
+  removed: number;
+  tests: { touched: string[]; ran: boolean; lastRun: "ok" | "failed" | null };
+  branch: ReviewBranch | null;
+}
+
+/** One file's diff and content for the Review lens. */
+export interface ReviewDiff {
+  path: string;
+  gitDiff: string | null;
+  source: string | null;
+  truncated: boolean;
+}
+
 /* ---------- Usage (redesign R1) ---------- */
 
 /** One calendar day in the server's local time zone. */

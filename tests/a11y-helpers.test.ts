@@ -66,7 +66,7 @@ test("the overlay lists every shortcut group", () => {
   const groups = shortcutGroups("Ctrl");
   assert.deepEqual(
     groups.map((g) => g.title),
-    ["Navigation", "Canvas and lists", "Timeline (when focused)", "Global"],
+    ["Navigation", "Canvas and lists", "Review lens", "Timeline (when focused)", "Global"],
   );
   assert.ok(groups[0].items.some((i) => i.keys.join("+") === "Ctrl+K"));
   assert.ok(groups.flatMap((g) => g.items).some((i) => i.keys.includes("?")));

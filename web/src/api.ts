@@ -11,8 +11,10 @@ import type {
   Overview,
   PriceTable,
   Project,
+  ReviewDiff,
   ServerInfo,
   SessionDetail,
+  SessionReview,
   SessionSummary,
   Settings,
   SetupStatus,
@@ -64,6 +66,9 @@ export const api = {
   sessions: (projectId?: string) =>
     get<SessionSummary[]>(projectId ? `/api/sessions?project=${id(projectId)}` : "/api/sessions"),
   session: (sid: string) => get<SessionDetail>(`/api/session?id=${id(sid)}`),
+  review: (sid: string) => get<SessionReview>(`/api/review?id=${id(sid)}`),
+  reviewDiff: (sid: string, path: string) =>
+    get<ReviewDiff>(`/api/review/diff?id=${id(sid)}&path=${id(path)}`),
   overview: () => get<Overview>("/api/overview"),
   settings: () => get<SettingsResponse>("/api/settings"),
   saveSettings: (patch: Partial<Settings>) => send<SettingsResponse>("PUT", "/api/settings", patch),

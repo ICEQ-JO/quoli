@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { AGENT_NAMES, type CommandRun, type SessionDetail } from "../../../shared/model.ts";
+import {
+  AGENT_NAMES,
+  type CommandRun,
+  type SessionDetail,
+  type SessionReview,
+} from "../../../shared/model.ts";
 import { clock, compact, fileName, span, tokenSum, usd } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import type { Lens, Selection } from "../state.ts";
@@ -40,8 +45,33 @@ function Sec({
 const EXT_KIND = { mcp: "MCP", skill: "Skill", subagent: "Subagent" } as const;
 
 /** The session Summary: a readable page of what was asked, changed, run and spent. */
-export function Summary({ session, href }: { session: SessionDetail; href: Href }) {
+export function Summary({
+  session,
+  review,
+  href,
+}: {
+  session: SessionDetail;
+  review: SessionReview | null;
+  href: Href;
+}) {
   const { report } = session;
+  // The same files as the header and the Review lens; recorded edits only until those load.
+  const fromGit = review?.source === "git";
+  const changes: {
+    path: string;
+    added: number | null;
+    removed: number | null;
+    rewrite: boolean;
+  }[] = review
+    ? review.files.map((f) => ({
+        path: f.path,
+        added: f.added,
+        removed: f.removed,
+        rewrite:
+          review.source === "edits" &&
+          (report.changes.find((c) => c.path === f.path)?.rewrite ?? false),
+      }))
+    : report.changes;
   const totalCost = session.cost;
   const sum = report.costByModel.reduce(
     (t, r) => ({
@@ -52,8 +82,8 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
     }),
     { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
   );
-  const added = report.changes.reduce((n, c) => n + c.added, 0);
-  const removed = report.changes.reduce((n, c) => n + c.removed, 0);
+  const added = changes.reduce((n, c) => n + (c.added ?? 0), 0);
+  const removed = changes.reduce((n, c) => n + (c.removed ?? 0), 0);
   return (
     <div className="summary">
       <div className="sum-inner">
@@ -80,19 +110,21 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
           id="sum-changed"
           title="What changed"
           aside={
-            report.changes.length > 0 ? (
+            changes.length > 0 ? (
               <>
-                {report.changes.length} {report.changes.length === 1 ? "file" : "files"} ·{" "}
+                {changes.length} {changes.length === 1 ? "file" : "files"} ·{" "}
                 <span className="add">+{added}</span> <span className="del">−{removed}</span>
               </>
             ) : undefined
           }
         >
-          {report.changes.length === 0 ? (
+          {changes.length === 0 ? (
             <p className="faint">No files were changed.</p>
           ) : (
             <table className="sum-table">
-              <caption className="sr-only">Files changed, counted from recorded edits</caption>
+              <caption className="sr-only">
+                Files changed, {fromGit ? "lines from Git" : "lines from recorded edits"}
+              </caption>
               <thead>
                 <tr>
                   <th scope="col">File</th>
@@ -102,10 +134,10 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
                 </tr>
               </thead>
               <tbody>
-                {report.changes.map((c) => (
+                {changes.map((c) => (
                   <tr key={c.path}>
                     <td className="ellip" title={c.path}>
-                      <Link to={href("code", { kind: "file", id: c.path })} className="path">
+                      <Link to={href("review", { kind: "file", id: c.path })} className="path">
                         <b>{fileName(c.path)}</b>
                         <span className="faint">{c.path.slice(0, -fileName(c.path).length)}</span>
                       </Link>
@@ -118,10 +150,12 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
                         >
                           rewritten <span className="add">+{c.added}</span>
                         </span>
+                      ) : c.added === null && c.removed === null ? (
+                        <span className="faint">binary</span>
                       ) : (
                         <>
-                          <span className="add">+{c.added}</span>{" "}
-                          <span className="del">−{c.removed}</span>
+                          <span className="add">+{c.added ?? 0}</span>{" "}
+                          <span className="del">−{c.removed ?? 0}</span>
                         </>
                       )}
                     </td>
@@ -130,7 +164,11 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
               </tbody>
             </table>
           )}
-          <p className="sum-note">Counted from the edit inputs the agent recorded, not from Git.</p>
+          <p className="sum-note">
+            {fromGit
+              ? "Files and lines are what differs in Git from where the session began, so they include changes the agent made through commands. Open Review to read them."
+              : "Counted from the edit inputs the agent recorded, not from Git. Open Review for the details."}
+          </p>
         </Sec>
 
         <Sec id="sum-ran" title="What it ran" aside={report.commands.length || undefined}>

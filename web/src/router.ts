@@ -29,7 +29,7 @@ export const SETTINGS_SECTIONS = [
   "appearance",
 ] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
-const LENSES: Lens[] = ["summary", "agents", "code", "git", "infra"];
+const LENSES: Lens[] = ["summary", "review", "agents", "code", "git", "infra"];
 const KINDS = ["file", "tool", "service", "commit", "branch"] as const;
 
 export function parseRoute(pathname: string): Route {
