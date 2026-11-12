@@ -66,6 +66,6 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - Subagent ↔ spawning `Task` call is matched by launch order (drawn dashed), because hooks do not link them by id.
 - File-level code map; imports are resolved for relative JS/TS only.
 - Infra is what config files declare; hosted metrics need provider connections that do not exist yet.
-- Large repos: capped at 1,500 files; folders without activity fold automatically above 220 files.
+- Large repos: the code map lists up to 50,000 paths and reads line counts/imports for up to 5,000 files (≤ 512 KB); the Code lens opens at folder level. Git history pages 200 commits at a time (max 2,000 per request).
 - Dark theme only.
 - Cost and the Summary report are heuristics: commands are classified from their text, line counts come from recorded Edit/MultiEdit/Write inputs (a Write's removed lines are unknown), failed edits are ignored, and only edits inside the project root are counted. Edits made through Bash (sed, formatters, generators) are not seen. The checklist lists things worth a look and never says the work is correct.

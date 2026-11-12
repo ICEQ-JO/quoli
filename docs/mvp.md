@@ -99,7 +99,15 @@ Deviations and limits:
 
 ## Increment 3: Lenses that work at real scale (M)
 
-Issue: #93 · Status: **not started**
+Issue: #93 · Status: **done** (on branch `claude/stoic-bardeen-5zymlb`)
+
+Delivered, checked on `pnpm demo --large` (a generated monorepo: ~2,400 files, 560+ commits on six branches with merges, one recorded session):
+- **Code:** semantic zoom. Opens at folder level as heatmap tiles (edited / read share, file counts), drills in on click with a breadcrumb back out; untouched folders hidden by default with a "Show all folders" toggle; every file listed (up to 50,000 paths; line counts and imports read for up to 5,000 files ≤ 512 KB, the rest marked "not scanned"). `/api/code` ~55 ms on the large demo.
+- **Git:** vertical commit graph (lanes computed client-side, merges drawn), branch strip, uncommitted changes on top, 200 commits per page with "Load more", windowed rendering (first rows ~0.5 s; ~560 commits ~0.25 s more). Sessions appear on the commits they created, matched only from recorded `git commit` output (no time-window guessing).
+- **Agents:** Timeline view (prompts as headers, one row per call, subagents grouped, runs of 3+ same-tool calls collapsed, replay dims later calls) next to the Graph view; Timeline is the default up to 60 calls.
+- **Infra:** names never truncated; with two or fewer services, a guide lists what was detected, which files Quoli reads and how to add more.
+
+Limits: the Graph view of a large session is still dense (Timeline is the default there); the Code scope is not kept in the URL; the working-tree row in the Git graph is not joined to the branch lane.
 
 **User value:** The map stays readable on a real repo with thousands of files and hundreds of commits.
 

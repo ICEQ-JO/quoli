@@ -458,9 +458,20 @@ function ServicePanel({ id, infra, touched, goto }: Props & { id: string }) {
   );
 }
 
-function CommitPanel({ sha, git }: Props & { sha: string }) {
-  const c = git?.commits.find((x) => x.sha === sha);
-  if (!c) return null;
+function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: string }) {
+  const loaded = git?.commits.find((x) => x.sha === sha);
+  // Commits paged in by the Git lens are not in the board's first page; look them up once.
+  const [deep] = useData(!loaded && root ? `commit:${root}:${sha}` : null, () =>
+    api.git(root as string, 2000),
+  );
+  const c = loaded ?? deep?.commits.find((x) => x.sha === sha);
+  if (!c)
+    return (
+      <p className="faint pad">
+        {deep ? "Commit not found in the loaded history." : "Loading commit…"}
+      </p>
+    );
+  const madeBy = sessions.filter((s) => c.sessions?.includes(s.id));
   return (
     <>
       <header className="panel-head">
@@ -478,6 +489,19 @@ function CommitPanel({ sha, git }: Props & { sha: string }) {
       <Section title="Parents">
         <p className="mono">{c.parents.join(", ") || "root commit"}</p>
       </Section>
+      {madeBy.length > 0 && (
+        <Section title="Created by session" aside="recorded">
+          <ul className="links">
+            {madeBy.map((s) => (
+              <li key={s.id}>
+                <button type="button" onClick={() => openSession(s.id)} title={s.title}>
+                  <b>{s.title}</b>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
     </>
   );
 }
