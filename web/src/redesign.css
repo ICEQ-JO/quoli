@@ -1742,3 +1742,38 @@ ul.reasons li {
 .live-prices p {
   margin: 4px 0 0 24px;
 }
+
+/* Settings → Class sync */
+.sync .sync-steps {
+  margin: 8px 0 12px;
+  padding-left: 20px;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  display: grid;
+  gap: 4px;
+}
+.sync .field-row {
+  max-width: 640px;
+}
+.sync-toggle {
+  margin-top: 6px;
+}
+.sync-state {
+  margin: 4px 0 0 24px;
+}
+.sync-what {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.sync-what h3 {
+  margin: 0 0 6px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.sync-what ul {
+  margin: 0 0 6px;
+  padding-left: 20px;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}

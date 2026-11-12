@@ -20,7 +20,14 @@ export type Route =
   | { name: "notfound" };
 
 const CHANGE = "quoli:navigate";
-export const SETTINGS_SECTIONS = ["general", "alerts", "prices", "data", "appearance"] as const;
+export const SETTINGS_SECTIONS = [
+  "general",
+  "alerts",
+  "prices",
+  "sync",
+  "data",
+  "appearance",
+] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 const LENSES: Lens[] = ["summary", "agents", "code", "git", "infra"];
 const KINDS = ["file", "tool", "service", "commit", "branch"] as const;
