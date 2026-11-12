@@ -1,10 +1,11 @@
 import { type Edge, Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import type { CodeFile } from "../../../shared/model.ts";
 import { fileLabel, folderLabel, nodeA11y, quietNode } from "../a11y.ts";
 import { compact, fileName, plural } from "../format.ts";
 import { isSelected, type LensContext, type Touch } from "../state.ts";
 import { Board } from "./Board.tsx";
+import { ChangeMapView, type Source } from "./code/ChangeMapView.tsx";
 import "./code/code.css";
 import {
   aggregateTouches,
@@ -26,7 +27,80 @@ const FILE_GAP = 8;
 const TOP = 52;
 const MAX_CHIPS = 400;
 
+type Mode = "changes" | "browse";
+
 export function CodeLens(ctx: LensContext) {
+  const { code, session } = ctx;
+  const [mode, setMode] = useState<Mode | null>(null);
+  const [source, setSource] = useState<Source | null>(null);
+  const [hops, setHops] = useState<1 | 2>(1);
+  const sessionEdits = Object.values(session?.files ?? {}).some((t) => t.edited > 0);
+  const uncommitted = code?.files.filter((f) => f.status !== "clean").length ?? 0;
+  const src: Source = source ?? (session && sessionEdits ? "session" : "uncommitted");
+  const view: Mode = mode ?? (sessionEdits || uncommitted ? "changes" : "browse");
+
+  const seg = <T extends string | number>(
+    legend: string,
+    value: T,
+    options: [T, string, boolean?][],
+    set: (v: T) => void,
+  ) => (
+    <fieldset className="segmented">
+      <legend className="sr-only">{legend}</legend>
+      {options.map(([v, text, disabled]) => (
+        <button
+          type="button"
+          key={String(v)}
+          aria-pressed={value === v}
+          className={value === v ? "active" : ""}
+          disabled={disabled}
+          onClick={() => set(v)}
+        >
+          {text}
+        </button>
+      ))}
+    </fieldset>
+  );
+  const modeSwitch = seg<Mode>(
+    "Code view",
+    view,
+    [
+      ["changes", "Changes"],
+      ["browse", "All files"],
+    ],
+    setMode,
+  );
+
+  if (view === "changes") {
+    const bar = (
+      <div className="code-bar">
+        {modeSwitch}
+        {seg<Source>(
+          "Which changes",
+          src,
+          [
+            ["session", "This session", !session],
+            ["uncommitted", `Uncommitted${uncommitted ? ` · ${uncommitted}` : ""}`],
+          ],
+          setSource,
+        )}
+        {seg<1 | 2>(
+          "Connections shown",
+          hops,
+          [
+            [1, "Direct imports"],
+            [2, "Two steps"],
+          ],
+          setHops,
+        )}
+      </div>
+    );
+    return <ChangeMapView ctx={ctx} source={src} hops={hops} bar={bar} />;
+  }
+  return <BrowseView ctx={ctx} modeSwitch={modeSwitch} />;
+}
+
+function BrowseView({ ctx, modeSwitch }: { ctx: LensContext; modeSwitch: ReactNode }) {
   const { code, touched, selection, select, session } = ctx;
   const [scopeState, setScopeState] = useState<{ root: string; path: string }>({
     root: "",
@@ -218,6 +292,7 @@ export function CodeLens(ctx: LensContext) {
   return (
     <div className="code-lens">
       <div className="code-bar">
+        {modeSwitch}
         <nav className="crumbs" aria-label="Folder path">
           <button
             type="button"

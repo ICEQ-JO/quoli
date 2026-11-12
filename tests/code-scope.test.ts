@@ -17,6 +17,7 @@ const f = (path: string): CodeFile => ({
   language: null,
   imports: [],
   scanned: true,
+  diff: null,
   status: "clean",
 });
 const files = [

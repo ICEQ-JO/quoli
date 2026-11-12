@@ -42,7 +42,7 @@ export function RecordedChange({ call }: { call: ToolCall }) {
         // biome-ignore lint/suspicious/noArrayIndexKey: static edit list
         <span key={i}>
           {i > 0 && <span className="hunk">{"⋯\n"}</span>}
-          {before?.split("\n").map((l, j) => (
+          {(before ? before.split("\n") : []).map((l, j) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: static lines
             <span key={`d${j}`} className="del">{`- ${l}\n`}</span>
           ))}

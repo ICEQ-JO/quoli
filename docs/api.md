@@ -35,6 +35,7 @@ Retention runs at startup, hourly, and when settings change.
 - `SessionSummary.trace`: one character per tool call in time order (first 400): `r` read, `e` edit, `c` run, `s` search, `a` subagent, `w` web/MCP, `o` other, `f` failed (`TRACE_CODES` in `shared/model.ts`).
 - Retention deletes whole sessions (events, usage rows, transcript offsets) whose last event is older than `retentionDays`, then truncates the WAL.
 - `/api/code|git|infra|file` accept any root that has events or is registered.
+- `CodeFile.diff`: uncommitted `{ added, removed }` lines against HEAD from `git diff --numstat HEAD`; untracked text files count all their lines as added; `null` when clean or binary.
 
 ## Increment 2 additions
 
