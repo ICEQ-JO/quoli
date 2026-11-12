@@ -69,8 +69,15 @@ export function deriveSession(
         endedAt = null;
         break;
       case "UserPromptSubmit":
-        turns.push({ prompt: str(p.prompt) ?? "", at: e.at, toolCallIds: [] });
+        turns.push({ prompt: str(p.prompt) ?? "", at: e.at, toolCallIds: [], reply: null });
         break;
+      case "Stop": {
+        // The main agent's final text for the turn; SubagentStop is a subagent's and not shown.
+        const turn = turns.at(-1);
+        const reply = str(p.last_assistant_message)?.trim();
+        if (turn && reply && agentId === "main") turn.reply = reply;
+        break;
+      }
       case "PreToolUse": {
         const id = str(p.tool_use_id) ?? `seq-${e.seq}`;
         const name = str(p.tool_name) ?? "unknown";

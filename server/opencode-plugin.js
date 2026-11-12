@@ -121,7 +121,10 @@ export default {
     );
 
     const controller = new AbortController();
+    // The last finished text block per session, sent with the turn end as the agent's reply.
+    const replies = new Map();
     const types = [
+      "session.text.ended",
       "session.step.started",
       "session.step.ended",
       "session.execution.succeeded",
@@ -134,7 +137,9 @@ export default {
           // OpenCode 2 runs one shared service: keep only this directory's sessions.
           if (e?.location?.directory && e.location.directory !== cwd) continue;
           if (!started.has(d.sessionID)) continue;
-          if (e.type === "session.step.started") {
+          if (e.type === "session.text.ended") {
+            if (typeof d.text === "string" && d.text.trim()) replies.set(d.sessionID, d.text);
+          } else if (e.type === "session.step.started") {
             models.set(d.assistantMessageID, d.model?.id ?? null);
           } else if (e.type === "session.step.ended") {
             send(d.sessionID, {
@@ -146,7 +151,12 @@ export default {
             });
             models.delete(d.assistantMessageID);
           } else {
-            send(d.sessionID, { opencode_event: "turn.ended", outcome: e.type.split(".").pop() });
+            send(d.sessionID, {
+              opencode_event: "turn.ended",
+              outcome: e.type.split(".").pop(),
+              text: replies.get(d.sessionID) ?? null,
+            });
+            replies.delete(d.sessionID);
           }
         }
       } catch {}

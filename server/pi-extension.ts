@@ -113,9 +113,14 @@ export default function quoli(pi: Pi) {
       output: textOf(e.result),
     });
   });
+  // The last assistant text per session, sent with agent_end as the agent's reply.
+  const replies = new Map<string, string>();
   pi.on("message_end", (e, ctx) => {
     const m = e.message as Json | undefined;
     if (m?.role !== "assistant") return;
+    const said = textOf(m);
+    const id = ctx.sessionManager?.getSessionId?.();
+    if (said?.trim() && typeof id === "string") replies.set(id, said);
     send(ctx, {
       pi_event: "message.end",
       messageID: `${m.timestamp ?? ""}`,
@@ -126,7 +131,10 @@ export default function quoli(pi: Pi) {
     });
   });
   pi.on("agent_end", (_e, ctx) => {
-    send(ctx, { pi_event: "agent.end" });
+    const id = ctx.sessionManager?.getSessionId?.();
+    const text = typeof id === "string" ? (replies.get(id) ?? null) : null;
+    if (typeof id === "string") replies.delete(id);
+    send(ctx, { pi_event: "agent.end", text });
   });
   pi.on("session_shutdown", (e, ctx) => {
     send(ctx, { pi_event: "session.shutdown", reason: e.reason });

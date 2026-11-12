@@ -2690,6 +2690,31 @@ textarea.input {
   overflow-y: auto;
 }
 
+.sum-reply {
+  margin-top: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--line-strong);
+  color: var(--muted);
+}
+
+.sum-reply-who {
+  display: block;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.sum-reply p {
+  max-height: none;
+  overflow: visible;
+}
+
+.sum-reply p.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .sum-table {
   width: 100%;
   border-collapse: collapse;
@@ -3187,4 +3212,17 @@ textarea.input {
   .table.sessions .c-opt {
     display: none;
   }
+}
+
+.sum-reply-more {
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }

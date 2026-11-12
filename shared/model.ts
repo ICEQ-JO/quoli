@@ -156,6 +156,11 @@ export interface Turn {
   prompt: string;
   at: string;
   toolCallIds: string[];
+  /**
+   * The agent's final reply for this prompt, recorded from the turn's end (`last_assistant_message`
+   * on Stop). Null when the agent reported none.
+   */
+  reply: string | null;
 }
 
 export interface SessionDetail extends SessionSummary {
