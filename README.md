@@ -90,6 +90,10 @@ Press `?` in the app for all keyboard shortcuts. The main ones:
 - `Esc` clears the selection;
 - `←`/`→` on the replay bar step through a session.
 
+## Classes
+
+Instructors can see how a class uses coding agents at `/class/` on the hosted site: students opt in from Settings → Class sync, and only session summaries are shared (never prompts or code). Setup: [docs/classes.md](docs/classes.md).
+
 ## Privacy
 
 - All data stays on your machine, in `~/.quoli` (override with `QUOLI_HOME`). The server listens only on `127.0.0.1`.

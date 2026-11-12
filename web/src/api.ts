@@ -16,6 +16,7 @@ import type {
   SessionSummary,
   Settings,
   SetupStatus,
+  SyncStatus,
   UsageReport,
 } from "../../shared/model.ts";
 
@@ -68,6 +69,9 @@ export const api = {
   saveSettings: (patch: Partial<Settings>) => send<SettingsResponse>("PUT", "/api/settings", patch),
   prices: () => get<PriceTable>("/api/prices"),
   livePrices: () => get<LivePriceStatus>("/api/prices/live"),
+  sync: () => get<SyncStatus>("/api/sync"),
+  saveSync: (patch: { key?: string; enabled?: boolean }) =>
+    send<SyncStatus>("PUT", "/api/sync", patch),
   usage: (days: number, agent?: AgentKind) =>
     get<UsageReport>(`/api/usage?days=${days}${agent ? `&agent=${agent}` : ""}`),
   insights: (days: number, f: { project?: string; agent?: string; model?: string }) => {
