@@ -3,7 +3,10 @@ import { dirname, extname, join, normalize } from "node:path";
 import type { CodeFile, CodeMap } from "../shared/model.ts";
 import { git } from "./ingest.ts";
 
-const MAX_FILES = 1500;
+/** Paths listed in the map. Beyond this the remainder is only counted in `truncated`. */
+export const MAX_LISTED = 50_000;
+/** Files whose contents are read for line counts and imports. */
+export const MAX_SCANNED = 5_000;
 const MAX_BYTES = 512 * 1024;
 
 const LANGUAGES: Record<string, string> = {
@@ -42,27 +45,37 @@ export function codeMap(root: string): CodeMap {
     .split("\n")
     .filter((p) => p && !BINARY.test(p));
   const status = gitStatus(root);
-  const paths = listed.slice(0, MAX_FILES);
+  const paths = listed.slice(0, MAX_LISTED);
   const known = new Set(paths);
   const files: CodeFile[] = [];
+  let scans = 0;
   for (const path of paths) {
-    let text = "";
-    try {
-      if (statSync(join(root, path)).size <= MAX_BYTES)
-        text = readFileSync(join(root, path), "utf8");
-    } catch {
-      continue;
-    }
     const ext = extname(path).toLowerCase();
+    const language = LANGUAGES[ext] ?? null;
+    let text: string | null = null;
+    // Only recognised source/text types are read, and only within the scan budget.
+    if (language && scans < MAX_SCANNED) {
+      try {
+        const abs = join(root, path);
+        if (statSync(abs).size <= MAX_BYTES) {
+          text = readFileSync(abs, "utf8");
+          scans++;
+        }
+      } catch {
+        continue; // listed but gone or unreadable (deleted in the working tree)
+      }
+    }
     files.push({
       path,
-      lines: text ? text.split("\n").length : 0,
-      language: LANGUAGES[ext] ?? null,
-      imports: /\.(m|c)?[jt]sx?$/.test(path) ? resolveImports(path, text, known) : [],
+      lines: text === null ? 0 : text.split("\n").length,
+      language,
+      imports:
+        text !== null && /\.(m|c)?[jt]sx?$/.test(path) ? resolveImports(path, text, known) : [],
+      scanned: text !== null,
       status: status.get(path) ?? "clean",
     });
   }
-  return { root, files, truncated: Math.max(0, listed.length - MAX_FILES) };
+  return { root, files, truncated: Math.max(0, listed.length - MAX_LISTED) };
 }
 
 export function resolveImports(from: string, text: string, known: Set<string>): string[] {

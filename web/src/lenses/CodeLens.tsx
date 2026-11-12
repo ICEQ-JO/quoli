@@ -1,234 +1,266 @@
 import { type Edge, Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CodeFile } from "../../../shared/model.ts";
 import { compact, fileName } from "../format.ts";
 import { isSelected, type LensContext, type Touch } from "../state.ts";
 import { Board } from "./Board.tsx";
+import "./code/code.css";
+import {
+  aggregateTouches,
+  crumbs,
+  type FolderTile,
+  indexFiles,
+  intensity,
+  scopeForPath,
+  scopeOf,
+  tileColumns,
+} from "./code/scope.ts";
 
-interface Dir {
-  path: string;
-  name: string;
-  files: CodeFile[];
-  dirs: Dir[];
-  total: number;
-}
-
+const TILE_W = 236;
+const TILE_H = 96;
 const FILE_W = 184;
 const FILE_H = 30;
-const GAP = 8;
-const PAD = 12;
-const HEAD = 30;
-const COLLAPSED_W = 184;
-const COLLAPSED_H = 44;
-const BIG_REPO = 220;
-
-function tree(files: CodeFile[]): Dir {
-  const root: Dir = { path: "", name: "", files: [], dirs: [], total: 0 };
-  for (const f of files) {
-    let dir = root;
-    const parts = f.path.split("/");
-    root.total++;
-    for (const part of parts.slice(0, -1)) {
-      const path = dir.path ? `${dir.path}/${part}` : part;
-      let next = dir.dirs.find((d) => d.name === part);
-      if (!next) {
-        next = { path, name: part, files: [], dirs: [], total: 0 };
-        dir.dirs.push(next);
-      }
-      next.total++;
-      dir = next;
-    }
-    dir.files.push(f);
-  }
-  // Merge single-child chains like src/app/api into one box.
-  const squash = (d: Dir): Dir => {
-    d.dirs = d.dirs.map(squash);
-    if (d.path && !d.files.length && d.dirs.length === 1) {
-      const only = d.dirs[0];
-      return { ...only, name: `${d.name}/${only.name}` };
-    }
-    return d;
-  };
-  const r = squash(root);
-  const sort = (d: Dir) => {
-    d.dirs.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
-    d.files.sort((a, b) => a.path.localeCompare(b.path));
-    d.dirs.forEach(sort);
-  };
-  sort(r);
-  return r;
-}
-
-interface Laid {
-  w: number;
-  h: number;
-  nodes: Node[];
-}
-
-function layout(
-  dir: Dir,
-  depth: number,
-  isOpen: (d: Dir) => boolean,
-  touched: Map<string, Touch>,
-): Laid {
-  const id = `dir:${dir.path}`;
-  const hot = [...touched.keys()].some((p) => dir.path === "" || p.startsWith(`${dir.path}/`));
-  if (depth > 0 && !isOpen(dir)) {
-    return {
-      w: COLLAPSED_W,
-      h: COLLAPSED_H,
-      nodes: [
-        {
-          id,
-          type: "folded",
-          position: { x: 0, y: 0 },
-          data: { dir, hot },
-          style: { width: COLLAPSED_W, height: COLLAPSED_H },
-        },
-      ],
-    };
-  }
-  const children: Node[] = [];
-  const cols = Math.max(
-    1,
-    Math.min(dir.files.length, Math.ceil(Math.sqrt(dir.files.length / 1.5)), 4),
-  );
-  dir.files.forEach((f, i) => {
-    children.push({
-      id: `file:${f.path}`,
-      type: "file",
-      parentId: id,
-      position: {
-        x: PAD + (i % cols) * (FILE_W + GAP),
-        y: HEAD + Math.floor(i / cols) * (FILE_H + GAP),
-      },
-      data: { file: f },
-      style: { width: FILE_W, height: FILE_H },
-    });
-  });
-  const filesW = dir.files.length ? cols * (FILE_W + GAP) - GAP : 0;
-  const filesH = dir.files.length ? Math.ceil(dir.files.length / cols) * (FILE_H + GAP) - GAP : 0;
-
-  // Shelf-pack subdirectories into rows.
-  const maxRow = Math.max(filesW, depth === 0 ? 2200 : depth === 1 ? 1300 : 820);
-  let x = 0;
-  let y = filesH ? filesH + 16 : 0;
-  let rowH = 0;
-  let width = filesW;
-  for (const sub of dir.dirs) {
-    const laid = layout(sub, depth + 1, isOpen, touched);
-    if (x > 0 && x + laid.w > maxRow) {
-      x = 0;
-      y += rowH + 14;
-      rowH = 0;
-    }
-    const [top, ...rest] = laid.nodes;
-    children.push({ ...top, parentId: id, position: { x: PAD + x, y: HEAD + y } }, ...rest);
-    x += laid.w + 14;
-    rowH = Math.max(rowH, laid.h);
-    width = Math.max(width, x - 14);
-  }
-  const w = Math.max(width, 160) + PAD * 2;
-  const h = HEAD + y + rowH + PAD;
-  return {
-    w,
-    h,
-    nodes: [
-      {
-        id,
-        type: "dir",
-        position: { x: 0, y: 0 },
-        data: { dir, hot, depth },
-        style: { width: w, height: h },
-      },
-      ...children,
-    ],
-  };
-}
+const GAP = 14;
+const FILE_GAP = 8;
+const TOP = 52;
+const MAX_CHIPS = 400;
 
 export function CodeLens(ctx: LensContext) {
   const { code, touched, selection, select, session } = ctx;
-  const [toggled, setToggled] = useState<Record<string, boolean>>({});
-  const root = useMemo(() => (code ? tree(code.files) : null), [code]);
-  const big = (code?.files.length ?? 0) > BIG_REPO;
+  const [scopeState, setScopeState] = useState<{ root: string; path: string }>({
+    root: "",
+    path: "",
+  });
+  const [showAllPick, setShowAllPick] = useState<boolean | null>(null);
+  const root = code?.root ?? "";
+  const picked = scopeState.root === root ? scopeState.path : "";
+  const setScope = (path: string) => setScopeState({ root, path });
 
-  const { nodes, edges } = useMemo(() => {
-    if (!root || !code) return { nodes: [], edges: [] };
-    const sessionFiles = new Set(Object.keys(session?.files ?? {}));
-    const isOpen = (d: Dir) => {
-      if (d.path in toggled) return toggled[d.path];
-      if (!big) return true;
-      return (
-        [...sessionFiles].some((p) => p.startsWith(`${d.path}/`)) ||
-        code.files.some((f) => f.status !== "clean" && f.path.startsWith(`${d.path}/`))
-      );
-    };
-    const laid = layout(root, 0, isOpen, touched);
-    laid.nodes[0].data = { ...laid.nodes[0].data, label: code.root.split("/").at(-1) };
-    const sel = selection?.kind === "file" ? selection.id : null;
-    const related = new Set<string>();
-    const edges: Edge[] = [];
-    if (sel) {
-      const file = code.files.find((f) => f.path === sel);
-      for (const imp of file?.imports ?? []) {
-        related.add(imp);
-        edges.push(edge(sel, imp, "out"));
-      }
-      for (const f of code.files) {
-        if (f.imports.includes(sel)) {
-          related.add(f.path);
-          edges.push(edge(f.path, sel, "in"));
-        }
+  const index = useMemo(() => (code ? indexFiles(code.files) : null), [code]);
+  const heat = useMemo(() => aggregateTouches(touched), [touched]);
+
+  // Directories that contain anything the session touched at any time (stable while scrubbing).
+  const sessionDirs = useMemo(() => {
+    const dirs = new Set<string>();
+    for (const p of Object.keys(session?.files ?? {})) {
+      for (let d = scopeForPath(p); ; d = scopeForPath(d)) {
+        dirs.add(d);
+        if (!d) break;
       }
     }
-    const dimUntouched = touched.size > 0;
-    const fold = (path: string) => setToggled((t) => ({ ...t, [path]: false }));
-    const nodes = laid.nodes.map((n) => {
-      if (n.type === "dir") return { ...n, data: { ...n.data, fold } };
-      if (n.type !== "file") return n;
-      const f = (n.data as { file: CodeFile }).file;
-      return {
-        ...n,
-        data: {
-          file: f,
-          touch: touched.get(f.path) ?? null,
-          selected: isSelected(selection, "file", f.path),
-          related: related.has(f.path),
-          dim: dimUntouched && !touched.has(f.path) && !related.has(f.path) && sel !== f.path,
-        },
-      };
-    });
-    return { nodes, edges };
-  }, [root, code, toggled, big, touched, selection, session]);
+    return dirs;
+  }, [session]);
+  const sessionHasTouches = sessionDirs.size > 0;
+  const showAll = showAllPick ?? !sessionHasTouches;
+  const selectedPath = selection?.kind === "file" ? selection.id : null;
 
-  const focus = useMemo(() => [...touched.keys()].map((p) => `file:${p}`), [touched]);
+  // A level that holds a single visible folder and no visible files is skipped: show the next one.
+  const scope = useMemo(() => {
+    if (!index) return picked;
+    let dir = picked;
+    for (let i = 0; i < 32; i++) {
+      const sc = scopeOf(index, dir);
+      const folders = sc.folders.filter((f) => showAll || sessionDirs.has(f.path));
+      const hasFiles = sc.files.some(
+        (f) => showAll || session?.files[f.path] || f.path === selectedPath,
+      );
+      if (folders.length !== 1 || hasFiles) break;
+      dir = folders[0].path;
+    }
+    return dir;
+  }, [index, picked, showAll, sessionDirs, session, selectedPath]);
+
+  // A file selected elsewhere (Summary, inspector) opens the scope that contains it.
+  const selectedFile = selection?.kind === "file" ? selection.id : null;
+  useEffect(() => {
+    if (selectedFile) setScopeState({ root, path: scopeForPath(selectedFile) });
+  }, [selectedFile, root]);
+
+  const { nodes, edges, hidden, capped } = useMemo(() => {
+    const none = { nodes: [] as Node[], edges: [] as Edge[], hidden: 0, capped: 0 };
+    if (!code || !index) return none;
+    const sc = scopeOf(index, scope);
+    const keepDir = (p: string) => showAll || sessionDirs.has(p);
+    const folders = sc.folders.filter((f) => keepDir(f.path));
+    const ordered = [...folders].sort((a, b) => {
+      const ha = heat.get(a.path);
+      const hb = heat.get(b.path);
+      const wa = (ha?.edited ?? 0) * 1000 + (ha?.read ?? 0);
+      const wb = (hb?.edited ?? 0) * 1000 + (hb?.read ?? 0);
+      return wb - wa || b.files - a.files || a.name.localeCompare(b.name);
+    });
+    const inSession = (f: CodeFile) => !!session?.files[f.path];
+    const files = sc.files.filter(
+      (f) => showAll || inSession(f) || touched.has(f.path) || f.path === selectedFile,
+    );
+    const hiddenCount = sc.folders.length - folders.length + (sc.files.length - files.length);
+
+    const out: Node[] = [];
+    const cols = tileColumns(ordered.length);
+    ordered.forEach((f, i) => {
+      out.push({
+        id: `dir:${f.path}`,
+        type: "tile",
+        position: {
+          x: (i % cols) * (TILE_W + GAP),
+          y: TOP + Math.floor(i / cols) * (TILE_H + GAP),
+        },
+        data: { folder: f, heat: heat.get(f.path) ?? null },
+        style: { width: TILE_W, height: TILE_H },
+      });
+    });
+    const tilesW = ordered.length ? Math.min(cols, ordered.length) * (TILE_W + GAP) - GAP : 0;
+    const tilesH = ordered.length ? Math.ceil(ordered.length / cols) * (TILE_H + GAP) - GAP : 0;
+
+    // Touched files first so the cap never hides activity.
+    const chips = [...files].sort(
+      (a, b) =>
+        Number(touched.has(b.path) || b.path === selectedFile) -
+          Number(touched.has(a.path) || a.path === selectedFile) || a.path.localeCompare(b.path),
+    );
+    const shown = chips.slice(0, MAX_CHIPS);
+    const fileCols = Math.max(
+      1,
+      Math.min(
+        6,
+        Math.floor((Math.max(tilesW, 3 * (FILE_W + FILE_GAP)) + FILE_GAP) / (FILE_W + FILE_GAP)),
+      ),
+    );
+    let y = TOP + (tilesH ? tilesH + 36 : 0);
+    if (shown.length) {
+      out.push({
+        id: "label:files",
+        type: "label",
+        position: { x: 0, y: y - 24 },
+        data: { text: `files in this folder · ${compact(files.length)}` },
+        style: { width: 360, height: 18 },
+        selectable: false,
+      });
+      shown
+        .sort((a, b) => a.path.localeCompare(b.path))
+        .forEach((f, i) => {
+          out.push({
+            id: `file:${f.path}`,
+            type: "file",
+            position: {
+              x: (i % fileCols) * (FILE_W + FILE_GAP),
+              y: y + Math.floor(i / fileCols) * (FILE_H + FILE_GAP),
+            },
+            data: {
+              file: f,
+              touch: touched.get(f.path) ?? null,
+              selected: isSelected(selection, "file", f.path),
+              related: false,
+              dim: false,
+            },
+            style: { width: FILE_W, height: FILE_H },
+          });
+        });
+      y += Math.ceil(shown.length / fileCols) * (FILE_H + FILE_GAP);
+    }
+
+    const edges: Edge[] = [];
+    if (selectedFile) {
+      const present = new Set(shown.map((f) => f.path));
+      const link = (from: string, to: string, kind: "in" | "out") => {
+        if (present.has(from) && present.has(to)) edges.push(edge(from, to, kind));
+      };
+      const rel = new Set<string>();
+      const self = code.files.find((f) => f.path === selectedFile);
+      for (const imp of self?.imports ?? []) {
+        rel.add(imp);
+        link(selectedFile, imp, "out");
+      }
+      for (const f of code.files) {
+        if (f.imports.includes(selectedFile)) {
+          rel.add(f.path);
+          link(f.path, selectedFile, "in");
+        }
+      }
+      for (const n of out) {
+        if (n.type !== "file") continue;
+        const d = n.data as { file: CodeFile; related: boolean };
+        d.related = rel.has(d.file.path);
+      }
+    }
+    return { nodes: out, edges, hidden: hiddenCount, capped: chips.length - shown.length };
+  }, [code, index, scope, showAll, sessionDirs, heat, touched, selection, selectedFile, session]);
+
+  const onNodeClick = (n: Node) => {
+    if (n.type === "file") select({ kind: "file", id: n.id.slice(5) });
+    if (n.type === "tile") setScope((n.data as { folder: FolderTile }).folder.path);
+  };
+
+  const trail = crumbs(scope);
+  const repoName = root.split("/").filter(Boolean).at(-1) ?? "repo";
 
   return (
-    <Board
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      fitKey={`${code?.root}:${session?.id ?? ""}:${Object.keys(toggled).length}`}
-      focus={big && focus.length ? focus : undefined}
-      onNodeClick={(n) => {
-        if (n.type === "file") select({ kind: "file", id: n.id.slice(5) });
-        if (n.type === "folded") {
-          const d = (n.data as { dir: Dir }).dir;
-          setToggled((t) => ({ ...t, [d.path]: true }));
+    <div className="code-lens">
+      <div className="code-bar">
+        <nav className="crumbs" aria-label="Folder path">
+          <button
+            type="button"
+            className={scope === "" ? "here" : ""}
+            title={root}
+            onClick={() => setScope("")}
+          >
+            {repoName}
+          </button>
+          {trail.map((c, i) => (
+            <span key={c.path} style={{ display: "contents" }}>
+              <span className="sep">/</span>
+              <button
+                type="button"
+                className={i === trail.length - 1 ? "here" : ""}
+                title={c.path}
+                onClick={() => setScope(c.path)}
+              >
+                {c.name}
+              </button>
+            </span>
+          ))}
+        </nav>
+        {sessionHasTouches && (
+          <button
+            type="button"
+            className={`code-toggle ${showAll ? "on" : ""}`}
+            aria-pressed={showAll}
+            onClick={() => setShowAllPick(!showAll)}
+          >
+            <span className="box" />
+            Show all folders
+          </button>
+        )}
+      </div>
+      <Board
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitKey={`${root}:${session?.id ?? ""}:${scope}:${showAll}`}
+        onNodeClick={onNodeClick}
+        onPaneClick={() => select(null)}
+        empty={
+          code
+            ? hidden
+              ? "Nothing here was touched by this session. Turn on “Show all folders”."
+              : "No files found in this folder."
+            : "Reading the repository…"
         }
-      }}
-      onPaneClick={() => select(null)}
-      empty={code ? "No files found in this repository." : "Reading the repository…"}
-      legend={
-        <>
-          <span className="lg edit">edited</span>
-          <span className="lg read">read</span>
-          <span className="lg git">M · changed in git</span>
-          {code?.truncated ? <span>{code.truncated} files not shown</span> : null}
-          {big && <span>Folders without activity are folded — click to open</span>}
-        </>
-      }
-    />
+        legend={
+          <>
+            <span className="lg edit">edited</span>
+            <span className="lg read">read</span>
+            <span className="lg git">M · changed in git</span>
+            {code && <span>{compact(code.files.length)} files</span>}
+            {hidden > 0 && !showAll && <span>{hidden} untouched hidden</span>}
+            {capped > 0 && <span>{capped} more files not drawn</span>}
+            {code?.truncated ? (
+              <span>{compact(code.truncated)} files beyond the listing cap</span>
+            ) : null}
+          </>
+        }
+      />
+    </div>
   );
 }
 
@@ -258,7 +290,7 @@ function FileNode({ data }: NodeProps) {
     dim ? "dim" : "",
   ].join(" ");
   return (
-    <div className={cls} title={`${file.path} · ${file.lines} lines`}>
+    <div className={cls} title={file.scanned ? `${file.path} · ${file.lines} lines` : file.path}>
       <Handle type="target" position={Position.Left} className="h" />
       <span className="name" title={file.path}>
         {fileName(file.path)}
@@ -273,49 +305,44 @@ function FileNode({ data }: NodeProps) {
   );
 }
 
-function DirNode({ data }: NodeProps) {
-  const { dir, hot, label, depth, fold } = data as {
-    dir: Dir;
-    hot: boolean;
-    label?: string;
-    depth: number;
-    fold: (path: string) => void;
+function TileNode({ data }: NodeProps) {
+  const { folder, heat } = data as {
+    folder: FolderTile;
+    heat: { edited: number; read: number } | null;
   };
+  const e = heat?.edited ?? 0;
+  const r = heat?.read ?? 0;
+  const eShare = e / folder.files;
+  const rShare = r / folder.files;
+  const cls = ["tile-node", e ? "edited" : "", r ? "read" : "", e || r ? "" : "quiet"].join(" ");
+  const style = {
+    "--heat-e": intensity(eShare),
+    "--heat-r": intensity(rShare),
+  } as React.CSSProperties;
   return (
-    <div className={`dir-node ${hot ? "hot" : ""} ${depth === 0 ? "root" : ""}`}>
-      <div className="dir-head">
-        <span className="dir-name" title={dir.path || label || dir.name}>
-          {label ?? dir.name}
-        </span>
-        <span className="dir-count">{compact(dir.total)} files</span>
-        {depth > 0 && (
-          <button
-            type="button"
-            className="fold"
-            title="Fold folder"
-            onClick={(e) => {
-              e.stopPropagation();
-              fold(dir.path);
-            }}
-          >
-            −
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FoldedNode({ data }: NodeProps) {
-  const { dir, hot } = data as { dir: Dir; hot: boolean };
-  return (
-    <div className={`folded-node ${hot ? "hot" : ""}`} title="Click to open">
-      <span className="dir-name" title={dir.path || dir.name}>
-        {dir.name}/
+    <div
+      className={cls}
+      style={style}
+      title={`${folder.path}/ · ${folder.files} files · ${e} edited · ${r} read`}
+    >
+      <Handle type="target" position={Position.Left} className="h" />
+      <span className="tile-name">{folder.name}/</span>
+      <span className="tile-meta">
+        {e > 0 && <span className="e">✎ {e} edited</span>}
+        {r > 0 && <span className="r">{r} read</span>}
+        {!e && !r && <span>untouched</span>}
+        <span className="n">{compact(folder.files)} files</span>
       </span>
-      <span className="dir-count">{compact(dir.total)} files</span>
+      <span className="tile-bar" aria-hidden="true">
+        <i style={{ width: `${Math.max(e ? 2 : 0, eShare * 100)}%` }} />
+        <i style={{ width: `${Math.max(r ? 2 : 0, rShare * 100)}%` }} />
+      </span>
     </div>
   );
 }
 
-const nodeTypes = { file: FileNode, dir: DirNode, folded: FoldedNode };
+function LabelNode({ data }: NodeProps) {
+  return <div className="label-node">{(data as { text: string }).text}</div>;
+}
+
+const nodeTypes = { file: FileNode, tile: TileNode, label: LabelNode };

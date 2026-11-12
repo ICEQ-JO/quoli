@@ -115,15 +115,19 @@ export interface UsagePoint {
 
 export interface CodeFile {
   path: string;
+  /** Line count; 0 when the file was not scanned (see `scanned`). */
   lines: number;
   language: string | null;
   imports: string[];
+  /** False when contents were not read (unknown type, over 512 KB, or over the scan budget). */
+  scanned: boolean;
   status: "clean" | "modified" | "added" | "untracked";
 }
 
 export interface CodeMap {
   root: string;
   files: CodeFile[];
+  /** Paths beyond the listing cap that are not in `files`. */
   truncated: number;
 }
 
