@@ -483,3 +483,8 @@
 .ag-block-title .faint {
   font-weight: 400;
 }
+
+.ag-badge.loop {
+  color: var(--search);
+  background: color-mix(in srgb, var(--search) 14%, transparent);
+}

@@ -3106,3 +3106,12 @@ textarea.input {
 .sum-slow .num.fail {
   color: var(--fail);
 }
+
+.loop-tag {
+  margin-left: 6px;
+  font: 600 var(--fs-xs) var(--sans);
+  color: var(--search);
+  background: color-mix(in srgb, var(--search) 14%, transparent);
+  border-radius: 4px;
+  padding: 0 5px;
+}
