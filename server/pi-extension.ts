@@ -3,7 +3,8 @@
 // (prompts, tool calls, assistant messages with token usage) to the local Quoli server. It never
 // changes, blocks or delays the agent: handlers return at once, posts run in order in the
 // background, and every failure is swallowed. It reads no credentials and no session files.
-import { appendFileSync, existsSync, statSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
 const PORT = Number("__QUOLI_PORT__");
 const URL = `http://127.0.0.1:${PORT}/ingest?agent=pi`;
@@ -17,6 +18,25 @@ const spool = (body: string, at: string) => {
   try {
     if (!SPOOL || (existsSync(SPOOL) && statSync(SPOOL).size >= SPOOL_MAX)) return;
     appendFileSync(SPOOL, `${JSON.stringify({ agent: "pi", at, body })}\n`, { mode: 0o600 });
+    kick();
+  } catch {}
+};
+
+// Starts `quoli sync` beside the queue (it records the queue, sends Team sync, then exits) unless
+// one ran in the last 90 seconds. The command is in sync.json, written by the user-level install.
+const kick = () => {
+  try {
+    const dir = SPOOL.replace(/spool\.jsonl$/, "");
+    const stamp = `${dir}sync.last`;
+    if (existsSync(stamp) && Date.now() - statSync(stamp).mtimeMs < 90_000) return;
+    const run = JSON.parse(readFileSync(`${dir}sync.json`, "utf8")) as {
+      command: string;
+      args: string[];
+      cwd: string;
+    };
+    writeFileSync(stamp, "");
+    const opts = { cwd: run.cwd, detached: true, stdio: "ignore" as const, windowsHide: true };
+    spawn(run.command, run.args, opts).unref();
   } catch {}
 };
 

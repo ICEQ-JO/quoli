@@ -14,3 +14,6 @@ coverage/
 test-results/
 .claude/worktrees/
 release/
+
+# Browser-automation snapshots written by local tools
+.playwright-mcp/

@@ -228,9 +228,8 @@ export function createApp(store: Store, port: () => number) {
         if (!isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
         const payload = JSON.parse(await body(req));
         const changed = () => broadcast({ type: "projects" });
-        if (ingest(store, payload, undefined, changed, agent)) {
-          broadcast({ type: "event", sessionId: payload.session_id });
-        }
+        const sessionId = ingest(store, payload, undefined, changed, agent);
+        if (sessionId) broadcast({ type: "event", sessionId });
         json(res, 202, {});
       } catch {
         json(res, 400, {});
