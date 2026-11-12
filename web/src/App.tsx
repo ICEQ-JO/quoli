@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { isTypingTarget, modalOpen } from "./a11y.ts";
+import { Toasts, useAlerts } from "./alerts.tsx";
 import { api, useData, useLiveEvents } from "./api.ts";
 import { ShortcutOverlay } from "./components/Dialog.tsx";
 import { NavSidebar } from "./components/NavSidebar.tsx";
@@ -21,11 +22,19 @@ export function App() {
     refreshOverview();
     refreshProjects();
   });
-  // A session stops being live without any event, so look again now and then.
+  const [settings] = useData("settings", api.settings);
+  // A session stops being live without any event, so look again now and then, and catch up
+  // as soon as a backgrounded tab is shown again.
   useEffect(() => {
     const t = setInterval(refreshOverview, 30_000);
-    return () => clearInterval(t);
+    const onShow = () => document.visibilityState === "visible" && refreshOverview();
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", onShow);
+    };
   }, [refreshOverview]);
+  const alerts = useAlerts(overview, projects, settings?.settings.budgetDailyUsd ?? null);
 
   // After moving to another page, start reading at its content rather than at the nav rail.
   const page = useRef(route.name);
@@ -70,6 +79,7 @@ export function App() {
         )}
         {route.name === "notfound" && <NotFound />}
       </Main>
+      <Toasts {...alerts} />
       <ShortcutsHost />
       {route.name !== "board" && <GlobalPalette />}
     </div>

@@ -1,5 +1,6 @@
 import type { Overview, Project } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
+import { LiveRow } from "../components/Live.tsx";
 import { Onboarding } from "../components/Onboarding.tsx";
 import { SpendChart } from "../components/SpendChart.tsx";
 import {
@@ -101,7 +102,7 @@ export function DashboardPage() {
               </div>
               <ul className="slist">
                 {live.map((s) => (
-                  <SessionRow key={s.id} session={s} projects={projects} />
+                  <LiveRow key={s.id} s={s} projects={projects} />
                 ))}
               </ul>
             </section>

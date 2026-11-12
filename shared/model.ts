@@ -301,8 +301,18 @@ export interface InfraMap {
 /* ---------- App (Increment 1) ---------- */
 
 /** GET /api/overview — what the Home page shows, across all projects. */
+/** A running session as the live panel shows it (GET /api/overview). All derived. */
+export interface LiveSession extends SessionSummary {
+  /** Time of the last recorded activity: a prompt, a call starting or ending, or usage. */
+  lastAt: string;
+  /** The running call, or else the most recent one; null before the first call. */
+  step: Pick<ToolCall, "name" | "category" | "summary" | "status" | "startedAt"> | null;
+  /** Estimated spend of usage recorded in the last 10 minutes; null when none was priced. */
+  recentUsd: number | null;
+}
+
 export interface Overview {
-  live: SessionSummary[];
+  live: LiveSession[];
   /** Derived; each reason is a plain sentence, e.g. "2 failed tool calls". */
   needsReview: { session: SessionSummary; reasons: string[] }[];
   /** Most recent sessions first, at most 10. */

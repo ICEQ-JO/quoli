@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Project } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
+import { AlertSettings } from "../components/AlertSettings.tsx";
 import { PricesSection } from "../components/Prices.tsx";
 import { DeleteDataDialog, ErrorState, Loading, PageHead } from "../components/ui.tsx";
 import { plural } from "../format.ts";
@@ -9,6 +10,7 @@ import { setThemePref, type ThemePref, useThemePref } from "../theme.ts";
 
 const SECTIONS: { id: SettingsSection; label: string; hint: string }[] = [
   { id: "general", label: "General", hint: "This install and spend budgets" },
+  { id: "alerts", label: "Alerts", hint: "Local alerts for running sessions" },
   { id: "prices", label: "Prices", hint: "The list prices behind cost estimates" },
   { id: "data", label: "Data & privacy", hint: "Retention, redaction and deleting data" },
   { id: "appearance", label: "Appearance", hint: "Theme" },
@@ -132,6 +134,9 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                 </p>
               </div>
             </section>
+          )}
+          {data && section === "alerts" && (
+            <AlertSettings dailyBudget={data.settings.budgetDailyUsd} />
           )}
           {section === "prices" && <PricesSection />}
           {data && section === "data" && (
