@@ -47,15 +47,24 @@ readable final recorder state and stops continuous updates. Terminal and product
 data are synthetic and labeled. The product board supports tab arrows/Home/End,
 explicit row selection, and a compact readable phone layout.
 
-## Waitlist and launch limits
+## Waitlist
 
-The tested POST /api/waitlist handler is unchanged. It accepts an email JSON field,
-checks same-origin Origin and content type, bounds requests to 2 KB, validates and
-normalizes email, and deduplicates into QUOLI_HOME/waitlist.sqlite with owner-only
-file permissions. It stores email/joined timestamp, separate from agent evidence.
-The form reports success only after storage, or a retryable error.
+Two handlers share one validator (`shared/waitlist.ts`). Both accept a JSON `email`, require a same-origin Origin and a JSON content type, cap requests at 2 KB, and normalise the address before storing it.
 
-No automatic email, analytics, or third-party signup provider is connected. This
-is a loopback preview. Public marketing hosting, a separate signup backend, email
-provider/opt-in delivery, abuse controls, a removal flow and launch privacy policy
-are still launch work. Never expose the private evidence server publicly.
+- **Local preview** (`pnpm landing`): `POST /api/waitlist` in `server/waitlist.ts` stores email and joined time in `QUOLI_HOME/waitlist.sqlite`. That file has owner-only permissions and is kept apart from agent evidence.
+- **Vercel** (`api/waitlist.ts`, a Vercel Function): writes `HSETNX quoli:waitlist <email> <joined>` through the Upstash REST API. It uses `KV_REST_API_URL`/`KV_REST_API_TOKEN` from the Vercel Marketplace Upstash integration, or `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`. Without them it answers 503 "isn't open yet". It never fakes success.
+
+The form reports success only after the address is stored; otherwise it shows a retryable error.
+
+## Deploying (Vercel)
+
+- `vercel.json` builds with `QUOLI_BUILD=landing pnpm build`, which uses only the landing entry, serves `dist/` and redirects `/` to `/landing/`. The local app and the evidence server are never deployed.
+- No analytics are included, and no automatic email is sent.
+
+Before sending launch updates, the operator still needs to:
+- publish a contact address for removal requests;
+- connect an email provider with an unsubscribe link in every message.
+
+- Repository links (Docs, GitHub, Development) appear only when `VITE_PUBLIC_REPO_URL` is set at build time. While the repository is private they are hidden, so visitors never land on a GitHub 404.
+
+Never expose the private evidence server publicly.

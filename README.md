@@ -1,68 +1,123 @@
 # Quoli
 
-**See everything your coding agent did — on one map.**
+**One visual map of what your coding agents did.**
 
-Every tool call, every token, every file it read or changed, the branch it worked on, and the services that code runs in. One board, four lenses, one shared selection, and a timeline to replay the session.
+Coding agents such as Claude Code read files, run commands, edit code, spend tokens and commit to branches. Today that trail is scattered across terminal scrollback, Git diffs, cloud consoles and billing pages. Quoli records it as it happens and draws it on one board. You can see what the agent did, where in the code it happened, which branch and commits it produced, and which services run that code. You can also see what it cost and what deserves a review.
+
+Everything runs locally. Nothing leaves your machine.
+
+## What works today
+
+**Pages**
+- **Dashboard:** spend today, this week and this month, plus live sessions, sessions that need a review, recent sessions and projects.
+- **Sessions:** every recorded session across projects, with filters.
+- **Usage:** spend over time, by model and by project; how much prompt caching saved; the most expensive sessions; optional daily and monthly budgets.
+- **Projects and Settings:** connect repositories, edit model prices, set data retention and redaction, choose the theme.
+
+**One board per project, with five lenses on the same selection**
 
 | Lens | Answers |
 | --- | --- |
-| **Agents** | What did it do? Swimlanes for the agent and its subagents, every tool call in order, failures in red, tokens per lane. |
-| **Code** | Where did it happen? Your repo as a map; edited files glow orange, read files outlined blue. Click for the exact diff. |
-| **Git** | Which branch? Branches, recent commits, uncommitted changes, and the sessions that ran on each branch. |
-| **Infra** | Where does it run? Services read from your compose, Dockerfiles, Vercel/Fly/Railway/Terraform/CI config, with the ones the agent touched highlighted. |
+| **Summary** | What was asked, what changed, what ran, what it cost, and a checklist of things worth reviewing. |
+| **Agents** | What did the agent do? Every tool call in order, with full commands, results, subagents and failures. There is a step list and a lane graph. |
+| **Code** | Where did it happen? A change map: the files the session changed in the middle, the files they import on the left, the files that import them on the right. Click a file for its code and diff. |
+| **Git** | Which branch and commits? The local repository's history and branches, marked as pushed or local-only. Commits created during a session are tagged with it. |
+| **Infra** | Where does it run? Services declared in the repo's config files (Docker Compose, Vercel, Fly, Railway, Terraform and others), live CPU and memory for local Docker containers, and CI pipelines listed separately. You can also add any hosted service by hand. |
 
-## Quick start
+A replay bar steps through any session call by call, and every lens follows along.
 
-Requires Node 24 and pnpm 11.
+**Honest by design:** every fact is marked as recorded, derived or inferred. Unknown values stay empty, and costs are estimates at list prices, not invoices.
+
+**Supported agents:** Claude Code today. Codex and OpenCode adapters are next (roadmap phase 3).
+
+## Try it in two minutes
+
+Requires Node 24 (Node 22.13+ also works) and pnpm.
 
 ```sh
 pnpm install
-pnpm demo
+pnpm demo                 # synthetic demo project with three sessions
 ```
 
-Open http://127.0.0.1:4400. The demo builds a sample project with three recorded sessions.
+Open http://127.0.0.1:4400.
 
-## Use it with your own repo
+For a bigger example (about 2,400 files, 560+ commits, and a session with 500+ tool calls and subagents), run:
 
 ```sh
-pnpm connect /path/to/your/repo   # adds hooks to <repo>/.claude/settings.local.json
-pnpm dev                          # start Quoli
+QUOLI_HOME=/tmp/quoli-demo QUOLI_PORT=4471 pnpm demo -- --large
+```
+
+Then open http://127.0.0.1:4471. The demo data is fully synthetic and needs no API keys.
+
+## Use it with your own repository
+
+```sh
+pnpm connect /path/to/your/repo   # adds Quoli's hooks to <repo>/.claude/settings.local.json
+pnpm dev                          # start Quoli on http://127.0.0.1:4400
 cd /path/to/your/repo && claude   # sessions appear live
 ```
 
-`pnpm connect /path/to/your/repo --remove` takes the hooks out again. `pnpm start` runs a production build.
+You can also connect a repository from **Projects → Connect** in the app. `pnpm connect /path/to/your/repo --remove` removes the hooks again.
 
-## Keys
-
-`1`–`4` switch lenses · `⌘K` search everything · `Esc` clear selection · `←`/`→` on the timeline step through the session.
+Press `?` in the app for all keyboard shortcuts. The main ones:
+- `1`–`5` switch lenses;
+- `Ctrl/⌘ K` searches files, tool calls, sessions and pages;
+- `Esc` clears the selection;
+- `←`/`→` on the replay bar step through a session.
 
 ## Privacy
 
-Everything stays on your machine (`~/.quoli`, override with `QUOLI_HOME`). The server only listens on `127.0.0.1`. Prompts and tool input/output are stored locally so you can read them; common credential formats are redacted first.
+- All data stays on your machine, in `~/.quoli` (override with `QUOLI_HOME`). The server listens only on `127.0.0.1`.
+- Prompts and tool input and output are stored locally so you can read them. Common credential formats are redacted before anything is stored.
+- Quoli observes passively: it never blocks, steers or replays the agent.
 
-## Docs
+## Landing page
 
-- [Product vision](docs/vision.md) — the idea, the visual language, the roadmap
-- [MVP plan](docs/mvp.md) — what we are building next, as issue-ready increments
-- [Architecture](docs/architecture.md) — how it works, decisions, limitations
-- [Working agreements](AGENTS.md)
+The public website lives in `web/landing/` and `web/src/landing/`, separate from the app. It is an animated pixel page with an interactive, synthetic product example, plus Mission, Roadmap and Privacy pages and a waitlist form.
+
+To preview it locally:
+
+```sh
+QUOLI_HOME=/tmp/quoli-landing-preview QUOLI_PORT=4473 pnpm landing
+```
+
+Then open http://127.0.0.1:4473/landing/.
+
+### Deploying it to Vercel
+
+`vercel.json` is ready. Import the repository in Vercel and deploy. The build (`QUOLI_BUILD=landing pnpm build`) publishes **only** the landing page; the local app is never deployed. `/` redirects to `/landing/`.
+
+The waitlist form posts to a Vercel Function, `api/waitlist.ts`, which stores email addresses in Redis. To turn it on:
+1. In the Vercel project, open **Storage** (Marketplace) and add **Upstash for Redis**, connected to the project. It provides `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+2. Redeploy.
+
+Until a database is connected, the form says "The waitlist isn't open yet", and it never claims to have saved an address. Signups live in the Redis hash `quoli:waitlist` (email → joined time). You can read them in the Upstash console.
+
+The repository is private for now, so the site hides its Docs and GitHub links. If you make it public, set `VITE_PUBLIC_REPO_URL=https://github.com/ICEQ-JO/quoli` in the Vercel project and redeploy to show them.
+
+See [docs/landing.md](docs/landing.md) for the design, motion and launch notes.
 
 ## Development
 
 ```sh
-pnpm dev        # server + UI with hot reload
-pnpm test       # unit tests
+pnpm dev          # server + UI with hot reload
+pnpm test         # unit and API tests
 pnpm typecheck
 pnpm lint
+pnpm build        # app + landing
 ```
 
-## Landing page
+## Documentation
 
-The marketing page is a separate entry at /landing/; the local app remains at /.
-For an isolated preview, including an isolated email list:
+- [Product vision and roadmap](docs/vision.md)
+- [Architecture, decisions and limitations](docs/architecture.md)
+- [HTTP API](docs/api.md)
+- [App design system](DESIGN.md) and [landing design system](docs/landing-design.md)
+- [Working agreements for contributors and agents](AGENTS.md)
 
-    QUOLI_HOME=/tmp/quoli-landing-preview pnpm landing
+## Status
 
-Open http://127.0.0.1:4420/landing/. The four-lens example is synthetic, with no
-connection to captured sessions. Fonts are self-hosted; the original pixel scenery and recorder animate in code.
-See [the landing-page notes](docs/landing.md) for assets, email storage, and launch limits.
+Quoli is an early-stage project, built in the open. Phase 1 (the MVP) is largely built. Next on the roadmap:
+- **Phase 3:** more agents (Codex, OpenCode);
+- **Deeper observability:** per-step cost and time, failures and loops, cross-session trends, live alerts;
+- **Later phases:** symbol-level code maps, live hosting-provider data, and opt-in team sharing.

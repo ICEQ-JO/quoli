@@ -3,8 +3,12 @@ import { PixelScene, SESSION_STEPS } from "./PixelScene.tsx";
 import { Arrow, Brand, Mark, Moon } from "./ui.tsx";
 import { Waitlist } from "./Waitlist.tsx";
 
-const github = "https://github.com/ICEQ-JO/quoli";
-const docs = `${github}/blob/main/docs/`;
+/**
+ * Public repository link, set at build time with VITE_PUBLIC_REPO_URL. While the repository is
+ * private it stays unset, so the site never sends visitors to a GitHub 404.
+ */
+const github = (import.meta.env.VITE_PUBLIC_REPO_URL as string | undefined)?.replace(/\/+$/, "");
+const docs = github ? `${github}/blob/main/docs/` : null;
 const names = ["Agents", "Code", "Git", "Infra"] as const;
 const features = [
   [
@@ -140,7 +144,7 @@ function ProductBoard({ paused }: { paused: boolean }) {
     <div className="board-frame">
       <PixelScene kind="field" blue paused={paused} />
       <div className="product-board">
-        <aside className="board-sidebar">
+        <div className="board-sidebar">
           <span className="board-brand">
             <Mark small />
             Quoli
@@ -159,7 +163,7 @@ function ProductBoard({ paused }: { paused: boolean }) {
             <span />
             Local workspace
           </div>
-        </aside>
+        </div>
         <div className="board-main">
           <div className="board-top">
             <span>
@@ -264,7 +268,7 @@ function SiteFooter({ paused }: { paused: boolean }) {
           <p>Quoli connects coding-agent activity to the code, history, and systems it touches.</p>
           <a className="footer-status" href="/landing/?page=roadmap">
             <span />
-            Building in the open <Arrow diagonal />
+            {github ? "Building in the open" : "Follow the roadmap"} <Arrow diagonal />
           </a>
           <small>
             Claude Code locally today.
@@ -276,22 +280,29 @@ function SiteFooter({ paused }: { paused: boolean }) {
           <h3>Product</h3>
           <a href="/landing/#product">Four lenses</a>
           <a href="/landing/?page=roadmap">Roadmap</a>
-          <a href={`${docs}architecture.md`} target="_blank" rel="noreferrer">
+          <a
+            href={docs ? `${docs}architecture.md` : "/landing/#product"}
+            {...(docs ? { target: "_blank", rel: "noreferrer" } : {})}
+          >
             How it works
           </a>
           <a href="/landing/#waitlist">Early access</a>
         </div>
         <div className="footer-column">
           <h3>Resources</h3>
-          <a href={`${docs}vision.md`} target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-          <a href={github} target="_blank" rel="noreferrer">
-            GitHub <Arrow diagonal />
-          </a>
-          <a href={`${github}/issues`} target="_blank" rel="noreferrer">
-            Development
-          </a>
+          {github && (
+            <>
+              <a href={`${docs}vision.md`} target="_blank" rel="noreferrer">
+                Documentation
+              </a>
+              <a href={github} target="_blank" rel="noreferrer">
+                GitHub <Arrow diagonal />
+              </a>
+              <a href={`${github}/issues`} target="_blank" rel="noreferrer">
+                Development
+              </a>
+            </>
+          )}
           <a href="/landing/?page=privacy">Privacy</a>
         </div>
         <div className="footer-column">
@@ -377,16 +388,17 @@ function InformationPage({ page }: { page: string }) {
           </p>
           <h2>The waitlist</h2>
           <p>
-            Submitting the form saves your email and joined timestamp to a separate local database.
-            No automatic email is sent in this preview. We don't add analytics, tracking cookies, or
-            a third-party signup provider.
+            Submitting the form stores your email address and the time you joined, nothing else. On
+            the public website it is kept in the site's database (Redis hosted by Upstash through
+            Vercel); in a local preview it goes to a separate file on that computer. We use it only
+            for Quoli launch updates. No analytics, no tracking cookies, no advertising and no
+            mailing-list service.
           </p>
-          <h2>Before a public launch</h2>
+          <h2>Removing your address</h2>
           <p>
-            Public signup hosting, an email provider, opt-in delivery and a removal flow still need
-            to be connected. The local evidence server is not a public marketing backend. The
-            operator can remove an entry directly from its separate database; do not post an address
-            publicly.
+            Ask the Quoli team to remove it at any time and it is deleted from the list. No
+            automatic emails are sent yet; when launch updates start, each one will include a way to
+            stop them.
           </p>
         </>
       ) : (
@@ -499,9 +511,11 @@ export function Landing() {
           <Brand />
           <nav aria-label="Main navigation">
             <a href="/landing/?page=roadmap">Roadmap</a>
-            <a href={`${docs}vision.md`} target="_blank" rel="noreferrer">
-              Docs
-            </a>
+            {docs && (
+              <a href={`${docs}vision.md`} target="_blank" rel="noreferrer">
+                Docs
+              </a>
+            )}
             <a href="/landing/?page=mission">Mission</a>
             <a href="/landing/#product">Demo</a>
           </nav>

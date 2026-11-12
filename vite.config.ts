@@ -7,6 +7,13 @@ export default defineConfig({
   build: {
     outDir: "../dist",
     emptyOutDir: true,
-    rollupOptions: { input: { app: "web/index.html", landing: "web/landing/index.html" } },
+    // QUOLI_BUILD=landing builds only the public landing page (Vercel); the local app is never
+    // published there because it needs its private evidence server.
+    rollupOptions: {
+      input:
+        process.env.QUOLI_BUILD === "landing"
+          ? { landing: "web/landing/index.html" }
+          : { app: "web/index.html", landing: "web/landing/index.html" },
+    },
   },
 });
