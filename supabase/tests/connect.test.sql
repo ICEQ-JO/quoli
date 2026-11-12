@@ -1,11 +1,12 @@
 -- Connecting a computer (#154). Run with `supabase test db`.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(20);
 
-insert into auth.users (id, raw_user_meta_data) values
-  ('00000000-0000-0000-0000-0000000000a1', '{"user_name":"owner"}'),
-  ('00000000-0000-0000-0000-0000000000b1', '{"full_name":"Google Person"}');
+insert into auth.users (id, raw_user_meta_data, email) values
+  ('00000000-0000-0000-0000-0000000000a1', '{"user_name":"owner"}', 'owner@example.com'),
+  ('00000000-0000-0000-0000-0000000000b1', '{"full_name":"Google Person"}', 'g@example.com'),
+  ('00000000-0000-0000-0000-0000000000c1', '{}', 'student@example.com');
 
 create function pg_temp.act_as(u uuid) returns void language sql as $$
   select set_config('role', 'authenticated', true),
@@ -73,5 +74,10 @@ grant select on code to authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select is((public.join_class((select invite_code from code))).name, 'Team', 'joins');
 select is((select github_login from public.members), 'Google Person', 'shown by name');
+-- A member who signed in with only an email is shown by email.
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
+select is((public.join_class((select invite_code from code))).name, 'Team', 'joins with email only');
+select is((select github_login from public.members where user_id = auth.uid()), 'student@example.com',
+  'shown by email');
 select * from finish();
 rollback;

@@ -146,6 +146,9 @@ const login = (s: Session) =>
 function SignIn({ client, pending }: { client: SupabaseClient; pending: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [google, setGoogle] = useState(false);
+  const [email, setEmail] = useState("");
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
   useEffect(() => {
     // The Google button appears once Google sign-in is turned on in Supabase.
     fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: KEY } })
@@ -183,6 +186,49 @@ function SignIn({ client, pending }: { client: SupabaseClient; pending: string |
           </button>
         )}
       </div>
+      <form
+        className="class-email"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError(null);
+          setSending(true);
+          const address = email.trim();
+          const { error } = await client.auth.signInWithOtp({
+            email: address,
+            options: { emailRedirectTo: `${location.origin}/app/` },
+          });
+          setSending(false);
+          if (!error) return setSentTo(address);
+          setError(
+            error.status === 429
+              ? "Too many sign-in emails right now. Wait a minute and try again."
+              : `Could not send the email: ${error.message}`,
+          );
+        }}
+      >
+        <label htmlFor="email" className="sr-only">
+          Email address
+        </label>
+        <input
+          id="email"
+          className="input"
+          type="email"
+          autoComplete="email"
+          required
+          placeholder="Or your email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button type="submit" className="btn" disabled={sending || !email.trim()}>
+          {sending ? "Sending…" : "Email me a sign-in link"}
+        </button>
+      </form>
+      {sentTo && (
+        <p className="notice" role="status">
+          Check {sentTo} for a sign-in link from Quoli and open it in this browser. It can take a
+          minute; look in spam too.
+        </p>
+      )}
       <p className="faint">Free. Your account is created the first time you sign in.</p>
       {error && (
         <p className="form-error" role="alert">
