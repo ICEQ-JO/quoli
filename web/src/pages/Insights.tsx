@@ -187,7 +187,10 @@ export function InsightsPage() {
             <MixChart days={report.days} hover={hover} setHover={setHover} open={open} />
           </div>
           <div className="ins-grid lower">
-            <Durations report={report} />
+            <div className="ins-col">
+              <Durations report={report} />
+              <Extensions rows={report.extensions} />
+            </div>
             <div className="ins-col">
               <Groups title="By agent" id="i-agent" rows={report.byAgent} />
               <Groups title="By main model" id="i-model" rows={report.byModel} mono />
@@ -514,6 +517,61 @@ function Groups({
           ))}
         </tbody>
       </table>
+    </section>
+  );
+}
+
+const EXT_KIND = { mcp: "MCP", skill: "Skill", subagent: "Subagent" } as const;
+
+/** MCP servers, skills and subagent types across the sessions in range. */
+function Extensions({ rows }: { rows: InsightsReport["extensions"] }) {
+  return (
+    <section className="panel" aria-labelledby="i-ext">
+      <div className="sec-head">
+        <h2 id="i-ext">MCP servers, skills and subagents</h2>
+        <span className="faint">most called first</span>
+      </div>
+      {rows.length === 0 ? (
+        <p className="faint">
+          None called in this range. MCP servers are named for Claude Code and Codex sessions,
+          skills and subagent types for Claude Code.
+        </p>
+      ) : (
+        <table className="table ins-table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Kind</th>
+              <th scope="col" className="num">
+                Sessions
+              </th>
+              <th scope="col" className="num">
+                Calls
+              </th>
+              <th scope="col" className="num">
+                Failed
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((x) => (
+              <tr key={`${x.kind}:${x.plugin}:${x.name}`}>
+                <td
+                  className="mono ins-name"
+                  title={x.plugin ? `${x.name} (plugin ${x.plugin})` : x.name}
+                >
+                  {x.name}
+                  {x.plugin && <span className="faint"> · {x.plugin}</span>}
+                </td>
+                <td className="faint">{EXT_KIND[x.kind]}</td>
+                <td className="num mono">{x.sessions}</td>
+                <td className="num mono">{x.calls}</td>
+                <td className="num mono">{pct(x.failures, x.calls)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 }

@@ -181,6 +181,8 @@ type Step =
       fail?: boolean;
       agent?: string;
       secs?: number;
+      /** Claude Code's `mcp_server` field on MCP tool calls. */
+      mcp?: { name: string; source: string };
     }
   | { subagent: string; type: string; start: boolean };
 
@@ -294,6 +296,7 @@ function record(
       tool_input: step.input,
       tool_use_id: toolUseId,
       ...(agent ? { agent_id: agent, agent_type: "Explore" } : {}),
+      ...(step.mcp ? { mcp_server: step.mcp } : {}),
     };
     send({ hook_event_name: "PreToolUse", ...common });
     t += (step.secs ?? 2) * 1000;
@@ -404,6 +407,32 @@ export function seedDemo(store: Store) {
       { tool: "Read", input: { file_path: p("apps/api/src/routes/orders.ts") } },
       { tool: "Read", input: { file_path: p("apps/api/src/services/payments.ts") } },
       { tool: "Read", input: { file_path: p("apps/api/src/db/schema.sql") } },
+      {
+        tool: "Skill",
+        input: { skill: "api-conventions" },
+        output: "Loaded skill api-conventions",
+      },
+      {
+        tool: "mcp__stripe__search_documentation",
+        input: { query: "refund a payment intent" },
+        mcp: { name: "stripe", source: "user" },
+        fail: true,
+        output: "MCP error -32001: Request timed out",
+        secs: 30,
+      },
+      {
+        tool: "mcp__stripe__search_documentation",
+        input: { query: "refund a payment intent" },
+        mcp: { name: "stripe", source: "user" },
+        output: "stripe.refunds.create({ payment_intent }) refunds the full amount by default.",
+        secs: 3,
+      },
+      {
+        tool: "mcp__stripe__get_api_reference",
+        input: { object: "refund" },
+        mcp: { name: "stripe", source: "user" },
+        output: "Refund object: id, amount, payment_intent, status, reason…",
+      },
       {
         tool: "Task",
         input: {

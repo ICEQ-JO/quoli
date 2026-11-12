@@ -118,6 +118,21 @@ export interface ToolCall {
   files: string[];
   input: unknown;
   output: string | null;
+  /** The MCP server as Claude Code reports it (v2.1.274+); absent otherwise. */
+  mcpServer?: { name: string; source: string | null } | null;
+}
+
+/** An MCP server, skill or subagent type the session called (#135). Derived from tool calls. */
+export interface Extension {
+  kind: "mcp" | "skill" | "subagent";
+  name: string;
+  /** The plugin that provides it, when the agent says so; null otherwise. */
+  plugin: string | null;
+  calls: number;
+  failures: number;
+  /** MCP tools used on this server, in first-use order. */
+  tools: string[];
+  toolCallIds: string[];
 }
 
 export interface Turn {
@@ -430,6 +445,8 @@ export interface SessionReport {
   turns: TurnStat[];
   /** Possible loops and failure patterns, inferred by rule. */
   loops: LoopFinding[];
+  /** MCP servers, skills and subagent types the session called. */
+  extensions: Extension[];
   /** The longest finished tool calls, longest first (up to 5). */
   slowest: { toolCallId: string; ms: number }[];
   /** Cost per model; model null = usage without a model id. */
@@ -494,6 +511,10 @@ export interface InsightsReport {
   byModel: InsightsGroup[];
   /** Every model seen in the range, for the filter. */
   models: string[];
+  /** MCP servers, skills and subagent types across the sessions, most called first (max 20). */
+  extensions: (Pick<Extension, "kind" | "name" | "plugin" | "calls" | "failures"> & {
+    sessions: number;
+  })[];
 }
 
 /** GET /api/usage?days=N — spend and tokens over the last N days (1–365), all derived from usage rows. */
