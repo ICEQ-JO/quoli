@@ -444,6 +444,46 @@ test("sessions list spans projects and filters by project id", async () => {
   }
 });
 
+test("derived sessions are cached until the session changes or prices change", async () => {
+  const { store, call, close } = await start();
+  store0 = store;
+  const dir = repo();
+  try {
+    hook(dir, "c1", "SessionStart");
+    hook(dir, "c1", "UserPromptSubmit", { prompt: "first" });
+    const first = await call("GET", "/api/session?id=c1");
+    assert.equal(first.body.turns.length, 1);
+
+    // An unchanged session is served from the cache without reading its events again.
+    const events = store.events.bind(store);
+    let reads = 0;
+    store.events = (id: string) => {
+      reads++;
+      return events(id);
+    };
+    await call("GET", "/api/session?id=c1");
+    await call("GET", "/api/sessions");
+    assert.equal(reads, 0);
+
+    // A new event invalidates it.
+    hook(dir, "c1", "UserPromptSubmit", { prompt: "second" });
+    const second = await call("GET", "/api/session?id=c1");
+    assert.equal(second.body.turns.length, 2);
+    assert.equal(reads, 1);
+
+    // So does a price change, and deleting the session makes it a 404.
+    const prices = defaultPrices();
+    prices.version = "edited";
+    await call("PUT", "/api/prices", prices);
+    assert.equal((await call("GET", "/api/session?id=c1")).body.report.priceVersion, "edited");
+    store.deleteSessions(["c1"]);
+    assert.equal((await call("GET", "/api/session?id=c1")).status, 404);
+  } finally {
+    close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("services added by hand are saved per project, merged into the infra map and removable", async () => {
   const { call, close } = await start();
   const dir = repo();

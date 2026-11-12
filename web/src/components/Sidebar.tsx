@@ -10,12 +10,14 @@ interface Props {
   /** The board URL with this session selected (null clears the selection). */
   hrefFor: (id: string | null) => string;
   projectPath: string;
+  /** Sessions recorded for the project; the list holds only the newest ones. */
+  total?: number;
   /** Message of the latest failed load, and a way to try again. */
   error?: string | null;
   retry?: () => void;
 }
 
-export function Sidebar({ sessions, activeId, hrefFor, projectPath, error, retry }: Props) {
+export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error, retry }: Props) {
   return (
     <nav className="sidebar" aria-label="Agent sessions">
       <div className="side-head">
@@ -73,6 +75,12 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, error, retry
           </li>
         ))}
       </ul>
+      {sessions && total !== undefined && total > sessions.length && (
+        <p className="faint pad">
+          Showing the newest {sessions.length} of {total} sessions. Older ones are kept but not
+          listed here.
+        </p>
+      )}
     </nav>
   );
 }

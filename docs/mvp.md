@@ -1,6 +1,6 @@
 # MVP plan: from proof of concept to product
 
-Status: **planned**. Owner direction 2026-11-12: the rebuilt app proves the pipeline (real Claude Code sessions arrive live with prompts, tool calls and tokens) but feels like a proof of concept. There is no dashboard, no real navigation, no projects or settings, and the lenses break down on a real repository.
+Status: **delivered** (Increments 1–4 are on `main`). Owner direction 2026-11-12: the rebuilt app proves the pipeline (real Claude Code sessions arrive live with prompts, tool calls and tokens) but feels like a proof of concept. There is no dashboard, no real navigation, no projects or settings, and the lenses break down on a real repository.
 
 This page is the working backlog for the MVP. Each increment is tracked as a GitHub issue (work is tracked on GitHub only). Build them in order. Every increment must keep `pnpm demo`, `pnpm test`, `pnpm typecheck`, `pnpm lint` and `pnpm build` passing.
 
@@ -21,7 +21,7 @@ Found by the owner running Quoli on the Quoli repository itself:
 
 ## Increment 1: App shell, Home, Projects, Settings (M)
 
-Issue: #91 · Status: **done** (on branch `claude/stoic-bardeen-5zymlb`)
+Issue: #91 · Status: **done** (on `main`)
 
 Delivered: History-API routing (`/`, `/projects`, `/sessions`, `/settings`, `/projects/:id[/sessions/:sid]?lens=&sel=`), left navigation with a live indicator, Home, Projects (connect/disconnect/delete from the UI, hook status), Sessions (search, filters, paging), Settings (retention, redaction toggle and preview, install info, per-project delete), projects registry, mutation guard, retention, title and tooltip fixes. API contract: [api.md](api.md).
 
@@ -60,7 +60,7 @@ Decisions made during the build:
 
 ## Increment 2: Session Summary and cost (M)
 
-Issue: #92 · Status: **done** (on branch `claude/stoic-bardeen-5zymlb`)
+Issue: #92 · Status: **done** (on `main`)
 
 Delivered: session header with estimated cost; a Summary tab (first when a session is open) with what you asked, what changed (+/− lines from recorded edits), what it ran (test/build/lint/typecheck), what it cost (per model) and a derived review checklist; lens-specific inspector panels; cost on Home, the Sessions list and the sidebar; Settings → Prices (editable, resettable list-price table, prefix matching for dated model ids).
 
@@ -99,7 +99,7 @@ Deviations and limits:
 
 ## Increment 3: Lenses that work at real scale (M)
 
-Issue: #93 · Status: **done** (on branch `claude/stoic-bardeen-5zymlb`)
+Issue: #93 · Status: **done** (on `main`)
 
 Delivered, checked on `pnpm demo --large` (a generated monorepo: ~2,400 files, 560+ commits on six branches with merges, one recorded session):
 - **Code:** semantic zoom. Opens at folder level as heatmap tiles (edited / read share, file counts), drills in on click with a breadcrumb back out; untouched folders hidden by default with a "Show all folders" toggle; every file listed (up to 50,000 paths; line counts and imports read for up to 5,000 files ≤ 512 KB, the rest marked "not scanned"). `/api/code` ~55 ms on the large demo.
@@ -132,7 +132,7 @@ Limits: the Graph view of a large session is still dense (Timeline is the defaul
 
 ## Increment 4: Product polish (M)
 
-Issue: #94 · Status: **done** (on branch `claude/stoic-bardeen-5zymlb`)
+Issue: #94 · Status: **done** (on `main`)
 
 Delivered:
 - **Design tokens** for colour, type (11/12/13/15/18/24) and spacing; stray literal colours replaced in CSS and lens code.
