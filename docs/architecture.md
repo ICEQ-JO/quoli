@@ -41,6 +41,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 
 - **Events are the record.** Every hook payload is stored as received (after redaction), append-only. All views are derived from events at read time, so improving the derivation improves old sessions too.
 - **Tokens come from transcripts.** Claude Code hooks do not carry usage; each hook points at the session transcript, which records per-message usage. Messages repeat once per content block, so rows are keyed by message id and merged with `MAX`.
+- **Derived sessions are cached in memory** per session and reused until that session gets a new event or usage row, the price table changes, or it is deleted. `live` is recomputed on every read because it depends on the clock. The cache starts empty on each server start.
 - **Repository views are computed live** from the working tree (`git`, files on disk). They are not stored.
 - **Costs and the report are derived, not stored.** Cost is computed per read from usage rows and the current price table, so editing prices re-prices history. Costs are estimates at list prices (no discounts, taxes, batch or long-context tiers), not invoices. Usage without a model id, or with a model matching no price row, is excluded and reported as unpriced.
 

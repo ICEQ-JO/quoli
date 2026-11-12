@@ -37,6 +37,8 @@ export interface UsageRow {
 /** Append-only hook events plus deduplicated token usage read from transcripts. */
 export class Store {
   readonly db: DatabaseSync;
+  /** Bumped on every write to a session, so derived views can be cached until it changes. */
+  private readonly revisions = new Map<string, number>();
 
   constructor(file = join(home(), "quoli.db")) {
     if (file !== ":memory:") mkdirSync(join(file, ".."), { recursive: true });
@@ -82,7 +84,17 @@ export class Store {
     `);
   }
 
+  /** In-memory change counter for a session; only this process writes events and usage. */
+  revision(sessionId: string): number {
+    return this.revisions.get(sessionId) ?? 0;
+  }
+
+  private touch(sessionId: string) {
+    this.revisions.set(sessionId, this.revision(sessionId) + 1);
+  }
+
   append(e: Omit<RawEvent, "seq">) {
+    this.touch(e.sessionId);
     this.db
       .prepare("INSERT INTO events (session_id, root, event, at, payload) VALUES (?, ?, ?, ?, ?)")
       .run(e.sessionId, e.root, e.event, e.at, JSON.stringify(e.payload));
@@ -171,6 +183,7 @@ export class Store {
     this.db.exec("BEGIN");
     try {
       for (const id of ids) {
+        this.touch(id);
         events += Number(
           this.db.prepare("DELETE FROM events WHERE session_id = ?").run(id).changes,
         );
@@ -273,6 +286,7 @@ export class Store {
 
   /** Keeps the largest value per field: transcripts repeat a message once per content block. */
   upsertUsage(u: UsageRow) {
+    this.touch(u.sessionId);
     this.db
       .prepare(
         `INSERT INTO usage VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

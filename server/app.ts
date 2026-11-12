@@ -24,7 +24,7 @@ import {
   savePrices,
   validatePrices,
 } from "./prices.ts";
-import { deriveSession, summarizeSession } from "./sessions.ts";
+import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
 
 const version: string = JSON.parse(
   readFileSync(resolve(fileURLToPath(import.meta.url), "../../package.json"), "utf8"),
@@ -117,11 +117,29 @@ export function createApp(store: Store, port: () => number) {
       );
   }
 
+  // Derived sessions are reused until the session is written to or the price table changes.
+  // Without this, every hook event re-read and re-derived up to 500 sessions for Home.
+  const cache = new Map<
+    string,
+    { revision: number; prices: string; lastAt: string; detail: SessionDetail }
+  >();
+  const derive = (id: string, prices: PriceTable, pricesKey: string): SessionDetail | null => {
+    const revision = store.revision(id);
+    const hit = cache.get(id);
+    if (hit && hit.revision === revision && hit.prices === pricesKey) {
+      return { ...hit.detail, live: isLive(hit.detail.endedAt, hit.lastAt) };
+    }
+    const events = store.events(id);
+    const detail = deriveSession(events, store.usage(id), prices);
+    if (detail) {
+      cache.set(id, { revision, prices: pricesKey, lastAt: events.at(-1)?.at ?? "", detail });
+    } else cache.delete(id);
+    return detail;
+  };
   const details = (ids: string[]) => {
     const prices = loadPrices(store);
-    return ids
-      .map((id) => deriveSession(store.events(id), store.usage(id), prices))
-      .filter((d): d is SessionDetail => d !== null);
+    const key = JSON.stringify(prices);
+    return ids.map((id) => derive(id, prices, key)).filter((d): d is SessionDetail => d !== null);
   };
 
   function overview(): Overview {
@@ -220,7 +238,7 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/prices") return json(res, 200, loadPrices(store));
     if (path === "/api/session") {
       const id = url.searchParams.get("id") ?? "";
-      const detail = deriveSession(store.events(id), store.usage(id), loadPrices(store));
+      const [detail = null] = details([id]);
       return json(res, detail ? 200 : 404, detail);
     }
     if (path === "/api/sessions") {
