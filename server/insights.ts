@@ -171,5 +171,30 @@ export function insightsReport(
       .map(([k, ds]) => group(k, k || "No model reported", ds))
       .sort((a, b) => b.sessions - a.sessions),
     models,
+    extensions: extensionTotals(list),
   };
+}
+
+function extensionTotals(list: SessionDetail[]): InsightsReport["extensions"] {
+  const m = new Map<string, InsightsReport["extensions"][number]>();
+  for (const d of list) {
+    for (const e of d.report?.extensions ?? []) {
+      const key = `${e.kind}\0${e.plugin ?? ""}\0${e.name}`;
+      const x = m.get(key) ?? {
+        kind: e.kind,
+        name: e.name,
+        plugin: e.plugin,
+        sessions: 0,
+        calls: 0,
+        failures: 0,
+      };
+      x.sessions++;
+      x.calls += e.calls;
+      x.failures += e.failures;
+      m.set(key, x);
+    }
+  }
+  return [...m.values()]
+    .sort((a, b) => b.calls - a.calls || b.sessions - a.sessions || a.name.localeCompare(b.name))
+    .slice(0, 20);
 }

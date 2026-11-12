@@ -37,6 +37,8 @@ function Sec({
   );
 }
 
+const EXT_KIND = { mcp: "MCP", skill: "Skill", subagent: "Subagent" } as const;
+
 /** The session Summary: a readable page of what was asked, changed, run and spent. */
 export function Summary({ session, href }: { session: SessionDetail; href: Href }) {
   const { report } = session;
@@ -291,6 +293,50 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
                       <span className="faint">+{item.toolCallIds.length - 8} more</span>
                     )}
                   </p>
+                </li>
+              ))}
+            </ul>
+          </Sec>
+        )}
+
+        {report.extensions.length > 0 && (
+          <Sec
+            id="sum-ext"
+            title="MCP servers, skills and subagents"
+            aside={report.extensions.length}
+          >
+            <ul className="sum-ext">
+              {report.extensions.map((x) => (
+                <li key={`${x.kind}:${x.plugin}:${x.name}`}>
+                  <span className={`ext-kind ${x.kind}`}>{EXT_KIND[x.kind]}</span>
+                  <span className="ext-name">
+                    <b className="mono">{x.name}</b>
+                    {x.plugin && <span className="faint"> from plugin {x.plugin}</span>}
+                    {x.tools.length > 0 && (
+                      <span className="ext-tools mono faint" title={x.tools.join(", ")}>
+                        {x.tools.join(" · ")}
+                      </span>
+                    )}
+                  </span>
+                  <span className="ext-count num">
+                    {x.calls} {x.calls === 1 ? "call" : "calls"}
+                    {x.failures > 0 && <span className="fail"> · {x.failures} failed</span>}
+                  </span>
+                  <span className="refs">
+                    {x.toolCallIds.slice(0, 6).map((id, i) => (
+                      <Link
+                        key={id}
+                        to={href("agents", { kind: "tool", id })}
+                        className="ref"
+                        title={`Open tool call ${id} in the Agents lens`}
+                      >
+                        call {i + 1}
+                      </Link>
+                    ))}
+                    {x.toolCallIds.length > 6 && (
+                      <span className="faint">+{x.toolCallIds.length - 6}</span>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>

@@ -87,6 +87,7 @@ export function deriveSession(
           files: touched,
           input: p.tool_input ?? null,
           output: null,
+          mcpServer: mcpServerOf(p.mcp_server),
         };
         calls.set(id, call);
         turns.at(-1)?.toolCallIds.push(id);
@@ -189,6 +190,14 @@ export function deriveSession(
     files,
     usage: usagePoints,
   };
+}
+
+/** Claude Code's `mcp_server` hook field: { name, source }. */
+function mcpServerOf(v: unknown): ToolCall["mcpServer"] {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Record<string, unknown>;
+  const name = str(o.name);
+  return name ? { name, source: str(o.source) } : null;
 }
 
 /** First line of the first prompt with text, without Claude Code image placeholders like "[Image #4]". */

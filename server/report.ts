@@ -5,6 +5,7 @@ import type {
   SessionReport,
   ToolCall,
 } from "../shared/model.ts";
+import { sessionExtensions } from "./extensions.ts";
 import { slowestCalls } from "./steps.ts";
 
 const LARGE_DELETION = 40;
@@ -194,6 +195,7 @@ export function buildReport(
     checklist: checklist(calls, commands),
     turns,
     loops,
+    extensions: sessionExtensions(calls),
     slowest: slowestCalls(calls),
     costByModel,
     priceVersion,
