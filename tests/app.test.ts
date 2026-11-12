@@ -537,37 +537,28 @@ test("services added by hand are saved per project, merged into the infra map an
   }
 });
 
-test("the live stream names the session for every agent, including OpenCode's sessionID", async () => {
-  const store = new Store(":memory:");
-  let port = 0;
-  const app = createApp(store, () => port);
-  const server = createServer(async (req, res) => {
-    const url = new URL(req.url ?? "/", "http://127.0.0.1");
-    if (!(await app.api(req, res, url))) json(res, 404, {});
-  });
-  await new Promise<void>((ok) => server.listen(0, "127.0.0.1", ok));
-  port = (server.address() as AddressInfo).port;
+test("the change feed names the session for every agent, and a page that fell behind reloads", async () => {
+  const { call, close } = await start();
   const dir = repo();
-  const stop = new AbortController();
   try {
-    const stream = await fetch(`http://127.0.0.1:${port}/api/stream`, { signal: stop.signal });
-    const post = (agent: string, body: object) =>
-      fetch(`http://127.0.0.1:${port}/ingest?agent=${agent}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+    const first = await call("GET", "/api/changes");
+    assert.deepEqual(first.body, { seq: 0, changes: [] });
+    const post = (agent: string, body: object) => call("POST", `/ingest?agent=${agent}`, body);
     await post("opencode", { opencode_event: "session.start", sessionID: "ses_live", cwd: dir });
     await post("claude-code", { hook_event_name: "Stop", session_id: "cc_live", cwd: dir });
-    const reader = (stream.body as ReadableStream<Uint8Array>).getReader();
-    let text = "";
-    while (!text.includes("cc_live")) text += new TextDecoder().decode((await reader.read()).value);
-    const ids = [...text.matchAll(/"sessionId":"([^"]+)"/g)].map((m) => m[1]);
-    assert.deepEqual(ids, ["ses_live", "cc_live"]);
+    const { body } = await call("GET", "/api/changes?after=0");
+    const ids = body.changes.filter((c: { type: string }) => c.type === "event");
+    assert.deepEqual(
+      ids.map((c: { sessionId: string }) => c.sessionId),
+      ["ses_live", "cc_live"],
+    );
+    assert.deepEqual((await call("GET", `/api/changes?after=${body.seq}`)).body.changes, []);
+    // A page ahead of the server (it restarted) is told to reload everything.
+    assert.deepEqual((await call("GET", "/api/changes?after=999")).body.changes, [
+      { type: "projects" },
+    ]);
   } finally {
-    stop.abort();
-    server.closeAllConnections();
-    server.close();
+    close();
     rmSync(dir, { recursive: true, force: true });
   }
 });

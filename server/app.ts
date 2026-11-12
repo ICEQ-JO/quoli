@@ -103,9 +103,22 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
 
 /** The product's HTTP API. `port` is read per request so tests can listen on port 0. */
 export function createApp(store: Store, port: () => number) {
-  const listeners = new Set<ServerResponse>();
+  // Live updates: a numbered feed of recent changes that pages poll (GET /api/changes). Polling
+  // instead of a held connection: browsers allow six connections per address, so a stream per
+  // tab left a seventh tab, or a reload, waiting forever.
+  let seq = 0;
+  const recent: { seq: number; data: object }[] = [];
   const broadcast = (data: object) => {
-    for (const res of listeners) res.write(`data: ${JSON.stringify(data)}\n\n`);
+    recent.push({ seq: ++seq, data });
+    if (recent.length > 200) recent.shift();
+  };
+  /** Changes after `after`; a page that missed some (or a restarted server) reloads everything. */
+  const changesAfter = (after: number) => {
+    if (!Number.isInteger(after) || after < 0) return { seq, changes: [] };
+    if (after > seq || (recent.length && after < recent[0].seq - 1)) {
+      return { seq, changes: [{ type: "projects" }] };
+    }
+    return { seq, changes: recent.filter((c) => c.seq > after).map((c) => c.data) };
   };
 
   const hasRoot = (root: string) => store.hasRoot(root) || store.isRegistered(root);
@@ -255,16 +268,8 @@ export function createApp(store: Store, port: () => number) {
     }
 
     if (method !== "GET") return false;
-    if (path === "/api/stream") {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-store",
-        Connection: "keep-alive",
-      });
-      res.write(": connected\n\n");
-      listeners.add(res);
-      req.on("close", () => listeners.delete(res));
-      return true;
+    if (path === "/api/changes") {
+      return json(res, 200, changesAfter(Number(url.searchParams.get("after") ?? -1)));
     }
     if (path === "/api/projects") return json(res, 200, projects());
     if (path === "/api/setup") return json(res, 200, setupStatus());
