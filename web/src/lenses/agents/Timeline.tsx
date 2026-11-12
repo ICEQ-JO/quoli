@@ -97,6 +97,12 @@ export function Timeline({ session, visible, selection, cursorId, select, filter
     [session],
   );
   const sections = useMemo(() => buildSections(session, all), [session, all]);
+  const loopOf = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const f of session.report.loops ?? [])
+      for (const id of f.toolCallIds) if (!m.has(id)) m.set(id, f.text);
+    return m;
+  }, [session]);
   const mainId = session.agents.find((a) => a.kind === "main")?.id ?? "main";
   const shown = useMemo(() => {
     if (filter === "all") return sections;
@@ -162,6 +168,7 @@ export function Timeline({ session, visible, selection, cursorId, select, filter
       selected={selectedId === call.id}
       tabStop={tabId === call.id}
       future={!visible.has(call.id)}
+      loop={loopOf.get(call.id)}
       onToggle={toggleCall}
       select={stableSelect}
     />
@@ -282,6 +289,7 @@ const CallRow = memo(function CallRow({
   selected,
   tabStop,
   future,
+  loop,
   onToggle,
   select,
 }: {
@@ -290,6 +298,8 @@ const CallRow = memo(function CallRow({
   selected: boolean;
   tabStop: boolean;
   future: boolean;
+  /** The text of a loop finding that includes this call. */
+  loop?: string;
   onToggle: (id: string) => void;
   select: (s: Selection) => void;
 }) {
@@ -314,6 +324,11 @@ const CallRow = memo(function CallRow({
         </span>
         <span className={`ag-text ${call.files.length ? "" : "mono"}`}>{callText(call)}</span>
         <span className="ag-end">
+          {loop && (
+            <span className="ag-badge loop" title={`Possible loop (inferred): ${loop}`}>
+              Loop
+            </span>
+          )}
           {call.status === "failed" ? (
             <span className="ag-badge failed">Failed</span>
           ) : call.status === "running" ? (

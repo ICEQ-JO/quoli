@@ -18,7 +18,7 @@ Everything runs locally. Nothing leaves your machine.
 
 | Lens | Answers |
 | --- | --- |
-| **Summary** | What was asked, what changed, what ran, where the time and money went (per prompt, and the slowest calls), what it cost, and a checklist of things worth reviewing. |
+| **Summary** | What was asked, what changed, what ran, where the time and money went (per prompt, and the slowest calls), possible loops (a command failing again and again, a file edited over and over), what it cost, and a checklist of things worth reviewing. |
 | **Agents** | What did the agent do? Every tool call in order, with full commands, results, subagents and failures. There is a step list and a lane graph. |
 | **Code** | Where did it happen? A change map: the files the session changed in the middle, the files they import on the left, the files that import them on the right. Click a file for its code and diff. |
 | **Git** | Which branch and commits? The local repository's history and branches, marked as pushed or local-only. Commits created during a session are tagged with it. |

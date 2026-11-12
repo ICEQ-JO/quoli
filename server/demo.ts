@@ -566,6 +566,35 @@ export function seedDemo(store: Store) {
         output: "app/page.tsx:5:8 - error TS2304: Cannot find name 'Search'.",
         secs: 12,
       },
+      // A short synthetic loop: the same typecheck fails again before the real fix.
+      {
+        tool: "apply_patch",
+        input: {
+          input:
+            '*** Begin Patch\n*** Update File: apps/web/app/page.tsx\n@@\n-      <Search />\n+      <Search query="" />\n*** End Patch',
+        },
+      },
+      {
+        tool: "shell",
+        input: { command: ["bash", "-lc", "pnpm --filter storefront typecheck"] },
+        fail: true,
+        output: "app/page.tsx:5:8 - error TS2304: Cannot find name 'Search'.",
+        secs: 11,
+      },
+      {
+        tool: "apply_patch",
+        input: {
+          input:
+            '*** Begin Patch\n*** Update File: apps/web/app/page.tsx\n@@\n-      <Search query="" />\n+      <Search />\n*** End Patch',
+        },
+      },
+      {
+        tool: "shell",
+        input: { command: ["bash", "-lc", "pnpm --filter storefront typecheck"] },
+        fail: true,
+        output: "app/page.tsx:5:8 - error TS2304: Cannot find name 'Search'.",
+        secs: 12,
+      },
       {
         tool: "apply_patch",
         input: {

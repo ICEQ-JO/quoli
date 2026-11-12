@@ -15,6 +15,7 @@ import {
   zeroTokens,
 } from "../shared/model.ts";
 import { projectId, type RawEvent, type UsageRow } from "./db.ts";
+import { findLoops } from "./loops.ts";
 import { costOf } from "./prices.ts";
 import { buildReport } from "./report.ts";
 import { turnStats } from "./steps.ts";
@@ -144,6 +145,7 @@ export function deriveSession(
     usd: costOf([{ model, tokens: t }], prices).usd,
   }));
   const last = events.at(-1)?.at ?? first.at;
+  const loops = findLoops(toolCalls, turns);
   const usagePoints = usage.map((u) => ({
     at: u.at,
     agentId: u.agentId,
@@ -165,6 +167,7 @@ export function deriveSession(
     toolCount: toolCalls.length,
     filesTouched: Object.keys(files).length,
     failures: toolCalls.filter((c) => c.status === "failed").length,
+    loops: loops.length,
     trace: [...toolCalls]
       .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
       .slice(0, 400)
@@ -178,6 +181,7 @@ export function deriveSession(
       costByModel,
       prices.version,
       turnStats(turns, toolCalls, usagePoints, prices, last),
+      loops,
     ),
     agents: [...agents.values()],
     turns,

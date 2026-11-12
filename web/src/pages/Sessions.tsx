@@ -29,6 +29,7 @@ export function SessionsPage() {
   const [status, setStatus] = useState<"" | "live" | "ended">("");
   const [agent, setAgent] = useState<"" | AgentKind>("");
   const [failedOnly, setFailedOnly] = useState(false);
+  const [loopsOnly, setLoopsOnly] = useState(false);
   const [shown, setShown] = useState(PAGE);
   useNow();
   useLiveEvents(() => {
@@ -44,11 +45,12 @@ export function SessionsPage() {
         (!agent || s.agent === agent) &&
         (!status || s.live === (status === "live")) &&
         (!failedOnly || s.failures > 0) &&
+        (!loopsOnly || s.loops > 0) &&
         (!q || s.title.toLowerCase().includes(q) || (s.branch ?? "").toLowerCase().includes(q)),
     );
-  }, [sessions, query, project, status, agent, failedOnly]);
+  }, [sessions, query, project, status, agent, failedOnly, loopsOnly]);
 
-  const filtered = query || project || status || agent || failedOnly;
+  const filtered = query || project || status || agent || failedOnly || loopsOnly;
   // The server lists only the newest sessions; projects count all of them.
   const recorded = (projects ?? []).reduce((n, p) => n + p.sessions, 0);
   const reset = () => {
@@ -57,6 +59,7 @@ export function SessionsPage() {
     setStatus("");
     setAgent("");
     setFailedOnly(false);
+    setLoopsOnly(false);
   };
 
   return (
@@ -130,6 +133,14 @@ export function SessionsPage() {
             onChange={(e) => setFailedOnly(e.target.checked)}
           />
           Has failures
+        </label>
+        <label className="check" title="Sessions where a simple rule found a possible loop">
+          <input
+            type="checkbox"
+            checked={loopsOnly}
+            onChange={(e) => setLoopsOnly(e.target.checked)}
+          />
+          Possible loops
         </label>
         {sessions && (
           <span className="faint count" aria-live="polite">
@@ -242,6 +253,14 @@ function Row({ s, name }: { s: SessionSummary; name: string }) {
         <Link to={to} className="strong">
           {s.title}
         </Link>
+        {s.loops > 0 && (
+          <span
+            className="loop-tag"
+            title={`${s.loops} possible ${s.loops === 1 ? "loop" : "loops"} (inferred). Open the Summary for details.`}
+          >
+            loop
+          </span>
+        )}
       </td>
       <td className="ellip">
         <AgentTag session={s} always />

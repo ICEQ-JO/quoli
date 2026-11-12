@@ -254,6 +254,49 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
           </p>
         </Sec>
 
+        {report.loops.length > 0 && (
+          <Sec id="sum-loops" title="Possible loops" aside={report.loops.length}>
+            <p className="sum-note lead">
+              Inferred by simple rules: patterns worth a look, not proof the agent was stuck.
+            </p>
+            <ul className="sum-review">
+              {report.loops.map((item) => (
+                <li key={item.id}>
+                  <p>{item.text}</p>
+                  <p className="refs">
+                    <span className="faint" title="The rule that found this">
+                      Rule: {item.rule}.
+                    </span>
+                    {item.files.map((f) => (
+                      <Link
+                        key={f}
+                        to={href("code", { kind: "file", id: f })}
+                        className="ref mono"
+                        title={f}
+                      >
+                        {fileName(f)}
+                      </Link>
+                    ))}
+                    {item.toolCallIds.slice(0, 8).map((id, i) => (
+                      <Link
+                        key={id}
+                        to={href("agents", { kind: "tool", id })}
+                        className="ref"
+                        title={`Open tool call ${id} in the Agents lens`}
+                      >
+                        call {i + 1}
+                      </Link>
+                    ))}
+                    {item.toolCallIds.length > 8 && (
+                      <span className="faint">+{item.toolCallIds.length - 8} more</span>
+                    )}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </Sec>
+        )}
+
         <Sec id="sum-review" title="Review checklist" aside={report.checklist.length || undefined}>
           <p className="sum-note lead">
             Derived — prompts for your review, not proof anything works.

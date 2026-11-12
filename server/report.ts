@@ -185,6 +185,7 @@ export function buildReport(
   costByModel: SessionReport["costByModel"],
   priceVersion: string,
   turns: SessionReport["turns"] = [],
+  loops: SessionReport["loops"] = [],
 ): SessionReport {
   const commands = commandRuns(calls);
   return {
@@ -192,6 +193,7 @@ export function buildReport(
     commands,
     checklist: checklist(calls, commands),
     turns,
+    loops,
     slowest: slowestCalls(calls),
     costByModel,
     priceVersion,

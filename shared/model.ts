@@ -65,6 +65,8 @@ export interface SessionSummary {
   toolCount: number;
   filesTouched: number;
   failures: number;
+  /** How many loop findings the session has (report.loops), for lists and filters. */
+  loops: number;
   tokens: TokenTotals;
   models: string[];
   /** Estimated list-price cost of the reported usage (Increment 2). */
@@ -366,6 +368,17 @@ export interface CommandRun {
 }
 
 /** A derived review prompt. Never a claim that something works. */
+/** A possible loop or failure pattern (inferred by a stated rule; see server/loops.ts). */
+export interface LoopFinding {
+  id: string;
+  kind: "repeated-failure" | "edit-churn" | "error-streak" | "stall";
+  text: string;
+  /** The rule that fired, in words. */
+  rule: string;
+  toolCallIds: string[];
+  files: string[];
+}
+
 export interface ReviewItem {
   id: string;
   text: string;
@@ -396,6 +409,8 @@ export interface SessionReport {
   checklist: ReviewItem[];
   /** Per prompt: time, calls, failures, tokens and estimated cost. */
   turns: TurnStat[];
+  /** Possible loops and failure patterns, inferred by rule. */
+  loops: LoopFinding[];
   /** The longest finished tool calls, longest first (up to 5). */
   slowest: { toolCallId: string; ms: number }[];
   /** Cost per model; model null = usage without a model id. */
