@@ -7,6 +7,6 @@
  * (class page).
  */
 export const HOSTED_SUPABASE = {
-  url: "",
+  url: "https://fuyorcqpxsrndkioccra.supabase.co",
   publishableKey: "sb_publishable_7_PxtqdlUy0FSdklA3F2dA_W1uw5nb8",
 };
