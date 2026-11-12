@@ -99,7 +99,9 @@ reflow content rather than clipping it.
 Depth is local: the hero trace, terminal and screenshot use soft offset shadows.
 The page, text sections and footer stay flat. Borders distinguish controls and
 selected tabs. Pixel canvases render at low resolution without smoothing; the
-hero uses object-fit cover to preserve its pixel proportions.
+hero uses object-fit cover to preserve its pixel proportions and a short edge
+mask to merge scenery into the copy field. The chapter signal preserves a 3:1
+aspect ratio. Trace points and connector share one bordered row.
 
 ## Shapes
 
@@ -121,7 +123,8 @@ The same geometry appears in the favicon, header, recorder summary and signup.
   and a retry state. Each image opens at full size.
 - Recorder reels, lamps, paper and terminal stages share the existing synthetic
   session clock. Pause and replay work; offscreen/hidden canvases stop; reduced
-  motion reveals the complete terminal without continuous animation.
+  motion reveals the complete terminal without continuous animation and hides
+  playback controls. Browser theme-color follows the selected theme.
 - Mission, Roadmap and Privacy remain real query-addressed pages. Their footer
   navigation remains available on narrow screens.
 

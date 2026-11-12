@@ -302,6 +302,7 @@ main {
   min-width: 0;
 }
 .hero-art > canvas {
+  mask-image: linear-gradient(90deg, transparent, #000 56px);
   object-fit: cover;
   object-position: center top;
   position: absolute;
@@ -326,6 +327,14 @@ main {
   width: 24px;
   height: 24px;
 }
+.hero-trace-points {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid #88b5d0;
+  padding-top: 8px;
+}
 .hero-trace span {
   position: relative;
   font-size: 13px;
@@ -337,17 +346,9 @@ main {
   height: 5px;
   background: #477da8;
   left: 50%;
-  top: -10px;
+  top: -11px;
 }
-.hero-trace::before {
-  content: "";
-  position: absolute;
-  height: 1px;
-  background: #88b5d0;
-  left: 70px;
-  right: 30px;
-  top: 13px;
-}
+
 .lens-index {
   max-width: 1240px;
   margin: 0 auto;
@@ -654,7 +655,7 @@ main {
   padding: 0 32px;
 }
 .chapter-signal {
-  height: 95px;
+  aspect-ratio: 3 / 1;
   max-width: 400px;
   margin: 0 auto 24px;
 }
@@ -1114,7 +1115,7 @@ main {
   .nav-inner nav {
     gap: 18px;
   }
-  .nav-inner nav a:last-child {
+  .nav-inner nav .nav-docs {
     display: none;
   }
   .hero {
@@ -1139,10 +1140,6 @@ main {
   }
   .hero-trace .q-mark {
     display: none;
-  }
-  .hero-trace::before {
-    left: 25px;
-    right: 25px;
   }
   .recording-section {
     gap: 30px;
@@ -1215,6 +1212,9 @@ main {
   .hero-copy > small {
     max-width: none;
   }
+  .hero-art > canvas {
+    mask-image: linear-gradient(180deg, transparent, #000 36px);
+  }
   .hero-art {
     height: 260px;
     margin: 0;
@@ -1226,9 +1226,6 @@ main {
   }
   .hero-trace .q-mark {
     display: block;
-  }
-  .hero-trace::before {
-    left: 65px;
   }
   .lens-index {
     padding: 30px 24px 0;
@@ -1485,6 +1482,10 @@ main {
   #quoli-landing *::after {
     animation: none;
     transition: none;
+  }
+  .terminal-footer button,
+  .motion-control {
+    display: none;
   }
   .terminal-event.pending {
     display: block;

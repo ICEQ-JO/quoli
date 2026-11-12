@@ -482,6 +482,9 @@ export function Landing() {
   }, [page]);
   useEffect(() => {
     document.documentElement.dataset.mode = dark ? "dark" : "light";
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", dark ? "#101f30" : "#edf7fc");
     try {
       localStorage.setItem("quoli.landing.theme", dark ? "dark" : "light");
     } catch {
@@ -503,7 +506,7 @@ export function Landing() {
             <a href="/landing/?page=roadmap">Roadmap</a>
             <a href="/landing/?page=mission">Mission</a>
             {docs && (
-              <a href={`${docs}vision.md`} target="_blank" rel="noreferrer">
+              <a className="nav-docs" href={`${docs}vision.md`} target="_blank" rel="noreferrer">
                 Docs
               </a>
             )}
@@ -554,10 +557,12 @@ export function Landing() {
                 aria-label="One session connects agents, code, Git and infrastructure"
               >
                 <Mark />
-                <span>Agents</span>
-                <span>Code</span>
-                <span>Git</span>
-                <span>Infra</span>
+                <div className="hero-trace-points">
+                  <span>Agents</span>
+                  <span>Code</span>
+                  <span>Git</span>
+                  <span>Infra</span>
+                </div>
               </div>
             </div>
           </section>
