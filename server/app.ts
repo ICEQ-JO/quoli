@@ -19,6 +19,7 @@ import { commitDetail, gitState, parseLimit } from "./gitstate.ts";
 import { infraMap } from "./infra.ts";
 import { git, ingest, redact } from "./ingest.ts";
 import { insightsReport } from "./insights.ts";
+import { saveLinkedKey, startLink, waitForLink } from "./link.ts";
 import { liveStatusOf, updateLivePrices } from "./liveprices.ts";
 import { addManual, loadManual, mergeManual, saveManual, validateManual } from "./manual.ts";
 import {
@@ -33,7 +34,7 @@ import {
 import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
 import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
 import { liveSession } from "./steps.ts";
-import { loadSync, saveSync, syncOnce, syncStatus } from "./sync.ts";
+import { HOSTED, loadSync, saveSync, syncOnce, syncStatus } from "./sync.ts";
 import { usageReport } from "./usage.ts";
 
 const version: string = JSON.parse(
@@ -271,7 +272,7 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
     if (path === "/api/prices") return json(res, 200, loadPrices(store));
-    if (path === "/api/sync") return json(res, 200, syncStatus(loadSync(store)));
+    if (path === "/api/sync") return json(res, 200, syncState());
     if (path === "/api/prices/live") {
       return json(res, 200, liveStatusOf(store.settings().livePrices));
     }
@@ -415,7 +416,34 @@ export function createApp(store: Store, port: () => number) {
       if (!c.key) c.enabled = false;
       saveSync(store, c);
       if (c.enabled) void sync();
-      return json(res, 200, syncStatus(loadSync(store)));
+      return json(res, 200, syncState());
+    }
+    if (method === "POST" && path === "/api/sync/connect") {
+      // Settings → Team sync → Connect: the same browser approval as `quoli connect` (#154).
+      if (!HOSTED.url || !HOSTED.anonKey) throw new BadRequest("No account service to connect to");
+      let link: Awaited<ReturnType<typeof startLink>>;
+      try {
+        link = await startLink(HOSTED);
+      } catch (error) {
+        throw new BadRequest(error instanceof Error ? error.message : String(error));
+      }
+      const mine = { pair: link.pair, url: link.url, error: null as string | null };
+      linking = mine;
+      waitForLink(HOSTED, link, { isCancelled: () => linking !== mine }).then(
+        (key) => {
+          saveLinkedKey(store, key);
+          if (linking === mine) linking = null;
+          void sync();
+        },
+        (error) => {
+          if (linking === mine) mine.error = error instanceof Error ? error.message : String(error);
+        },
+      );
+      return json(res, 200, syncState());
+    }
+    if (method === "DELETE" && path === "/api/sync/connect") {
+      linking = null;
+      return json(res, 200, syncState());
     }
     if (method === "POST" && path === "/api/setup") {
       const { agents, remove } = await payload();
@@ -526,7 +554,11 @@ export function createApp(store: Store, port: () => number) {
     return json(res, 404, { error: "Not found" });
   }
 
-  /** One class-sync pass (summaries only); main.ts runs it every minute. */
+  /** A browser approval in progress from Settings → Team sync → Connect. */
+  let linking: { pair: string; url: string; error: string | null } | null = null;
+  const syncState = () => ({ ...syncStatus(loadSync(store)), linking });
+
+  /** One team-sync pass (summaries only); main.ts runs it every minute. */
   let syncing = false;
   async function sync(options?: Parameters<typeof syncOnce>[2]) {
     const c = loadSync(store);

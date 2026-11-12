@@ -54,11 +54,11 @@ Then open http://127.0.0.1:4471. The demo data is fully synthetic and needs no A
 ## Install
 
 ```sh
-npx https://iceq.best/quoli-0.2.1.tgz setup   # once: records every repository for the agents on this machine
-npx https://iceq.best/quoli-0.2.1.tgz         # open http://127.0.0.1:4400
+npx https://iceq.best/quoli-0.2.2.tgz connect   # once: set up the agents, link your Quoli account, start
+npx https://iceq.best/quoli-0.2.2.tgz           # later: open http://127.0.0.1:4400
 ```
 
-Needs Node.js 22.13 or newer. The package is served from the website for now; it will also be on npm as `@iceq/quoli` (the plain name `quoli` was refused as too close to `quill`). It contains only the built app (`pnpm pack:release` makes it in `release/`; see [docs/architecture.md](docs/architecture.md)). From a clone of this repository, use the `pnpm` commands below instead.
+`connect` opens your browser to sign in at [iceq.best/app](https://iceq.best/app/) and approve the code it shows; your prompts and code stay on your machine, and only session summaries reach your account. `setup` instead of `connect` records sessions without any account. Needs Node.js 22.13 or newer. The package is served from the website for now; it will also be on npm as `@iceq/quoli` (the plain name `quoli` was refused as too close to `quill`). It contains only the built app (`pnpm pack:release` makes it in `release/`; see [docs/architecture.md](docs/architecture.md)). From a clone of this repository, use the `pnpm` commands below instead.
 
 ## Use it with your own repositories
 

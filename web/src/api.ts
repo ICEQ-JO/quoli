@@ -72,6 +72,8 @@ export const api = {
   sync: () => get<SyncStatus>("/api/sync"),
   saveSync: (patch: { key?: string; enabled?: boolean }) =>
     send<SyncStatus>("PUT", "/api/sync", patch),
+  connectSync: () => send<SyncStatus>("POST", "/api/sync/connect", {}),
+  cancelConnect: () => send<SyncStatus>("DELETE", "/api/sync/connect", {}),
   usage: (days: number, agent?: AgentKind) =>
     get<UsageReport>(`/api/usage?days=${days}${agent ? `&agent=${agent}` : ""}`),
   insights: (days: number, f: { project?: string; agent?: string; model?: string }) => {

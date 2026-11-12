@@ -3,6 +3,7 @@
  * The `quoli` command of the published package (npm: quoli). Bundled by scripts/pack.mjs.
  *   quoli               start Quoli on http://127.0.0.1:4400 (QUOLI_PORT or --port to change)
  *   quoli demo          start with the synthetic demo project
+ *   quoli connect       setup + link this computer to a Quoli account (see link.ts) + start
  *   quoli setup [...]   record every repository for the agents on this machine (see setup.ts)
  *   quoli --version
  */
@@ -13,7 +14,13 @@ if (portAt > 0) process.env.QUOLI_PORT = process.argv[portAt + 1];
 const VERSION = process.env.QUOLI_VERSION ?? "dev";
 const Q = `npx https://iceq.best/quoli-${VERSION}.tgz`;
 
-if (cmd === "setup") {
+if (cmd === "connect") {
+  const { connectCli } = await import("./link.ts");
+  const next = await connectCli(rest);
+  if (next !== "start") process.exit(next);
+  process.env.NODE_ENV = "production";
+  await import("./main.ts");
+} else if (cmd === "setup") {
   const { setupCli } = await import("./setup.ts");
   process.exit(setupCli(rest));
 } else if (cmd === "--version" || cmd === "-v") {
@@ -21,6 +28,7 @@ if (cmd === "setup") {
 } else if (cmd === "--help" || cmd === "-h" || cmd === "help") {
   console.log(`Quoli ${VERSION}: one map of what your coding agents did.
 
+  ${Q} connect       set up, link this computer to your Quoli account, and start
   ${Q}               start Quoli on http://127.0.0.1:4400
   ${Q} setup         record every repository for Claude Code, Codex, OpenCode and Pi
   ${Q} setup --remove
