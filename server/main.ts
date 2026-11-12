@@ -5,8 +5,10 @@ import { fileURLToPath } from "node:url";
 import { applyRetention, createApp, json } from "./app.ts";
 import { refreshHooks } from "./connect.ts";
 import { Store } from "./db.ts";
+import { waitlistRequest } from "./waitlist.ts";
 
-const PORT = Number(process.env.QUOLI_PORT ?? 4400);
+const landing = process.argv.includes("--landing");
+const PORT = Number(process.env.QUOLI_PORT ?? (landing ? 4420 : 4400));
 const HOST = "127.0.0.1";
 const appRoot = resolve(fileURLToPath(import.meta.url), "../..");
 const production = process.env.NODE_ENV === "production";
@@ -34,6 +36,9 @@ const MIME: Record<string, string> = {
   ".js": "text/javascript",
   ".css": "text/css",
   ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".ttf": "font/ttf",
   ".woff2": "font/woff2",
 };
 
@@ -49,6 +54,7 @@ const server = createServer(async (req, res) => {
   if (!guard(req)) return json(res, 403, { error: "Loopback only" });
   const url = new URL(req.url ?? "/", `http://${HOST}`);
   try {
+    if (url.pathname === "/api/waitlist") return await waitlistRequest(req, res);
     if (await app.api(req, res, url)) return;
   } catch (error) {
     return json(res, 500, { error: String(error) });
@@ -56,7 +62,11 @@ const server = createServer(async (req, res) => {
   if (vite) return vite.middlewares(req, res);
   const dist = join(appRoot, "dist");
   const file = normalize(join(dist, url.pathname));
-  const target = file.startsWith(dist) && extname(file) ? file : join(dist, "index.html");
+  const target = /^\/landing\/?$/.test(url.pathname)
+    ? join(dist, "landing/index.html")
+    : file.startsWith(dist) && extname(file)
+      ? file
+      : join(dist, "index.html");
   try {
     res.writeHead(200, { "Content-Type": MIME[extname(target)] ?? "application/octet-stream" });
     res.end(readFileSync(target));
@@ -77,8 +87,8 @@ for (const root of refreshHooks(roots))
 setInterval(() => applyRetention(store), 3_600_000).unref();
 
 server.listen(PORT, HOST, () => {
-  console.log(`\n  Quoli → http://${HOST}:${PORT}\n`);
-  if (!store.roots().length) {
+  console.log(`\n  Quoli → http://${HOST}:${PORT}${landing ? "/landing/" : ""}\n`);
+  if (!landing && !store.roots().length) {
     console.log(
       "  No sessions yet. Run `pnpm connect /path/to/repo`, or `pnpm demo` to explore sample data.\n",
     );

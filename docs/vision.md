@@ -104,3 +104,14 @@ Each phase is something a developer can use on its own.
 2. **Symbol-level map** — invest in a real call graph (compiler/tree-sitter, full-depth) or stay file-level with smarter grouping?
 3. **Which second agent** matters most to you: Codex, OpenCode or Pi?
 4. **Infra providers** — which one do you deploy to today? That decides Phase 4's first integration. Until then any provider can be added by hand on the Infra board (#114), without a connection.
+
+## Landing presentation
+
+Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) presents Quoli's
+connected record through original animated pixel scenery, a physical session
+recorder and an interactive product example. Owner correction 2026-11-12:
+replace the rejected game-like city and follow the reference site's actual page structure
+and animated pixel material. Speak to coding-agent users and engineering teams,
+while separating current Claude Code/local support from planned adapters,
+shared sessions and hosted sync. The marketing page is isolated from the app;
+its demonstrations are synthetic, never evidence of a real captured session.

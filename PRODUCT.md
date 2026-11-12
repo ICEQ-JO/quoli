@@ -41,3 +41,20 @@ Real local sessions recorded from Claude Code; the synthetic demo (`pnpm demo`, 
 
 ## Accessibility & Inclusion
 WCAG AA contrast in dark and light themes (enforced by `tests/theme-contrast.test.ts`), full keyboard operation, screen-reader labels on canvas nodes, no horizontal scroll at 1280 px.
+
+## Landing page (marketing surface)
+Quoli. Owner requests a complete landing-page replacement inspired by the reference site's full pixel-art theme: scenery, characters, typography and motion. Original Quoli art and storytelling. On 2026-11-12 the owner delegated creative decisions and implementation. Main conversion is Join the waitlist; no pricing, testimonials or availability claims may be invented.
+
+## Evidence on Hand
+`docs/vision.md`, `docs/mvp.md`, `docs/architecture.md`; synthetic sessions in `server/demo.ts`. No approved customer testimonials, usage benchmarks, or waitlist provider supplied.
+
+## Product Principles
+- Local by default; cloud only through explicit opt-in.
+- Glanceable first, precise evidence on demand.
+- Observe passively; never replay captured commands.
+- Label unknowns, derivations and synthetic demonstrations honestly.
+
+## Owner correction — 2026-11-12
+The owner rejected the first pixel-city implementation as game-like and unlike the reference site. Replace it completely. The reference site is the direct structural and material reference: compact equal hero panels, dotted white page, vivid green/blue pixel surfaces, original animated figures that perform their mechanism, terminal demonstration, product display and full website footer. No city, robot mascot, game world or generic stacked landing sections. Existing audience, waitlist goal and product facts stand.
+
+The landing design system lives in `docs/landing-design.md`; `DESIGN.md` is the app.

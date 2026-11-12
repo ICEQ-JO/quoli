@@ -79,3 +79,15 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - The Git lens reads the local repository only. Remote branches are what the last `git fetch` saw, and commits that exist only on a remote are not drawn (the history follows local branches). A commit is tagged with a session only when that session's recorded `git commit` output printed its sha; `git commit -q` prints nothing, so such commits stay untagged.
 - Themes: dark and light (System follows the OS). Contrast is enforced by `tests/theme-contrast.test.ts`; accessibility was checked with axe-core (0 violations on every page in both themes on the synthetic large demo at 1280 and 1600 px) and keyboard walkthroughs, not a real screen reader. `prefers-reduced-motion` turns motion off. The design system is recorded in DESIGN.md.
 - Cost and the Summary report are heuristics: commands are classified from their text, line counts come from recorded Edit/MultiEdit/Write inputs (a Write's removed lines are unknown), failed edits are ignored, and only edits inside the project root are counted. Edits made through Bash (sed, formatters, generators) are not seen. The checklist lists things worth a look and never says the work is correct.
+
+## Marketing surface
+
+Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) adds a separate Vite
+entry at /landing/ with original pixel artwork and a synthetic four-lens
+explorer. The main application still loads at / with its existing theme.
+The page reads no captured evidence. Its explicit email submission goes to a
+same-origin, size-limited handler, stored separately in waitlist.sqlite;
+it sends no email. This is a loopback preview. Public marketing hosting and
+delivery require a separate acquisition service, never exposing the private
+evidence APIs. See [landing.md](landing.md).
+\nThe owner-directed replacement uses original procedural Canvas scenery and a\nphysical recorder rather than generated city artwork. The scene model drives\nrecorder transport and progressive terminal from one clock. Informational\nmarketing views use query navigation within the isolated landing entry.\n
