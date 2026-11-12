@@ -5,9 +5,10 @@ import { AGENT_NAMES, type AgentKind } from "../../../shared/model.ts";
 import { ago, compact, usd } from "../format.ts";
 
 /**
- * Quoli Classes (#144), hosted on Vercel next to the landing page. Instructors create a class and
- * see their students' session summaries; students join with an invite code and make the sync key
- * their local Quoli uses. Everything goes through Supabase with the public key and row-level
+ * The Quoli account page at /app/ (#144, #151), hosted on Vercel next to the landing page. Anyone
+ * signs in with GitHub; owners create a team (a class is one kind) and see their members' session
+ * summaries; members join with an invite code and make the sync key their local Quoli uses. The
+ * database keeps its first names (`classes`, `join_class`): a team is a row in `classes`. Everything goes through Supabase with the public key and row-level
  * security (supabase/migrations): this page holds no secret and sees only what the signed-in
  * user may see.
  */
@@ -75,7 +76,7 @@ export function ClassApp() {
       <header className="class-top">
         <a className="class-brand" href="/landing/">
           <span className="class-logo" aria-hidden="true" />
-          Quoli <span className="faint">Classes</span>
+          Quoli
         </a>
         {session && client && (
           <div className="class-user">
@@ -88,7 +89,7 @@ export function ClassApp() {
       </header>
       <main className="page class-page">
         {!client ? (
-          <p className="notice">The class service is not configured for this site yet.</p>
+          <p className="notice">Quoli accounts are not set up for this site yet.</p>
         ) : !ready ? null : session ? (
           <SignedIn client={client} session={session} />
         ) : (
@@ -106,10 +107,11 @@ function SignIn({ client }: { client: SupabaseClient }) {
   const [error, setError] = useState<string | null>(null);
   return (
     <section className="class-hero">
-      <h1>See how your class uses coding agents</h1>
+      <h1>See how your team uses coding agents</h1>
       <p>
-        Students share a summary of each session from Quoli on their own machine: which agent and
-        model, how long, what it cost, how many calls failed or looped. Never their prompts or code.
+        Quoli runs on each person's own machine. In a team (a class, a company, a group of friends)
+        members can share a summary of each session: which agent and model, how long, what it cost,
+        how many calls failed or looped. Never their prompts or code.
       </p>
       <button
         type="button"
@@ -155,7 +157,7 @@ function SignedIn({ client, session }: { client: SupabaseClient; session: Sessio
           {error}
         </p>
       )}
-      {/* Someone who teaches sees their classes first; everyone else starts with joining. */}
+      {/* Someone who owns a team sees it first; everyone else starts with joining. */}
       {teaching.length > 0 && <Teaching client={client} classes={teaching} onChange={load} />}
       <div className="class-grid">
         <Joined client={client} me={me} classes={joined} onChange={load} />
@@ -166,7 +168,7 @@ function SignedIn({ client, session }: { client: SupabaseClient; session: Sessio
   );
 }
 
-/* ---------- Instructor ---------- */
+/* ---------- Team owner ---------- */
 
 function Teaching({
   client,
@@ -184,7 +186,7 @@ function Teaching({
   return (
     <section className="card" aria-labelledby="teach-h">
       <div className="class-head">
-        <h2 id="teach-h">Classes you teach</h2>
+        <h2 id="teach-h">Teams you own</h2>
         <form
           className="field-row"
           onSubmit={async (e) => {
@@ -202,18 +204,18 @@ function Teaching({
           }}
         >
           <label htmlFor="class-name" className="sr-only">
-            New class name
+            New team name
           </label>
           <input
             id="class-name"
             className="input"
-            placeholder="New class, e.g. CS 101 · Fall"
+            placeholder="New team, e.g. CS 101 · Fall or Acme backend"
             maxLength={100}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <button type="submit" className="btn" disabled={!name.trim()}>
-            Create class
+            Create team
           </button>
         </form>
       </div>
@@ -224,13 +226,13 @@ function Teaching({
       )}
       {!classes.length ? (
         <p className="faint">
-          Create a class to get an invite code for your students. You will see their sessions here
-          once they turn on Class sync in Quoli.
+          Create a team to get an invite code. You will see members' sessions here once they turn on
+          Team sync in Quoli.
         </p>
       ) : (
         <>
           {classes.length > 1 && (
-            <div className="class-tabs" role="tablist" aria-label="Your classes">
+            <div className="class-tabs" role="tablist" aria-label="Your teams">
               {classes.map((c) => (
                 <button
                   key={c.id}
@@ -303,7 +305,7 @@ function ClassView({
   }, [load]);
 
   const students: StudentRow[] = (members ?? []).map((m) => {
-    // A student's sessions from before they joined this class are not this class's.
+    // A member's sessions from before they joined this team are not this team's.
     const mine = rows.filter((r) => r.user_id === m.user_id && r.started_at >= m.joined_at);
     return {
       m,
@@ -317,7 +319,7 @@ function ClassView({
       agents: new Set(mine.map((r) => r.agent)),
     };
   });
-  const byUser = new Map((members ?? []).map((m) => [m.user_id, m.github_login ?? "student"]));
+  const byUser = new Map((members ?? []).map((m) => [m.user_id, m.github_login ?? "member"]));
   const total = students.reduce((n, s) => n + s.usd, 0);
   const sessions = students.reduce((n, s) => n + s.sessions, 0);
   const activeWeek = students.filter(
@@ -331,19 +333,20 @@ function ClassView({
         <code>{c.invite_code}</code>
         <CopyButton text={c.invite_code} />
         <span className="faint">
-          Students join at <code>{location.host}/class/</code> with this code.
+          Members join at <code>{location.host}/app/</code> with this code.
         </span>
         <button
           type="button"
           className="btn danger class-delete"
           onClick={async () => {
-            if (!confirm(`Delete ${c.name}? Students stay; their summaries stay theirs.`)) return;
+            if (!confirm(`Delete ${c.name}? Members keep their accounts and their own summaries.`))
+              return;
             const { error } = await client.from("classes").delete().eq("id", c.id);
             if (error) setError(error.message);
             else onChange();
           }}
         >
-          Delete class
+          Delete team
         </button>
       </div>
       {error && (
@@ -353,7 +356,7 @@ function ClassView({
       )}
       <dl className="class-stats">
         <div>
-          <dt>Students</dt>
+          <dt>Members</dt>
           <dd>{members?.length ?? "…"}</dd>
         </div>
         <div>
@@ -370,14 +373,14 @@ function ClassView({
         </div>
       </dl>
       {members && !members.length ? (
-        <p className="faint">No students yet. Share the invite code above.</p>
+        <p className="faint">No members yet. Share the invite code above.</p>
       ) : (
         <div className="table-wrap">
           <table className="table class-table">
-            <caption className="sr-only">Students and their sessions</caption>
+            <caption className="sr-only">Members and their sessions</caption>
             <thead>
               <tr>
-                <th scope="col">Student</th>
+                <th scope="col">Member</th>
                 <th scope="col">Agents</th>
                 <th scope="col" className="num">
                   Sessions
@@ -415,7 +418,7 @@ function ClassView({
                           {s.m.github_login}
                         </a>
                       ) : (
-                        "student"
+                        "member"
                       )}
                     </td>
                     <td className="faint">
@@ -442,7 +445,7 @@ function ClassView({
                         className="btn"
                         onClick={async () => {
                           if (
-                            !confirm(`Remove ${s.m.github_login ?? "this student"} from ${c.name}?`)
+                            !confirm(`Remove ${s.m.github_login ?? "this member"} from ${c.name}?`)
                           )
                             return;
                           const { error } = await client
@@ -470,7 +473,7 @@ function ClassView({
             <table className="table class-table">
               <thead>
                 <tr>
-                  <th scope="col">Student</th>
+                  <th scope="col">Member</th>
                   <th scope="col">Agent · model</th>
                   <th scope="col">Repository</th>
                   <th scope="col">Started</th>
@@ -530,7 +533,7 @@ function ClassView({
   );
 }
 
-/* ---------- Student ---------- */
+/* ---------- Member ---------- */
 
 function Joined({
   client,
@@ -548,7 +551,7 @@ function Joined({
   const [notice, setNotice] = useState<string | null>(null);
   return (
     <section className="card" aria-labelledby="join-h">
-      <h2 id="join-h">Classes you joined</h2>
+      <h2 id="join-h">Teams you joined</h2>
       <form
         className="field-row"
         onSubmit={async (e) => {
@@ -556,7 +559,12 @@ function Joined({
           setError(null);
           setNotice(null);
           const { data, error } = await client.rpc("join_class", { p_code: code.trim() });
-          if (error) return setError(error.message);
+          if (error)
+            return setError(
+              error.code === "P0002"
+                ? "No team has that invite code. Check it with the team owner."
+                : error.message,
+            );
           setCode("");
           setNotice(`Joined ${(data as ClassRow).name}. Next: create your sync key.`);
           onChange();
@@ -568,7 +576,7 @@ function Joined({
         <input
           id="join-code"
           className="input mono"
-          placeholder="Invite code from your instructor"
+          placeholder="Invite code from the team owner"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           autoComplete="off"
@@ -597,9 +605,7 @@ function Joined({
                 type="button"
                 className="btn"
                 onClick={async () => {
-                  if (
-                    !confirm(`Leave ${c.name}? Your instructor will no longer see your sessions.`)
-                  )
+                  if (!confirm(`Leave ${c.name}? The team owner will no longer see your sessions.`))
                     return;
                   const { error } = await client
                     .from("members")
@@ -639,8 +645,8 @@ function SyncKey({ client, me }: { client: SupabaseClient; me: string }) {
     <section className="card" aria-labelledby="key-h">
       <h2 id="key-h">Your sync key</h2>
       <p className="faint">
-        Paste it into Quoli on your computer: Settings → Class sync. Then turn on “Send session
-        summaries to my class”.
+        Paste it into Quoli on your computer: Settings → Team sync. Then turn on “Send session
+        summaries to my teams”.
       </p>
       {key ? (
         <div className="class-key">

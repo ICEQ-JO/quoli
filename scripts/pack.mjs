@@ -90,8 +90,8 @@ npx https://iceq.best/quoli-${pkg.version}.tgz         # open http://127.0.0.1:4
 
 - Requires Node.js 22.13 or newer.
 - Everything stays on your machine in \`~/.quoli\`. The only outbound request is a daily download of
-  public model prices from models.dev, and, only if you turn it on, Class sync, which shares
-  session summaries (never prompts or code) with your class.
+  public model prices from models.dev, and, only if you turn it on, Team sync, which shares
+  session summaries (never prompts or code) with your team.
 - \`setup --remove\` takes Quoli out of every agent again; \`--help\` lists the rest.
 
 More: https://iceq.best

@@ -368,7 +368,7 @@ export interface Settings {
   livePrices: boolean;
 }
 
-/** Class sync (GET/PUT /api/sync): summaries only, never the sync key. */
+/** Team sync (GET/PUT /api/sync): summaries only, never the sync key. */
 export interface SyncStatus {
   enabled: boolean;
   /** This build knows a hosted class service to send to. */

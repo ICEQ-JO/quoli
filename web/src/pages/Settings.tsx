@@ -13,7 +13,7 @@ const SECTIONS: { id: SettingsSection; label: string; hint: string }[] = [
   { id: "general", label: "General", hint: "This install and spend budgets" },
   { id: "alerts", label: "Alerts", hint: "Local alerts for running sessions" },
   { id: "prices", label: "Prices", hint: "The list prices behind cost estimates" },
-  { id: "sync", label: "Class sync", hint: "Share session summaries with a class" },
+  { id: "sync", label: "Team sync", hint: "Share session summaries with your team" },
   { id: "data", label: "Data & privacy", hint: "Retention, redaction and deleting data" },
   { id: "appearance", label: "Appearance", hint: "Theme" },
 ];
