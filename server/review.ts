@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { join, sep } from "node:path";
 import type {
   CommandRun,
   FileChange,
@@ -456,14 +456,14 @@ export function reviewDiff(
     const range = plan.target ? [plan.base, plan.target] : [plan.base];
     gitDiff = git(root, ["diff", "--no-color", "-M", "--relative", ...range, "--", path]) || null;
     if (gitDiff === null && !plan.target) {
-      const text = readText(join(root, path));
+      const text = readInside(root, path);
       if (text !== null && git(root, ["ls-files", "--error-unmatch", "--", path]) === null) {
         const lines = text.replace(/\n$/, "").split("\n");
         gitDiff = `@@ new file, ${lines.length} lines @@\n${lines.map((l) => `+${l}`).join("\n")}`;
       }
     }
   }
-  const source = readText(join(root, path));
+  const source = readInside(root, path);
   const truncated = (gitDiff?.length ?? 0) > DIFF_LIMIT;
   return {
     path,
@@ -471,6 +471,17 @@ export function reviewDiff(
     source,
     truncated,
   };
+}
+
+/** A file's text only when its real location is inside the repository (no symlink escapes). */
+function readInside(root: string, path: string): string | null {
+  try {
+    const real = realpathSync(join(root, path));
+    if (!real.startsWith(realpathSync(root) + sep)) return null;
+    return readText(real);
+  } catch {
+    return null;
+  }
 }
 
 function readText(full: string): string | null {

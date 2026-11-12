@@ -277,3 +277,24 @@ test("clean tree with recorded edits lists the edits and says why; commands alon
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("the review diff never reads through a symlink that leaves the repository", async () => {
+  const { mkdtempSync, symlinkSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { reviewDiff } = await import("../server/review.ts");
+  const outside = mkdtempSync(join(tmpdir(), "quoli-outside-"));
+  const repo = mkdtempSync(join(tmpdir(), "quoli-link-"));
+  try {
+    writeFileSync(join(outside, "secret.txt"), "SECRET");
+    symlinkSync(join(outside, "secret.txt"), join(repo, "link.txt"));
+    const session = { root: repo, toolCalls: [], turns: [] } as unknown as Parameters<
+      typeof reviewDiff
+    >[0];
+    const diff = reviewDiff(session, "link.txt", true);
+    assert.ok(!JSON.stringify(diff ?? {}).includes("SECRET"));
+  } finally {
+    rmSync(outside, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
