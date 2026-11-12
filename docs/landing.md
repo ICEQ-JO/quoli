@@ -9,8 +9,8 @@ supersedes the earlier reference-site structural direction. Original pixel scene
 working recorder remain, recolored in ice blue, baby blue, denim, midnight and cream.
 A continuous hero places the promise and actions beside the scenery; a stepped open Q
 and connected pixel form the landing mark. Left-side tabs introduce the product
-tour. A four-lens optical instrument, illustrated workbench and panoramic footer
-forest add original pixel artwork throughout the page. See [landing-design.md](landing-design.md).
+tour. A four-lens optical instrument, square animated workspace and rounded contour-art
+footer add original pixel artwork throughout the page. See [landing-design.md](landing-design.md).
 
 Jost sans carries explanation and the hero; Jersey 10 carries section headings and
 the wordmark. Both are self-hosted under their included OFL licenses.
@@ -59,11 +59,18 @@ at 2× and resized to 1600 px wide WebP and JPEG, with colour profiles stripped 
 set. Retake them whenever the app's look changes noticeably; the page says they are
 screenshots of the synthetic demo.
 
-## Collaborate
+## Developers and engineering teams
 
-The "Work on it with us" section invites research, student projects and course pilots.
-Its contact button uses `VITE_PUBLIC_CONTACT_EMAIL`; without it the button falls back to
-the waitlist and no address is shown. The footer adds a Contact link when it is set.
+The former academic collaboration pitch is replaced with product benefits: review
+changes with context, track usage and estimated spend, and see team activity through
+opt-in session summaries. The team action links to the existing `/app/` account page.
+Prompts, source code, commands and tool output stay local; detailed hosted session
+review remains future work. See [teams.md](teams.md) for the delivered summary model.
+
+Quoli is proprietary. Public source-repository links and `VITE_PUBLIC_REPO_URL`
+behavior have been removed from this entry. An optional `VITE_PUBLIC_CONTACT_EMAIL`
+adds a workflow contact in the team section and footer. The `#collaborate` anchor is
+retained for existing links; visible navigation calls it "For teams".
 
 ## Link previews
 
@@ -87,10 +94,10 @@ The form reports success only after the address is stored; otherwise it shows a 
 - No analytics are included, and no automatic email is sent.
 
 Before sending launch updates, the operator still needs to:
-- publish a contact address for removal requests (setting `VITE_PUBLIC_CONTACT_EMAIL` shows one in the Collaborate section and footer);
+- publish a contact address for removal requests (setting `VITE_PUBLIC_CONTACT_EMAIL` shows one in the developer/team section and footer);
 - connect an email provider with an unsubscribe link in every message.
 
-- Repository links (Docs, GitHub, Development) appear only when `VITE_PUBLIC_REPO_URL` is set at build time. While the repository is private they are hidden, so visitors never land on a GitHub 404.
+
 
 Never expose the private evidence server publicly.
 
@@ -104,6 +111,16 @@ real emails submitted, private evidence read, deployment or real-screen-reader t
 
 Owner refinement in PR #160 restores left-side desktop tour tabs and left-aligned
 product copy, and adds original optical-instrument and workbench scenes plus a
-panoramic forest footer. The two new drawing tests bring the suite to 167 passing
+square workspace and rounded animated contour footer. The two new drawing tests bring the suite to 167 passing
 tests. Browser checks confirm animation progresses, freezes on pause, and stays
 static under reduced motion; both themes pass axe and 320–1440px overflow checks.
+
+The latest owner correction restores the large mission link and rounded contour
+footer, and replaces the 5:3 workbench drawing with a full 1:1 animated workspace.
+The private repository is never exposed, even through a configured repository URL.
+Browser assertions verify commercial developer/team copy and no public repository
+links; summary-sharing claims are grounded in the current team implementation.
+
+The square scene passes animation, pause and reduced-motion checks. Footer text
+was checked against the brightest composited contour shade at WCAG AA contrast.
+Both themes pass axe; tested widths from 320 to 1440px have no horizontal overflow.

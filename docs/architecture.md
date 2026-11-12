@@ -135,8 +135,9 @@ Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) adds a separate Vite
 entry at `/landing/` with original procedural pixel artwork, a working synthetic
 recorder and real screenshots of the synthetic demo. [#159](https://github.com/ICEQ-JO/quoli/issues/159)
 establishes the baby-blue identity, stepped Q mark, continuous hero, left-side
-product tabs, optical-instrument and workbench illustrations, and a panoramic
-forest above the footer. The app's separate styles and activity colors are unchanged.
+product tabs, optical-instrument and square workspace illustrations, and an
+animated contour-art footer. The page describes the existing opt-in team summary
+model and links to `/app/`, without public source-repository links. The app's separate styles and activity colors are unchanged.
 
 The page reads no captured evidence. Explicit email submission uses the existing
 same-origin size-limited waitlist handler: separate local SQLite storage in preview,

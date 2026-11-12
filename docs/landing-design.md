@@ -89,21 +89,22 @@ follows the copy inside the same clipped frame.
 The recording section leads with explanation above the working recorder, beside
 an entirely inset terminal. The product introduction is left-aligned beside a detailed four-lens optical
 instrument. Six product tabs sit to the left of the screenshot on desktop;
-they become two rows of three above it on mobile. Collaboration pairs a ruled list with a pixel workbench (monitor, lamp,
-notebooks, fern and steaming cup), followed
-by the waitlist, a small mission link and a pale-blue footer beneath a panoramic animated forest. There is no
-full-page dotted ground, oversized mission banner or contour-textured footer.
+they become two rows of three above it on mobile. The developer/team section pairs concrete benefits with a square animated
+workspace: a monitor, lamp, notebooks, fern and steaming cup in front of a window
+onto moving blue hills. The waitlist leads to a large pixel mission link and
+a rounded blue footer with animated contour artwork, as requested by the owner.
 A 1440px rule adds hero side margins; breakpoints at 1000, 760 and 440px
 reflow content rather than clipping it.
 
 ## Elevation & Depth
 
 Depth is local: the hero trace, terminal and screenshot use soft offset shadows.
-The page, text sections and footer stay flat. Borders distinguish controls and
+The page and text sections stay flat; the footer contains original animated
+contour art behind its content. Borders distinguish controls and
 selected tabs. Pixel canvases render at low resolution without smoothing; the
 hero uses object-fit cover to preserve its pixel proportions and a short edge
 mask to merge scenery into the copy field. The optical instrument preserves a 2:1
-aspect ratio; the workbench preserves 5:3. Trace points and connector share one bordered row.
+aspect ratio; the workspace preserves 1:1. Trace points and connector share one bordered row.
 
 ## Shapes
 
@@ -135,16 +136,25 @@ The same geometry appears in the favicon, header, recorder summary and signup.
 - Keep original pixel artwork and working mechanisms; use blue consistently.
 - Keep evidence descriptions honest: synthetic examples, inferred relationships,
   estimated costs and hosted services without live connections.
-- Preserve the distinction between current local agent support and future hosted
-  capabilities. Do not invent customers, benchmarks, prices or availability.
-- Do not recreate the reference site's paired green panels, chapter color switch, or textured
-  blue footer. Do not apply landing colors to the app's semantic activity tokens.
+- Distinguish current local capture and opt-in team summary sharing from planned
+  detailed hosted session review and live provider connections. Do not invent customers, benchmarks, prices or availability.
+- Do not recreate the reference site's paired green panels, chapter color switch. The owner-requested contour footer uses Quoli
+  blue with verified readable foreground contrast. Do not apply landing colors to the app's semantic activity tokens.
 
 ## Owner refinement — more artwork
 
 The owner asked to restore life and left-side product navigation after reviewing
 the initial blue pass. `pixel-art.ts` supplies the original optical rail and
-workbench; `PixelScene.tsx` supplies the footer panorama through the existing
+workbench; `PixelScene.tsx` supplies the footer contours through the existing
 landscape painter. The same bounded canvas lifecycle handles visibility, pause
 and reduced motion. Art does not claim actual capture or infrastructure status.
 Deterministic drawing tests exercise both new scenes with no browser dependency.
+
+## Commercial product presentation
+
+Quoli is a proprietary product for developers and engineering teams. Content leads
+with review context, agent effort/spend and opt-in team visibility; no academic
+pilot or open-source contributor pitch. The footer restores the owner's rounded
+animated contour treatment, with ice-blue text over a darkened blue canvas.
+The large pixel mission link replaces the compact text link. Canvas imagery is
+decorative and does not replace readable links. Repository links are absent.

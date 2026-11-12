@@ -3,13 +3,7 @@ import { PixelScene, SESSION_STEPS } from "./PixelScene.tsx";
 import { Arrow, Brand, Mark, Moon } from "./ui.tsx";
 import { Waitlist } from "./Waitlist.tsx";
 
-/**
- * Public repository link, set at build time with VITE_PUBLIC_REPO_URL. While the repository is
- * private it stays unset, so the site never sends visitors to a GitHub 404.
- */
-const github = (import.meta.env.VITE_PUBLIC_REPO_URL as string | undefined)?.replace(/\/+$/, "");
-const docs = github ? `${github}/blob/main/docs/` : null;
-/** Contact address for collaboration, set at build time with VITE_PUBLIC_CONTACT_EMAIL. */
+/** Optional product contact address, set at build time. */
 const contact = (import.meta.env.VITE_PUBLIC_CONTACT_EMAIL as string | undefined)?.trim() || null;
 
 const LENS_ICONS = {
@@ -20,10 +14,10 @@ const LENS_ICONS = {
 } as const;
 
 const lenses = [
-  ["Agents", "Every prompt, tool call and subagent, in order."],
-  ["Code", "The files it read and changed, and what imports them."],
-  ["Git", "The branch it worked on and the commits around it."],
-  ["Infra", "The services your repository declares, and which ones it touched."],
+  ["Agents", "Follow the session. Spot failures, repeated work and unexpected detours."],
+  ["Code", "Review changed files in context, with the exact edits one click away."],
+  ["Git", "Connect the work to its branch, commits and uncommitted changes."],
+  ["Infra", "See the services your repository declares and how they connect."],
 ] as const;
 
 /**
@@ -36,12 +30,12 @@ const views = [
     name: "Review",
     line: "What it was asked, what changed, what ran, what it cost.",
     caption:
-      "One page per session: the prompts, every file it changed with line counts, the commands it ran with their exit status, and an estimated cost by model.",
+      "One page per session: the prompts, recorded file edits with line counts, commands with their exit status, and an estimated cost by model.",
   },
   {
     id: "agents",
     name: "Agents",
-    line: "Every step, including subagents and failures.",
+    line: "Recorded steps, subagents and failures.",
     caption:
       "The session in order. Subagents nest under the call that started them, failures are marked, and the strip at the bottom replays it step by step.",
   },
@@ -254,16 +248,16 @@ function ProductTour({
 function SiteFooter({ paused }: { paused: boolean }) {
   return (
     <footer className="site-footer">
-      <div className="footer-landscape">
-        <PixelScene kind="panorama" paused={paused} />
-      </div>
+      <PixelScene kind="field" paused={paused} />
       <div className="footer-content">
         <div className="footer-description">
           <Brand />
-          <p>Quoli connects coding-agent activity to the code, history, and systems it touches.</p>
+          <p>
+            The connected view of coding-agent work. Built for developers and engineering teams.
+          </p>
           <a className="footer-status" href="/landing/?page=roadmap">
             <span />
-            {github ? "Building in the open" : "Follow the roadmap"} <Arrow diagonal />
+            Explore the roadmap <Arrow diagonal />
           </a>
           <small>
             Claude Code · Codex · OpenCode · Pi.
@@ -275,35 +269,20 @@ function SiteFooter({ paused }: { paused: boolean }) {
           <h3>Product</h3>
           <a href="/landing/#product">The app</a>
           <a href="/landing/?page=roadmap">Roadmap</a>
-          <a
-            href={docs ? `${docs}architecture.md` : "/landing/#product"}
-            {...(docs ? { target: "_blank", rel: "noreferrer" } : {})}
-          >
-            How it works
-          </a>
+          <a href="/landing/#how-it-works">How it works</a>
+          <a href="/app/">Team dashboard</a>
           <a href="/landing/#waitlist">Early access</a>
         </div>
         <div className="footer-column">
           <h3>Resources</h3>
-          {github && (
-            <>
-              <a href={`${docs}vision.md`} target="_blank" rel="noreferrer">
-                Documentation
-              </a>
-              <a href={github} target="_blank" rel="noreferrer">
-                GitHub <Arrow diagonal />
-              </a>
-              <a href={`${github}/issues`} target="_blank" rel="noreferrer">
-                Development
-              </a>
-            </>
-          )}
+          <a href="/landing/#product">Product tour</a>
+          <a href="/landing/#collaborate">For developers &amp; teams</a>
           <a href="/landing/?page=privacy">Privacy</a>
         </div>
         <div className="footer-column">
           <h3>Quoli</h3>
           <a href="/landing/?page=mission">Our mission</a>
-          <a href="/landing/#collaborate">Collaborate</a>
+          <a href="/landing/#collaborate">For teams</a>
           {contact && <a href={`mailto:${contact}`}>Contact</a>}
           <a href="/landing/?page=roadmap">What's next</a>
           <a href="/landing/#waitlist">Join the waitlist</a>
@@ -367,9 +346,10 @@ function InformationPage({ page }: { page: string }) {
           </p>
           <h2>Local first. Deliberately.</h2>
           <p>
-            Today's application keeps evidence on your machine. Future shared work must make
-            synchronization an explicit project choice. We want a clearer view for individual
-            developers and, over time, their teams.
+            The local application keeps detailed agent evidence on your machine. Team sharing is
+            opt-in and limited to session summaries. Quoli is built for developers and engineering
+            teams. Today, optional team sync shares summaries; prompts, code, commands and tool
+            output stay local.
           </p>
         </>
       ) : privacy ? (
@@ -413,6 +393,15 @@ function InformationPage({ page }: { page: string }) {
             </p>
           </div>
           <div className="roadmap-entry">
+            <span>Available</span>
+            <h2>A shared view of agent usage.</h2>
+            <p>
+              Create or join a team and opt in to sharing session summaries. Team owners can see
+              activity, failures, possible loops and estimated spend by member. Detailed evidence
+              stays on each developer's machine.
+            </p>
+          </div>
+          <div className="roadmap-entry">
             <span>In development</span>
             <h2>A product you can find your way around.</h2>
             <p>
@@ -422,7 +411,7 @@ function InformationPage({ page }: { page: string }) {
           </div>
           <div className="roadmap-entry">
             <span>Planned</span>
-            <h2>More agents. Deeper code.</h2>
+            <h2>Deeper code. Live infrastructure.</h2>
             <p>
               Symbol-level code maps and live hosted-provider connections. These are roadmap items;
               Claude Code, Codex, OpenCode and Pi capture is available locally today.
@@ -430,10 +419,11 @@ function InformationPage({ page }: { page: string }) {
           </div>
           <div className="roadmap-entry">
             <span>Planned</span>
-            <h2>A shared view for teams.</h2>
+            <h2>Richer shared review.</h2>
             <p>
-              Explicitly enabled hosted sync, shared sessions and team review. Local evidence stays
-              local until you choose otherwise.
+              Team summary sharing is available today. Shared detailed sessions and richer team
+              review are planned; they will require an explicit choice about what leaves your
+              machine.
             </p>
           </div>
         </>
@@ -505,14 +495,9 @@ export function Landing() {
           <Brand />
           <nav aria-label="Main navigation">
             <a href="/landing/#product">Product</a>
-            <a href="/landing/#collaborate">Collaborate</a>
+            <a href="/landing/#collaborate">For teams</a>
             <a href="/landing/?page=roadmap">Roadmap</a>
             <a href="/landing/?page=mission">Mission</a>
-            {docs && (
-              <a className="nav-docs" href={`${docs}vision.md`} target="_blank" rel="noreferrer">
-                Docs
-              </a>
-            )}
           </nav>
           <button
             className="theme-toggle"
@@ -539,8 +524,8 @@ export function Landing() {
                 <span>coding agents did.</span>
               </h1>
               <p>
-                From the first prompt to the files it changed. Follow your agent's work across code,
-                Git and infrastructure, in one connected view.
+                Your agent moves fast. Stay close to the work. See what changed, what it cost, where
+                it got stuck and what needs review—across sessions, code, Git and infrastructure.
               </p>
               <div className="hero-actions">
                 <a className="hero-cta" href="#waitlist">
@@ -584,7 +569,7 @@ export function Landing() {
               ))}
             </ul>
           </nav>
-          <section className="recording-section" aria-labelledby="recorder-title">
+          <section className="recording-section" id="how-it-works" aria-labelledby="recorder-title">
             <div className="recorder-column">
               <div className="recorder-stage">
                 <PixelScene
@@ -611,11 +596,14 @@ export function Landing() {
                   <em>For your coding agent.</em>
                 </h2>
                 <p>
-                  Your agent reads, edits, runs, and moves on. Quoli keeps the recorded trail
-                  together—so you can understand what changed, how it happened, and what deserves a
-                  closer look.
+                  A finished prompt is the start of your review. Quoli keeps prompts, tool calls,
+                  edits and command results connected, so you can follow the work without piecing
+                  together terminal scrollback.
                 </p>
-                <p>From the first prompt to the final edit, the details stay connected.</p>
+                <p>
+                  Replay the session. Inspect a failed call. Catch an edit made after the tests ran.
+                  Find the evidence you need before you decide what to merge.
+                </p>
               </div>
             </div>
             <Terminal
@@ -633,13 +621,14 @@ export function Landing() {
             <div className="product-intro">
               <div className="product-intro-copy">
                 <h2 id="product-title">
-                  The activity is only
+                  From agent activity
                   <br />
-                  <em>part of the story.</em>
+                  <em>to review context.</em>
                 </h2>
                 <p>
-                  Follow one session from the prompt to the files it changed, the branch it landed
-                  on and the services that run that code. These are screenshots of the real app.
+                  A tool log tells you what ran. Quoli connects that record to the code around it,
+                  the Git history and the services declared in your repository. Move between views
+                  without losing the session you are reviewing.
                 </p>
               </div>
               <div className="chapter-signal">
@@ -655,30 +644,21 @@ export function Landing() {
           <section className="collaborate" id="collaborate" aria-labelledby="collaborate-title">
             <div className="collaborate-intro">
               <h2 id="collaborate-title">
-                Work on it
+                For developers.
                 <br />
-                <em>with us.</em>
+                <em>For engineering teams.</em>
               </h2>
               <p>
-                Quoli is early: a working local app with a public roadmap. Coding agents are
-                changing how software is written, and how people review it. We'd like to study and
-                build that with researchers, students and teaching teams.
+                One developer, several agents, or an engineering team. Give agent-written work the
+                context it deserves: a record you can inspect, costs you can track, and session
+                summaries your team can choose to share.
               </p>
-              {contact ? (
-                <a
-                  className="button collaborate-cta"
-                  href={`mailto:${contact}?subject=Quoli%20collaboration`}
-                >
-                  Get in touch <Arrow />
-                </a>
-              ) : (
-                <a className="button collaborate-cta" href="#waitlist">
-                  Join the waitlist to hear from us <Arrow />
-                </a>
-              )}
+              <a className="button collaborate-cta" href="/app/">
+                Open the team dashboard <Arrow />
+              </a>
               {contact && (
                 <small className="collaborate-address">
-                  Or write to <a href={`mailto:${contact}`}>{contact}</a>
+                  Talk to us about your workflow: <a href={`mailto:${contact}`}>{contact}</a>
                 </small>
               )}
               <div className="workbench-art">
@@ -687,24 +667,26 @@ export function Landing() {
             </div>
             <ul className="collaborate-list">
               <li>
-                <h3>Research</h3>
+                <h3>Review the work with context.</h3>
                 <p>
-                  How do developers review, trust and learn from an agent's work? Quoli records that
-                  evidence on each participant's own machine, so studies can stay opt-in and local.
+                  Revisit prompts, tool calls and file changes together. See what commands ran,
+                  where they failed, and what changed afterward—so you know where to focus your
+                  review.
                 </p>
               </li>
               <li>
-                <h3>Student projects</h3>
+                <h3>See where the effort goes.</h3>
                 <p>
-                  Bounded pieces with a real user: deeper agent integrations, function-level code
-                  maps, failure and cost analysis, accessible graph views.
+                  Track token usage and estimated spend across models, sessions and projects. Spot
+                  repeated failures and possible loops, then inspect the steps behind them.
                 </p>
               </li>
               <li>
-                <h3>Course and lab pilots</h3>
+                <h3>Bring your team's agent usage into view.</h3>
                 <p>
-                  Run Quoli beside your coding agent on a course or lab project and tell us what was
-                  unclear. Nothing leaves the machine unless you choose to share it.
+                  Opt in to sharing session summaries with your team. Owners can see activity,
+                  failures, possible loops and estimated spend by member. Prompts, source code,
+                  commands and tool output stay on each developer's machine.
                 </p>
               </li>
             </ul>
@@ -712,20 +694,20 @@ export function Landing() {
           <section className="waitlist-section" id="waitlist" aria-labelledby="waitlist-title">
             <div>
               <h2 id="waitlist-title">
-                Be here for
+                Keep up with
                 <br />
-                <em>what comes next.</em>
+                <em>what your agents do.</em>
               </h2>
               <p>
-                Join the waitlist for Quoli's next chapter.
+                Get Quoli product updates for your development workflow.
                 <br />
-                Launch updates, without the noise.
+                Join the list for what comes next.
               </p>
             </div>
             <Waitlist location="hero" />
           </section>
           <a className="mission-link" href="/landing/?page=mission">
-            Why we're <span>building Quoli</span>
+            Read our <span>mission statement</span>
             <Arrow diagonal />
           </a>
         </main>

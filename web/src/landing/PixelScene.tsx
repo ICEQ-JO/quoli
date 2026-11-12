@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { drawOptics, drawWorkbench } from "./pixel-art.ts";
 import { SESSION_STEPS, sessionAt } from "./scene-model.ts";
 
-type Scene = "forest" | "field" | "recorder" | "signal" | "workbench" | "panorama";
+type Scene = "forest" | "field" | "recorder" | "signal" | "workbench";
 const hash = (n: number) => {
   const value = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return value - Math.floor(value);
@@ -247,8 +247,7 @@ export function PixelScene({
       field: [420, 190],
       recorder: [350, 220],
       signal: [480, 240],
-      workbench: [400, 240],
-      panorama: [960, 190],
+      workbench: [400, 400],
     }[kind];
     element.width = width;
     element.height = height;
@@ -264,7 +263,7 @@ export function PixelScene({
     function draw() {
       if (!context) return;
       context.clearRect(0, 0, width, height);
-      if (kind === "forest" || kind === "field" || kind === "panorama")
+      if (kind === "forest" || kind === "field")
         landscape(context, width, height, time, kind === "field");
       else if (kind === "recorder") recorder(context, width, height, time);
       else if (kind === "workbench") drawWorkbench(context, time);
@@ -333,7 +332,7 @@ export function PixelScene({
         : kind === "signal"
           ? "An original pixel optical instrument: four fitted lenses on one rail, linked by stepped cables and a moving signal."
           : kind === "workbench"
-            ? "A pixel workbench with a connected map on its monitor, a reading lamp, notebooks, a fern and steam rising from a cup."
+            ? "An animated square pixel workspace: blue hills and trees move beyond the window; a monitor, lamp, notebooks, fern and steaming cup sit on the desk."
             : undefined;
   return (
     <canvas

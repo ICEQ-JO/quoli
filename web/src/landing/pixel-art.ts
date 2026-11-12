@@ -97,6 +97,42 @@ export function drawWorkbench(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fillStyle = color;
     ctx.fillRect(Math.round(x), Math.round(y), w, h);
   };
+  // A full square studio scene: a moving landscape through the window, desk in front.
+  rect(0, 0, 400, 400, p.pale);
+  rect(0, 338, 400, 62, p.blue);
+  for (let y = 350; y < 400; y += 14) rect(0, y, 400, 1, p.mid);
+  for (let x = 15; x < 400; x += 65) rect(x, 338, 1, 62, p.mid);
+  rect(18, 22, 364, 208, p.denim);
+  rect(23, 27, 354, 197, p.ice);
+  rect(28, 32, 344, 186, p.pale);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(28, 32, 344, 186);
+  ctx.clip();
+  for (let band = 0; band < 4; band++) {
+    for (let x = 28; x < 372; x += 2) {
+      const y = 80 + band * 36 + Math.sin(x / (57 - band * 6) + time * 0.025 + band) * 19;
+      rect(x, y, 2, 220 - Math.round(y), [p.ice, p.blue, p.mid, p.denim][band]);
+    }
+  }
+  rect(310, 49, 14, 14, p.cream);
+  rect(307, 52, 20, 8, p.cream);
+  const cloud = 20 + ((time * 2) % 410);
+  rect(cloud, 57, 43, 5, p.ice);
+  rect(cloud + 8, 52, 24, 5, p.ice);
+  for (let x = 28; x < 372; x += 13) {
+    const height = 9 + Math.round((Math.sin(x * 2.3) + 1) * 10);
+    rect(x, 205 - height, 3, height, p.deep);
+    rect(x - 3, 209 - height, 9, 3, p.deep);
+    rect(x - 5, 214 - height, 13, 3, p.deep);
+  }
+  ctx.restore();
+  rect(196, 28, 6, 194, p.ice);
+  rect(24, 217, 352, 7, p.blue);
+  rect(14, 228, 372, 8, p.mid);
+  rect(14, 226, 372, 3, p.ice);
+  ctx.save();
+  ctx.translate(0, 140);
   // Lamp, warm pool of light, monitor, paper notes and a cup share one supported desk.
   ctx.fillStyle = p.cream;
   ctx.beginPath();
@@ -175,4 +211,5 @@ export function drawWorkbench(ctx: CanvasRenderingContext2D, time: number) {
     rect(49 - (i % 2) * 4 + sway, y, 14, 3, p.mid);
     rect(62 + sway, y + 4, 14 + (i % 2) * 4, 3, p.denim);
   }
+  ctx.restore();
 }

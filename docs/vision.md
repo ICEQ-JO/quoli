@@ -67,9 +67,14 @@ Across the bottom, a **timeline** replays the session step by step — every len
 
 ## Who it is for
 
-**First: the individual developer using Claude Code** who wants to answer, in under a minute, "what did the agent just do to my project, what did it cost, and what do I need to review?" Local, private, free to try.
+**Developers and engineering teams building with coding agents.** A developer
+needs to know what changed, what it cost and what deserves review. A team owner
+needs visibility across members' agent usage. The local app supports Claude Code,
+Codex, OpenCode and Pi; opt-in team summary sharing is delivered (see [teams.md](teams.md)).
+Detailed shared session review remains future work.
 
-**Later: the team lead** who wants the same view across several developers' agents — which requires the hosted version.
+Quoli is a proprietary product. Its marketing is aimed at professional development
+workflows, not student projects or open-source contributors.
 
 ## Principles
 

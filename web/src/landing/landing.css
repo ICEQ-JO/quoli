@@ -836,8 +836,10 @@ main {
 .workbench-art {
   width: 100%;
   max-width: 440px;
-  aspect-ratio: 5 / 3;
-  margin-top: 25px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 20px;
+  margin-top: 32px;
   background-image: radial-gradient(var(--dot) 0.8px, transparent 0.9px);
   background-size: 12px 12px;
 }
@@ -960,39 +962,49 @@ main {
   margin: 0 auto;
   text-align: center;
   text-decoration: none;
-  padding: 32px 20px 56px;
-  font-size: 16px;
+  padding: 76px 24px 95px;
+  font:
+    clamp(36px, 4.8vw, 68px) / 1.15 Quoli Pixel,
+    monospace;
 }
 .mission-link > span {
   color: var(--brand);
   text-decoration: underline;
 }
 .mission-link > svg {
-  width: 18px;
-  height: 18px;
+  width: 34px;
+  height: 34px;
   color: var(--brand);
 }
-.footer-landscape {
-  height: 220px;
-  overflow: hidden;
-  background: var(--paper);
-}
-.footer-landscape canvas {
-  object-fit: cover;
-  object-position: center bottom;
-  mask-image: linear-gradient(180deg, transparent, #000 50px);
-}
 .site-footer {
-  background: var(--tint);
-  border-top: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  margin: 0 24px 24px;
+  border-radius: 24px;
+  background: #172d43;
+  color: #edf7fc;
+  --brand: #a9d8f2;
+  --muted: #d0e4f2;
+  --border: #6f9ebc;
+}
+.site-footer > .pixel-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.7;
+  filter: brightness(0.65);
+  pointer-events: none;
 }
 .footer-content {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1fr;
   gap: 50px;
   max-width: 1240px;
   margin: auto;
-  padding: 55px 32px 35px;
+  padding: 65px 32px 35px;
 }
 .footer-description .brand {
   font-size: 36px;
@@ -1151,9 +1163,6 @@ main {
   }
   .nav-inner nav {
     gap: 18px;
-  }
-  .nav-inner nav .nav-docs {
-    display: none;
   }
   .hero {
     min-height: 510px;
@@ -1377,6 +1386,15 @@ main {
   }
   .signup-controls .button {
     flex: none;
+  }
+  .site-footer {
+    margin: 0 16px 16px;
+    border-radius: 18px;
+  }
+  .mission-link {
+    flex-wrap: wrap;
+    gap: 5px 10px;
+    padding-block: 55px 65px;
   }
   .footer-content {
     grid-template-columns: repeat(3, minmax(0, 1fr));
