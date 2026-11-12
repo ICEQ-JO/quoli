@@ -358,6 +358,7 @@ test("settings are validated, saved, and drive redaction", async () => {
       redact: true,
       budgetDailyUsd: null,
       budgetMonthlyUsd: null,
+      livePrices: true,
     });
     assert.equal(typeof first.body.info.port, "number");
     assert.match(first.body.info.version, /^\d+\.\d+\.\d+/);
@@ -368,6 +369,7 @@ test("settings are validated, saved, and drive redaction", async () => {
       { retentionDays: 1.5 },
       { retentionDays: "7" },
       { redact: "no" },
+      { livePrices: "yes" },
       { other: 1 },
     ]) {
       assert.equal((await call("PUT", "/api/settings", bad)).status, 400, JSON.stringify(bad));
@@ -378,6 +380,7 @@ test("settings are validated, saved, and drive redaction", async () => {
       redact: false,
       budgetDailyUsd: null,
       budgetMonthlyUsd: null,
+      livePrices: true,
     });
 
     const secret = "sk-ant-abcdefghijklmnopqrstuvwxyz0123";

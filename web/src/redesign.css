@@ -1731,3 +1731,14 @@ ul.reasons li {
     justify-self: start;
   }
 }
+
+/* Settings → Prices: live prices from models.dev */
+.live-prices {
+  margin: 4px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.live-prices p {
+  margin: 4px 0 0 24px;
+}
