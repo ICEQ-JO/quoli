@@ -7,7 +7,7 @@ import {
   type NodeProps,
   Position,
 } from "@xyflow/react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Service, ServiceKind } from "../../../shared/model.ts";
 import { nodeA11y, plural, quietNode } from "../a11y.ts";
 import { bytes } from "../format.ts";
@@ -88,6 +88,12 @@ const load = (root: string | null): Positions => {
 export function InfraLens(ctx: LensContext) {
   const { infra, touched, selection, select, root, session, projectId, refreshInfra } = ctx;
   const [moved, setMoved] = useState<Positions>(() => load(root));
+  // Rendered card heights. Cards stack by their real height once measured, so a card with live
+  // metrics or a long name never overlaps the one below it.
+  const [heights, setHeights] = useState<Record<string, number>>({});
+  const measured = useCallback((id: string, h: number) => {
+    setHeights((prev) => (Math.abs((prev[id] ?? 0) - h) < 1 ? prev : { ...prev, [id]: h }));
+  }, []);
 
   const split = useMemo(() => (infra ? splitInfra(infra) : null), [infra]);
   const { nodes, edges } = useMemo(() => {
@@ -128,16 +134,15 @@ export function InfraLens(ctx: LensContext) {
               selected: isSelected(selection, "service", s.id),
             },
             style: { width: W },
-            width: W,
-            height: (s.basis === "inferred" || isAdded(s) ? 150 : 128) + (s.metrics ? 24 : 0),
             ...nodeA11y(serviceLabel(s, editedUnder(touched, s.sourceDir).length), first),
           });
           first = false;
-          // Long names and the live metrics row wrap onto extra lines, so leave room for them.
+          // Until a card is measured, estimate: long names and live metrics wrap onto extra lines.
           y +=
-            (s.basis === "inferred" || isAdded(s) ? 172 : 150) +
-            (s.metrics ? 24 : 0) +
-            Math.max(0, Math.ceil(s.name.length / 16) - 1) * 20;
+            (heights[s.id] ??
+              (s.basis === "inferred" || isAdded(s) ? 150 : 128) +
+                (s.metrics ? 70 : 0) +
+                Math.max(0, Math.ceil(s.name.length / 16) - 1) * 20) + 22;
         }
         y += 28;
       }
@@ -165,7 +170,7 @@ export function InfraLens(ctx: LensContext) {
         };
       });
     return { nodes, edges };
-  }, [infra, split, touched, selection, moved]);
+  }, [infra, split, touched, selection, moved, heights]);
 
   return (
     <div className="infra-lens">
@@ -176,6 +181,7 @@ export function InfraLens(ctx: LensContext) {
             edges={edges}
             nodeTypes={nodeTypes}
             draggable
+            onMeasured={measured}
             variant={BackgroundVariant.Dots}
             fitKey={`infra:${root}:${infra?.services.length ?? 0}:${session?.id ?? ""}`}
             onNodeClick={(n) => n.type === "service" && select({ kind: "service", id: n.id })}
