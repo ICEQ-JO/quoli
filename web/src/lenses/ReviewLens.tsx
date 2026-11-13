@@ -353,7 +353,7 @@ export function ReviewLens(p: Props) {
   const copy = () => writeClipboard(prSummary(session.title, review, session.report.commands));
 
   return (
-    <div className="review">
+    <div className="review-lens">
       <BranchPanel review={review} copy={copy} />
       {review.note && <p className="rv-note">{review.note}</p>}
       {review.noNetChange.length > 0 && (

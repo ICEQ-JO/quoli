@@ -1,4 +1,4 @@
-.review {
+.review-lens {
   position: absolute;
   inset: 0;
   display: flex;
@@ -7,7 +7,7 @@
   background: var(--bg);
 }
 
-.review > .state {
+.review-lens > .state {
   margin: 24px;
 }
 
@@ -170,16 +170,16 @@
   font: var(--fs-xs) var(--mono);
 }
 
-.add,
-.del {
+.review-lens .add,
+.review-lens .del {
   font-variant-numeric: tabular-nums;
 }
 
-.review .add {
+.review-lens .add {
   color: var(--ok-text);
 }
 
-.review .del {
+.review-lens .del {
   color: var(--fail-text);
 }
 
