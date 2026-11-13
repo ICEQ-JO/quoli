@@ -2,8 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   announceCalls,
-  fileLabel,
-  folderLabel,
   isTypingTarget,
   modKey,
   plural,
@@ -28,12 +26,7 @@ test("shortcuts stay quiet while typing", () => {
   assert.equal(isTypingTarget(null), false);
 });
 
-test("node labels say what happened, with correct plurals", () => {
-  assert.equal(fileLabel("src/a.ts", 2, 1), "src/a.ts, edited 2 times, read 1 time");
-  assert.equal(fileLabel("src/a.ts", 1, 0, "modified"), "src/a.ts, edited 1 time, modified in git");
-  assert.equal(fileLabel("a.ts", 0, 0, "clean"), "a.ts, not touched by this session");
-  assert.equal(folderLabel("src", 1, 0, 0), "Folder src, 1 file, untouched");
-  assert.equal(folderLabel("src/ui", 12, 3, 4), "Folder src/ui, 12 files, 3 edited, 4 read");
+test("node labels say what happened", () => {
   assert.equal(
     toolLabel({ name: "mcp__x__y", summary: "do it", status: "failed" }, "2s"),
     "x__y, do it, failed, 2s",
@@ -66,7 +59,7 @@ test("the overlay lists every shortcut group", () => {
   const groups = shortcutGroups("Ctrl");
   assert.deepEqual(
     groups.map((g) => g.title),
-    ["Navigation", "Canvas and lists", "Review lens", "Timeline (when focused)", "Global"],
+    ["Navigation", "Canvas and lists", "Review lens", "Map", "Timeline (when focused)", "Global"],
   );
   assert.ok(groups[0].items.some((i) => i.keys.join("+") === "Ctrl+K"));
   assert.ok(groups.flatMap((g) => g.items).some((i) => i.keys.includes("?")));

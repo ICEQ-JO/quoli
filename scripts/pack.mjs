@@ -1,6 +1,6 @@
 // Builds the publishable npm package `quoli` into ./release (`pnpm pack:release`):
 //   release/package.json   name, version, `quoli` command, Node engine; no dependencies
-//   release/server/        the server bundled by esbuild (cli.mjs + chunks), plus the hook,
+//   release/server/        the server bundled by esbuild (cli.mjs, codegraph-worker.mjs + chunks, grammars/*.wasm), plus the hook,
 //                          OpenCode plugin and Pi extension that `quoli setup` installs
 //   release/dist/          the built web app (app, class page; the landing page is left out)
 //   release/README.md
@@ -28,7 +28,11 @@ cpSync(join(root, "dist"), join(out, "dist"), {
 
 // 2. The server, one ESM bundle with chunks so `quoli setup` does not load the web server.
 await build({
-  entryPoints: { cli: join(root, "server", "cli.ts") },
+  // The code graph parses in a worker thread, which needs its own file beside the bundle.
+  entryPoints: {
+    cli: join(root, "server", "cli.ts"),
+    "codegraph-worker": join(root, "server", "codegraph", "worker.ts"),
+  },
   outdir: join(out, "server"),
   bundle: true,
   splitting: true,
@@ -53,6 +57,21 @@ await build({
 for (const f of ["hook.mjs", "opencode-plugin.js", "pi-extension.ts"]) {
   cpSync(join(root, "server", f), join(out, "server", f));
 }
+
+// 3b. WASM for the code graph, read at runtime from server/grammars (server/codegraph/index.ts):
+// the web-tree-sitter runtime and the five grammars (TypeScript, TSX, JavaScript, Python, Go).
+mkdirSync(join(out, "server", "grammars"), { recursive: true });
+const grammarSource = join(root, "node_modules", "@vscode", "tree-sitter-wasm", "wasm");
+for (const g of ["typescript", "tsx", "javascript", "python", "go"]) {
+  cpSync(
+    join(grammarSource, `tree-sitter-${g}.wasm`),
+    join(out, "server", "grammars", `tree-sitter-${g}.wasm`),
+  );
+}
+cpSync(
+  join(root, "node_modules", "web-tree-sitter", "web-tree-sitter.wasm"),
+  join(out, "server", "grammars", "web-tree-sitter.wasm"),
+);
 
 // 4. package.json and README for npm.
 writeFileSync(
@@ -99,5 +118,6 @@ More: https://iceq.best
 `,
 );
 
-if (!existsSync(join(out, "server", "cli.mjs"))) throw new Error("bundle missing");
+for (const f of ["cli.mjs", "codegraph-worker.mjs", "grammars/web-tree-sitter.wasm"])
+  if (!existsSync(join(out, "server", f))) throw new Error(`${f} missing`);
 console.log(`\nBuilt quoli ${pkg.version} in ${out}`);

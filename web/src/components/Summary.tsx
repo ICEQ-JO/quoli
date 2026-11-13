@@ -313,7 +313,7 @@ export function Summary({
                     {item.files.map((f) => (
                       <Link
                         key={f}
-                        to={href("code", { kind: "file", id: f })}
+                        to={href("map", { kind: "file", id: f })}
                         className="ref mono"
                         title={f}
                       >
@@ -400,7 +400,7 @@ export function Summary({
                       {item.files.map((f) => (
                         <Link
                           key={f}
-                          to={href("code", { kind: "file", id: f })}
+                          to={href("map", { kind: "file", id: f })}
                           className="ref mono"
                           title={f}
                         >

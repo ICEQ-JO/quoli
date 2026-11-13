@@ -29,8 +29,11 @@ export const SETTINGS_SECTIONS = [
   "appearance",
 ] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
-const LENSES: Lens[] = ["summary", "review", "agents", "code", "git", "infra"];
-const KINDS = ["file", "tool", "service", "commit", "branch"] as const;
+const LENSES: Lens[] = ["summary", "review", "agents", "map", "git", "infra"];
+const KINDS = ["file", "symbol", "route", "table", "tool", "service", "commit", "branch"] as const;
+/** URL prefix of a selection kind; symbols are `sym:` to keep links short. */
+const PREFIX: Record<string, string> = { symbol: "sym" };
+const KIND_OF = Object.fromEntries(Object.entries(PREFIX).map(([k, v]) => [v, k]));
 
 export function parseRoute(pathname: string): Route {
   const parts = pathname
@@ -73,7 +76,10 @@ const readable = (v: string) => encodeURIComponent(v).replace(/%2F/gi, "/").repl
 export function boardQuery(view: BoardView): string {
   const q: string[] = [];
   if (view.lens) q.push(`lens=${view.lens}`);
-  if (view.selection) q.push(`sel=${view.selection.kind}:${readable(view.selection.id)}`);
+  if (view.selection)
+    q.push(
+      `sel=${PREFIX[view.selection.kind] ?? view.selection.kind}:${readable(view.selection.id)}`,
+    );
   return q.length ? `?${q.join("&")}` : "";
 }
 
@@ -84,12 +90,14 @@ export function parseBoardQuery(search: string): BoardView {
   let selection: Selection = null;
   if (sel) {
     const at = sel.indexOf(":");
-    const kind = sel.slice(0, at);
+    const kind = KIND_OF[sel.slice(0, at)] ?? sel.slice(0, at);
     const id = sel.slice(at + 1);
     if (at > 0 && id && (KINDS as readonly string[]).includes(kind))
       selection = { kind, id } as Selection;
   }
-  return { lens: LENSES.includes(lens as Lens) ? (lens as Lens) : null, selection };
+  // Links from before the Code lens became the Map keep working.
+  const named = lens === "code" ? "map" : lens;
+  return { lens: LENSES.includes(named as Lens) ? (named as Lens) : null, selection };
 }
 
 export const paths = {

@@ -146,6 +146,9 @@ test("the hook queues events while Quoli is closed and the server records them i
   try {
     execFileSync("git", ["init", "-q", repo]);
     setup(["claude-code", "codex"], false, []);
+    // A sync that just ran keeps the hook from starting another one, which would drain the queue
+    // while this test reads it (starting the sync is tested in background.test.ts).
+    writeFileSync(join(box.root, ".quoli", "sync.last"), "");
     const run = (payload: object, agent?: string) =>
       execFileSync(
         process.execPath,

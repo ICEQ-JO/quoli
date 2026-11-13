@@ -108,39 +108,6 @@ function LensPanel(p: Props & { session: SessionDetail }) {
       </Section>
     );
   }
-  if (lens === "code") {
-    const changed = session.report.changes;
-    return (
-      <Section title="Changed files" aside={String(changed.length)}>
-        {changed.length === 0 ? (
-          <p className="faint">No files were changed.</p>
-        ) : (
-          <ul className="file-list">
-            {changed.map((c) => (
-              <li key={c.path}>
-                <button
-                  type="button"
-                  title={c.path}
-                  onClick={() => select({ kind: "file", id: c.path })}
-                >
-                  <span className="fname">{fileName(c.path)}</span>
-                  <span className="fdir">{c.path.slice(0, -fileName(c.path).length - 1)}</span>
-                  <span className="delta">
-                    <span className="add">+{c.added}</span>{" "}
-                    {c.rewrite ? (
-                      <span className="faint">rewritten</span>
-                    ) : (
-                      <span className="del">−{c.removed}</span>
-                    )}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-    );
-  }
   if (lens === "git") {
     const branch = git?.branches.find((b) => b.current);
     const ran = branch ? sessions.filter((s) => s.branch === branch.name) : [];
@@ -324,7 +291,7 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
                 <button
                   type="button"
                   title={f}
-                  onClick={() => goto("code", { kind: "file", id: f })}
+                  onClick={() => goto("map", { kind: "file", id: f })}
                 >
                   imports <b>{fileName(f)}</b>
                 </button>
@@ -335,7 +302,7 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
                 <button
                   type="button"
                   title={f.path}
-                  onClick={() => goto("code", { kind: "file", id: f.path })}
+                  onClick={() => goto("map", { kind: "file", id: f.path })}
                 >
                   used by <b>{fileName(f.path)}</b>
                 </button>
@@ -374,7 +341,7 @@ function ToolPanel({ id, session, goto }: Props & { id: string }) {
                 <button
                   type="button"
                   title={f}
-                  onClick={() => goto("code", { kind: "file", id: f })}
+                  onClick={() => goto("map", { kind: "file", id: f })}
                 >
                   <b>{fileName(f)}</b> <span className="faint">{f}</span>
                 </button>
@@ -478,7 +445,7 @@ function ServicePanel({
                 <button
                   type="button"
                   title={f}
-                  onClick={() => goto("code", { kind: "file", id: f })}
+                  onClick={() => goto("map", { kind: "file", id: f })}
                 >
                   <b>{fileName(f)}</b> <span className="faint">{f}</span>
                 </button>
