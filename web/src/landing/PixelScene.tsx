@@ -1,32 +1,22 @@
 import { useEffect, useRef } from "react";
-import { drawOptics, drawWorkbench } from "./pixel-art.ts";
+import { drawArchive, drawOptics, drawValley } from "./pixel-art.ts";
 import { SESSION_STEPS, sessionAt } from "./scene-model.ts";
 
-type Scene = "forest" | "field" | "recorder" | "signal" | "workbench";
-const hash = (n: number) => {
-  const value = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-  return value - Math.floor(value);
-};
-
-function landscape(
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  time: number,
-  simple: boolean,
-) {
-  const colors = ["#294e70", "#477da8", "#75acd0", "#a9d8f2", "#c7e6f7", "#edf7fc"];
-  ctx.fillStyle = simple ? colors[0] : colors[3];
+type Scene = "forest" | "field" | "recorder" | "signal" | "archive";
+function contours(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
+  ctx.fillStyle = "#294e70";
   ctx.fillRect(0, 0, w, h);
-  // Sample shared contour boundaries, not every pixel: crisp edges without a per-pixel frame cost.
-  const bands = simple ? [2, 1, 0, 1] : [4, 5, 4, 3, 4, 2];
-  for (let band = 0; band < bands.length; band++) {
-    ctx.fillStyle = colors[bands[band]];
+  for (let band = 0; band < 4; band++) {
+    ctx.fillStyle = ["#477da8", "#294e70", "#172d43", "#294e70"][band];
     ctx.beginPath();
     for (let x = 0; x <= w; x += 3) {
-      const boundary =
-        (band - 2) * h * 0.27 + x * 0.18 + Math.sin(x / 100 + time * 0.045 + band * 0.25) * h * 0.3;
-      const y = Math.round(boundary / 2) * 2;
+      const y =
+        Math.round(
+          ((band - 2) * h * 0.27 +
+            x * 0.18 +
+            Math.sin(x / 100 + time * 0.045 + band * 0.25) * h * 0.3) /
+            2,
+        ) * 2;
       if (!x) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
@@ -35,63 +25,6 @@ function landscape(
     ctx.closePath();
     ctx.fill();
   }
-  if (simple) return;
-  const sunX = w * 0.86;
-  const sunY = h * 0.18;
-  ctx.fillStyle = "#fff4de";
-  ctx.beginPath();
-  for (let i = 0; i < 16; i++) {
-    const a = (i * Math.PI) / 8;
-    const x = Math.round(sunX + Math.cos(a) * 9);
-    const y = Math.round(sunY + Math.sin(a) * 9);
-    if (!i) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.fill();
-  for (let i = 0; i < 22; i++) {
-    const a = (i * Math.PI) / 11 + time * 0.018;
-    ctx.fillRect(Math.round(sunX + Math.cos(a) * 14), Math.round(sunY + Math.sin(a) * 14), 1, 2);
-  }
-  // Distant tree line, then progressively darker foreground silhouettes.
-  for (let layer = 0; layer < 3; layer++) {
-    const baseline = h * (0.52 + layer * 0.2);
-    const shade = colors[2 - layer];
-    ctx.fillStyle = shade;
-    for (let x = -8; x < w + 10; x += 5) {
-      const height = 4 + hash(x + layer * 350) * (8 + layer * 14);
-      const y = baseline + Math.sin(x / 48 + layer) * 5;
-      ctx.fillRect(x, Math.round(y - height), 3, Math.round(height));
-      for (let k = 0; k < 5; k++) {
-        const size = 2 + k * 0.9;
-        ctx.fillRect(
-          Math.round(x - size),
-          Math.round(y - height + (k * height) / 6),
-          Math.round(size * 2 + 2),
-          3,
-        );
-      }
-    }
-  }
-  ctx.fillStyle = colors[0];
-  for (let x = 0; x < w; x += 2) {
-    const base = h - 7 + Math.sin(x / 22) * 3;
-    ctx.fillRect(x, Math.round(base), 2, h - base);
-    const grass = hash(x + 8);
-    if (grass > 0.5) ctx.fillRect(x, Math.round(base - grass * 8), 1, 8);
-    if (grass > 0.85) {
-      ctx.fillStyle = colors[5];
-      ctx.fillRect(x, Math.round(base - 6), 2, 2);
-      ctx.fillStyle = colors[0];
-    }
-  }
-  for (let i = 0; i < 18; i++) {
-    const x = (hash(i + 8) * w + time * (1 + hash(i))) % w;
-    const y = hash(i + 30) * h * 0.75 + Math.sin(time * 0.5 + i) * 2;
-    ctx.globalAlpha = 0.35 + Math.sin(time + i) * 0.2;
-    ctx.fillStyle = colors[5];
-    ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
-  }
-  ctx.globalAlpha = 1;
 }
 
 function recorder(ctx: CanvasRenderingContext2D, w: number, h: number, seconds: number) {
@@ -247,7 +180,7 @@ export function PixelScene({
       field: [420, 190],
       recorder: [350, 220],
       signal: [480, 240],
-      workbench: [400, 400],
+      archive: [300, 240],
     }[kind];
     element.width = width;
     element.height = height;
@@ -263,10 +196,10 @@ export function PixelScene({
     function draw() {
       if (!context) return;
       context.clearRect(0, 0, width, height);
-      if (kind === "forest" || kind === "field")
-        landscape(context, width, height, time, kind === "field");
+      if (kind === "forest") drawValley(context, time);
+      else if (kind === "field") contours(context, width, height, time);
       else if (kind === "recorder") recorder(context, width, height, time);
-      else if (kind === "workbench") drawWorkbench(context, time);
+      else if (kind === "archive") drawArchive(context, time);
       else drawOptics(context, time);
     }
     function tick(now: number) {
@@ -328,11 +261,11 @@ export function PixelScene({
     kind === "recorder"
       ? "Animated twin-reel recorder: reels turn, tape moves through the head, and a paper strip records the session's steps."
       : kind === "forest"
-        ? "An original animated pixel forest with layered blue contours, drifting light, and distant trees."
+        ? "An original animated pixel valley with snowy peaks, signal stations, a cable crossing, pine trees and a flowing river."
         : kind === "signal"
-          ? "An original pixel optical instrument: four fitted lenses on one rail, linked by stepped cables and a moving signal."
-          : kind === "workbench"
-            ? "An animated square pixel workspace: blue hills and trees move beyond the window; a monitor, lamp, notebooks, fern and steaming cup sit on the desk."
+          ? "Four original pixel observatory rooms represent Agents, Code, Git and Infra, connected by one moving signal."
+          : kind === "archive"
+            ? "An animated pixel archive console with a receiving antenna, an open field guide and a steaming cup against blue hills."
             : undefined;
   return (
     <canvas

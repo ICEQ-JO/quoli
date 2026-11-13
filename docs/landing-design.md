@@ -87,11 +87,11 @@ main marketing sections are bounded between 1140px and 1240px. Navigation is
 follows the copy inside the same clipped frame.
 
 The recording section leads with explanation above the working recorder, beside
-an entirely inset terminal. The product introduction is left-aligned beside a detailed four-lens optical
-instrument. Six product tabs sit to the left of the screenshot on desktop;
-they become two rows of three above it on mobile. The developer/team section pairs concrete benefits with a square animated
-workspace: a monitor, lamp, notebooks, fern and steaming cup in front of a window
-onto moving blue hills. The waitlist leads to a large pixel mission link and
+an entirely inset terminal. The product introduction is left-aligned beside four
+connected observatory rooms in a pixel hillside. Six product tabs sit to the left of the screenshot on desktop;
+they become two rows of three above it on mobile. The developer/team section shows
+local evidence, an opt-in summary conduit and a shared team view, then explains
+visibility and control beneath it. The waitlist leads to a large pixel mission link and
 a rounded blue footer with animated contour artwork, as requested by the owner.
 A 1440px rule adds hero side margins; breakpoints at 1000, 760 and 440px
 reflow content rather than clipping it.
@@ -103,8 +103,8 @@ The page and text sections stay flat; the footer contains original animated
 contour art behind its content. Borders distinguish controls and
 selected tabs. Pixel canvases render at low resolution without smoothing; the
 hero uses object-fit cover to preserve its pixel proportions and a short edge
-mask to merge scenery into the copy field. The optical instrument preserves a 2:1
-aspect ratio; the workspace preserves 1:1. Trace points and connector share one bordered row.
+mask to merge scenery into the copy field. The observatory panorama preserves a 2:1
+aspect ratio; the FAQ archive uses 5:4. The mobile hero preserves its 21:17 scene. Trace points and connector share one bordered row.
 
 ## Shapes
 
@@ -141,14 +141,20 @@ The same geometry appears in the favicon, header, recorder summary and signup.
 - Do not recreate the reference site's paired green panels, chapter color switch. The owner-requested contour footer uses Quoli
   blue with verified readable foreground contrast. Do not apply landing colors to the app's semantic activity tokens.
 
-## Owner refinement — more artwork
+## Owner refinement — signal valley
 
-The owner asked to restore life and left-side product navigation after reviewing
-the initial blue pass. `pixel-art.ts` supplies the original optical rail and
-workbench; `PixelScene.tsx` supplies the footer contours through the existing
-landscape painter. The same bounded canvas lifecycle handles visibility, pause
-and reduced motion. Art does not claim actual capture or infrastructure status.
-Deterministic drawing tests exercise both new scenes with no browser dependency.
+The November 13 owner review rejected the square desk, optical rail and empty
+landscape bands. `pixel-art.ts` now supplies an original inhabited valley, four
+observatory rooms and an archive field guide. Layered peaks, warm windows, timber
+roof details, pine foliage, a waterfall and a cable signal establish depth. Moving
+clouds, packets, steam and river highlights provide life without moving the copy.
+The same canvas lifecycle stops offscreen and in hidden tabs and respects reduced
+motion. There is no floating page-pause control, by explicit owner direction. The
+synthetic walkthrough retains its separate transport controls.
+
+The team section explains the actual sharing model in a wide schematic instead of
+placing unrelated desk art beneath a long introduction. All summary fields reflect
+the shipped model; no invented member metrics or activity counts.
 
 ## Commercial product presentation
 
@@ -167,5 +173,9 @@ synthetic-demo Usage/Insights screenshots provide proof in matching themes. Cost
 are estimates and loop flags are investigative signals; detailed hosted review
 and live provider connections remain distinguished from shipped capabilities.
 Evidence sections alternate copy and screenshots on desktop and read copy-first
-on mobile. FAQs use native keyboard-operable disclosures. This pass keeps the
-current artwork while the owner's preferred earlier style is clarified.
+on mobile. FAQs use a single-open accordion with semantic buttons, expanded state,
+controlled answer regions and inert closed answers. Grid expansion, a pixel plus/minus
+sigil and a short content transition work with keyboard input. Reduced motion skips
+transitions. The archive illustration provides the pixel-art treatment requested
+for this section. Footer links and hover states use explicit ice-blue foregrounds
+in both themes; scenery stays subdued behind them.

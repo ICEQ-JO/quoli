@@ -135,8 +135,9 @@ Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) adds a separate Vite
 entry at `/landing/` with original procedural pixel artwork, a working synthetic
 recorder and real screenshots of the synthetic demo. [#159](https://github.com/ICEQ-JO/quoli/issues/159)
 establishes the baby-blue identity, stepped Q mark, continuous hero, left-side
-product tabs, optical-instrument and square workspace illustrations, and an
-animated contour-art footer. The page describes the existing opt-in team summary
+product tabs, signal-valley and observatory illustrations, an animated FAQ field
+guide, a local-to-team summary schematic and a contour-art footer. Decorative
+scenery runs while visible, respects reduced motion and has no floating pause button. The page describes the existing opt-in team summary
 model and links to `/app/`, without public source-repository links. Dedicated Usage and Insights figures, workflow/setup content and FAQs explain
 shipped capabilities. The app's separate styles and activity colors are unchanged.
 

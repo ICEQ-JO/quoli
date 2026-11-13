@@ -83,7 +83,7 @@ function Terminal({
 }) {
   return (
     <div className="terminal-shell">
-      <PixelScene kind="field" paused={paused} />
+      <PixelScene kind="field" />
       <div className="terminal">
         <div className="terminal-header">
           <span className="window-controls" aria-hidden="true">
@@ -157,12 +157,10 @@ function Terminal({
 }
 
 function ProductTour({
-  paused,
   dark,
   view,
   onView,
 }: {
-  paused: boolean;
   dark: boolean;
   view: number;
   onView: (i: number) => void;
@@ -203,7 +201,7 @@ function ProductTour({
         ))}
       </div>
       <div className="board-frame">
-        <PixelScene kind="field" paused={paused} />
+        <PixelScene kind="field" />
         <div id="tour-panel" role="tabpanel" aria-labelledby={`tour-tab-${current.id}`}>
           <ProductScreenshot screen={current} dark={dark} />
         </div>
@@ -212,10 +210,10 @@ function ProductTour({
   );
 }
 
-function SiteFooter({ paused }: { paused: boolean }) {
+function SiteFooter() {
   return (
     <footer className="site-footer">
-      <PixelScene kind="field" paused={paused} />
+      <PixelScene kind="field" />
       <div className="footer-content">
         <div className="footer-description">
           <Brand />
@@ -402,6 +400,96 @@ function InformationPage({ page }: { page: string }) {
   );
 }
 
+const questions = [
+  {
+    question: "Which coding agents does Quoli support?",
+    answer:
+      "Claude Code, Codex, OpenCode and Pi. Capture depends on the events each agent exposes; supported tools, usage reporting and subagent relationships differ between agents. Quoli does not capture hidden model reasoning.",
+  },
+  {
+    question: "What can I review in a session?",
+    answer:
+      "Recorded prompts, supported tool calls and results, file edits, failures and usage. The session Summary brings together changes, commands, estimated costs and a derived review checklist. Code, Git and Infra add repository context around that work.",
+  },
+  {
+    question: "Can I use Quoli while an agent is running?",
+    answer:
+      "The Dashboard and session views update as supported events arrive. Follow active tool calls and live sessions, then revisit the same record afterward. Optional browser alerts can flag configured conditions such as spend thresholds, quiet sessions and possible loops while Quoli is open.",
+  },
+  {
+    question: "Does Quoli decide whether the code is correct?",
+    answer:
+      "No. It helps you find and inspect evidence. A recorded test run, review checklist or possible-loop flag does not establish feature correctness. You remain responsible for deciding what to review and merge.",
+  },
+  {
+    question: "What does the team dashboard receive?",
+    answer:
+      "Allowed session-summary fields such as agent, model, GitHub repository, branch, activity counts and estimated spend. Prompts, source code, commands, tool output, file names and local folder paths are excluded. Sharing starts only when you choose to connect and enable sync.",
+  },
+  {
+    question: "How accurate are cost estimates?",
+    answer:
+      "Quoli uses the token usage each supported agent reports and the current model price table. Estimates can differ from provider invoices because discounts, billing tiers and other pricing conditions are not fully modelled. Unpriced models are shown separately.",
+  },
+  {
+    question: "Does Infra show live production deployments?",
+    answer:
+      "It shows services and pipelines declared in repository files, plus services you add by hand. Local Docker can provide live container metrics. Live connections to hosted providers and richer shared session review remain planned capabilities.",
+  },
+];
+
+function FieldGuide() {
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <section className="faq-section" aria-labelledby="faq-title">
+      <div className="faq-intro">
+        <h2 id="faq-title">
+          A little context.
+          <br />
+          <em>Before you connect.</em>
+        </h2>
+        <p>The essentials on agents, evidence and what stays on your machine.</p>
+        <div className="faq-art">
+          <PixelScene kind="archive" />
+        </div>
+      </div>
+      <div className="faq-list">
+        {questions.map((item, i) => (
+          <div className={`faq-item${open === i ? " is-open" : ""}`} key={item.question}>
+            <h3>
+              <button
+                type="button"
+                id={`faq-question-${i}`}
+                aria-expanded={open === i}
+                aria-controls={`faq-answer-${i}`}
+                onClick={() => setOpen(open === i ? null : i)}
+              >
+                <svg className="faq-sigil" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 0h16v4h4v16h-4v4H4v-4H0V4h4zm0 4v16h16V4z" fill="currentColor" />
+                  <path className="sigil-horizontal" d="M6 10h12v4H6z" fill="currentColor" />
+                  <path className="sigil-vertical" d="M10 6h4v12h-4z" fill="currentColor" />
+                </svg>
+                <span>{item.question}</span>
+              </button>
+            </h3>
+            <section
+              className="faq-answer"
+              id={`faq-answer-${i}`}
+              aria-labelledby={`faq-question-${i}`}
+              aria-hidden={open !== i}
+              inert={open !== i}
+            >
+              <div>
+                <p>{item.answer}</p>
+              </div>
+            </section>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function Landing() {
   const [paused, setPaused] = useState(false);
   const [step, setStep] = useState(0);
@@ -426,9 +514,6 @@ export function Landing() {
       return false;
     }
   });
-  useEffect(() => {
-    document.documentElement.dataset.paused = String(paused);
-  }, [paused]);
   const page = new URLSearchParams(location.search).get("page");
   useEffect(() => {
     document.title =
@@ -508,7 +593,7 @@ export function Landing() {
               </small>
             </div>
             <div className="hero-art">
-              <PixelScene kind="forest" paused={paused} />
+              <PixelScene kind="forest" />
               <div
                 className="hero-trace"
                 role="img"
@@ -637,10 +722,10 @@ export function Landing() {
                 </p>
               </div>
               <div className="chapter-signal">
-                <PixelScene kind="signal" paused={paused} />
+                <PixelScene kind="signal" />
               </div>
             </div>
-            <ProductTour paused={paused} dark={dark} view={view} onView={setView} />
+            <ProductTour dark={dark} view={view} onView={setView} />
             <p className="tour-note">
               Every screen above is Quoli running its built-in synthetic demo: no real sessions, no
               real company. Unknown values stay unknown, and inferred ones are labelled.
@@ -678,7 +763,7 @@ export function Landing() {
               </p>
             </div>
             <div className="board-frame">
-              <PixelScene kind="field" paused={paused} />
+              <PixelScene kind="field" />
               <ProductScreenshot
                 dark={dark}
                 webp={false}
@@ -727,7 +812,7 @@ export function Landing() {
               </p>
             </div>
             <div className="board-frame">
-              <PixelScene kind="field" paused={paused} />
+              <PixelScene kind="field" />
               <ProductScreenshot
                 dark={dark}
                 webp={false}
@@ -740,54 +825,99 @@ export function Landing() {
               />
             </div>
           </section>
-          <section className="collaborate" id="collaborate" aria-labelledby="collaborate-title">
-            <div className="collaborate-intro">
+          <section className="team-section" id="collaborate" aria-labelledby="collaborate-title">
+            <div className="team-heading">
               <h2 id="collaborate-title">
-                Your team uses agents.
+                Individual context.
                 <br />
-                <em>Make the work visible.</em>
+                <em>A shared team view.</em>
               </h2>
-              <p>
-                Engineering leads need more than anecdotes about agent usage. Create a team, invite
-                members and see the session summaries they choose to share, while detailed evidence
-                stays on their own machines. Individual developers keep the full local view.
-              </p>
-              <a className="button collaborate-cta" href="/app/">
-                Open the team dashboard <Arrow />
-              </a>
-              {contact && (
-                <small className="collaborate-address">
-                  Talk to us about your workflow: <a href={`mailto:${contact}`}>{contact}</a>
-                </small>
-              )}
-              <div className="workbench-art">
-                <PixelScene kind="workbench" paused={paused} />
+              <div>
+                <p>
+                  See how your team uses coding agents, without collecting everyone’s source code.
+                  Members choose to share session summaries. The detailed work stays on their
+                  machines.
+                </p>
+                <a className="primary-link" href="/app/">
+                  Open the team dashboard <Arrow />
+                </a>
               </div>
             </div>
-            <ul className="collaborate-list">
-              <li>
-                <h3>Know what is being used.</h3>
+            <div
+              className="team-schematic"
+              role="img"
+              aria-label="Illustration: developers keep detailed evidence locally and optionally share session summaries with the team dashboard."
+            >
+              <div className="team-machines" aria-hidden="true">
+                {["Agent activity", "Code & commands", "Local session history"].map((label, i) => (
+                  <div className="local-machine" key={label}>
+                    <svg viewBox="0 0 64 54" fill="none" aria-hidden="true">
+                      <path d="M4 2h56v38H4zM24 40h16v8H24zM14 48h36v4H14z" fill="#75acd0" />
+                      <path d="M8 6h48v30H8z" fill="#172d43" />
+                      <path
+                        d={
+                          i === 0
+                            ? "M14 13h4v4h-4zm9 0h21v2H23zm-9 9h4v4h-4zm9 0h15v2H23z"
+                            : i === 1
+                              ? "M18 13h4v4h-4v6h4v4h-4l-6-7zm24 0h4l6 7-6 7h-4v-4h4v-6h-4zM30 11h3v19h-3z"
+                              : "M14 13h30v3H14zm0 7h24v3H14zm0 7h18v3H14z"
+                        }
+                        fill="#c7e6f7"
+                      />
+                    </svg>
+                    <span>{label}</span>
+                  </div>
+                ))}
+                <strong>On each developer’s machine</strong>
+              </div>
+              <div className="summary-conduit" aria-hidden="true">
+                <span>Opt-in summaries</span>
+                <div>
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              </div>
+              <div className="team-console" aria-hidden="true">
+                <div className="team-console-title">
+                  <Mark />
+                  <strong>Your team, in view</strong>
+                </div>
+                <div className="team-console-row">
+                  <span>Agent & model</span>
+                  <span>Usage</span>
+                </div>
+                <div className="team-console-row">
+                  <span>Repository & branch</span>
+                  <span>Activity</span>
+                </div>
+                <div className="team-console-row">
+                  <span>Failures & possible loops</span>
+                  <span>Review</span>
+                </div>
+                <div className="team-console-row">
+                  <span>Estimated spend</span>
+                  <span>Cost</span>
+                </div>
+                <small>Illustrative summary · no source code uploaded</small>
+              </div>
+            </div>
+            <div className="team-boundaries">
+              <div>
+                <h3>A useful view for engineering leads.</h3>
                 <p>
-                  See session summaries with the agent, model, repository and branch, alongside
-                  calls, failures, possible loops and estimated spend.
+                  Review activity by member, open recent summaries and understand recorded usage
+                  across the team.
                 </p>
-              </li>
-              <li>
-                <h3>Look across the team.</h3>
+              </div>
+              <div>
+                <h3>Sharing stays in your control.</h3>
                 <p>
-                  Team owners can review activity by member and open recent summaries. Start
-                  conversations with a shared view of recorded usage.
+                  Prompts, code, commands, tool output and local paths are excluded. Members can
+                  leave, revoke keys or delete shared data.
                 </p>
-              </li>
-              <li>
-                <h3>Share summaries, keep the details local.</h3>
-                <p>
-                  Team sync is opt-in. Prompts, source code, commands, tool output, file names and
-                  local folder paths are excluded from uploads. Members can leave a team, revoke
-                  keys or delete shared data.
-                </p>
-              </li>
-            </ul>
+              </div>
+            </div>
           </section>
           <section className="trust-section" aria-labelledby="trust-title">
             <div>
@@ -855,75 +985,7 @@ export function Landing() {
               </li>
             </ol>
           </section>
-          <section className="faq-section" aria-labelledby="faq-title">
-            <h2 id="faq-title">
-              Before you
-              <br />
-              <em>connect.</em>
-            </h2>
-            <div className="faq-list">
-              <details>
-                <summary>Which coding agents does Quoli support?</summary>
-                <p>
-                  Claude Code, Codex, OpenCode and Pi. Capture depends on the events each agent
-                  exposes; supported tools, usage reporting and subagent relationships differ
-                  between agents. Quoli does not capture hidden model reasoning.
-                </p>
-              </details>
-              <details>
-                <summary>What can I review in a session?</summary>
-                <p>
-                  Recorded prompts, supported tool calls and results, file edits, failures and
-                  usage. The session Summary brings together changes, commands, estimated costs and
-                  a derived review checklist. Code, Git and Infra add repository context around that
-                  work.
-                </p>
-              </details>
-              <details>
-                <summary>Can I use Quoli while an agent is running?</summary>
-                <p>
-                  The Dashboard and session views update as supported events arrive. Follow active
-                  tool calls and live sessions, then revisit the same record afterward. Optional
-                  browser alerts can flag configured conditions such as spend thresholds, quiet
-                  sessions and possible loops while Quoli is open.
-                </p>
-              </details>
-              <details>
-                <summary>Does Quoli decide whether the code is correct?</summary>
-                <p>
-                  No. It helps you find and inspect evidence. A recorded test run, review checklist
-                  or possible-loop flag does not establish feature correctness. You remain
-                  responsible for deciding what to review and merge.
-                </p>
-              </details>
-              <details>
-                <summary>What does the team dashboard receive?</summary>
-                <p>
-                  Allowed session-summary fields such as agent, model, GitHub repository, branch,
-                  activity counts and estimated spend. Prompts, source code, commands, tool output,
-                  file names and local folder paths are excluded. Sharing starts only when you
-                  choose to connect and enable sync.
-                </p>
-              </details>
-              <details>
-                <summary>How accurate are cost estimates?</summary>
-                <p>
-                  Quoli uses the token usage each supported agent reports and the current model
-                  price table. Estimates can differ from provider invoices because discounts,
-                  billing tiers and other pricing conditions are not fully modelled. Unpriced models
-                  are shown separately.
-                </p>
-              </details>
-              <details>
-                <summary>Does Infra show live production deployments?</summary>
-                <p>
-                  It shows services and pipelines declared in repository files, plus services you
-                  add by hand. Local Docker can provide live container metrics. Live connections to
-                  hosted providers and richer shared session review remain planned capabilities.
-                </p>
-              </details>
-            </div>
-          </section>
+          <FieldGuide />
           <section className="waitlist-section" id="waitlist" aria-labelledby="waitlist-title">
             <div>
               <h2 id="waitlist-title">
@@ -945,15 +1007,7 @@ export function Landing() {
           </a>
         </main>
       )}
-      <SiteFooter paused={paused} />
-      <button
-        className="motion-control"
-        type="button"
-        onClick={() => setPaused(!paused)}
-        aria-label={paused ? "Resume page animations" : "Pause page animations"}
-      >
-        {paused ? "Play motion" : "Pause motion"}
-      </button>
+      <SiteFooter />
     </>
   );
 }

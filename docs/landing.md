@@ -9,8 +9,9 @@ supersedes the earlier reference-site structural direction. Original pixel scene
 working recorder remain, recolored in ice blue, baby blue, denim, midnight and cream.
 A continuous hero places the promise and actions beside the scenery; a stepped open Q
 and connected pixel form the landing mark. Left-side tabs introduce the product
-tour. A four-lens optical instrument, square animated workspace and rounded contour-art
-footer add original pixel artwork throughout the page. See [landing-design.md](landing-design.md).
+tour. An original signal valley, four observatory rooms, animated archive field guide
+and rounded contour-art footer give the page one illustrated world. The team section
+shows local evidence flowing into opt-in summaries, rather than a decorative workspace. See [landing-design.md](landing-design.md).
 
 Jost sans carries explanation and the hero; Jersey 10 carries section headings and
 the wordmark. Both are self-hosted under their included OFL licenses.
@@ -41,8 +42,9 @@ in scene-model.ts. The clock is time-based and preserved across pause/resume.
 
 The recorder observes the entire recording section: on phones its terminal still
 progresses while the mechanical drawing is above the viewport. Other scenes stop
-offscreen, and all stop in hidden tabs. The page pause control reaches every canvas
-and CSS animation; replay restarts the demonstration. Reduced motion draws a
+offscreen, and all stop in hidden tabs. At the owner’s request there is no floating
+page-pause control: decorative animation runs while visible. The walkthrough keeps
+its own Pause/Play and Replay controls, without stopping other scenery. Reduced motion draws a
 readable final recorder state and stops continuous updates. Terminal and product
 data are synthetic and labeled. The terminal shows only the steps reached so far, so it
 fills as the session plays; reduced motion shows every step.
@@ -73,8 +75,9 @@ private sessions.
 The page now explains the problem, recorded review workflow, four lenses, token
 usage/spend, failures and Insights, opt-in team summaries, evidence/privacy boundaries,
 setup and seven practical FAQs. The content is a review draft, not owner-approved
-final copy. A preference question is pending for the next artwork revision; this
-content pass deliberately preserves the current illustration implementation.
+final copy. The November 13 owner revision replaces the workspace and optical rail
+with signal-valley illustrations, rebuilds the team explanation, and adds an animated
+keyboard-operable FAQ accordion. One answer opens at a time; hidden answers are inert.
 
 ## Developers and engineering teams
 
@@ -146,3 +149,14 @@ Content-rebuild validation: 167 tests, typecheck, lint and build passed. Browser
 checks covered both themes, no overflow at 320–1440px, axe zero A/AA violations,
 keyboard tour and FAQ operation, screenshot loading, forced image-failure recovery
 and reduced-motion evidence visibility. Synthetic screenshot capture must not change the user's installed agent integrations.
+
+## November 13 artwork and layout revision
+
+The hero has layered mountains, trees, two signal stations, moving clouds, a cable
+packet, waterfall and river highlights. Four observatory rooms replace the optical
+rail; the FAQ has its own animated archive console and field guide. All are original
+canvas drawings, tested for finite coordinates, deterministic stills and time changes.
+The team section now diagrams local evidence → opt-in summaries → team view and
+labels the drawing as illustrative. Footer text/hover colors are explicitly light
+in either theme, and its contour canvas has reduced opacity. Mobile hero art keeps
+its full aspect ratio so the station is not cropped away.

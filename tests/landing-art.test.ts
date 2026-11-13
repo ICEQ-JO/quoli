@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { drawOptics, drawWorkbench } from "../web/src/landing/pixel-art.ts";
+import { drawArchive, drawOptics, drawValley } from "../web/src/landing/pixel-art.ts";
 
 // Record real drawing commands without requiring a browser or a native canvas dependency.
 function paint(draw: (ctx: CanvasRenderingContext2D, time: number) => void, time: number) {
@@ -26,7 +26,7 @@ function paint(draw: (ctx: CanvasRenderingContext2D, time: number) => void, time
   return commands;
 }
 
-for (const draw of [drawOptics, drawWorkbench]) {
+for (const draw of [drawArchive, drawOptics, drawValley]) {
   test(`${draw.name}: artwork is finite, deterministic when paused, and changes with time`, () => {
     const still = paint(draw, 0);
     assert.ok(still.length > 100, "the illustration actually draws its fitted parts");
