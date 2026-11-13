@@ -7,12 +7,16 @@ import { home } from "./db.ts";
  * Live model prices from models.dev, a public, maintained catalogue of model prices
  * (https://models.dev/api.json: providers → models → `cost` in USD per million tokens, with
  * optional `cache_read` and `cache_write`). Quoli fetches it at most once a day with a plain GET
- * that carries no identifiers, keeps only the first-party providers' prices, and caches them in
- * the Quoli home. Nothing about the user is sent.
+ * that carries no identifiers and caches the prices in the Quoli home. Nothing about the user is
+ * sent. Makers' prices come first, then OpenCode Zen's (the models OpenCode serves itself, some
+ * free), then any other provider's for a model no one above lists, so a new model is priced as
+ * soon as models.dev knows it.
  */
 export const LIVE_SOURCE = "https://models.dev/api.json";
 const DAY = 86_400_000;
 const MAX_BYTES = 30 * 1024 * 1024;
+/** Bumped when parsing changes, so an older cache is fetched again. */
+const FORMAT = 2;
 
 /**
  * Providers that sell their own models, in priority order: resellers list the same ids at their
@@ -34,6 +38,7 @@ const PROVIDERS = [
 export interface LivePrices {
   source: string;
   fetchedAt: string;
+  format?: number;
   prices: ModelPrice[];
 }
 
@@ -48,7 +53,11 @@ export function parseModelsDev(data: unknown): ModelPrice[] {
   const out: ModelPrice[] = [];
   const seen = new Set<string>();
   if (!data || typeof data !== "object") return out;
-  for (const provider of PROVIDERS) {
+  const first = [...PROVIDERS, "opencode"];
+  const rest = Object.keys(data)
+    .filter((p) => !first.includes(p))
+    .sort();
+  for (const provider of [...first, ...rest]) {
     const models = (data as Record<string, { models?: unknown }>)[provider]?.models;
     if (!models || typeof models !== "object") continue;
     for (const [id, m] of Object.entries(models as Record<string, { cost?: unknown }>)) {
@@ -117,13 +126,13 @@ export function loadLiveCache(file: string): LivePrices | null {
   try {
     const c = JSON.parse(readFileSync(file, "utf8")) as LivePrices;
     if (typeof c.fetchedAt !== "string" || Number.isNaN(Date.parse(c.fetchedAt))) return null;
-    if (!Array.isArray(c.prices)) return null;
+    if (!Array.isArray(c.prices) || c.format !== FORMAT) return null;
     const prices = c.prices.filter(
       (p) =>
         typeof p?.model === "string" &&
         [p.input, p.output, p.cacheRead, p.cacheWrite].every((v) => price(v) !== null),
     );
-    current = { source: LIVE_SOURCE, fetchedAt: c.fetchedAt, prices };
+    current = { source: LIVE_SOURCE, fetchedAt: c.fetchedAt, format: FORMAT, prices };
     return current;
   } catch {
     return null;
@@ -148,7 +157,12 @@ export async function refreshLivePrices(
   if (text.length > MAX_BYTES) throw new Error("models.dev price list is too large");
   const prices = parseModelsDev(JSON.parse(text));
   if (prices.length < 10) throw new Error("models.dev price list has too few priced models");
-  const live = { source: LIVE_SOURCE, fetchedAt: new Date(now).toISOString(), prices };
+  const live = {
+    source: LIVE_SOURCE,
+    fetchedAt: new Date(now).toISOString(),
+    format: FORMAT,
+    prices,
+  };
   writeFileSync(file, JSON.stringify(live));
   current = live;
   return live;

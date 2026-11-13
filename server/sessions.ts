@@ -14,6 +14,7 @@ import {
   type Turn,
   zeroTokens,
 } from "../shared/model.ts";
+import { contextOf } from "./context.ts";
 import { projectId, type RawEvent, type UsageRow } from "./db.ts";
 import { findLoops } from "./loops.ts";
 import { costOf } from "./prices.ts";
@@ -69,8 +70,15 @@ export function deriveSession(
         endedAt = null;
         break;
       case "UserPromptSubmit":
-        turns.push({ prompt: str(p.prompt) ?? "", at: e.at, toolCallIds: [] });
+        turns.push({ prompt: str(p.prompt) ?? "", at: e.at, toolCallIds: [], reply: null });
         break;
+      case "Stop": {
+        // The main agent's final text for the turn; SubagentStop is a subagent's and not shown.
+        const turn = turns.at(-1);
+        const reply = str(p.last_assistant_message)?.trim();
+        if (turn && reply && agentId === "main") turn.reply = reply;
+        break;
+      }
       case "PreToolUse": {
         const id = str(p.tool_use_id) ?? `seq-${e.seq}`;
         const name = str(p.tool_name) ?? "unknown";
@@ -145,7 +153,8 @@ export function deriveSession(
     tokens: t,
     usd: costOf([{ model, tokens: t }], prices).usd,
   }));
-  const last = events.at(-1)?.at ?? first.at;
+  // ISO times sort as text; the latest of the last event and any usage.
+  const last = [events.at(-1)?.at ?? first.at, ...usage.map((u) => u.at)].sort().at(-1) as string;
   const loops = findLoops(toolCalls, turns);
   const usagePoints = usage.map((u) => ({
     at: u.at,
@@ -164,6 +173,7 @@ export function deriveSession(
     branch,
     startedAt: first.at,
     endedAt,
+    lastAt: last,
     live: isLive(endedAt, last, now),
     toolCount: toolCalls.length,
     filesTouched: Object.keys(files).length,
@@ -189,6 +199,7 @@ export function deriveSession(
     toolCalls,
     files,
     usage: usagePoints,
+    context: contextOf(events, usagePoints, root),
   };
 }
 
@@ -217,7 +228,16 @@ function promptTitle(prompts: string[]): string | null {
 }
 
 export function summarizeSession(d: SessionDetail): SessionSummary {
-  const { agents: _a, turns: _t, toolCalls: _c, files: _f, usage: _u, report: _r, ...rest } = d;
+  const {
+    agents: _a,
+    turns: _t,
+    toolCalls: _c,
+    files: _f,
+    usage: _u,
+    report: _r,
+    context: _x,
+    ...rest
+  } = d;
   return rest;
 }
 
@@ -267,7 +287,10 @@ function summarize(input: unknown, root: string): string {
   if (str(i.description)) return clip(String(i.description), 140);
   if (str(i.url)) return String(i.url);
   if (str(i.query)) return clip(String(i.query), 140);
-  return clip(JSON.stringify(i), 120);
+  for (const k of ["prompt", "message", "text", "title", "name"])
+    if (str(i[k])) return clip(String(i[k]).split("\n")[0], 140);
+  // Nothing readable (ids, flags): the tool's name says more than raw JSON would.
+  return "";
 }
 
 function outputText(r: unknown): string | null {

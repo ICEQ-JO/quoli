@@ -11,6 +11,16 @@ import {
 } from "../shared/alerts.ts";
 import type { LiveSession, SessionDetail, ToolCall } from "../shared/model.ts";
 
+const emptyContext = {
+  sizes: [],
+  peak: null,
+  current: null,
+  compactions: [],
+  instructions: [],
+  commands: [],
+  modelSwitches: [],
+};
+
 const NOW = Date.UTC(2026, 10, 12, 12, 0, 0);
 const ago = (min: number) => new Date(NOW - min * 60_000).toISOString();
 
@@ -159,9 +169,10 @@ test("the live view of a session shows the running call and spend in the last 10
     tokens: { input, output: 0, cacheRead: 0, cacheWrite: 0 },
   });
   const d = {
+    context: emptyContext,
     ...live("a"),
     agents: [],
-    turns: [{ prompt: "go", at: ago(20), toolCallIds: [] }],
+    turns: [{ prompt: "go", at: ago(20), toolCallIds: [], reply: null }],
     toolCalls: [call("1", 3, "running", "pnpm test"), call("2", 2, "ok", "cat a.ts")],
     files: {},
     usage: [usage(15, 1_000_000), usage(4, 250_000)],

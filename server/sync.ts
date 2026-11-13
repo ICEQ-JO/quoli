@@ -104,7 +104,9 @@ export function toUpload(d: SessionDetail): SessionUpload {
     branch: d.branch,
     startedAt: d.startedAt,
     endedAt: d.endedAt,
-    durationMs: sessionMs(d),
+    // A live session sends its length so far: agents such as OpenCode never send an end event,
+    // and a summary is re-sent only when the session has new activity.
+    durationMs: sessionMs(d) ?? Math.max(0, Date.parse(d.lastAt) - Date.parse(d.startedAt)),
     inputTokens: t.input,
     outputTokens: t.output,
     cacheReadTokens: t.cacheRead,

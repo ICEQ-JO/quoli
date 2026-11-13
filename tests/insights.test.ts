@@ -3,6 +3,16 @@ import { test } from "node:test";
 import { insightsReport, mainModel, percentile, sessionMs } from "../server/insights.ts";
 import type { SessionDetail, ToolCall, ToolCategory } from "../shared/model.ts";
 
+const emptyContext = {
+  sizes: [],
+  peak: null,
+  current: null,
+  compactions: [],
+  instructions: [],
+  commands: [],
+  modelSwitches: [],
+};
+
 // Local-time dates, so day bucketing is checked in the server's own time zone.
 const at = (day: number, h = 12, m = 0) => new Date(2026, 10, day, h, m).toISOString();
 const NOW = new Date(2026, 10, 12, 18, 0);
@@ -52,6 +62,8 @@ function session(o: {
     branch: null,
     startedAt,
     endedAt: o.live ? null : end,
+    lastAt: end,
+    context: emptyContext,
     live: !!o.live,
     toolCount: toolCalls.length,
     filesTouched: 0,

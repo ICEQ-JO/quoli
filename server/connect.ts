@@ -30,6 +30,12 @@ export const TARGETS: Record<HookFileAgent, { file: string; events: string[] }> 
       "SubagentStop",
       "Stop",
       "SessionEnd",
+      // Context observability (code.claude.com/docs/en/hooks, verified on Claude Code 2.1.323).
+      "InstructionsLoaded",
+      "PreCompact",
+      "PostCompact",
+      "UserPromptExpansion",
+      "PostModelSwitch",
     ],
   },
   // Codex hook contract: learn.chatgpt.com/docs/hooks (verified against codex-cli 0.163.0).
@@ -109,6 +115,24 @@ function ourCommands(root: string, agent: HookFileAgent): string[] | null {
     .map((h: { command?: string }) => h.command ?? "");
 }
 
+/**
+ * True when a hook file has Quoli's hook but not on every event Quoli now listens to, as after an
+ * update that adds events. The install is then rewritten so the new events start arriving.
+ */
+export function missingEvents(file: string, agent: HookFileAgent): boolean {
+  let hooks: Record<string, unknown>;
+  try {
+    hooks = JSON.parse(readFileSync(file, "utf8"))?.hooks ?? {};
+  } catch {
+    return false;
+  }
+  const has = (event: string) => {
+    const groups = hooks[event];
+    return Array.isArray(groups) && groups.some(isOurs);
+  };
+  return Object.keys(hooks).some((e) => has(e)) && TARGETS[agent].events.some((e) => !has(e));
+}
+
 /** The agents whose hook files in `root` contain Quoli's hook. */
 export function installedAgents(root: string): HookAgent[] {
   return HOOK_AGENTS.filter((a) =>
@@ -137,7 +161,12 @@ export function refreshHooks(roots: string[]): string[] {
         if (!text?.includes(PLUGINS[agent].mark) || text === pluginSource(agent)) continue;
       } else {
         const ours = ourCommands(root, agent);
-        if (!ours?.length || ours.every((c) => c === commandFor(agent))) continue;
+        if (
+          !ours?.length ||
+          (ours.every((c) => c === commandFor(agent)) &&
+            !missingEvents(settingsFile(root, agent), agent))
+        )
+          continue;
       }
       try {
         connect(root, false, agent);

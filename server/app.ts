@@ -1,6 +1,6 @@
 import { readFileSync, statSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { basename, normalize, resolve } from "node:path";
+import { basename, isAbsolute, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   isAgentKind,
@@ -12,6 +12,7 @@ import {
   type Settings,
 } from "../shared/model.ts";
 import { codeMap } from "./code.ts";
+import { codeGraphFor, scopeGraph } from "./codegraph/index.ts";
 import { connect, HOOK_AGENTS, type HookAgent, installedAgents, validateRepo } from "./connect.ts";
 import { home, projectId, type Store } from "./db.ts";
 import { githubRepo } from "./github.ts";
@@ -31,11 +32,14 @@ import {
   savePrices,
   validatePrices,
 } from "./prices.ts";
+import { buildReview, reviewDiff } from "./review.ts";
+import { searchEvents } from "./search.ts";
 import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
 import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
 import { liveSession } from "./steps.ts";
 import { HOSTED, loadSync, saveSync, syncOnce, syncStatus } from "./sync.ts";
 import { usageReport } from "./usage.ts";
+import { groupRoot } from "./worktrees.ts";
 
 const version: string = JSON.parse(
   readFileSync(resolve(fileURLToPath(import.meta.url), "../../package.json"), "utf8"),
@@ -103,9 +107,22 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
 
 /** The product's HTTP API. `port` is read per request so tests can listen on port 0. */
 export function createApp(store: Store, port: () => number) {
-  const listeners = new Set<ServerResponse>();
+  // Live updates: a numbered feed of recent changes that pages poll (GET /api/changes). Polling
+  // instead of a held connection: browsers allow six connections per address, so a stream per
+  // tab left a seventh tab, or a reload, waiting forever.
+  let seq = 0;
+  const recent: { seq: number; data: object }[] = [];
   const broadcast = (data: object) => {
-    for (const res of listeners) res.write(`data: ${JSON.stringify(data)}\n\n`);
+    recent.push({ seq: ++seq, data });
+    if (recent.length > 200) recent.shift();
+  };
+  /** Changes after `after`; a page that missed some (or a restarted server) reloads everything. */
+  const changesAfter = (after: number) => {
+    if (!Number.isInteger(after) || after < 0) return { seq, changes: [] };
+    if (after > seq || (recent.length && after < recent[0].seq - 1)) {
+      return { seq, changes: [{ type: "projects" }] };
+    }
+    return { seq, changes: recent.filter((c) => c.seq > after).map((c) => c.data) };
   };
 
   const hasRoot = (root: string) => store.hasRoot(root) || store.isRegistered(root);
@@ -140,6 +157,10 @@ export function createApp(store: Store, port: () => number) {
           agents,
           connectedAt: registered.get(root) ?? null,
           github: githubRepo(root),
+          worktreeOf: (() => {
+            const main = groupRoot(root, roots);
+            return main ? projectId(main) : null;
+          })(),
         };
       })
       .sort(
@@ -228,9 +249,8 @@ export function createApp(store: Store, port: () => number) {
         if (!isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
         const payload = JSON.parse(await body(req));
         const changed = () => broadcast({ type: "projects" });
-        if (ingest(store, payload, undefined, changed, agent)) {
-          broadcast({ type: "event", sessionId: payload.session_id });
-        }
+        const sessionId = ingest(store, payload, undefined, changed, agent);
+        if (sessionId) broadcast({ type: "event", sessionId });
         json(res, 202, {});
       } catch {
         json(res, 400, {});
@@ -256,16 +276,8 @@ export function createApp(store: Store, port: () => number) {
     }
 
     if (method !== "GET") return false;
-    if (path === "/api/stream") {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-store",
-        Connection: "keep-alive",
-      });
-      res.write(": connected\n\n");
-      listeners.add(res);
-      req.on("close", () => listeners.delete(res));
-      return true;
+    if (path === "/api/changes") {
+      return json(res, 200, changesAfter(Number(url.searchParams.get("after") ?? -1)));
     }
     if (path === "/api/projects") return json(res, 200, projects());
     if (path === "/api/setup") return json(res, 200, setupStatus());
@@ -310,6 +322,19 @@ export function createApp(store: Store, port: () => number) {
       const [detail = null] = details([id]);
       return json(res, detail ? 200 : 404, detail);
     }
+    if (path === "/api/review" || path === "/api/review/diff") {
+      const [detail = null] = details([url.searchParams.get("id") ?? ""]);
+      if (!detail) return json(res, 404, { error: "Unknown session" });
+      const known = hasRoot(detail.root);
+      if (path === "/api/review") return json(res, 200, buildReview(detail, known));
+      const rel = normalize(url.searchParams.get("path") ?? "");
+      if (!rel || rel.startsWith("..") || isAbsolute(rel))
+        return json(res, 400, { error: "Bad path" });
+      const diff = reviewDiff(detail, rel, known);
+      return diff
+        ? json(res, 200, diff)
+        : json(res, 404, { error: "The repository is not available" });
+    }
     if (path === "/api/sessions") {
       const wanted = url.searchParams.get("project");
       let ids: string[];
@@ -322,6 +347,25 @@ export function createApp(store: Store, port: () => number) {
       }
       const sessions: SessionSummary[] = details(ids).map(summarizeSession);
       return json(res, 200, sessions);
+    }
+    if (path === "/api/search") {
+      const project = projects().find((p) => p.id === url.searchParams.get("project"));
+      if (!project) return json(res, 404, { error: "Unknown project" });
+      const recent = details(store.sessionIds(project.root).slice(0, 60));
+      return json(res, 200, searchEvents(recent, url.searchParams.get("q") ?? ""));
+    }
+    const graphRoute = /^\/api\/projects\/([^/]+)\/codegraph$/.exec(path);
+    if (graphRoute) {
+      const project = projects().find((p) => p.id === graphRoute[1]);
+      if (!project) return json(res, 404, { error: "Unknown project" });
+      const state = codeGraphFor(project.id, project.root);
+      if (!state.graph) {
+        return state.error
+          ? json(res, 500, { error: state.error })
+          : json(res, 202, { status: "building" });
+      }
+      const prefix = url.searchParams.get("path");
+      return json(res, 200, prefix ? scopeGraph(state.graph, prefix) : state.graph);
     }
     if (!path.startsWith("/api/")) return false;
     // Only known project roots can be read, and only files inside them.

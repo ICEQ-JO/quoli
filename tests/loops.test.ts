@@ -26,6 +26,7 @@ function call(
 }
 const turn = (calls: ToolCall[]): Turn => ({
   prompt: "p",
+  reply: null,
   at: calls[0]?.startedAt ?? T(0),
   toolCallIds: calls.map((c) => c.id),
 });

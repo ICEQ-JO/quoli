@@ -32,6 +32,7 @@ Approving shares as you: the page asks to check that the terminal shows the same
 
 - **Team owner** (an instructor, a lead): sign in at `/app/`, create a team, share the invite code.
 - **Everyone**: sign in at `/app/`; the page shows one command, `npx https://iceq.best/quoli-<version>.tgz connect`. It records every repository for the agents, opens the browser on `/app/?connect=CODE`, and once the signed-in user approves that code it collects a sync key, turns Team sync on and starts Quoli (#154). Settings → Team sync → Connect does the same from a running Quoli. Pasting a sync key made under "Sync keys and shared data" still works.
+- **Your activity** (#167): once a computer has uploaded, the account page shows the signed-in person's own sessions over 7, 30 or 90 days: sessions, agent time, estimated cost (token counts when a model has no price), tokens and failed calls; cost per day; the top agents, repositories and models; and recent sessions. It reads only their own `session_summaries` rows (row-level security), and refreshes every minute.
 - **Member**: join with the code. Only sessions that start after that are shared; a member can leave a team, revoke keys or delete what they shared at any time.
 - The owner sees, per member, sessions, last activity, calls, failures, possible loops and estimated spend, for sessions since the member joined; plus the most recent sessions with agent, model, GitHub repository and branch.
 
