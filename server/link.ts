@@ -132,22 +132,37 @@ export function openBrowser(url: string) {
  * through the browser, and turn Team sync on. Returns "start" when Quoli should start next, or an
  * exit code.
  */
-export async function connectCli(args: string[]): Promise<number | "start"> {
-  const { setupCli } = await import("./setup.ts");
+export async function connectCli(
+  args: string[],
+  { askToLink = false } = {},
+): Promise<number | "start"> {
+  const { setupCli, START } = await import("./setup.ts");
   const { Store } = await import("./db.ts");
-  if (!HOSTED.url || !HOSTED.anonKey) {
-    console.log("This copy of Quoli has no account service to connect to.");
-    return 1;
+  const { chooseScope, yes } = await import("./onboard.ts");
+  console.log("1. Which projects to record\n");
+  console.log(`   ${await chooseScope(args)}\n`);
+  if (setupCli([], false) !== 0) {
+    console.log("\n   Some agents could not be set up; the others are recording.");
   }
-  console.log("1. Recording your repositories\n");
-  setupCli([], false);
 
   const store = new Store();
   const current = loadSync(store);
-  if (current.key && current.enabled && !args.includes("--again")) {
+  const offerLink = async () => {
     console.log(
-      "\n2. This computer is already connected to a Quoli account and Team sync is on.\n   (`connect --again` links it again, for example to another account.)",
+      "\n2. Your Quoli account (optional): see your sessions at iceq.best and share them with a team.\n   Only summaries are sent, never prompts or code.\n",
     );
+    return yes("   Connect this computer now?");
+  };
+  if (!HOSTED.url || !HOSTED.anonKey) {
+    console.log(
+      "\n2. This copy of Quoli has no account service; everything stays on this computer.",
+    );
+  } else if (current.key && current.enabled && !args.includes("--again")) {
+    console.log(
+      "\n2. This computer is already connected to your Quoli account.\n   (`connect --again` links it again, for example to another account.)",
+    );
+  } else if (askToLink && !(await offerLink())) {
+    console.log("   Skipped. Everything stays on this computer; run `connect` later to link it.");
   } else {
     console.log("\n2. Connecting this computer to your Quoli account\n");
     const link = await startLink(HOSTED);
@@ -178,9 +193,8 @@ export async function connectCli(args: string[]): Promise<number | "start"> {
     return 0;
   }
   console.log(
-    `\n3. Done. You can close this terminal: your agents keep recording, and summaries keep
-   reaching your account, without Quoli open. To look at your sessions in detail, run
-   ${process.env.QUOLI_BUNDLED === "1" ? `npx https://iceq.best/quoli-${process.env.QUOLI_VERSION}.tgz` : "pnpm dev"} any time.
+    `\n3. Done. Recording is on, and it keeps working with this terminal closed: you do not
+   need to keep Quoli open. Run ${START} again whenever you want to look.
 
    Opening Quoli now:`,
   );

@@ -6,6 +6,7 @@ import { applyRetention, createApp, json } from "./app.ts";
 import { HOOK_AGENTS, refreshHooks } from "./connect.ts";
 import { Store } from "./db.ts";
 import { startLivePrices } from "./liveprices.ts";
+import { loadScope } from "./scope.ts";
 import { isSetUp, refreshSetup, START, spoolFile } from "./setup.ts";
 import { drainSpool } from "./spool.ts";
 import { waitlistRequest } from "./waitlist.ts";
@@ -116,7 +117,9 @@ server.listen(PORT, HOST, () => {
   console.log(`\n  Quoli → http://${HOST}:${PORT}${landing ? "/landing/" : ""}\n`);
   if (!landing && !store.roots().length && HOOK_AGENTS.some(isSetUp)) {
     console.log(
-      "  No sessions yet: start your coding agent in any repository and it appears here.\n",
+      `  No sessions yet: start your coding agent ${
+        loadScope().only ? "in a project Quoli records" : "in any repository"
+      } and it appears here. You can close this; recording goes on without it.\n`,
     );
   } else if (!landing && !store.roots().length) {
     console.log(

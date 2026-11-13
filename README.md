@@ -54,11 +54,14 @@ Then open http://127.0.0.1:4471. The demo data is fully synthetic and needs no A
 ## Install
 
 ```sh
-npx https://iceq.best/quoli-0.2.8.tgz connect   # once: set up the agents, link your Quoli account, start
-npx https://iceq.best/quoli-0.2.8.tgz           # later: open http://127.0.0.1:4400
+npx https://iceq.best/quoli.tgz
 ```
 
-After `connect` you can close the terminal: your agents keep recording and your summaries keep reaching your account without Quoli open (the agents start a short `quoli sync` that exits by itself). `connect` opens your browser to sign in at [iceq.best/app](https://iceq.best/app/) and approve the code it shows; your prompts and code stay on your machine, and only session summaries reach your account. `setup` instead of `connect` records sessions without any account. Needs Node.js 22.13 or newer. The package is served from the website for now; it will also be on npm as `@iceq/quoli` (the plain name `quoli` was refused as too close to `quill`). It contains only the built app (`pnpm pack:release` makes it in `release/`; see [docs/architecture.md](docs/architecture.md)). From a clone of this repository, use the `pnpm` commands below instead.
+One command, run inside the project you work on. The first time, it asks whether to record only that project or every project on this computer (`--here` / `--all` answer without asking), offers to link your Quoli account, and opens Quoli at http://127.0.0.1:4400. After that the same command just opens Quoli; run inside a project that is not recorded, it offers to add it. Projects → Stop recording leaves a project out again.
+
+You do not need to keep Quoli open: the agents' hooks keep recording with the terminal closed, and a linked account keeps receiving summaries (the agents start a short `quoli sync` that exits by itself). Linking opens your browser to sign in at [iceq.best/app](https://iceq.best/app/) and approve the code it shows; your prompts and code stay on your machine, and only session summaries reach your account. `connect` links (or re-links) an account later; `setup --remove` stops recording and takes Quoli out of every agent. Needs Node.js 22.13 or newer.
+
+`quoli.tgz` is a permanent link: `npx` keeps the first copy it downloads from a link, so on start the package reads the newest version number from `iceq.best/quoli.json` and hands over to `quoli-<version>.tgz` when it is newer (`QUOLI_NO_UPDATE_CHECK=1` turns that off). The package is served from the website for now; it will also be on npm as `@iceq/quoli` (the plain name `quoli` was refused as too close to `quill`). It contains only the built app (`pnpm pack:release` makes it in `release/`; see [docs/architecture.md](docs/architecture.md)). From a clone of this repository, use the `pnpm` commands below instead.
 
 ## Use it with your own repositories
 

@@ -15,7 +15,15 @@ import { test } from "node:test";
 import { connect, installedAgents } from "../server/connect.ts";
 import { Store } from "../server/db.ts";
 import { parseGithubRemote } from "../server/github.ts";
+import { ingest } from "../server/ingest.ts";
 import { defaultPrices } from "../server/prices.ts";
+import {
+  recordEverything,
+  recordOnly,
+  records,
+  startRecording,
+  stopRecording,
+} from "../server/scope.ts";
 import { deriveSession } from "../server/sessions.ts";
 import {
   detectedAgents,
@@ -204,4 +212,49 @@ test("GitHub remotes are read in every common form", () => {
   assert.equal(parseGithubRemote("https://gitlab.com/a/b.git"), null);
   assert.equal(parseGithubRemote("https://github.com.evil.dev/a/b"), null);
   assert.equal(parseGithubRemote("git@github.com:a/b/c.git"), null);
+});
+
+test("only the chosen projects are recorded, by the hook and by the server", () => {
+  const box = sandbox();
+  const mine = realpathSync(mkdtempSync(join(tmpdir(), "quoli-scope-mine-")));
+  const other = realpathSync(mkdtempSync(join(tmpdir(), "quoli-scope-other-")));
+  try {
+    for (const r of [mine, other]) execFileSync("git", ["init", "-q", r]);
+    setup(["claude-code"], false, []);
+    writeFileSync(join(box.root, ".quoli", "sync.last"), "");
+    recordOnly(mine);
+    assert.equal(records(join(mine, "src")), true);
+    assert.equal(records(join(mine, ".claude", "worktrees", "a")), true);
+    assert.equal(records(other), false);
+    assert.equal(records(`${mine}-sibling`), false);
+
+    const hook = (cwd: string, id: string) =>
+      execFileSync(process.execPath, [join(box.root, ".quoli", "quoli-hook.mjs"), "1"], {
+        input: JSON.stringify({ session_id: id, cwd, hook_event_name: "SessionStart" }),
+      });
+    hook(mine, "s-mine");
+    hook(other, "s-other");
+    const queued = readFileSync(spoolFile(), "utf8").trim().split("\n");
+    assert.equal(queued.length, 1, "the hook drops events from projects that are not recorded");
+
+    const store = new Store(":memory:");
+    assert.ok(ingest(store, { session_id: "x", cwd: mine, hook_event_name: "SessionStart" }));
+    assert.equal(
+      ingest(store, { session_id: "y", cwd: other, hook_event_name: "SessionStart" }),
+      false,
+    );
+
+    stopRecording(mine);
+    assert.equal(records(mine), false);
+    recordEverything();
+    stopRecording(other);
+    assert.equal(records(mine), true);
+    assert.equal(records(other), false);
+    startRecording(other);
+    assert.equal(records(other), true);
+    assert.equal(existsSync(join(box.root, ".quoli", "scope.json")), false);
+  } finally {
+    box.done();
+    for (const r of [mine, other]) rmSync(r, { recursive: true, force: true });
+  }
 });
