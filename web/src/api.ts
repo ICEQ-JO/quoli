@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AgentKind,
+  CodeGraph,
   CodeMap,
   CommitDetail,
+  EventHit,
   GitState,
   InfraMap,
   InsightsReport,
@@ -96,6 +98,11 @@ export const api = {
     send<ManualService[]>("DELETE", `/api/projects/${id(projectId)}/services/${id(sid)}`),
   commit: (root: string, sha: string) =>
     get<CommitDetail>(`/api/commit?${q(root)}&sha=${encodeURIComponent(sha)}`),
+  /** 200 with the graph, or 202 `{status:"building"}` while the server parses. */
+  codeGraph: (projectId: string) =>
+    get<CodeGraph | { status: "building" }>(`/api/projects/${id(projectId)}/codegraph`),
+  search: (projectId: string, query: string) =>
+    get<EventHit[]>(`/api/search?project=${id(projectId)}&q=${encodeURIComponent(query)}`),
   file: (root: string, path: string) =>
     get<{ path: string; content: string | null; diff: string | null }>(
       `/api/file?${q(root)}&path=${encodeURIComponent(path)}`,

@@ -36,8 +36,11 @@ export const shortcutGroups = (mod = modKey()): ShortcutGroup[] => [
   {
     title: "Navigation",
     items: [
-      { keys: ["1", "2", "3", "4", "5"], does: "Switch lens: Summary, Agents, Code, Git, Infra" },
-      { keys: [mod, "K"], does: "Search files, tool calls, sessions and pages" },
+      { keys: ["1", "2", "3", "4", "5"], does: "Switch lens: Summary, Agents, Map, Git, Infra" },
+      {
+        keys: [mod, "K"],
+        does: "Search functions, routes, tables, files, prompts, commands, errors and pages",
+      },
       { keys: ["Esc"], does: "Close a dialog, or clear the current selection" },
       { keys: ["Tab"], does: "Move between regions; “Skip to content” is the first stop" },
     ],
@@ -50,6 +53,16 @@ export const shortcutGroups = (mod = modKey()): ShortcutGroup[] => [
     ],
   },
   {
+    title: "Map",
+    items: [
+      { keys: ["↑", "↓", "j", "k"], does: "Move through the explorer tree" },
+      { keys: ["→", "←"], does: "Open or close a folder or file; Enter focuses the row" },
+      { keys: ["[", "]"], does: "Fewer or more hops of callers and callees" },
+      { keys: ["/"], does: "Filter the explorer" },
+      { keys: ["o"], does: "Open the focused function in VS Code" },
+    ],
+  },
+  {
     title: "Timeline (when focused)",
     items: [
       { keys: ["←", "→"], does: "Step back or forward one tool call" },
@@ -59,24 +72,6 @@ export const shortcutGroups = (mod = modKey()): ShortcutGroup[] => [
   },
   { title: "Global", items: [{ keys: ["?"], does: "Show this list of shortcuts" }] },
 ];
-
-/** Label for a file chip on the code canvas. */
-export function fileLabel(path: string, edited: number, read: number, gitStatus?: string): string {
-  const parts = [path];
-  if (edited) parts.push(`edited ${plural(edited, "time")}`);
-  if (read) parts.push(`read ${plural(read, "time")}`);
-  if (!edited && !read) parts.push("not touched by this session");
-  if (gitStatus && gitStatus !== "clean") parts.push(`${gitStatus} in git`);
-  return parts.join(", ");
-}
-
-export function folderLabel(path: string, files: number, edited: number, read: number): string {
-  const parts = [`Folder ${path || "/"}`, plural(files, "file")];
-  if (edited) parts.push(`${edited} edited`);
-  if (read) parts.push(`${read} read`);
-  if (!edited && !read) parts.push("untouched");
-  return parts.join(", ");
-}
 
 export function toolLabel(call: Pick<ToolCall, "name" | "summary" | "status">, took = ""): string {
   const status = call.status === "failed" ? "failed" : call.status === "running" ? "running" : "ok";

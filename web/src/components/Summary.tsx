@@ -105,7 +105,7 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
                 {report.changes.map((c) => (
                   <tr key={c.path}>
                     <td className="ellip" title={c.path}>
-                      <Link to={href("code", { kind: "file", id: c.path })} className="path">
+                      <Link to={href("map", { kind: "file", id: c.path })} className="path">
                         <b>{fileName(c.path)}</b>
                         <span className="faint">{c.path.slice(0, -fileName(c.path).length)}</span>
                       </Link>
@@ -275,7 +275,7 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
                     {item.files.map((f) => (
                       <Link
                         key={f}
-                        to={href("code", { kind: "file", id: f })}
+                        to={href("map", { kind: "file", id: f })}
                         className="ref mono"
                         title={f}
                       >
@@ -362,7 +362,7 @@ export function Summary({ session, href }: { session: SessionDetail; href: Href 
                       {item.files.map((f) => (
                         <Link
                           key={f}
-                          to={href("code", { kind: "file", id: f })}
+                          to={href("map", { kind: "file", id: f })}
                           className="ref mono"
                           title={f}
                         >

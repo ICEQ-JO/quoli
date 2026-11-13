@@ -241,8 +241,34 @@ export interface CodeSymbol {
 export interface CodeEdge {
   from: string;
   to: string;
-  kind: "import" | "call";
+  kind: "import" | "call" | "route" | "query";
   certainty: "resolved" | "possible";
+}
+
+/** An HTTP route. A `route` edge goes from the route id to its handler symbol id. */
+export interface CodeRoute {
+  id: string;
+  method: string;
+  path: string;
+  framework: string;
+  file: string;
+  line: number;
+  handler: string | null;
+}
+
+/** A database table. A `query` edge goes from a symbol id to the table id. */
+export interface CodeTable {
+  id: string;
+  name: string;
+  source: string;
+  file: string;
+  line: number;
+  columns: {
+    name: string;
+    type: string | null;
+    pk: boolean;
+    references: { table: string; column: string | null } | null;
+  }[];
 }
 
 export interface CodeGraphFile {
@@ -266,6 +292,8 @@ export interface CodeGraph {
   files: CodeGraphFile[];
   symbols: CodeSymbol[];
   edges: CodeEdge[];
+  routes?: CodeRoute[];
+  tables?: CodeTable[];
   /** True when more source files exist than the scan limit. */
   truncated: boolean;
   stats: {
@@ -281,6 +309,16 @@ export interface CodeGraph {
     skipped: number;
     ms: number;
   };
+}
+
+export interface EventHit {
+  kind: "prompt" | "command" | "error";
+  sessionId: string;
+  sessionTitle: string;
+  /** The tool call to open; for a prompt, the first call it made (null when it made none). */
+  callId: string | null;
+  text: string;
+  at: string;
 }
 
 /* ---------- Git ---------- */

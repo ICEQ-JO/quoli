@@ -32,6 +32,7 @@ import {
   savePrices,
   validatePrices,
 } from "./prices.ts";
+import { searchEvents } from "./search.ts";
 import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
 import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
 import { liveSession } from "./steps.ts";
@@ -327,6 +328,12 @@ export function createApp(store: Store, port: () => number) {
       }
       const sessions: SessionSummary[] = details(ids).map(summarizeSession);
       return json(res, 200, sessions);
+    }
+    if (path === "/api/search") {
+      const project = projects().find((p) => p.id === url.searchParams.get("project"));
+      if (!project) return json(res, 404, { error: "Unknown project" });
+      const recent = details(store.sessionIds(project.root).slice(0, 60));
+      return json(res, 200, searchEvents(recent, url.searchParams.get("q") ?? ""));
     }
     const graphRoute = /^\/api\/projects\/([^/]+)\/codegraph$/.exec(path);
     if (graphRoute) {

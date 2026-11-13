@@ -21,6 +21,8 @@ interface BoardProps {
   /** When this key changes the view refits; `focus` limits the fit to those node ids. */
   fitKey: string;
   focus?: string[];
+  /** The smallest zoom a fit may use, so text stays readable; wider content is panned. */
+  fitMinZoom?: number;
   draggable?: boolean;
   onNodeClick?: (node: Node) => void;
   onNodeDragStop?: (node: Node) => void;
@@ -75,9 +77,10 @@ function Inner(p: BoardProps) {
         padding: 0.12,
         duration: still ? 0 : 350,
         maxZoom: focus ? 1.1 : 1,
+        minZoom: p.fitMinZoom,
       }),
     );
-  }, [p.fitKey, p.nodes.length, p.focus, flow]);
+  }, [p.fitKey, p.nodes.length, p.focus, p.fitMinZoom, flow]);
 
   return (
     <div className="board">

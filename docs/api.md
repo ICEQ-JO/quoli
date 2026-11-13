@@ -61,6 +61,7 @@ Retention runs at startup, hourly, and when settings change.
 | Method & path | Returns |
 | --- | --- |
 | `GET /api/projects/:id/codegraph[?path=prefix]` | `CodeGraph` (`shared/model.ts`), or `202 { "status": "building" }` while the first build runs in a worker thread (poll again). `404` for an unknown project id, `500 { error }` if the build failed. |
+| `GET /api/search?project=<id>&q=` | `EventHit[]`: recorded prompts, shell commands and failed-call output in the project's last 60 sessions that contain `q` (at least 2 characters), newest first, at most 20. Plain substring search of recorded text; nothing is run. `404` for an unknown project. |
 
 - `files`, `symbols`, `edges`, `stack`, `stats`, `commit`, `generatedAt`, `truncated`. Symbol ids are `<path>#<qualifiedName>` (`src/orders.ts#OrderService.create`); top-level code that makes calls appears as kind `module` with id `<path>#<module>`. Kinds: `function`, `method`, `class`, `component` (React function or class component), `variable-function` (`const f = () => …`), `module`.
 - Edges: `import` is file to file and always `resolved`. `call` is symbol to symbol. `certainty: "possible"` means the receiver is unknown (a parameter, a call result) and the callee was matched only by method name, with at most three candidates. Calls to libraries, the runtime or anything not in the repository have no edge.
