@@ -414,6 +414,16 @@ kbd {
   color: var(--faint);
 }
 
+/* Time, agent and cost keep their width; only the branch shortens. */
+.session-item .meta > :not(.branch) {
+  flex: none;
+  white-space: nowrap;
+}
+
+.session-item .meta .branch {
+  min-width: 0;
+}
+
 .session-item .fail {
   color: var(--fail);
 }

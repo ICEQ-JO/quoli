@@ -27,6 +27,8 @@ interface BoardProps {
   onNodeClick?: (node: Node) => void;
   onNodeDragStop?: (node: Node) => void;
   onPaneClick?: () => void;
+  /** Called with a node's rendered height whenever it is measured or changes. */
+  onMeasured?: (id: string, height: number) => void;
   variant?: BackgroundVariant;
   empty?: ReactNode;
   legend?: ReactNode;
@@ -48,6 +50,8 @@ function Inner(p: BoardProps) {
   // measured size when its object changes and keeps it hidden until measured again, which never
   // happens when the size did not change. Remember sizes and hand them back.
   const sizes = useRef(new Map<string, { width: number; height: number }>());
+  const onMeasured = useRef(p.onMeasured);
+  onMeasured.current = p.onMeasured;
   const [sized, setSized] = useState(0);
   const nodes = useMemo(() => {
     void sized;
@@ -61,6 +65,7 @@ function Inner(p: BoardProps) {
     for (const c of changes) {
       if (c.type === "dimensions" && c.dimensions) {
         sizes.current.set(c.id, c.dimensions);
+        onMeasured.current?.(c.id, c.dimensions.height);
         changed = true;
       }
     }
