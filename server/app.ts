@@ -12,6 +12,7 @@ import {
   type Settings,
 } from "../shared/model.ts";
 import { codeMap } from "./code.ts";
+import { codeGraphFor, scopeGraph } from "./codegraph/index.ts";
 import { connect, HOOK_AGENTS, type HookAgent, installedAgents, validateRepo } from "./connect.ts";
 import { home, projectId, type Store } from "./db.ts";
 import { githubRepo } from "./github.ts";
@@ -326,6 +327,19 @@ export function createApp(store: Store, port: () => number) {
       }
       const sessions: SessionSummary[] = details(ids).map(summarizeSession);
       return json(res, 200, sessions);
+    }
+    const graphRoute = /^\/api\/projects\/([^/]+)\/codegraph$/.exec(path);
+    if (graphRoute) {
+      const project = projects().find((p) => p.id === graphRoute[1]);
+      if (!project) return json(res, 404, { error: "Unknown project" });
+      const state = codeGraphFor(project.id, project.root);
+      if (!state.graph) {
+        return state.error
+          ? json(res, 500, { error: state.error })
+          : json(res, 202, { status: "building" });
+      }
+      const prefix = url.searchParams.get("path");
+      return json(res, 200, prefix ? scopeGraph(state.graph, prefix) : state.graph);
     }
     if (!path.startsWith("/api/")) return false;
     // Only known project roots can be read, and only files inside them.
