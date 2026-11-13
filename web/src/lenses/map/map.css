@@ -182,7 +182,7 @@
   pointer-events: none;
 }
 
-.icon-btn.on {
+.map .icon-btn.on {
   color: var(--text);
   background: var(--hover);
 }
