@@ -2,7 +2,7 @@ import type { SessionSummary } from "../../../shared/model.ts";
 import { ago, money, plural } from "../format.ts";
 import { Link } from "../router.ts";
 import { Trace } from "./Trace.tsx";
-import { AgentTag, ErrorState, LiveDot } from "./ui.tsx";
+import { AgentTag, ErrorState, LiveDot, Loading } from "./ui.tsx";
 
 interface Props {
   sessions: SessionSummary[] | null;
@@ -33,9 +33,9 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error
         (error ? (
           <ErrorState title="Could not load sessions" message={error} retry={retry} />
         ) : (
-          <p className="faint pad" role="status">
-            Loading…
-          </p>
+          <div className="pad">
+            <Loading />
+          </div>
         ))}
       {sessions?.length === 0 && (
         <div className="side-empty">

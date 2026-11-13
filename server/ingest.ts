@@ -43,7 +43,8 @@ export function redact(text: string): string {
 
 /**
  * Stores one hook payload from `agent`, after its adapter maps it into the shared shape.
- * Returns false when the agent has no adapter or the payload is not a usable hook event.
+ * Returns the recorded event's session id (each agent names it differently on the wire), or
+ * false when the agent has no adapter or the payload is not a usable hook event.
  */
 export function ingest(
   store: Store,
@@ -51,14 +52,14 @@ export function ingest(
   at = new Date().toISOString(),
   onNewRoot?: () => void,
   agent: AgentKind = "claude-code",
-) {
+): string | false {
   const adapter = adapterFor(agent);
   const normalized = adapter?.normalize(raw);
   if (!adapter || !normalized || !recordEvent(store, normalized, agent, at, onNewRoot))
     return false;
   const usage = adapter.usage?.(normalized, at);
   if (usage) store.upsertUsage(usage);
-  return true;
+  return normalized.session_id as string;
 }
 
 /**

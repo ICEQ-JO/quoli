@@ -100,6 +100,15 @@ if (!landing) {
 }
 setInterval(() => applyRetention(store), 3_600_000).unref();
 
+server.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code !== "EADDRINUSE") throw error;
+  console.log(
+    `\n  Port ${PORT} is already in use, most likely by a Quoli that is still running.\n` +
+      `  Open http://${HOST}:${PORT}, or stop that one (Ctrl+C in its terminal) and run this again.\n` +
+      "  To run both, add --port 4401.\n",
+  );
+  process.exit(1);
+});
 server.listen(PORT, HOST, () => {
   console.log(`\n  Quoli → http://${HOST}:${PORT}${landing ? "/landing/" : ""}\n`);
   if (!landing && !store.roots().length && HOOK_AGENTS.some(isSetUp)) {

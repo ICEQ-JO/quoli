@@ -174,9 +174,15 @@ export async function connectCli(args: string[]): Promise<number | "start"> {
     () => false,
   );
   if (running) {
-    console.log(`\n3. Quoli is already running at http://127.0.0.1:${port}. You are all set.`);
+    console.log(`\n3. Quoli is already open at http://127.0.0.1:${port}. You are all set.`);
     return 0;
   }
-  console.log("\n3. Starting Quoli");
+  console.log(
+    `\n3. Done. You can close this terminal: your agents keep recording, and summaries keep
+   reaching your account, without Quoli open. To look at your sessions in detail, run
+   ${process.env.QUOLI_BUNDLED === "1" ? `npx https://iceq.best/quoli-${process.env.QUOLI_VERSION}.tgz` : "pnpm dev"} any time.
+
+   Opening Quoli now:`,
+  );
   return "start";
 }

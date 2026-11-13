@@ -65,8 +65,12 @@ export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n ==
  * Cost of a session or period. With `tokens`, zero tokens means nothing to price: `$0.00`,
  * not `—`. `—` stays for usage that exists but could not be priced.
  */
+/** A cost; when no model in it has a price, its token count instead of a dash. */
 export function money(c: Cost, tokens?: TokenTotals): string {
-  if (c.usd === null && tokens && tokenSum(tokens) === 0) return usd(0);
+  if (c.usd === null && tokens) {
+    const n = tokenSum(tokens);
+    return n === 0 ? usd(0) : `${compact(n)} tokens`;
+  }
   return usd(c.usd);
 }
 

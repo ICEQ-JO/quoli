@@ -6,7 +6,7 @@ Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: a
 
 | Method & path | Body | Returns |
 | --- | --- | --- |
-| `GET /api/projects` | | `Project[]`, registered projects plus any root that has events, most recent first. `github` is `owner/repo` when the `origin` remote is on github.com, otherwise `null` |
+| `GET /api/projects` | | `Project[]`, registered projects plus any root that has events, most recent first. `github` is `owner/repo` when the `origin` remote is on github.com, otherwise `null`. `worktreeOf` is the id of the project a linked Git worktree belongs to (the sidebar lists it under that project), otherwise `null` |
 | `POST /api/projects` | `{ "path": "/abs/path", "agents"?: ["claude-code", "codex", "opencode", "pi"] }` | `Project`. Path must be absolute, exist, and be a git repository top level (`git rev-parse --show-toplevel` equals its real path); otherwise `400 { error }`. Installs hooks for each listed agent (default Claude Code only) exactly like `pnpm connect --agent`, and registers the project. Posting again with another agent adds it. `Project.agents` lists each agent recording the repository, `everywhere: true` when that is through the user-level setup rather than hooks in the repository, with `status` `installed` (no event yet; for Codex usually waiting for `/hooks` trust) or `receiving`. Disconnect removes every agent's hooks. |
 | `POST /api/projects/:id/disconnect` | `{}` | `Project`. Removes Quoli's hooks from the repository, keeps data. Agents recorded through the user-level setup keep recording. |
 | `GET /api/prices/live` | | `LivePriceStatus`: whether live prices are on (`Settings.livePrices`, default `true`), their `source`, `fetchedAt`, number of `models` and the last fetch `error` |
@@ -30,7 +30,7 @@ Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: a
 | `POST /api/redact-preview` | `{ "text": "..." }` | `{ "text": "..." }`, the text after redaction |
 | `GET /api/code\|git\|infra?root=` | | unchanged, except `infra` merges the project's hand-added services: `Service.url` (dashboard link) and `Service.manual` (entry id, or null). Hand-added cards have id `manual:<sid>`, `evidence: "added by you"` and never carry metrics. |
 | `GET /api/file?root=&path=` | | unchanged |
-| `GET /api/stream` | | SSE: `{ type: "event", sessionId }` on ingest, `{ type: "projects" }` when projects change |
+| `GET /api/changes?after=N` | | Live updates, polled about once a second by each page: `{ seq, changes }` with the changes after `N` (`{ type: "event", sessionId }` on ingest, `{ type: "projects" }` when projects change). Without `after`, only the current `seq`; a page that fell behind or is ahead of a restarted server gets `{ type: "projects" }` (reload everything). Replaces the earlier SSE stream, which held one connection per tab and hit the browser's six-per-address limit |
 
 Retention runs at startup, hourly, and when settings change.
 
@@ -56,6 +56,18 @@ Retention runs at startup, hourly, and when settings change.
 - `GET /api/commit?root=&sha=` returns `CommitDetail`: the commit's files with added/removed lines (`null` for binary) and its diff, clipped to 300,000 characters (`truncated`). `sha` must be 4–40 hex characters, otherwise `404`.
 - `CodeFile.diff`: uncommitted `{ added, removed }` lines against HEAD from `git diff --numstat HEAD`; untracked text files count all their lines as added; `null` when clean or binary.
 
+## Code graph (#170)
+
+| Method & path | Returns |
+| --- | --- |
+| `GET /api/projects/:id/codegraph[?path=prefix]` | `CodeGraph` (`shared/model.ts`), or `202 { "status": "building" }` while the first build runs in a worker thread (poll again). `404` for an unknown project id, `500 { error }` if the build failed. |
+| `GET /api/search?project=<id>&q=` | `EventHit[]`: recorded prompts, shell commands and failed-call output in the project's last 60 sessions that contain `q` (at least 2 characters), newest first, at most 20. Plain substring search of recorded text; nothing is run. `404` for an unknown project. |
+
+- `files`, `symbols`, `edges`, `stack`, `stats`, `commit`, `generatedAt`, `truncated`. Symbol ids are `<path>#<qualifiedName>` (`src/orders.ts#OrderService.create`); top-level code that makes calls appears as kind `module` with id `<path>#<module>`. Kinds: `function`, `method`, `class`, `component` (React function or class component), `variable-function` (`const f = () => …`), `module`.
+- Edges: `import` is file to file and always `resolved`. `call` is symbol to symbol. `certainty: "possible"` means the receiver is unknown (a parameter, a call result) and the callee was matched only by method name, with at most three candidates. Calls to libraries, the runtime or anything not in the repository have no edge.
+- `?path=prefix` keeps files and symbols whose path starts with `prefix`, and every edge with at least one end in them (so callers and callees outside the scope are visible). `stack` and `stats` stay whole-repository.
+- The graph is rebuilt in the background when the served one is more than 5 s old; the older graph is returned meanwhile (`generatedAt` tells how old). Parsed facts are cached in `<QUOLI_HOME>/codegraph/<projectId>-<commit>.json` and reused per file when the git blob (clean files) or modification time and size (edited or untracked files) is unchanged.
+
 ## Increment 2 additions
 
 | Method & path | Body | Returns |
@@ -80,3 +92,13 @@ Retention runs at startup, hourly, and when settings change.
 - Sums are rounded to 1e-9 USD. Usage rows with no model id are excluded from `usd` and not listed in `unpriced` (they have no id); their `costByModel` row has `usd: null`.
 - `report.changes` skips failed edit calls and files outside the project root. `report.commands` skips `run` calls without a string `command` (e.g. BashOutput). Commands starting with `git` are classified `other`, so commit messages mentioning "test" are not misread.
 - Checklist ids: `edited-after-test`, `failed-<toolCallId>`, `large-deletion-<toolCallId>`. "Last test command" is the last `test`-kind command whatever its status; a failed one is also covered by rule 2.
+
+## Review lens (#171)
+
+| Method & path | Returns |
+| --- | --- |
+| `GET /api/review?id=<sessionId>` | `SessionReview`: `source` (`git` or `edits`), `note` (why Git was not used, or a caveat), `files`, `noNetChange`, `added`/`removed`, `tests` and `branch` |
+| `GET /api/review/diff?id=<sessionId>&path=<repo-relative path>` | `ReviewDiff`: `gitDiff` (against where the session began, clipped to 300,000 characters, `truncated`), `source` (current file, null for binary, over 1 MB or deleted). 404 when the repository is not available, 400 for paths outside the project |
+
+- `ReviewFile`: `path`, `group` (package or top folder), `status` (`added|modified|deleted|renamed`, null when only edits are known), `added`/`removed` (Git, or recorded edits when `source` is `edits`; null for binary), `editAdded`/`editRemoved`, `timesEdited`, `outsideEdits`, `editedAfterTest`, `failedAfter`, `rewritten`, `kind` (`code|test|docs|config|schema|lockfile|other`), `noTest`, `risk`, `level`, `reasons[] { label, text, points }`, `toolCallIds`, `turnIndexes`, `after` (commands after the last edit), `functions` (`ChangedSymbol[] | null`, `{ name, kind, change: added|modified|removed }`; null until the code engine fills it).
+- `branch`: `head`, `base` (main/master/remote default when it is not the branch itself), `upstream`, `commits` made while the session ran, `uncommitted`, `unpushed`; each is null when it could not be read, never guessed.

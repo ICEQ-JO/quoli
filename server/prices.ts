@@ -60,8 +60,15 @@ export const defaultPrices = (): PriceTable => ({
  * Exact model id first, then the longest price `model` followed by a dash and a digit, as in a
  * dated snapshot (`claude-opus-5-5-20261001`, `gpt-5-2025-08-07`). `gpt-5` never prices
  * `gpt-5.3-codex` or `gpt-5-codex`: a different model stays unpriced rather than guessed.
+ * An id with a provider in front (`opencode/minimax-m2.5-free`) is also tried without it.
  */
 export function priceFor(model: string, table: PriceTable): ModelPrice | null {
+  const found = priceOf(model, table);
+  const bare = model.slice(model.lastIndexOf("/") + 1);
+  return found ?? (bare && bare !== model ? priceOf(bare, table) : null);
+}
+
+function priceOf(model: string, table: PriceTable): ModelPrice | null {
   let best: ModelPrice | null = null;
   for (const p of table.prices) {
     if (p.model === model) return p;

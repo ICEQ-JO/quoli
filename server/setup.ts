@@ -4,12 +4,19 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { AGENT_NAMES } from "../shared/model.ts";
 import {
+  installSyncCommand,
+  removeSyncCommand,
+  syncCommand,
+  syncCommandFile,
+} from "./background.ts";
+import {
   commandFor,
   connect,
   HOOK_AGENTS,
   type HookAgent,
   hook,
   isPluginAgent,
+  missingEvents,
   pluginSource,
   writeHooks,
   writePlugin,
@@ -73,6 +80,7 @@ export function setup(agents: HookAgent[], remove = false, roots?: string[]): Se
   if (!remove) {
     mkdirSync(home(), { recursive: true });
     copyFileSync(hook, hookCopy());
+    installSyncCommand();
   }
   const results = agents.map((agent): SetupResult => {
     const { file } = globalTarget(agent);
@@ -84,6 +92,7 @@ export function setup(agents: HookAgent[], remove = false, roots?: string[]): Se
       return { agent, file, error: (error as Error).message };
     }
   });
+  if (remove && !HOOK_AGENTS.some(isSetUp)) removeSyncCommand();
   if (!remove) {
     const done = results.filter((r) => !r.error).map((r) => r.agent);
     for (const root of roots ?? registeredRoots()) {
@@ -129,12 +138,25 @@ export function isSetUp(agent: HookAgent): boolean {
   }
 }
 
+/** The user-level install for `agent` runs from this Quoli home (not one started elsewhere). */
+function ownedHere(agent: HookAgent): boolean {
+  try {
+    const text = readFileSync(globalTarget(agent).file, "utf8");
+    return isPluginAgent(agent)
+      ? text.includes(spoolFile().split("\\").join("/"))
+      : text.includes(JSON.stringify(hookCopy()).slice(1, -1));
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Rewrites the user-level install where it no longer matches this Quoli (another port, or an
- * older hook or plugin after an update). Agents without it are left alone. Returns those updated.
+ * older hook or plugin after an update). Agents without it, or set up from another Quoli home
+ * (a test or second copy with QUOLI_HOME), are left alone. Returns those updated.
  */
 export function refreshSetup(): HookAgent[] {
-  const agents = HOOK_AGENTS.filter(isSetUp);
+  const agents = HOOK_AGENTS.filter((agent) => isSetUp(agent) && ownedHere(agent));
   if (!agents.length) return [];
   let hookStale = true;
   try {
@@ -147,10 +169,26 @@ export function refreshSetup(): HookAgent[] {
     } catch {}
     return isPluginAgent(agent)
       ? text !== pluginSource(agent, spoolFile())
-      : hookStale || !text.includes(JSON.stringify(commandFor(agent, hookCopy())).slice(1, -1));
+      : hookStale ||
+          !text.includes(JSON.stringify(commandFor(agent, hookCopy())).slice(1, -1)) ||
+          missingEvents(globalTarget(agent).file, agent);
   });
   if (stale.length) setup(stale, false, []);
+  else if (syncCommandStale()) installSyncCommand();
   return stale;
+}
+
+/** sync.json points somewhere else, or (from the package) the app copy is another version. */
+function syncCommandStale(): boolean {
+  try {
+    if (readFileSync(syncCommandFile(), "utf8") !== `${JSON.stringify(syncCommand(), null, 2)}\n`)
+      return true;
+    if (process.env.QUOLI_BUNDLED !== "1") return false;
+    const copy = JSON.parse(readFileSync(join(home(), "app", "package.json"), "utf8"));
+    return copy.version !== process.env.QUOLI_VERSION;
+  } catch {
+    return true;
+  }
 }
 
 /**

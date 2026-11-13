@@ -50,8 +50,8 @@ test("coveredMs counts overlapping intervals once", () => {
 test("turn stats split time, calls, failures and usage at each prompt", () => {
   const calls = [call("a", 2, 7), call("b", 5, 9, "failed"), call("c", 32, 40)];
   const turns: Turn[] = [
-    { prompt: "first", at: T(0), toolCallIds: ["a", "b"] },
-    { prompt: "second", at: T(30), toolCallIds: ["c"] },
+    { prompt: "first", at: T(0), toolCallIds: ["a", "b"], reply: null },
+    { prompt: "second", at: T(30), toolCallIds: ["c"], reply: null },
   ];
   // claude-opus-5-5: $4 input, $20 output per million.
   const usage = [
@@ -89,7 +89,7 @@ test("turn stats split time, calls, failures and usage at each prompt", () => {
 });
 
 test("a running call counts until the turn ends, and sessions without prompts have no turns", () => {
-  const turns: Turn[] = [{ prompt: "go", at: T(0), toolCallIds: ["r"] }];
+  const turns: Turn[] = [{ prompt: "go", at: T(0), toolCallIds: ["r"], reply: null }];
   const [only] = turnStats(turns, [call("r", 10, null, "running")], [], defaultPrices(), T(25));
   assert.equal(only.toolMs, 15_000);
   assert.equal(only.cost.usd, null);

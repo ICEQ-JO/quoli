@@ -14,6 +14,25 @@ interface Props {
 export function NavSidebar({ pathname, projects, overview }: Props) {
   const live = overview?.live ?? [];
   const liveIn = (id: string) => live.filter((s) => s.projectId === id).length;
+  const projectLink = (p: Project, worktrees: number) => {
+    const n = liveIn(p.id);
+    const active = pathname.startsWith(`/projects/${p.id}`);
+    return (
+      <Link
+        to={paths.board(p.id)}
+        className={`nav-item nav-project ${active ? "active" : ""}`}
+        aria-current={active ? "page" : undefined}
+        title={worktrees ? `${p.root} · ${worktrees} worktrees` : p.root}
+      >
+        <span className={`nav-dot ${n ? "live" : p.hookStatus}`} aria-hidden />
+        <span className="nav-label">{p.name}</span>
+        <span className="nav-count">
+          {n ? `${n} live` : p.sessions}
+          {!n && <span className="sr-only"> sessions</span>}
+        </span>
+      </Link>
+    );
+  };
   const item = (
     to: string,
     label: string,
@@ -92,27 +111,28 @@ export function NavSidebar({ pathname, projects, overview }: Props) {
             <Link to={paths.projects()}>Connect a repository</Link>
           </li>
         )}
-        {projects?.map((p) => {
-          const n = liveIn(p.id);
-          const active = pathname.startsWith(`/projects/${p.id}`);
-          return (
-            <li key={p.id}>
-              <Link
-                to={paths.board(p.id)}
-                className={`nav-item nav-project ${active ? "active" : ""}`}
-                aria-current={active ? "page" : undefined}
-                title={p.root}
-              >
-                <span className={`nav-dot ${n ? "live" : p.hookStatus}`} aria-hidden />
-                <span className="nav-label">{p.name}</span>
-                <span className="nav-count">
-                  {n ? `${n} live` : p.sessions}
-                  {!n && <span className="sr-only"> sessions</span>}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
+        {projects
+          ?.filter((p) => !p.worktreeOf)
+          .map((p) => {
+            const worktrees = projects.filter((w) => w.worktreeOf === p.id);
+            // Worktrees (agent checkouts of the same repository) show under it while it is open,
+            // or while one of them is open or live; otherwise they only add to its count.
+            const open =
+              pathname.startsWith(`/projects/${p.id}`) ||
+              worktrees.some((w) => liveIn(w.id) || pathname.startsWith(`/projects/${w.id}`));
+            return (
+              <li key={p.id}>
+                {projectLink(p, worktrees.length)}
+                {open && worktrees.length > 0 && (
+                  <ul className="nav-worktrees" aria-label={`Worktrees of ${p.name}`}>
+                    {worktrees.map((w) => (
+                      <li key={w.id}>{projectLink(w, 0)}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
       </ul>
 
       <LiveStrip live={live} />

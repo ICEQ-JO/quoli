@@ -536,3 +536,29 @@ test("services added by hand are saved per project, merged into the infra map an
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("the change feed names the session for every agent, and a page that fell behind reloads", async () => {
+  const { call, close } = await start();
+  const dir = repo();
+  try {
+    const first = await call("GET", "/api/changes");
+    assert.deepEqual(first.body, { seq: 0, changes: [] });
+    const post = (agent: string, body: object) => call("POST", `/ingest?agent=${agent}`, body);
+    await post("opencode", { opencode_event: "session.start", sessionID: "ses_live", cwd: dir });
+    await post("claude-code", { hook_event_name: "Stop", session_id: "cc_live", cwd: dir });
+    const { body } = await call("GET", "/api/changes?after=0");
+    const ids = body.changes.filter((c: { type: string }) => c.type === "event");
+    assert.deepEqual(
+      ids.map((c: { sessionId: string }) => c.sessionId),
+      ["ses_live", "cc_live"],
+    );
+    assert.deepEqual((await call("GET", `/api/changes?after=${body.seq}`)).body.changes, []);
+    // A page ahead of the server (it restarted) is told to reload everything.
+    assert.deepEqual((await call("GET", "/api/changes?after=999")).body.changes, [
+      { type: "projects" },
+    ]);
+  } finally {
+    close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

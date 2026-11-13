@@ -89,6 +89,13 @@ const FIXED_TOTAL = `export function total(items: { price: number; qty: number; 
 
 const REFUNDS_ROUTE = `import { Hono } from "hono";\nimport { db } from "../db/client";\nimport { refund } from "../services/payments";\nimport { queue } from "../queue";\n\nexport const refunds = new Hono();\n\nrefunds.post("/:id/refunds", async (c) => {\n  const id = c.req.param("id");\n  const order = (await db.query("select * from orders where id = $1", [id])).rows[0];\n  if (!order) return c.json({ error: "Order not found" }, 404);\n  const result = await refund(order.payment_intent);\n  await db.query("insert into refunds (order_id, stripe_id) values ($1, $2)", [id, result.id]);\n  await queue.add("refund-email", { orderId: id });\n  return c.json({ refunded: true }, 201);\n});\n`;
 
+/** Commit date for the sample repository's history, so it lines up with the sessions' times. */
+let when = "";
+const ago = (ms: number) => {
+  when = new Date(Date.now() - ms).toISOString();
+};
+const DAY = 86_400_000;
+
 function sh(cwd: string, ...args: string[]) {
   execFileSync("git", args, {
     cwd,
@@ -99,6 +106,8 @@ function sh(cwd: string, ...args: string[]) {
       GIT_AUTHOR_EMAIL: "demo@example.com",
       GIT_COMMITTER_NAME: "Demo",
       GIT_COMMITTER_EMAIL: "demo@example.com",
+      GIT_AUTHOR_DATE: when,
+      GIT_COMMITTER_DATE: when,
     },
   });
 }
@@ -123,6 +132,7 @@ function buildRepo(root: string) {
   } = BASE;
   write(root, first);
   sh(root, "add", "-A");
+  ago(10 * DAY);
   sh(root, "commit", "-qm", "Scaffold storefront and orders API");
   write(root, {
     "apps/worker/package.json": w,
@@ -131,12 +141,14 @@ function buildRepo(root: string) {
     "apps/worker/src/jobs/send-receipt.ts": ws,
   });
   sh(root, "add", "-A");
+  ago(9 * DAY);
   sh(root, "commit", "-qm", "Add receipt worker");
   const order = BASE["apps/api/src/services/order.ts"].replace(
     /export function total[\s\S]*?\n}/,
     FIXED_TOTAL,
   );
   write(root, { "apps/api/src/services/order.ts": order });
+  ago(2 * DAY - 3 * 60_000);
   sh(root, "commit", "-qam", "Fix rounding in order totals");
   sh(root, "checkout", "-qb", "feature/search");
   write(root, {
@@ -144,12 +156,14 @@ function buildRepo(root: string) {
       'export function Search() {\n  return <input type="search" />;\n}\n',
   });
   sh(root, "add", "-A");
+  ago(5 * DAY);
   sh(root, "commit", "-qm", "Add search box");
   sh(root, "checkout", "-q", "main");
   sh(root, "checkout", "-qb", "feature/refunds");
   write(root, {
     "apps/api/src/db/schema.sql": `${BASE["apps/api/src/db/schema.sql"]}\nalter table orders add column payment_intent text;\n`,
   });
+  ago(90 * 60_000);
   sh(root, "commit", "-qam", "Store payment intent on orders");
   // Working-tree changes left by the refunds session.
   write(root, {
@@ -184,7 +198,9 @@ type Step =
       /** Claude Code's `mcp_server` field on MCP tool calls. */
       mcp?: { name: string; source: string };
     }
-  | { subagent: string; type: string; start: boolean };
+  | { subagent: string; type: string; start: boolean }
+  /** Any other hook event as Claude Code sends it (instruction files, compaction, commands). */
+  | { hook: Record<string, unknown> };
 
 function record(
   store: Store,
@@ -198,6 +214,8 @@ function record(
     transcripts: string;
     /** Another agent's session: events go through `recordEvent`, token usage straight to the store. */
     agent?: { kind: AgentKind; version: string; model: string };
+    /** The agent's final reply, sent on Stop like `last_assistant_message`. */
+    reply?: string;
   },
 ) {
   const { id, root } = opts;
@@ -263,8 +281,15 @@ function record(
 
   send({ hook_event_name: "SessionStart", source: "startup", quoli_branch: opts.branch });
   let n = 0;
+  // Context shrinks after a compaction: later requests resend less cached history.
+  let compacted = 0;
   for (const step of opts.steps) {
     t += 4000;
+    if ("hook" in step) {
+      if (step.hook.hook_event_name === "PostCompact") compacted = n * 1500 + 6000;
+      send(step.hook);
+      continue;
+    }
     if ("prompt" in step) {
       send({ hook_event_name: "UserPromptSubmit", prompt: step.prompt });
       continue;
@@ -288,7 +313,7 @@ function record(
       agent ?? "main",
       1800 + n * 120,
       260 + (n % 4) * 180,
-      22000 + n * 1500,
+      22000 + n * 1500 - compacted,
       n % 5 === 0 ? 4200 : 0,
     );
     const common = {
@@ -306,9 +331,12 @@ function record(
       ...(step.fail ? { error: step.output } : { tool_response: step.output ?? { success: true } }),
     });
   }
-  usage("main", 2400, 1100, 61000, 0);
+  usage("main", 2400, 1100, 61000 - compacted, 0);
   t += 3000;
-  send({ hook_event_name: "Stop" });
+  send({
+    hook_event_name: "Stop",
+    ...(opts.reply ? { last_assistant_message: opts.reply } : {}),
+  });
   if (opts.end) {
     t += 1000;
     send({ hook_event_name: "SessionEnd", reason: "exit" });
@@ -344,6 +372,8 @@ export function seedDemo(store: Store) {
 
   record(store, {
     id: "demo-rounding",
+    reply:
+      "Fixed the rounding in `formatTotal`: totals are now rounded once, after summing, instead of per line. Added a test for three items at $0.10 that used to show $0.29. All checkout tests pass.",
     root,
     branch: "main",
     start: now - 2 * 86_400_000,
@@ -400,6 +430,32 @@ export function seedDemo(store: Store) {
     end: true,
     transcripts,
     steps: [
+      {
+        hook: {
+          hook_event_name: "InstructionsLoaded",
+          file_path: p("CLAUDE.md"),
+          memory_type: "Project",
+          load_reason: "session_start",
+        },
+      },
+      {
+        hook: {
+          hook_event_name: "InstructionsLoaded",
+          file_path: "/home/you/.claude/CLAUDE.md",
+          memory_type: "User",
+          load_reason: "session_start",
+        },
+      },
+      {
+        hook: {
+          hook_event_name: "UserPromptExpansion",
+          expansion_type: "slash_command",
+          command_name: "plan",
+          command_args: "refunds",
+          command_source: "project",
+          prompt: "/plan refunds",
+        },
+      },
       {
         prompt:
           "Add refunds: POST /orders/:id/refunds should refund through Stripe, record it in the database and email the customer. Add tests.",
@@ -458,6 +514,16 @@ export function seedDemo(store: Store) {
         agent: "agent-email",
       },
       { subagent: "agent-email", type: "Explore", start: false },
+      { hook: { hook_event_name: "PreCompact", trigger: "auto" } },
+      { hook: { hook_event_name: "PostCompact", trigger: "auto" } },
+      {
+        hook: {
+          hook_event_name: "InstructionsLoaded",
+          file_path: p("CLAUDE.md"),
+          memory_type: "Project",
+          load_reason: "compact",
+        },
+      },
       {
         tool: "Edit",
         input: {
@@ -642,6 +708,8 @@ export function seedDemo(store: Store) {
 
   record(store, {
     id: "demo-opencode-docs",
+    reply:
+      "Documented the six environment variables the API reads in `docs/env.md`, with defaults and which ones are required in production. `DATABASE_URL` and `JWT_SECRET` have no default, so the API refuses to start without them.",
     root,
     branch: "main",
     start: now - 6 * 3_600_000,
@@ -694,6 +762,8 @@ export function seedDemo(store: Store) {
 
   record(store, {
     id: "demo-worker",
+    reply:
+      "Failed email jobs are retried by BullMQ with its default settings: 3 attempts with exponential backoff starting at 1 second. After the third failure the job moves to the failed set and nothing alerts on it. I did not change anything.",
     root,
     branch: "feature/refunds",
     start: now - 3 * 60_000,

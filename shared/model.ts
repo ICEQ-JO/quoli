@@ -30,6 +30,8 @@ export interface SetupStatus {
 export interface Project {
   /** Stable id: first 12 hex chars of sha256(root). Used in URLs. */
   id: string;
+  /** Id of the project this Git worktree belongs to (it is listed under it); null otherwise. */
+  worktreeOf?: string | null;
   root: string;
   name: string;
   sessions: number;
@@ -78,6 +80,8 @@ export interface SessionSummary {
   branch: string | null;
   startedAt: string;
   endedAt: string | null;
+  /** The last recorded event or usage; a session that never sent an end event ends here. */
+  lastAt: string;
   live: boolean;
   toolCount: number;
   filesTouched: number;
@@ -156,6 +160,11 @@ export interface Turn {
   prompt: string;
   at: string;
   toolCallIds: string[];
+  /**
+   * The agent's final reply for this prompt, recorded from the turn's end (`last_assistant_message`
+   * on Stop). Null when the agent reported none.
+   */
+  reply: string | null;
 }
 
 export interface SessionDetail extends SessionSummary {
@@ -167,6 +176,48 @@ export interface SessionDetail extends SessionSummary {
   usage: UsagePoint[];
   /** What the Summary tab shows (Increment 2). All derived from recorded events. */
   report: SessionReport;
+  /** What the agent had in its context: size over time, compactions, instruction files, commands. */
+  context: SessionContext;
+}
+
+/**
+ * The agent's context window as recorded. Sizes come from token usage (the prompt each model
+ * request sent: input + cache read + cache write), so they exist only for agents that report
+ * usage per request (Claude Code). Instruction files, compactions and commands come from Claude
+ * Code hook events (InstructionsLoaded, PreCompact/PostCompact, UserPromptExpansion,
+ * PostModelSwitch); other agents leave them empty.
+ */
+export interface SessionContext {
+  /** One point per main-agent model request, oldest first (at most 400, evenly thinned). */
+  sizes: { at: string; tokens: number; model: string | null }[];
+  /** Largest prompt sent; null when no usage was recorded. */
+  peak: number | null;
+  /** Latest prompt size; null when no usage was recorded. */
+  current: number | null;
+  compactions: {
+    at: string;
+    trigger: "manual" | "auto" | null;
+    before: number | null;
+    after: number | null;
+  }[];
+  /** Instruction files the agent loaded (CLAUDE.md, rules, memory), first load of each path. */
+  instructions: {
+    path: string;
+    scope: string | null;
+    reason: string | null;
+    at: string;
+    /** Times loaded again later (after a compaction, for example). */
+    reloads: number;
+  }[];
+  /** Slash commands, skills and MCP prompts the user ran, in order. */
+  commands: {
+    at: string;
+    name: string;
+    args: string | null;
+    source: string | null;
+    kind: string | null;
+  }[];
+  modelSwitches: { at: string; from: string | null; to: string | null }[];
 }
 
 export interface FileTouch {
@@ -202,6 +253,118 @@ export interface CodeMap {
   files: CodeFile[];
   /** Paths beyond the listing cap that are not in `files`. */
   truncated: number;
+}
+
+/* ---------- Code graph (functions, imports, calls) ---------- */
+
+export type SymbolKind =
+  | "function"
+  | "method"
+  | "class"
+  | "component"
+  | "variable-function"
+  | "module";
+
+export interface CodeSymbol {
+  /** Stable: `<path>#<qualifiedName>`. Top-level statements are `<path>#<module>` (kind "module"). */
+  id: string;
+  file: string;
+  name: string;
+  /** `OrderService.create` for a method; equal to `name` for top-level symbols. */
+  qualifiedName: string;
+  kind: SymbolKind;
+  /** 1-based, inclusive. */
+  startLine: number;
+  endLine: number;
+  exported: boolean;
+}
+
+/**
+ * `import`: file path to file path, always `resolved`. `call`: caller symbol id to callee symbol id.
+ * `possible` means the callee was matched only by method name (at most 3 candidates); calls that
+ * cannot be tied to a file of the repository (libraries, runtime) have no edge.
+ */
+export interface CodeEdge {
+  from: string;
+  to: string;
+  kind: "import" | "call" | "route" | "query";
+  certainty: "resolved" | "possible";
+}
+
+/** An HTTP route. A `route` edge goes from the route id to its handler symbol id. */
+export interface CodeRoute {
+  id: string;
+  method: string;
+  path: string;
+  framework: string;
+  file: string;
+  line: number;
+  handler: string | null;
+}
+
+/** A database table. A `query` edge goes from a symbol id to the table id. */
+export interface CodeTable {
+  id: string;
+  name: string;
+  source: string;
+  file: string;
+  line: number;
+  columns: {
+    name: string;
+    type: string | null;
+    pk: boolean;
+    references: { table: string; column: string | null } | null;
+  }[];
+}
+
+export interface CodeGraphFile {
+  path: string;
+  language: string;
+  lines: number;
+}
+
+export interface Stack {
+  /** Programming languages by number of files; `share` is files / all files of these languages. */
+  languages: { name: string; files: number; share: number }[];
+  /** `evidence` is the manifest the dependency was read from. */
+  frameworks: { name: string; version: string | null; package: string | null; evidence: string }[];
+  packages: { name: string; path: string; framework: string | null }[];
+}
+
+export interface CodeGraph {
+  commit: string | null;
+  generatedAt: string;
+  stack: Stack;
+  files: CodeGraphFile[];
+  symbols: CodeSymbol[];
+  edges: CodeEdge[];
+  routes?: CodeRoute[];
+  tables?: CodeTable[];
+  /** True when more source files exist than the scan limit. */
+  truncated: boolean;
+  stats: {
+    files: number;
+    symbols: number;
+    imports: number;
+    calls: number;
+    possibleCalls: number;
+    /** Files parsed in this build; the rest came from the cache. */
+    parsed: number;
+    cached: number;
+    /** Source files skipped: too large, generated or minified. */
+    skipped: number;
+    ms: number;
+  };
+}
+
+export interface EventHit {
+  kind: "prompt" | "command" | "error";
+  sessionId: string;
+  sessionTitle: string;
+  /** The tool call to open; for a prompt, the first call it made (null when it made none). */
+  callId: string | null;
+  text: string;
+  at: string;
 }
 
 /* ---------- Git ---------- */
@@ -335,8 +498,6 @@ export interface InfraMap {
 /** GET /api/overview — what the Home page shows, across all projects. */
 /** A running session as the live panel shows it (GET /api/overview). All derived. */
 export interface LiveSession extends SessionSummary {
-  /** Time of the last recorded activity: a prompt, a call starting or ending, or usage. */
-  lastAt: string;
   /** The running call, or else the most recent one; null before the first call. */
   step: Pick<ToolCall, "name" | "category" | "summary" | "status" | "startedAt"> | null;
   /** Estimated spend of usage recorded in the last 10 minutes; null when none was priced. */
@@ -498,6 +659,101 @@ export interface SessionReport {
   /** Cost per model; model null = usage without a model id. */
   costByModel: { model: string | null; tokens: TokenTotals; usd: number | null }[];
   priceVersion: string;
+}
+
+/* ---------- Review lens (#171) ---------- */
+
+/** A function or class a file's change touches. Filled by the code engine; null until it exists. */
+export interface ChangedSymbol {
+  name: string;
+  kind: string;
+  change: "added" | "modified" | "removed";
+}
+
+export type ReviewKind = "code" | "test" | "docs" | "config" | "schema" | "lockfile" | "other";
+export type RiskLevel = "high" | "medium" | "low";
+
+export interface ReviewReason {
+  /** Short word for a chip, e.g. "edited after tests". */
+  label: string;
+  /** The same finding as a sentence. */
+  text: string;
+  points: number;
+}
+
+export interface ReviewFile {
+  path: string;
+  /** Package or top folder: "packages/api", "server", "(root)". */
+  group: string;
+  /** Git status against where the session started; null when only recorded edits are known. */
+  status: "added" | "modified" | "deleted" | "renamed" | null;
+  oldPath: string | null;
+  /** Lines from Git when the review is Git-based (null for binary files), else from recorded edits. */
+  added: number | null;
+  removed: number | null;
+  /** Lines counted from the agent's recorded edit inputs; null when it did not edit this file. */
+  editAdded: number | null;
+  editRemoved: number | null;
+  /** Edit calls the agent made to this file. */
+  timesEdited: number;
+  /** The agent has no recorded edit for this file (Git sees a change another tool or person made). */
+  outsideEdits: boolean;
+  editedAfterTest: boolean;
+  failedAfter: boolean;
+  /** A Write replaced a file that existed before. */
+  rewritten: boolean;
+  kind: ReviewKind;
+  /** A source file, with no test file touched and no test command run in the session. */
+  noTest: boolean;
+  risk: number;
+  level: RiskLevel;
+  reasons: ReviewReason[];
+  toolCallIds: string[];
+  /** Indexes into SessionDetail.turns of the prompts that led to edits of this file. */
+  turnIndexes: number[];
+  /** Commands that ran after the file's last edit (up to 4). */
+  after: CommandRun[];
+  /** Function-level changes; null until the code engine provides them. */
+  functions: ChangedSymbol[] | null;
+}
+
+export interface ReviewCommit {
+  sha: string;
+  subject: string;
+  at: string;
+}
+
+export interface ReviewBranch {
+  head: string | null;
+  /** main / master / the remote's default, when it is not the branch itself. */
+  base: string | null;
+  upstream: string | null;
+  /** Commits made while the session ran; null when they could not be read. */
+  commits: ReviewCommit[] | null;
+  uncommitted: number | null;
+  unpushed: number | null;
+}
+
+export interface SessionReview {
+  /** git: files come from Git; edits: only the agent's recorded edits are known. */
+  source: "git" | "edits";
+  /** Why Git was not used, or another caveat. */
+  note: string | null;
+  files: ReviewFile[];
+  /** Recorded edits whose file shows no net change in Git (reverted or ignored). */
+  noNetChange: string[];
+  added: number;
+  removed: number;
+  tests: { touched: string[]; ran: boolean; lastRun: "ok" | "failed" | null };
+  branch: ReviewBranch | null;
+}
+
+/** One file's diff and content for the Review lens. */
+export interface ReviewDiff {
+  path: string;
+  gitDiff: string | null;
+  source: string | null;
+  truncated: boolean;
 }
 
 /* ---------- Usage (redesign R1) ---------- */

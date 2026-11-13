@@ -126,6 +126,15 @@ test("refreshSetup rewrites the install when the port changes and leaves other a
     assert.match(readFileSync(globalTarget("pi").file, "utf8"), /Number\("4555"\)/);
     assert.equal(isSetUp("codex"), false);
     assert.deepEqual(refreshSetup(), []);
+
+    // A second Quoli with its own home and port (a test, a demo) never takes the install over.
+    const before = readFileSync(globalTarget("claude-code").file, "utf8");
+    const pi = readFileSync(globalTarget("pi").file, "utf8");
+    process.env.QUOLI_HOME = join(box.root, "elsewhere");
+    process.env.QUOLI_PORT = "4721";
+    assert.deepEqual(refreshSetup(), []);
+    assert.equal(readFileSync(globalTarget("claude-code").file, "utf8"), before);
+    assert.equal(readFileSync(globalTarget("pi").file, "utf8"), pi);
   } finally {
     box.done();
   }
@@ -137,6 +146,9 @@ test("the hook queues events while Quoli is closed and the server records them i
   try {
     execFileSync("git", ["init", "-q", repo]);
     setup(["claude-code", "codex"], false, []);
+    // A sync that just ran keeps the hook from starting another one, which would drain the queue
+    // while this test reads it (starting the sync is tested in background.test.ts).
+    writeFileSync(join(box.root, ".quoli", "sync.last"), "");
     const run = (payload: object, agent?: string) =>
       execFileSync(
         process.execPath,

@@ -12,16 +12,19 @@ import { Timeline } from "../components/Timeline.tsx";
 import { ErrorState, Icon, Loading, projectName } from "../components/ui.tsx";
 import { AgentsLens } from "../lenses/AgentsLens.tsx";
 import { useAgentsView } from "../lenses/agents/view.ts";
-import { CodeLens } from "../lenses/CodeLens.tsx";
 import { GitLens } from "../lenses/GitLens.tsx";
 import { InfraLens } from "../lenses/InfraLens.tsx";
+import { MapLens } from "../lenses/MapLens.tsx";
+import { useCodeGraph } from "../lenses/map/useGraph.ts";
+import { ReviewLens } from "../lenses/ReviewLens.tsx";
 import { Link, navigate, parseBoardQuery, paths, useLocation } from "../router.ts";
 import type { Lens, LensContext, Selection, Touch } from "../state.ts";
 
 const LENSES: { id: Lens; label: string; hint: string }[] = [
   { id: "summary", label: "Summary", hint: "What was asked, changed, run and spent" },
+  { id: "review", label: "Review", hint: "What to read before you merge" },
   { id: "agents", label: "Agents", hint: "What the agent did" },
-  { id: "code", label: "Code", hint: "Where it happened" },
+  { id: "map", label: "Map", hint: "Every function, who calls it, what the agent touched" },
   { id: "git", label: "Git", hint: "Which branch and commits" },
   { id: "infra", label: "Infra", hint: "Where it runs" },
 ];
@@ -34,6 +37,9 @@ const remember = (key: string, value?: string | null) => {
   } catch {}
   return null;
 };
+
+/** Lenses about one session: they need a session and are not offered without one. */
+const sessionOnly = (l: Lens) => l === "summary" || l === "review";
 
 const isLens = (v: string | null): v is Lens => LENSES.some((l) => l.id === v);
 
@@ -50,11 +56,11 @@ export function BoardPage({
   // Summary needs a session: it is that session's default, and not offered without one.
   const lens: Lens = sessionId
     ? (view.lens ?? "summary")
-    : view.lens && view.lens !== "summary"
+    : view.lens && !sessionOnly(view.lens)
       ? view.lens
-      : isLens(remembered) && remembered !== "summary"
+      : isLens(remembered) && !sessionOnly(remembered)
         ? remembered
-        : "code";
+        : "map";
   const selection = view.selection;
 
   const [projects, refreshProjects, projectsError] = useData("projects", api.projects);
@@ -67,16 +73,26 @@ export function BoardPage({
   const [session, refreshSession, sessionError] = useData(sessionId, () =>
     api.session(sessionId as string),
   );
-  const [code, refreshCode, codeError] = useData(root && `code:${root}`, () =>
-    api.code(root as string),
-  );
+  const [code, refreshCode] = useData(root && `code:${root}`, () => api.code(root as string));
   const [git, refreshGit, gitError] = useData(root && `git:${root}`, () => api.git(root as string));
   const [infra, refreshInfra, infraError] = useData(root && `infra:${root}`, () =>
     api.infra(root as string),
   );
 
+  const [review, refreshReview, reviewError] = useData(sessionId && `review:${sessionId}`, () =>
+    api.review(sessionId as string),
+  );
+
   const [cursor, setCursor] = useState<number | null>(null);
   const [palette, setPalette] = useState(false);
+  // The code graph is parsed on the server only once someone looks at the Map or searches.
+  const [wantGraph, setWantGraph] = useState(false);
+  useEffect(() => {
+    if (lens === "map" || palette) setWantGraph(true);
+  }, [lens, palette]);
+  const codeGraph = useCodeGraph(projectId, wantGraph || lens === "map" || palette);
+  const refreshGraph = useRef(codeGraph.retry);
+  refreshGraph.current = codeGraph.retry;
   // The sessions list is open when you arrive at a project and folds away once a session is open.
   const [listOpen, setListOpen] = useState(!sessionId);
   // biome-ignore lint/correctness/useExhaustiveDependencies: fold the list when a session opens
@@ -99,7 +115,7 @@ export function BoardPage({
     remember("quoli.lens", l);
     go(sessionId, l, l === "summary" ? null : selection);
   };
-  const select = (s: Selection) => go(sessionId, view.lens, s);
+  const select = (s: Selection, replace = false) => go(sessionId, view.lens, s, replace);
   const gotoLens = (l: Lens, s: Selection) => {
     remember("quoli.lens", l);
     go(sessionId, l, s);
@@ -114,16 +130,22 @@ export function BoardPage({
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset the replay when the session changes
   useEffect(() => setCursor(null), [sessionId]);
 
+  const wantGraphRef = useRef(wantGraph);
+  wantGraphRef.current = wantGraph;
   const slow = useRef<ReturnType<typeof setTimeout>>(undefined);
   useLiveEvents((m) => {
     refreshProjects();
     if (m.type === "projects") return;
     refreshSessions();
-    if (m.sessionId === sessionId) refreshSession();
+    if (m.sessionId === sessionId) {
+      refreshSession();
+      refreshReview();
+    }
     clearTimeout(slow.current);
     slow.current = setTimeout(() => {
       refreshCode();
       refreshGit();
+      if (wantGraphRef.current) refreshGraph.current();
     }, 1500);
   });
 
@@ -137,7 +159,7 @@ export function BoardPage({
       if (isTypingTarget(e.target as HTMLElement) || modalOpen()) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const n = Number(e.key);
-      if (n >= 1 && n <= LENSES.length && (sessionId || LENSES[n - 1].id !== "summary"))
+      if (n >= 1 && n <= LENSES.length && (sessionId || !sessionOnly(LENSES[n - 1].id)))
         setLens(LENSES[n - 1].id);
       if (e.key === "Escape" && selection) select(null);
     };
@@ -193,6 +215,7 @@ export function BoardPage({
     selection,
     select,
     code,
+    codeGraph,
     git,
     infra,
     refreshInfra,
@@ -203,23 +226,25 @@ export function BoardPage({
   const href = (l: Lens, s: Selection) =>
     paths.board(projectId, sessionId, { lens: l, selection: s });
   const summary = lens === "summary";
+  // Summary and Review are pages of their own: no details panel and no replay bar.
+  const wide = summary || lens === "review";
   const lensFetch = {
-    code: { data: code, error: codeError, retry: refreshCode, what: "repository files" },
     git: { data: git, error: gitError, retry: refreshGit, what: "Git history" },
     infra: { data: infra, error: infraError, retry: refreshInfra, what: "infrastructure files" },
   };
-  const fetched = lens === "code" || lens === "git" || lens === "infra" ? lensFetch[lens] : null;
+  const fetched = lens === "git" || lens === "infra" ? lensFetch[lens] : null;
   const blocked = fetched && !fetched.data && fetched.error ? fetched : null;
 
   // In the Agents lens' Steps view a selected call opens in place, so it needs no side panel.
   const inPlace = lens === "agents" && agentsView === "timeline" && selection?.kind === "tool";
-  const panelOpen = !summary && (details || (!!selection && !inPlace));
+  // Review and Summary use the full width; the Map has its own explorer and code reader.
+  const panelOpen = !wide && lens !== "map" && (details || (!!selection && !inPlace));
 
   return (
     <div
-      className={`app ${summary ? "is-summary" : ""} ${listOpen ? "" : "no-list"} ${
+      className={`app ${wide ? "is-summary" : ""} ${listOpen ? "" : "no-list"} ${
         panelOpen ? "" : "no-details"
-      } ${sessionId && session && !summary ? "" : "no-replay"}`}
+      } ${sessionId && session && !wide ? "" : "no-replay"}`}
     >
       <header className="topbar">
         <button
@@ -258,7 +283,7 @@ export function BoardPage({
           role="tablist"
           aria-label="Lens"
           onKeyDown={(e) => {
-            const tabs = LENSES.filter((l) => sessionId || l.id !== "summary");
+            const tabs = LENSES.filter((l) => sessionId || !sessionOnly(l.id));
             const to = roveTarget(
               e.key,
               tabs.findIndex((l) => l.id === lens),
@@ -271,7 +296,7 @@ export function BoardPage({
           }}
         >
           {LENSES.map((l, i) =>
-            l.id === "summary" && !sessionId ? null : (
+            sessionOnly(l.id) && !sessionId ? null : (
               <button
                 type="button"
                 role="tab"
@@ -297,7 +322,7 @@ export function BoardPage({
           {Icon.search}
           <span className="sr-only">Search this board</span>
         </button>
-        {!summary && (
+        {!wide && lens !== "map" && (
           <button
             type="button"
             className={`icon-btn ${panelOpen ? "on" : ""}`}
@@ -334,6 +359,8 @@ export function BoardPage({
           session={session}
           projectName={projectName(projects, projectId)}
           summaryHref={href("summary", null)}
+          review={review}
+          reviewHref={href("review", null)}
         />
       )}
 
@@ -356,7 +383,19 @@ export function BoardPage({
           </div>
         )}
         {summary && sessionId && !session && !sessionError && <Loading label="Loading session…" />}
-        {summary && session && <Summary session={session} href={href} />}
+        {summary && session && <Summary session={session} review={review} href={href} />}
+        {lens === "review" && sessionId && !session && !sessionError && (
+          <Loading label="Loading session…" />
+        )}
+        {lens === "review" && session && (
+          <ReviewLens
+            {...ctx}
+            session={session}
+            review={review}
+            error={reviewError}
+            retry={refreshReview}
+          />
+        )}
         {lens === "agents" && <AgentsLens {...ctx} />}
         {blocked ? (
           <div className="board-notice">
@@ -368,7 +407,7 @@ export function BoardPage({
           </div>
         ) : (
           <>
-            {lens === "code" && <CodeLens {...ctx} />}
+            {lens === "map" && <MapLens {...ctx} />}
             {lens === "git" && <GitLens {...ctx} />}
             {lens === "infra" && <InfraLens {...ctx} />}
           </>
@@ -390,7 +429,7 @@ export function BoardPage({
         />
       )}
 
-      {sessionId && session && !summary && (
+      {sessionId && session && !wide && (
         <Timeline
           session={session}
           calls={ordered}

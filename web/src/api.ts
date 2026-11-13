@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AgentKind,
+  CodeGraph,
   CodeMap,
   CommitDetail,
+  EventHit,
   GitState,
   InfraMap,
   InsightsReport,
@@ -11,8 +13,10 @@ import type {
   Overview,
   PriceTable,
   Project,
+  ReviewDiff,
   ServerInfo,
   SessionDetail,
+  SessionReview,
   SessionSummary,
   Settings,
   SetupStatus,
@@ -64,6 +68,9 @@ export const api = {
   sessions: (projectId?: string) =>
     get<SessionSummary[]>(projectId ? `/api/sessions?project=${id(projectId)}` : "/api/sessions"),
   session: (sid: string) => get<SessionDetail>(`/api/session?id=${id(sid)}`),
+  review: (sid: string) => get<SessionReview>(`/api/review?id=${id(sid)}`),
+  reviewDiff: (sid: string, path: string) =>
+    get<ReviewDiff>(`/api/review/diff?id=${id(sid)}&path=${id(path)}`),
   overview: () => get<Overview>("/api/overview"),
   settings: () => get<SettingsResponse>("/api/settings"),
   saveSettings: (patch: Partial<Settings>) => send<SettingsResponse>("PUT", "/api/settings", patch),
@@ -96,6 +103,11 @@ export const api = {
     send<ManualService[]>("DELETE", `/api/projects/${id(projectId)}/services/${id(sid)}`),
   commit: (root: string, sha: string) =>
     get<CommitDetail>(`/api/commit?${q(root)}&sha=${encodeURIComponent(sha)}`),
+  /** 200 with the graph, or 202 `{status:"building"}` while the server parses. */
+  codeGraph: (projectId: string) =>
+    get<CodeGraph | { status: "building" }>(`/api/projects/${id(projectId)}/codegraph`),
+  search: (projectId: string, query: string) =>
+    get<EventHit[]>(`/api/search?project=${id(projectId)}&q=${encodeURIComponent(query)}`),
   file: (root: string, path: string) =>
     get<{ path: string; content: string | null; diff: string | null }>(
       `/api/file?${q(root)}&path=${encodeURIComponent(path)}`,
@@ -142,44 +154,56 @@ export type LiveMessage = { type: "event"; sessionId: string } | { type: "projec
 type Listener = (m: LiveMessage) => void;
 
 const listeners = new Set<Listener>();
-let source: EventSource | null = null;
+let polling = false;
 
-function connect() {
-  if (source) return;
-  source = new EventSource("/api/stream");
-  // After the server restarts the browser reconnects on its own; reload what we show, since
-  // anything fetched while it was down failed.
-  let opened = false;
-  source.onopen = () => {
-    if (opened) for (const l of listeners) l({ type: "projects" });
-    opened = true;
-  };
-  source.onmessage = (m) => {
+/**
+ * Asks the local server for changes about once a second (GET /api/changes) while any page
+ * listens. Each request ends at once, so any number of tabs and reloads work; a held stream per
+ * tab ran into the browser's six-connections-per-address limit.
+ */
+async function poll() {
+  if (polling) return;
+  polling = true;
+  let after = -1;
+  let failed = false;
+  while (listeners.size) {
     try {
-      const msg = JSON.parse(m.data);
-      const typed: LiveMessage =
-        msg.type === "projects"
-          ? { type: "projects" }
-          : { type: "event", sessionId: msg.sessionId };
-      for (const l of listeners) l(typed);
-    } catch {}
-  };
+      const res = await fetch(`/api/changes?after=${after}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(String(res.status));
+      const { seq, changes } = (await res.json()) as { seq: number; changes: LiveMessage[] };
+      // Back after the server was down: anything fetched meanwhile failed, so reload it.
+      const all = failed ? [{ type: "projects" } as LiveMessage, ...changes] : changes;
+      failed = false;
+      after = seq;
+      // One notice per session (and one for projects) however many events arrived since.
+      const seen = new Set<string>();
+      for (const m of all) {
+        const typed: LiveMessage =
+          m.type === "projects" ? { type: "projects" } : { type: "event", sessionId: m.sessionId };
+        const key = typed.type === "projects" ? "" : typed.sessionId;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        for (const l of listeners) l(typed);
+      }
+    } catch {
+      failed = after >= 0;
+    }
+    // A hidden tab only needs to catch up when shown again.
+    await new Promise((r) => setTimeout(r, document.hidden ? 5000 : 1000));
+  }
+  polling = false;
 }
 
-/** Server-sent events from the local server, one connection shared by every subscriber. */
+/** Live changes from the local server, one poll loop shared by every subscriber in this tab. */
 export function useLiveEvents(onMessage: Listener) {
   const handler = useRef(onMessage);
   handler.current = onMessage;
   useEffect(() => {
     const l: Listener = (m) => handler.current(m);
     listeners.add(l);
-    connect();
+    void poll();
     return () => {
       listeners.delete(l);
-      if (!listeners.size) {
-        source?.close();
-        source = null;
-      }
     };
   }, []);
 }

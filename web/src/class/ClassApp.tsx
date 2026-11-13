@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { HOSTED_SUPABASE } from "../../../shared/hosted.ts";
 import { AGENT_NAMES, type AgentKind } from "../../../shared/model.ts";
 import { ago, compact, usd } from "../format.ts";
+import { Activity } from "./Activity.tsx";
 
 /**
  * The Quoli account page at /app/ (#144, #151), hosted on Vercel next to the landing page. Anyone
@@ -293,6 +294,9 @@ function SignedIn({
         />
       )}
       <Computers client={client} me={me} account={account} />
+      {account && (account.computers > 0 || account.sessions > 0) && (
+        <Activity client={client} me={me} />
+      )}
       <h2 className="class-section">Teams</h2>
       {/* Someone who owns a team sees it first; everyone else starts with joining. */}
       {teaching.length > 0 && <Teaching client={client} classes={teaching} onChange={load} />}

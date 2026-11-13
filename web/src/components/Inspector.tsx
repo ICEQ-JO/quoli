@@ -8,7 +8,7 @@ import { isAdded } from "../lenses/infra/split.ts";
 import { Link, paths } from "../router.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
-import { ErrorState, Icon } from "./ui.tsx";
+import { ErrorState, Icon, Loading } from "./ui.tsx";
 
 interface Props extends LensContext {
   lens: Lens;
@@ -100,39 +100,6 @@ function LensPanel(p: Props & { session: SessionDetail }) {
                   <span className="cl-name">{c.name}</span>
                   <span className="cl-sum">{c.summary}</span>
                   <span className={`st ${c.status}`}>{c.status}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-    );
-  }
-  if (lens === "code") {
-    const changed = session.report.changes;
-    return (
-      <Section title="Changed files" aside={String(changed.length)}>
-        {changed.length === 0 ? (
-          <p className="faint">No files were changed.</p>
-        ) : (
-          <ul className="file-list">
-            {changed.map((c) => (
-              <li key={c.path}>
-                <button
-                  type="button"
-                  title={c.path}
-                  onClick={() => select({ kind: "file", id: c.path })}
-                >
-                  <span className="fname">{fileName(c.path)}</span>
-                  <span className="fdir">{c.path.slice(0, -fileName(c.path).length - 1)}</span>
-                  <span className="delta">
-                    <span className="add">+{c.added}</span>{" "}
-                    {c.rewrite ? (
-                      <span className="faint">rewritten</span>
-                    ) : (
-                      <span className="del">−{c.removed}</span>
-                    )}
-                  </span>
                 </button>
               </li>
             ))}
@@ -312,9 +279,9 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
         ) : fileError ? (
           <ErrorState title="Could not read this file" message={fileError} retry={reloadFile} />
         ) : (
-          <p className="faint pad" role="status">
-            Loading…
-          </p>
+          <div className="pad">
+            <Loading lines={8} />
+          </div>
         ))}
       {meta?.imports.length || importers.length ? (
         <Section title="Connections">
@@ -324,7 +291,7 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
                 <button
                   type="button"
                   title={f}
-                  onClick={() => goto("code", { kind: "file", id: f })}
+                  onClick={() => goto("map", { kind: "file", id: f })}
                 >
                   imports <b>{fileName(f)}</b>
                 </button>
@@ -335,7 +302,7 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
                 <button
                   type="button"
                   title={f.path}
-                  onClick={() => goto("code", { kind: "file", id: f.path })}
+                  onClick={() => goto("map", { kind: "file", id: f.path })}
                 >
                   used by <b>{fileName(f.path)}</b>
                 </button>
@@ -374,7 +341,7 @@ function ToolPanel({ id, session, goto }: Props & { id: string }) {
                 <button
                   type="button"
                   title={f}
-                  onClick={() => goto("code", { kind: "file", id: f })}
+                  onClick={() => goto("map", { kind: "file", id: f })}
                 >
                   <b>{fileName(f)}</b> <span className="faint">{f}</span>
                 </button>
@@ -478,7 +445,7 @@ function ServicePanel({
                 <button
                   type="button"
                   title={f}
-                  onClick={() => goto("code", { kind: "file", id: f })}
+                  onClick={() => goto("map", { kind: "file", id: f })}
                 >
                   <b>{fileName(f)}</b> <span className="faint">{f}</span>
                 </button>
@@ -626,9 +593,7 @@ function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: s
             retry={reloadDetail}
           />
         ) : (
-          <p className="faint" role="status">
-            Loading…
-          </p>
+          <Loading />
         )}
       </Section>
       {detail?.diff && (

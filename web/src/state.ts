@@ -1,4 +1,5 @@
 import type {
+  CodeGraph,
   CodeMap,
   GitState,
   InfraMap,
@@ -7,15 +8,26 @@ import type {
   ToolCall,
 } from "../../shared/model.ts";
 
-export type Lens = "summary" | "agents" | "code" | "git" | "infra";
+export type Lens = "summary" | "review" | "agents" | "map" | "git" | "infra";
 
 export type Selection =
   | { kind: "file"; id: string }
+  | { kind: "symbol"; id: string }
+  | { kind: "route"; id: string }
+  | { kind: "table"; id: string }
   | { kind: "tool"; id: string }
   | { kind: "service"; id: string }
   | { kind: "commit"; id: string }
   | { kind: "branch"; id: string }
   | null;
+
+/** The code graph as the board holds it: absent until requested, `building` while the server parses. */
+export interface GraphState {
+  graph: CodeGraph | null;
+  building: boolean;
+  error: string | null;
+  retry: () => void;
+}
 
 export interface Touch {
   read: number;
@@ -33,8 +45,9 @@ export interface LensContext {
   /** Repo-relative path → how the visible calls touched it. */
   touched: Map<string, Touch>;
   selection: Selection;
-  select: (s: Selection) => void;
+  select: (s: Selection, replace?: boolean) => void;
   code: CodeMap | null;
+  codeGraph: GraphState;
   git: GitState | null;
   infra: InfraMap | null;
   /** Reload the infra map, e.g. after a service was added by hand. */

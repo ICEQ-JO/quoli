@@ -235,8 +235,12 @@ export function SessionsPage() {
                 <th scope="col" className="num c-n">
                   Tools
                 </th>
-                <th scope="col" className="num c-n c-opt">
-                  Files
+                <th
+                  scope="col"
+                  className="num c-n c-opt"
+                  title="Files the agent read or edited. Changed files are in the Review lens"
+                >
+                  Touched
                 </th>
                 <th scope="col" className="num c-n c-opt">
                   Tokens
