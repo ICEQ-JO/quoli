@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { articleAt } from "./articles.tsx";
+import { Journal, JournalTeaser } from "./Journal.tsx";
 import { PixelScene, SESSION_STEPS } from "./PixelScene.tsx";
 import { ProductScreenshot } from "./ProductScreenshot.tsx";
 import { Arrow, Brand, Mark, Moon } from "./ui.tsx";
@@ -240,6 +242,7 @@ function SiteFooter() {
         </div>
         <div className="footer-column">
           <h3>Resources</h3>
+          <a href="/journal/">Journal</a>
           <a href="/landing/#product">Product tour</a>
           <a href="/landing/#collaborate">For developers &amp; teams</a>
           <a href="/landing/?page=privacy">Privacy</a>
@@ -515,16 +518,21 @@ export function Landing() {
     }
   });
   const page = new URLSearchParams(location.search).get("page");
+  const journal = location.pathname.startsWith("/journal/");
+  const article = articleAt(location.pathname);
   useEffect(() => {
-    document.title =
-      page === "mission"
+    document.title = journal
+      ? article
+        ? `${article.title} — Quoli Journal`
+        : "Journal — Quoli"
+      : page === "mission"
         ? "Our mission — Quoli"
         : page === "roadmap"
           ? "Roadmap — Quoli"
           : page === "privacy"
             ? "Privacy — Quoli"
             : "Quoli — See what your coding agents did.";
-  }, [page]);
+  }, [page, journal, article]);
   useEffect(() => {
     document.documentElement.dataset.mode = dark ? "dark" : "light";
     document
@@ -548,6 +556,9 @@ export function Landing() {
           <nav aria-label="Main navigation">
             <a href="/landing/#product">Product</a>
             <a href="/landing/#collaborate">For teams</a>
+            <a href="/journal/" aria-current={journal ? "page" : undefined}>
+              Journal
+            </a>
             <a href="/landing/?page=roadmap">Roadmap</a>
             <a href="/landing/?page=mission">Mission</a>
           </nav>
@@ -564,7 +575,9 @@ export function Landing() {
           </a>
         </div>
       </header>
-      {page && ["mission", "roadmap", "privacy"].includes(page) ? (
+      {journal ? (
+        <Journal pathname={location.pathname} />
+      ) : page && ["mission", "roadmap", "privacy"].includes(page) ? (
         <InformationPage page={page} />
       ) : (
         <main id="main">
@@ -986,6 +999,7 @@ export function Landing() {
             </ol>
           </section>
           <FieldGuide />
+          <JournalTeaser />
           <section className="waitlist-section" id="waitlist" aria-labelledby="waitlist-title">
             <div>
               <h2 id="waitlist-title">

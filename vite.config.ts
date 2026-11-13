@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
+import { journalPages } from "./scripts/journal.ts";
 
 /**
  * Link previews need an absolute image URL. On Vercel the production domain (including a custom
@@ -25,7 +26,7 @@ const version: string = JSON.parse(
 
 export default defineConfig({
   root: "web",
-  plugins: [react(), siteUrl()],
+  plugins: [react(), siteUrl(), journalPages(site)],
   define: { "import.meta.env.VITE_QUOLI_VERSION": JSON.stringify(version) },
   build: {
     outDir: "../dist",

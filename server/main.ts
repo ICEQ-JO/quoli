@@ -56,8 +56,8 @@ const vite = production
 const server = createServer(async (req, res) => {
   if (!guard(req)) return json(res, 403, { error: "Loopback only" });
   const url = new URL(req.url ?? "/", `http://${HOST}`);
-  if (url.pathname === "/landing") {
-    res.writeHead(307, { Location: `/landing/${url.search}` });
+  if (url.pathname === "/landing" || /^\/journal(?:\/[a-z0-9-]+)?$/.test(url.pathname)) {
+    res.writeHead(307, { Location: `${url.pathname}/${url.search}` });
     return res.end();
   }
   try {
@@ -71,12 +71,15 @@ const server = createServer(async (req, res) => {
   const file = normalize(join(dist, url.pathname));
   const target = /^\/landing\/?$/.test(url.pathname)
     ? join(dist, "landing/index.html")
-    : file.startsWith(dist) && extname(file)
-      ? file
-      : join(dist, "index.html");
+    : /^\/journal(?:\/[a-z0-9-]+)?\/$/.test(url.pathname)
+      ? join(file, "index.html")
+      : file.startsWith(dist) && extname(file)
+        ? file
+        : join(dist, "index.html");
   try {
+    const content = readFileSync(target);
     res.writeHead(200, { "Content-Type": MIME[extname(target)] ?? "application/octet-stream" });
-    res.end(readFileSync(target));
+    res.end(content);
   } catch {
     json(res, 404, {});
   }
