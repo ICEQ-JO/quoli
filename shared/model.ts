@@ -176,6 +176,48 @@ export interface SessionDetail extends SessionSummary {
   usage: UsagePoint[];
   /** What the Summary tab shows (Increment 2). All derived from recorded events. */
   report: SessionReport;
+  /** What the agent had in its context: size over time, compactions, instruction files, commands. */
+  context: SessionContext;
+}
+
+/**
+ * The agent's context window as recorded. Sizes come from token usage (the prompt each model
+ * request sent: input + cache read + cache write), so they exist only for agents that report
+ * usage per request (Claude Code). Instruction files, compactions and commands come from Claude
+ * Code hook events (InstructionsLoaded, PreCompact/PostCompact, UserPromptExpansion,
+ * PostModelSwitch); other agents leave them empty.
+ */
+export interface SessionContext {
+  /** One point per main-agent model request, oldest first (at most 400, evenly thinned). */
+  sizes: { at: string; tokens: number; model: string | null }[];
+  /** Largest prompt sent; null when no usage was recorded. */
+  peak: number | null;
+  /** Latest prompt size; null when no usage was recorded. */
+  current: number | null;
+  compactions: {
+    at: string;
+    trigger: "manual" | "auto" | null;
+    before: number | null;
+    after: number | null;
+  }[];
+  /** Instruction files the agent loaded (CLAUDE.md, rules, memory), first load of each path. */
+  instructions: {
+    path: string;
+    scope: string | null;
+    reason: string | null;
+    at: string;
+    /** Times loaded again later (after a compaction, for example). */
+    reloads: number;
+  }[];
+  /** Slash commands, skills and MCP prompts the user ran, in order. */
+  commands: {
+    at: string;
+    name: string;
+    args: string | null;
+    source: string | null;
+    kind: string | null;
+  }[];
+  modelSwitches: { at: string; from: string | null; to: string | null }[];
 }
 
 export interface FileTouch {

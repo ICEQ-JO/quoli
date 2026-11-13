@@ -3152,6 +3152,80 @@ textarea.input {
 }
 
 /* MCP servers, skills and subagents a session called (#135). */
+/* ---------- Context window (Summary) ---------- */
+
+.ctx-stats {
+  margin: 0 0 8px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  min-height: 1.5em;
+}
+
+.ctx-stats b {
+  color: var(--text);
+}
+
+.ctx-chart {
+  display: block;
+  width: 100%;
+  height: 96px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.ctx-base {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.ctx-line {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.ctx-compact {
+  stroke: var(--warn);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.ctx-cross {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.ctx-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.ctx-list li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-sm);
+  min-width: 0;
+}
+
+.ctx-list li > :last-child {
+  margin-left: auto;
+  text-align: right;
+}
+
+.ctx-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sum-ext {
   list-style: none;
   margin: 0;

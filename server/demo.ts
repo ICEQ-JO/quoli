@@ -198,7 +198,9 @@ type Step =
       /** Claude Code's `mcp_server` field on MCP tool calls. */
       mcp?: { name: string; source: string };
     }
-  | { subagent: string; type: string; start: boolean };
+  | { subagent: string; type: string; start: boolean }
+  /** Any other hook event as Claude Code sends it (instruction files, compaction, commands). */
+  | { hook: Record<string, unknown> };
 
 function record(
   store: Store,
@@ -279,8 +281,15 @@ function record(
 
   send({ hook_event_name: "SessionStart", source: "startup", quoli_branch: opts.branch });
   let n = 0;
+  // Context shrinks after a compaction: later requests resend less cached history.
+  let compacted = 0;
   for (const step of opts.steps) {
     t += 4000;
+    if ("hook" in step) {
+      if (step.hook.hook_event_name === "PostCompact") compacted = n * 1500 + 6000;
+      send(step.hook);
+      continue;
+    }
     if ("prompt" in step) {
       send({ hook_event_name: "UserPromptSubmit", prompt: step.prompt });
       continue;
@@ -304,7 +313,7 @@ function record(
       agent ?? "main",
       1800 + n * 120,
       260 + (n % 4) * 180,
-      22000 + n * 1500,
+      22000 + n * 1500 - compacted,
       n % 5 === 0 ? 4200 : 0,
     );
     const common = {
@@ -322,7 +331,7 @@ function record(
       ...(step.fail ? { error: step.output } : { tool_response: step.output ?? { success: true } }),
     });
   }
-  usage("main", 2400, 1100, 61000, 0);
+  usage("main", 2400, 1100, 61000 - compacted, 0);
   t += 3000;
   send({
     hook_event_name: "Stop",
@@ -422,6 +431,32 @@ export function seedDemo(store: Store) {
     transcripts,
     steps: [
       {
+        hook: {
+          hook_event_name: "InstructionsLoaded",
+          file_path: p("CLAUDE.md"),
+          memory_type: "Project",
+          load_reason: "session_start",
+        },
+      },
+      {
+        hook: {
+          hook_event_name: "InstructionsLoaded",
+          file_path: "/home/you/.claude/CLAUDE.md",
+          memory_type: "User",
+          load_reason: "session_start",
+        },
+      },
+      {
+        hook: {
+          hook_event_name: "UserPromptExpansion",
+          expansion_type: "slash_command",
+          command_name: "plan",
+          command_args: "refunds",
+          command_source: "project",
+          prompt: "/plan refunds",
+        },
+      },
+      {
         prompt:
           "Add refunds: POST /orders/:id/refunds should refund through Stripe, record it in the database and email the customer. Add tests.",
       },
@@ -479,6 +514,16 @@ export function seedDemo(store: Store) {
         agent: "agent-email",
       },
       { subagent: "agent-email", type: "Explore", start: false },
+      { hook: { hook_event_name: "PreCompact", trigger: "auto" } },
+      { hook: { hook_event_name: "PostCompact", trigger: "auto" } },
+      {
+        hook: {
+          hook_event_name: "InstructionsLoaded",
+          file_path: p("CLAUDE.md"),
+          memory_type: "Project",
+          load_reason: "compact",
+        },
+      },
       {
         tool: "Edit",
         input: {

@@ -14,6 +14,7 @@ import {
   type Turn,
   zeroTokens,
 } from "../shared/model.ts";
+import { contextOf } from "./context.ts";
 import { projectId, type RawEvent, type UsageRow } from "./db.ts";
 import { findLoops } from "./loops.ts";
 import { costOf } from "./prices.ts";
@@ -198,6 +199,7 @@ export function deriveSession(
     toolCalls,
     files,
     usage: usagePoints,
+    context: contextOf(events, usagePoints, root),
   };
 }
 
@@ -226,7 +228,16 @@ function promptTitle(prompts: string[]): string | null {
 }
 
 export function summarizeSession(d: SessionDetail): SessionSummary {
-  const { agents: _a, turns: _t, toolCalls: _c, files: _f, usage: _u, report: _r, ...rest } = d;
+  const {
+    agents: _a,
+    turns: _t,
+    toolCalls: _c,
+    files: _f,
+    usage: _u,
+    report: _r,
+    context: _x,
+    ...rest
+  } = d;
   return rest;
 }
 

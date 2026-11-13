@@ -8,6 +8,7 @@ import {
 import { clock, compact, fileName, span, tokenSum, usd } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import type { Lens, Selection } from "../state.ts";
+import { ContextCard } from "./ContextCard.tsx";
 
 /** Builds a board URL for the current project and session. */
 export type Href = (lens: Lens, selection: Selection) => string;
@@ -337,6 +338,12 @@ export function Summary({
                 </li>
               ))}
             </ul>
+          </Sec>
+        )}
+
+        {session.context && (
+          <Sec id="sum-ctx" title="Context window">
+            <ContextCard context={session.context} />
           </Sec>
         )}
 

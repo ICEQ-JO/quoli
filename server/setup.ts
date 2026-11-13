@@ -16,6 +16,7 @@ import {
   type HookAgent,
   hook,
   isPluginAgent,
+  missingEvents,
   pluginSource,
   writeHooks,
   writePlugin,
@@ -168,7 +169,9 @@ export function refreshSetup(): HookAgent[] {
     } catch {}
     return isPluginAgent(agent)
       ? text !== pluginSource(agent, spoolFile())
-      : hookStale || !text.includes(JSON.stringify(commandFor(agent, hookCopy())).slice(1, -1));
+      : hookStale ||
+          !text.includes(JSON.stringify(commandFor(agent, hookCopy())).slice(1, -1)) ||
+          missingEvents(globalTarget(agent).file, agent);
   });
   if (stale.length) setup(stale, false, []);
   else if (syncCommandStale()) installSyncCommand();
