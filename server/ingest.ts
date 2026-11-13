@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import type { AgentKind } from "../shared/model.ts";
 import { adapterFor } from "./adapters.ts";
 import type { Store } from "./db.ts";
+import { records } from "./scope.ts";
 import { syncTranscript } from "./transcript.ts";
 
 const rootCache = new Map<string, string>();
@@ -82,6 +83,8 @@ export function recordEvent(
   if (typeof sessionId !== "string" || typeof event !== "string" || typeof cwd !== "string") {
     return false;
   }
+  // Repositories the user chose not to record are dropped before anything is stored.
+  if (!records(cwd)) return false;
   const root = repoRoot(cwd);
   if (event === "SessionStart" && payload.quoli_branch === undefined) {
     payload.quoli_branch = git(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]);

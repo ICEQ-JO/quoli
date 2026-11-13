@@ -61,6 +61,8 @@ export const api = {
   setupStatus: () => get<SetupStatus[]>("/api/setup"),
   setup: (agents: AgentKind[] | undefined, remove = false) =>
     send<SetupStatus[]>("POST", "/api/setup", { agents, remove }),
+  setRecording: (projectId: string, on: boolean) =>
+    send<Project>("PUT", `/api/projects/${id(projectId)}/recording`, { on }),
   disconnectProject: (projectId: string) =>
     send<Project>("POST", `/api/projects/${id(projectId)}/disconnect`),
   deleteProject: (projectId: string) =>

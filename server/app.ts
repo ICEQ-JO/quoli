@@ -33,6 +33,7 @@ import {
   validatePrices,
 } from "./prices.ts";
 import { buildReview, reviewDiff } from "./review.ts";
+import { records, startRecording, stopRecording } from "./scope.ts";
 import { searchEvents } from "./search.ts";
 import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
 import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
@@ -157,6 +158,7 @@ export function createApp(store: Store, port: () => number) {
           agents,
           connectedAt: registered.get(root) ?? null,
           github: githubRepo(root),
+          recording: records(root),
           worktreeOf: (() => {
             const main = groupRoot(root, roots);
             return main ? projectId(main) : null;
@@ -435,6 +437,7 @@ export function createApp(store: Store, port: () => number) {
       } catch (error) {
         throw new BadRequest((error as Error).message);
       }
+      startRecording(root);
       store.registerProject(root);
       broadcast({ type: "projects" });
       return json(res, 200, projectFor(projectId(root)));
@@ -545,6 +548,17 @@ export function createApp(store: Store, port: () => number) {
         saveManual(store, project.id, next);
         return json(res, 200, next);
       }
+    }
+    const rec = path.match(/^\/api\/projects\/([0-9a-f]{12})\/recording$/);
+    if (rec && method === "PUT") {
+      const project = projectFor(rec[1]);
+      if (!project) return json(res, 404, { error: "Unknown project" });
+      const { on } = await payload();
+      if (typeof on !== "boolean") throw new BadRequest("on must be true or false");
+      if (on) startRecording(project.root);
+      else stopRecording(project.root);
+      broadcast({ type: "projects" });
+      return json(res, 200, projectFor(project.id));
     }
     const m = path.match(/^\/api\/projects\/([0-9a-f]{12})(\/disconnect)?$/);
     if (m) {

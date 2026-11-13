@@ -19,7 +19,9 @@ const SUPABASE_URL =
 const KEY =
   (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || HOSTED_SUPABASE.publishableKey;
 /** One command sets up Quoli, links the computer through this page, and starts it (#154). */
-const CONNECT = `npx https://${location.hostname === "localhost" || location.hostname === "127.0.0.1" ? "iceq.best" : location.host}/quoli-${import.meta.env.VITE_QUOLI_VERSION}.tgz connect`;
+// The permanent link: it always starts the newest version (server/cli.ts).
+const START = `npx https://${location.hostname === "localhost" || location.hostname === "127.0.0.1" ? "iceq.best" : location.host}/quoli.tgz`;
+const CONNECT = `${START} connect`;
 /** A code from `quoli connect` waiting for approval, kept across the sign-in redirect. */
 const PENDING = "quoli.connect";
 
@@ -386,18 +388,14 @@ function Computers({
       <CopyButton text={CONNECT} />
     </div>
   );
+  if (account.sessions === 0) return <GettingStarted client={client} me={me} account={account} />;
   return (
     <section className="card class-computers" aria-labelledby="computers-h">
       {account.computers === 0 ? (
         <>
           <h2 id="computers-h">Connect your computer</h2>
-          <p>
-            Quoli runs on your computer and records what your coding agents do. Run this in a
-            terminal: it sets up Claude Code, Codex, OpenCode and Pi, links the computer to this
-            account (you approve a code here), and opens Quoli.
-          </p>
+          <p>Run this in a terminal to link this computer to your account.</p>
           {command}
-          <p className="faint">Needs Node.js 22.13 or newer. Your prompts and code stay on it.</p>
         </>
       ) : (
         <>
@@ -413,6 +411,121 @@ function Computers({
           </details>
         </>
       )}
+      <details className="class-more">
+        <summary>Sync keys and shared data</summary>
+        <SyncKey client={client} me={me} />
+      </details>
+    </section>
+  );
+}
+
+/**
+ * What a new account sees until its first session arrives: the steps from nothing to a recorded
+ * session, each ticked off as the account reports it (a linked computer, a shared session).
+ */
+function GettingStarted({
+  client,
+  me,
+  account,
+}: {
+  client: SupabaseClient;
+  me: string;
+  account: Account;
+}) {
+  const linked = account.computers > 0;
+  const steps: { title: string; done: boolean; body: React.ReactNode }[] = [
+    {
+      title: "Check Node.js",
+      done: linked,
+      body: (
+        <p>
+          Quoli needs Node.js 22.13 or newer. Run <code>node -v</code> in a terminal; if it is older
+          or missing, install the LTS from{" "}
+          <a href="https://nodejs.org" target="_blank" rel="noreferrer">
+            nodejs.org
+          </a>
+          .
+        </p>
+      ),
+    },
+    {
+      title: "Run Quoli in your project",
+      done: linked,
+      body: (
+        <>
+          <p>
+            Open a terminal in the project you work on and run this. It asks whether to record only
+            that project or every project, offers to connect this account, and opens Quoli.
+          </p>
+          <div className="class-command">
+            <code>{START}</code>
+            <CopyButton text={START} />
+          </div>
+          <p className="faint">
+            When it asks to connect, say yes and approve the code it shows on this page.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Work with your coding agent",
+      done: account.sessions > 0,
+      body: (
+        <p>
+          Use Claude Code, Codex, OpenCode or Pi as usual, in a new session. Quoli records in the
+          background, even with the terminal closed, and the session appears here when it ends.
+        </p>
+      ),
+    },
+    {
+      title: "Look closer any time",
+      done: false,
+      body: (
+        <p>
+          This page shows summaries: time, cost, models, failures. For the full map of a session
+          (prompts, files, diffs, Git), run the same command again; it opens on your computer at{" "}
+          <code>127.0.0.1:4400</code>. Your prompts and code never leave it.
+        </p>
+      ),
+    },
+  ];
+  const current = steps.findIndex((s) => !s.done);
+  return (
+    <section className="card class-start" aria-labelledby="start-h">
+      <h2 id="start-h">Getting started</h2>
+      <ol className="steps">
+        {steps.map((s, i) => (
+          <li
+            key={s.title}
+            className={s.done ? "done" : i === current ? "current" : undefined}
+            aria-current={i === current ? "step" : undefined}
+          >
+            <span className="step-mark" aria-hidden="true">
+              {s.done ? (
+                <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ) : (
+                i + 1
+              )}
+            </span>
+            <div className="step-body">
+              <h3>
+                {s.title}
+                {s.done && <span className="sr-only"> (done)</span>}
+              </h3>
+              {(i === current || !s.done) && s.body}
+            </div>
+          </li>
+        ))}
+      </ol>
       <details className="class-more">
         <summary>Sync keys and shared data</summary>
         <SyncKey client={client} me={me} />

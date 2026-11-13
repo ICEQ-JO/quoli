@@ -22,6 +22,7 @@ import {
   writePlugin,
 } from "./connect.ts";
 import { home, Store } from "./db.ts";
+import { describeScope } from "./scope.ts";
 
 /**
  * `pnpm quoli-setup` installs Quoli once for the user, so every repository is recorded without
@@ -192,10 +193,10 @@ function syncCommandStale(): boolean {
 }
 
 /**
- * How to start Quoli: the package (served from the website while the npm account is suspended,
- * see docs/architecture.md) or a clone of the repository.
+ * How to start Quoli: the package's permanent link (served from the website while the npm account
+ * is suspended; it starts the newest version, see server/cli.ts) or a clone of the repository.
  */
-export const PACKAGE = `npx https://iceq.best/quoli-${process.env.QUOLI_VERSION}.tgz`;
+export const PACKAGE = "npx https://iceq.best/quoli.tgz";
 export const START = process.env.QUOLI_BUNDLED === "1" ? PACKAGE : "pnpm dev";
 const SETUP = process.env.QUOLI_BUNDLED === "1" ? `${PACKAGE} setup` : "pnpm quoli-setup";
 
@@ -225,9 +226,7 @@ export function setupCli(args: string[], hint = true): number {
     );
   }
   if (!remove && hint) {
-    console.log(
-      `\nEvery repository you open with these agents is now recorded. Start Quoli with \`${START}\`.`,
-    );
+    console.log(`\n${describeScope()} Start Quoli with \`${START}\`.`);
     if (results.some((r) => r.agent === "codex" && !r.error)) {
       console.log("Codex: run `codex` once and approve Quoli's hooks with /hooks.");
     }

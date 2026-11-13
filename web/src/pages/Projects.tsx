@@ -18,6 +18,7 @@ import { ago, plural } from "../format.ts";
 import { Link, paths } from "../router.ts";
 
 export function hookLabel(p: Project): string {
+  if (p.recording === false) return "Not recording · you stopped it";
   if (p.hookStatus === "receiving")
     return `Receiving events${p.lastActivity ? ` · last event ${ago(p.lastActivity)}` : ""}`;
   if (p.hookStatus === "installed") return "Hooks installed · waiting for the first event";
@@ -27,7 +28,10 @@ export function hookLabel(p: Project): string {
 export function HookBadge({ project }: { project: Project }) {
   const label = hookLabel(project);
   return (
-    <span className={`badge-status ${project.hookStatus}`} title={label}>
+    <span
+      className={`badge-status ${project.recording === false ? "not_connected" : project.hookStatus}`}
+      title={label}
+    >
       <i aria-hidden="true" />
       {label}
     </span>
@@ -86,6 +90,24 @@ export function ProjectsPage() {
         agent === "codex"
           ? `Added Codex hooks to ${p.name} (.codex/hooks.json, kept out of Git). Run codex there and approve them with /hooks.`
           : `Added ${AGENT_NAMES[agent]} to ${p.name}.${PLUGIN_NOTE[agent] ?? ""}`,
+      );
+      refresh();
+    } catch (e) {
+      setRowError((r) => ({ ...r, [p.id]: e instanceof Error ? e.message : String(e) }));
+    }
+    setBusy(null);
+  };
+
+  const toggleRecording = async (p: Project) => {
+    setBusy(p.id);
+    setRowError(({ [p.id]: _, ...rest }) => rest);
+    try {
+      const on = p.recording === false;
+      await api.setRecording(p.id, on);
+      setNotice(
+        on
+          ? `Recording ${p.name} again.`
+          : `Stopped recording ${p.name}. New sessions there are not saved; recorded data is kept.`,
       );
       refresh();
     } catch (e) {
@@ -210,6 +232,14 @@ export function ProjectsPage() {
                       ))}
                     </select>
                   )}
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={busy === p.id}
+                    onClick={() => toggleRecording(p)}
+                  >
+                    {p.recording === false ? "Record again" : "Stop recording"}
+                  </button>
                   <button
                     type="button"
                     className="btn"

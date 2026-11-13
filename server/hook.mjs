@@ -8,7 +8,7 @@
 // starts a short `quoli sync` that records them (and sends Team sync) without Quoli open.
 import { spawn } from "node:child_process";
 import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SPOOL_MAX = 50 * 1024 * 1024;
@@ -18,6 +18,9 @@ const chunks = [];
 for await (const chunk of process.stdin) chunks.push(chunk);
 const body = Buffer.concat(chunks);
 const at = new Date().toISOString();
+// scope.json beside the user-level copy says which repositories to record (server/scope.ts);
+// events from any other folder are dropped here, before they are sent or queued.
+if (!wanted()) process.exit(0);
 try {
   await fetch(`http://127.0.0.1:${port}/ingest${kind ? `?agent=${kind}` : ""}`, {
     method: "POST",
@@ -56,4 +59,21 @@ function kick(dir) {
     const opts = { cwd: run.cwd, detached: true, stdio: "ignore", windowsHide: true };
     spawn(run.command, run.args, opts).unref();
   } catch {}
+}
+
+function wanted() {
+  try {
+    const self = fileURLToPath(import.meta.url);
+    if (basename(self) !== "quoli-hook.mjs") return true;
+    const file = join(dirname(self), "scope.json");
+    if (!existsSync(file)) return true;
+    const scope = JSON.parse(readFileSync(file, "utf8"));
+    const cwd = JSON.parse(body.toString("utf8"))?.cwd;
+    if (typeof cwd !== "string") return true;
+    const under = (r) => cwd === r || cwd.startsWith(r.endsWith(sep) ? r : r + sep);
+    if (Array.isArray(scope.only)) return scope.only.some(under);
+    return !(Array.isArray(scope.ignore) && scope.ignore.some(under));
+  } catch {
+    return true;
+  }
 }

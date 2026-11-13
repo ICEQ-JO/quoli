@@ -1849,3 +1849,84 @@ ul.reasons li {
     scrollbar-width: none;
   }
 }
+
+/* ---------- Getting started steps (local dashboard and account page) ---------- */
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.steps > li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.steps > li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.step-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.steps > li.current .step-mark {
+  border-color: var(--text);
+  color: var(--text);
+}
+.steps > li.done .step-mark {
+  border-color: transparent;
+  background: var(--ok);
+  color: var(--bg);
+}
+.step-body {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.step-body :is(h2, h3) {
+  margin: 2px 0 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.steps > li.done :is(h2, h3) {
+  color: var(--muted);
+  font-weight: 500;
+}
+.step-body p {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--text-2);
+}
+.step-body a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
+}
+.step-body .class-command {
+  max-width: 640px;
+}
+.step-body .faint {
+  color: var(--faint);
+  font-size: var(--fs-sm);
+}
+
+.panel.onboard {
+  max-width: 760px;
+}
+.onboard-demo {
+  margin-top: 14px;
+  font-size: var(--fs-sm);
+}

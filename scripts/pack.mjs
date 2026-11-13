@@ -103,16 +103,18 @@ One local map of what your coding agents did: every Claude Code, Codex, OpenCode
 what it changed, what it cost, what failed and where it looped.
 
 \`\`\`sh
-npx https://iceq.best/quoli-${pkg.version}.tgz connect   # once: set up the agents, link your Quoli account, start
-npx https://iceq.best/quoli-${pkg.version}.tgz setup     # or: set up the agents without an account
-npx https://iceq.best/quoli-${pkg.version}.tgz           # open http://127.0.0.1:4400
+npx https://iceq.best/quoli.tgz   # first time: choose what to record, link your account, start
+                                  # after that: open http://127.0.0.1:4400
 \`\`\`
 
 - Requires Node.js 22.13 or newer.
-- Everything stays on your machine in \`~/.quoli\`. The only outbound request is a daily download of
-  public model prices from models.dev and, only once you connect a Quoli account, Team sync,
-  which shares session summaries (never prompts or code) with your account and teams.
-- \`setup --remove\` takes Quoli out of every agent again; \`--help\` lists the rest.
+- Everything stays on your machine in \`~/.quoli\`. Outbound requests: a check of the newest version
+  number at iceq.best when Quoli starts (\`QUOLI_NO_UPDATE_CHECK=1\` turns it off), a daily
+  download of public model prices from models.dev and, only once you connect a Quoli account,
+  Team sync, which shares session summaries (never prompts or code) with your account and teams.
+- Run it inside a project to record only that project, or choose every project.
+- Recording keeps working with Quoli closed. \`setup --remove\` stops it and takes Quoli out of
+  every agent; \`--help\` lists the rest.
 
 More: https://iceq.best
 `,
@@ -120,4 +122,6 @@ More: https://iceq.best
 
 for (const f of ["cli.mjs", "codegraph-worker.mjs", "grammars/web-tree-sitter.wasm"])
   if (!existsSync(join(out, "server", f))) throw new Error(`${f} missing`);
+// The newest version, which the permanent link (quoli.tgz) hands over to (server/cli.ts).
+writeFileSync(join(out, "quoli.json"), `${JSON.stringify({ version: pkg.version })}\n`);
 console.log(`\nBuilt quoli ${pkg.version} in ${out}`);

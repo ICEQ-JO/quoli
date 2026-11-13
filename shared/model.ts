@@ -32,6 +32,8 @@ export interface Project {
   id: string;
   /** Id of the project this Git worktree belongs to (it is listed under it); null otherwise. */
   worktreeOf?: string | null;
+  /** False when the user chose not to record this repository (server/scope.ts). */
+  recording?: boolean;
   root: string;
   name: string;
   sessions: number;

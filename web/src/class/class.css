@@ -376,3 +376,13 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Getting started (the steps themselves are .steps in redesign.css). */
+.class-start {
+  display: grid;
+  gap: 14px;
+}
+.class-start h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
