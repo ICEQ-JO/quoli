@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AGENT_NAMES } from "../../../shared/model.ts";
 import { SpendChart } from "../components/SpendChart.tsx";
+import { Loading } from "../components/ui.tsx";
 import { ago, compact, span, tokenSum, usd } from "../format.ts";
 import { type ActivityGroup, activityOf, type SummaryRow } from "./activity.ts";
 
@@ -87,7 +88,7 @@ export function Activity({ client, me }: { client: SupabaseClient; me: string })
         </p>
       )}
       {!a ? (
-        <p className="faint">Loading…</p>
+        <Loading />
       ) : a.sessions === 0 ? (
         <p className="faint">
           No sessions in the last {days} days. Start a coding agent on a connected computer; a

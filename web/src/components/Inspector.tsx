@@ -8,7 +8,7 @@ import { isAdded } from "../lenses/infra/split.ts";
 import { Link, paths } from "../router.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
-import { ErrorState, Icon } from "./ui.tsx";
+import { ErrorState, Icon, Loading } from "./ui.tsx";
 
 interface Props extends LensContext {
   lens: Lens;
@@ -279,9 +279,9 @@ function FilePanel({ path, root, session, code, goto, select }: Props & { path: 
         ) : fileError ? (
           <ErrorState title="Could not read this file" message={fileError} retry={reloadFile} />
         ) : (
-          <p className="faint pad" role="status">
-            Loading…
-          </p>
+          <div className="pad">
+            <Loading lines={8} />
+          </div>
         ))}
       {meta?.imports.length || importers.length ? (
         <Section title="Connections">
@@ -593,9 +593,7 @@ function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: s
             retry={reloadDetail}
           />
         ) : (
-          <p className="faint" role="status">
-            Loading…
-          </p>
+          <Loading />
         )}
       </Section>
       {detail?.diff && (
