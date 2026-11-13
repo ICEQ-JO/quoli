@@ -184,7 +184,10 @@ function planFor(
       head,
       reason: `The repository is now on ${head}, not ${session.branch} where the session ran, so this shows the agent's recorded edits.`,
     };
-  const windowEnd = session.endedAt ? Date.parse(session.endedAt) + SLACK_MS : null;
+  // A session that never sent an end event stops at its last activity; without this, every later
+  // commit (other sessions, other people) would be credited to it.
+  const end = session.endedAt ?? (session.live ? null : session.lastAt);
+  const windowEnd = end ? Date.parse(end) + SLACK_MS : null;
   const commits = sessionCommits(root, session.startedAt, windowEnd);
   if (commits === null)
     return {

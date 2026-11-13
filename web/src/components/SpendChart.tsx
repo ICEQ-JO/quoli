@@ -8,7 +8,9 @@ const dayLabel = (date: string, opts: Intl.DateTimeFormatOptions) =>
 /**
  * Estimated spend per day as bars, one neutral series (hue is reserved for meaning in Quoli).
  * An optional daily budget is drawn as a labelled reference line. Days with usage that could
- * not be priced show as a short hatched stub so they never read as $0.
+ * not be priced show as a short hatched stub so they never read as $0. When nothing in the range
+ * cost money (free or unpriced models) but tokens were used, the bars show tokens instead, so
+ * the chart is never empty while there was activity.
  */
 export function SpendChart({
   days,
@@ -20,7 +22,9 @@ export function SpendChart({
   height?: number;
 }) {
   const [hover, setHover] = useState<number | null>(null);
-  const max = Math.max(budget ?? 0, ...days.map((d) => d.usd ?? 0)) || 1;
+  const byTokens = !days.some((d) => (d.usd ?? 0) > 0) && days.some((d) => tokenSum(d.tokens) > 0);
+  const value = (d: UsageDay) => (byTokens ? tokenSum(d.tokens) : (d.usd ?? 0));
+  const max = Math.max(byTokens ? 0 : (budget ?? 0), ...days.map(value)) || 1;
   const w = 100 / days.length;
   const today = days.length - 1;
   const shown = hover ?? today;
@@ -38,13 +42,13 @@ export function SpendChart({
         <span className="faint">{compact(tokenSum(d.tokens))} tokens</span>
       </figcaption>
       <div className="sc-plot" style={{ height }} onPointerLeave={() => setHover(null)}>
-        {budget ? (
+        {budget && !byTokens ? (
           <div className="sc-budget" style={{ bottom: `${(budget / max) * 100}%` }}>
             <span>Daily budget {usd(budget)}</span>
           </div>
         ) : null}
         {days.map((day, i) => {
-          const h = day.usd === null ? 0 : (day.usd / max) * 100;
+          const h = (value(day) / max) * 100;
           const over = budget && day.usd !== null && day.usd > budget;
           return (
             <button
@@ -63,7 +67,7 @@ export function SpendChart({
                   : usd(day.usd)
               }`}
             >
-              {day.usd === null && tokenSum(day.tokens) > 0 ? (
+              {!byTokens && day.usd === null && tokenSum(day.tokens) > 0 ? (
                 <i className="sc-bar unpriced" style={{ height: 6 }} />
               ) : (
                 <i
@@ -84,6 +88,7 @@ export function SpendChart({
           ) : null,
         )}
       </div>
+      {byTokens && <p className="sc-note faint">No cost in this range, so the bars show tokens.</p>}
     </figure>
   );
 }

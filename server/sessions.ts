@@ -152,7 +152,8 @@ export function deriveSession(
     tokens: t,
     usd: costOf([{ model, tokens: t }], prices).usd,
   }));
-  const last = events.at(-1)?.at ?? first.at;
+  // ISO times sort as text; the latest of the last event and any usage.
+  const last = [events.at(-1)?.at ?? first.at, ...usage.map((u) => u.at)].sort().at(-1) as string;
   const loops = findLoops(toolCalls, turns);
   const usagePoints = usage.map((u) => ({
     at: u.at,
@@ -171,6 +172,7 @@ export function deriveSession(
     branch,
     startedAt: first.at,
     endedAt,
+    lastAt: last,
     live: isLive(endedAt, last, now),
     toolCount: toolCalls.length,
     filesTouched: Object.keys(files).length,

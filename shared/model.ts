@@ -30,6 +30,8 @@ export interface SetupStatus {
 export interface Project {
   /** Stable id: first 12 hex chars of sha256(root). Used in URLs. */
   id: string;
+  /** Id of the project this Git worktree belongs to (it is listed under it); null otherwise. */
+  worktreeOf?: string | null;
   root: string;
   name: string;
   sessions: number;
@@ -78,6 +80,8 @@ export interface SessionSummary {
   branch: string | null;
   startedAt: string;
   endedAt: string | null;
+  /** The last recorded event or usage; a session that never sent an end event ends here. */
+  lastAt: string;
   live: boolean;
   toolCount: number;
   filesTouched: number;
@@ -452,8 +456,6 @@ export interface InfraMap {
 /** GET /api/overview — what the Home page shows, across all projects. */
 /** A running session as the live panel shows it (GET /api/overview). All derived. */
 export interface LiveSession extends SessionSummary {
-  /** Time of the last recorded activity: a prompt, a call starting or ending, or usage. */
-  lastAt: string;
   /** The running call, or else the most recent one; null before the first call. */
   step: Pick<ToolCall, "name" | "category" | "summary" | "status" | "startedAt"> | null;
   /** Estimated spend of usage recorded in the last 10 minutes; null when none was priced. */

@@ -52,6 +52,7 @@ function session(o: {
     branch: null,
     startedAt,
     endedAt: o.live ? null : end,
+    lastAt: end,
     live: !!o.live,
     toolCount: toolCalls.length,
     filesTouched: 0,

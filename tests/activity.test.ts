@@ -53,7 +53,7 @@ test("activity totals, per-day spend and breakdowns cover only the range", () =>
   );
   assert.deepEqual(
     a.repos.map((g) => g.label),
-    ["me/app", "No repository"],
+    ["me/app", "Without a GitHub remote"],
   );
   assert.equal(a.models[1].label, "new-model");
 

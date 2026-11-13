@@ -117,7 +117,8 @@ export function activityOf(rows: SummaryRow[], days: number, now = new Date()): 
     }
     day.usd = addUsd(day.usd, usd);
     count("agents", r.agent, AGENT_NAMES[r.agent] ?? r.agent, r);
-    count("repos", r.repo ?? "", r.repo ?? "No repository", r);
+    // Only GitHub "owner/name" is uploaded; other repositories stay private and are grouped here.
+    count("repos", r.repo ?? "", r.repo ?? "Without a GitHub remote", r);
     count("models", r.model ?? "", r.model ?? "Unknown model", r);
   }
   const order = (m: Map<string, ActivityGroup>) =>
