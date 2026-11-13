@@ -92,3 +92,13 @@ Retention runs at startup, hourly, and when settings change.
 - Sums are rounded to 1e-9 USD. Usage rows with no model id are excluded from `usd` and not listed in `unpriced` (they have no id); their `costByModel` row has `usd: null`.
 - `report.changes` skips failed edit calls and files outside the project root. `report.commands` skips `run` calls without a string `command` (e.g. BashOutput). Commands starting with `git` are classified `other`, so commit messages mentioning "test" are not misread.
 - Checklist ids: `edited-after-test`, `failed-<toolCallId>`, `large-deletion-<toolCallId>`. "Last test command" is the last `test`-kind command whatever its status; a failed one is also covered by rule 2.
+
+## Review lens (#171)
+
+| Method & path | Returns |
+| --- | --- |
+| `GET /api/review?id=<sessionId>` | `SessionReview`: `source` (`git` or `edits`), `note` (why Git was not used, or a caveat), `files`, `noNetChange`, `added`/`removed`, `tests` and `branch` |
+| `GET /api/review/diff?id=<sessionId>&path=<repo-relative path>` | `ReviewDiff`: `gitDiff` (against where the session began, clipped to 300,000 characters, `truncated`), `source` (current file, null for binary, over 1 MB or deleted). 404 when the repository is not available, 400 for paths outside the project |
+
+- `ReviewFile`: `path`, `group` (package or top folder), `status` (`added|modified|deleted|renamed`, null when only edits are known), `added`/`removed` (Git, or recorded edits when `source` is `edits`; null for binary), `editAdded`/`editRemoved`, `timesEdited`, `outsideEdits`, `editedAfterTest`, `failedAfter`, `rewritten`, `kind` (`code|test|docs|config|schema|lockfile|other`), `noTest`, `risk`, `level`, `reasons[] { label, text, points }`, `toolCallIds`, `turnIndexes`, `after` (commands after the last edit), `functions` (`ChangedSymbol[] | null`, `{ name, kind, change: added|modified|removed }`; null until the code engine fills it).
+- `branch`: `head`, `base` (main/master/remote default when it is not the branch itself), `upstream`, `commits` made while the session ran, `uncommitted`, `unpushed`; each is null when it could not be read, never guessed.

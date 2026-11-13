@@ -8,7 +8,7 @@ import type {
   ToolCall,
 } from "../../shared/model.ts";
 
-export type Lens = "summary" | "agents" | "map" | "git" | "infra";
+export type Lens = "summary" | "review" | "agents" | "map" | "git" | "infra";
 
 export type Selection =
   | { kind: "file"; id: string }
@@ -45,7 +45,7 @@ export interface LensContext {
   /** Repo-relative path → how the visible calls touched it. */
   touched: Map<string, Touch>;
   selection: Selection;
-  select: (s: Selection) => void;
+  select: (s: Selection, replace?: boolean) => void;
   code: CodeMap | null;
   codeGraph: GraphState;
   git: GitState | null;

@@ -1,4 +1,4 @@
-import type { SessionDetail } from "../../../shared/model.ts";
+import type { SessionDetail, SessionReview } from "../../../shared/model.ts";
 import { ago, duration, money, tokenSum } from "../format.ts";
 import { Link } from "../router.ts";
 import { Trace } from "./Trace.tsx";
@@ -9,11 +9,16 @@ export function SessionHeader({
   session,
   projectName,
   summaryHref,
+  review,
+  reviewHref,
 }: {
   session: SessionDetail;
   projectName: string;
   /** The Summary URL for this session; its cost section is scrolled into view. */
   summaryHref: string;
+  /** The session's changed files, the count Summary and Review show too; null while loading. */
+  review: SessionReview | null;
+  reviewHref: string;
 }) {
   useNow();
   const unpriced = session.cost.unpriced;
@@ -62,6 +67,18 @@ export function SessionHeader({
           {session.toolCount} {session.toolCount === 1 ? "call" : "calls"}
           {session.failures > 0 && <span className="fail"> · {session.failures} failed</span>}
         </span>
+        {review && (
+          <Link
+            to={reviewHref}
+            title={
+              review.source === "git"
+                ? "Files that differ from where the session began, per Git. Open the Review lens"
+                : "Files from the agent's recorded edits. Open the Review lens"
+            }
+          >
+            {review.files.length} {review.files.length === 1 ? "file" : "files"} changed
+          </Link>
+        )}
         {session.models.length > 0 && (
           <span className="mono" title={session.models.join(", ")}>
             {session.models.join(", ")}

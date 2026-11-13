@@ -29,7 +29,7 @@ export const SETTINGS_SECTIONS = [
   "appearance",
 ] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
-const LENSES: Lens[] = ["summary", "agents", "map", "git", "infra"];
+const LENSES: Lens[] = ["summary", "review", "agents", "map", "git", "infra"];
 const KINDS = ["file", "symbol", "route", "table", "tool", "service", "commit", "branch"] as const;
 /** URL prefix of a selection kind; symbols are `sym:` to keep links short. */
 const PREFIX: Record<string, string> = { symbol: "sym" };

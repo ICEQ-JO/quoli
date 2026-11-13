@@ -1,6 +1,6 @@
 import { readFileSync, statSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { basename, normalize, resolve } from "node:path";
+import { basename, isAbsolute, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   isAgentKind,
@@ -32,6 +32,7 @@ import {
   savePrices,
   validatePrices,
 } from "./prices.ts";
+import { buildReview, reviewDiff } from "./review.ts";
 import { searchEvents } from "./search.ts";
 import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
 import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
@@ -315,6 +316,19 @@ export function createApp(store: Store, port: () => number) {
       const id = url.searchParams.get("id") ?? "";
       const [detail = null] = details([id]);
       return json(res, detail ? 200 : 404, detail);
+    }
+    if (path === "/api/review" || path === "/api/review/diff") {
+      const [detail = null] = details([url.searchParams.get("id") ?? ""]);
+      if (!detail) return json(res, 404, { error: "Unknown session" });
+      const known = hasRoot(detail.root);
+      if (path === "/api/review") return json(res, 200, buildReview(detail, known));
+      const rel = normalize(url.searchParams.get("path") ?? "");
+      if (!rel || rel.startsWith("..") || isAbsolute(rel))
+        return json(res, 400, { error: "Bad path" });
+      const diff = reviewDiff(detail, rel, known);
+      return diff
+        ? json(res, 200, diff)
+        : json(res, 404, { error: "The repository is not available" });
     }
     if (path === "/api/sessions") {
       const wanted = url.searchParams.get("project");

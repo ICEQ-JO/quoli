@@ -36,7 +36,10 @@ export const shortcutGroups = (mod = modKey()): ShortcutGroup[] => [
   {
     title: "Navigation",
     items: [
-      { keys: ["1", "2", "3", "4", "5"], does: "Switch lens: Summary, Agents, Map, Git, Infra" },
+      {
+        keys: ["1", "2", "3", "4", "5", "6"],
+        does: "Switch lens: Summary, Review, Agents, Map, Git, Infra",
+      },
       {
         keys: [mod, "K"],
         does: "Search functions, routes, tables, files, prompts, commands, errors and pages",
@@ -50,6 +53,14 @@ export const shortcutGroups = (mod = modKey()): ShortcutGroup[] => [
     items: [
       { keys: ["↑", "↓", "←", "→"], does: "Move between nodes or rows once one is focused" },
       { keys: ["Enter"], does: "Open the focused node or row in the inspector" },
+    ],
+  },
+  {
+    title: "Review lens",
+    items: [
+      { keys: ["J", "K"], does: "Next or previous changed file" },
+      { keys: ["Enter"], does: "Move to the diff of the selected file" },
+      { keys: ["X"], does: "Mark the selected file reviewed or not" },
     ],
   },
   {
