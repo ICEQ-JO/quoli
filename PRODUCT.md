@@ -7,7 +7,13 @@
 web
 
 ## Users
-A developer who uses Claude Code on their own repositories, at their desk, right after (or while) an agent works. Their job: understand in under a minute what the agent did to the project, what it cost, and what they need to review before trusting or merging it. Later audience (not yet built): a team lead looking across several developers' agents, which needs the hosted version.
+Developers and engineering teams building with coding agents. Individuals need to
+understand what changed, what it cost and what to review. Team owners need a view
+of agent usage across members through opt-in session summaries. Detailed prompts,
+source code, commands and tool output remain on each developer's machine.
+
+Quoli is a proprietary product. Do not position it as an open-source, student,
+academic or volunteer collaboration project.
 
 ## Product Purpose
 Quoli is one visual map of what coding agents did. It joins the trail that today is scattered across terminal scrollback, git diffs, cloud consoles and billing pages: prompt → agent → tool calls → files changed → where they sit in the code → which branch/commit → which service runs that code. Success is a developer answering "what changed, what did it cost, what do I review?" without leaving Quoli.
@@ -19,7 +25,8 @@ Other tools see one slice: agent tracing sees prompts and tokens but not the cod
 Runs locally: `pnpm dev`/`pnpm demo` serves the app on 127.0.0.1:4400. `pnpm connect <repo>` (or Projects → Connect) installs Claude Code hooks; events stream in live over SSE. Used beside a terminal running Claude Code and an editor. Sessions range from a 2-call question to 500+ tool calls with subagents; repositories range from tens to tens of thousands of files and thousands of commits.
 
 ## Capabilities and Constraints
-- Agents: Claude Code only today (Codex, OpenCode, Pi on the roadmap).
+- Agents: Claude Code, Codex, OpenCode and Pi locally.
+- Teams: opt-in summary sharing and an account dashboard exist; detailed hosted session review is future work. See docs/teams.md.
 - Code: file-level map with relative JS/TS import edges; symbol-level (functions, routes, tables) is roadmap Phase 2.
 - Git: reads the local repository with `git` (branches, remote-tracking refs from the last fetch, commits). No GitHub API.
 - Infra: detected from config files in the repo, plus live CPU/memory from local Docker. Hosted provider connections (Vercel, AWS, Supabase, …) and their metrics are roadmap Phase 4 and do not exist yet.
@@ -43,18 +50,31 @@ Real local sessions recorded from Claude Code; the synthetic demo (`pnpm demo`, 
 WCAG AA contrast in dark and light themes (enforced by `tests/theme-contrast.test.ts`), full keyboard operation, screen-reader labels on canvas nodes, no horizontal scroll at 1280 px.
 
 ## Landing page (marketing surface)
-Quoli. Owner requests a complete landing-page replacement inspired by the reference site's full pixel-art theme: scenery, characters, typography and motion. Original Quoli art and storytelling. On 2026-11-12 the owner delegated creative decisions and implementation. Main conversion is Join the waitlist; no pricing, testimonials or availability claims may be invented.
 
-## Evidence on Hand
-`docs/vision.md`, `docs/mvp.md`, `docs/architecture.md`; synthetic sessions in `server/demo.ts`. No approved customer testimonials, usage benchmarks, or waitlist provider supplied.
+Mode: Persuade. Audience: developers using coding agents; primary action: Join the
+waitlist, secondary action: explore real screenshots of the synthetic demo.
 
-## Product Principles
-- Local by default; cloud only through explicit opt-in.
-- Glanceable first, precise evidence on demand.
-- Observe passively; never replay captured commands.
-- Label unknowns, derivations and synthetic demonstrations honestly.
+Owner-approved direction (2026-11-12, #159): preserve original pixel artwork and
+playful motion, establish a baby-blue/ice/denim/midnight/cream identity, and give
+Quoli its own composition and logo. The previous instruction to follow the reference site's
+structure is superseded. Keep the working recorder; avoid rabbit/robot mascots,
+game-world treatment, paired green panels and a green-to-blue chapter switch.
 
-## Owner correction — 2026-11-12
-The owner rejected the first pixel-city implementation as game-like and unlike the reference site. Replace it completely. The reference site is the direct structural and material reference: compact equal hero panels, dotted white page, vivid green/blue pixel surfaces, original animated figures that perform their mechanism, terminal demonstration, product display and full website footer. No city, robot mascot, game world or generic stacked landing sections. Existing audience, waitlist goal and product facts stand.
+The landing mark is a stepped open Q with a connected square endpoint. One sky-field
+hero pairs the promise and action with original pixel scenery. Product tabs sit to the left of
+real synthetic-demo screenshots on desktop, with a compact mobile grid. The app's activity colors remain semantic and separate.
+
+The current app supports Claude Code, Codex, OpenCode and Pi locally. Opt-in team summary sync is available today. Detailed hosted session review and
+live provider capabilities must remain distinguished from shipped capabilities.
+No customer testimonials, benchmarks or pricing may be invented. Demonstrations
+must use synthetic data and never read private captured sessions.
 
 The landing design system lives in `docs/landing-design.md`; `DESIGN.md` is the app.
+
+## Owner content and artwork correction — 2026-11-12
+
+Lead with review context, agent effort/spend and team visibility. The landing page
+must not link to the private source repository or suggest an open-source project.
+Use a square animated workspace with an outdoor view, and the requested rounded
+contour-art footer and large mission link in the established blue identity. This
+supersedes the previous flat footer and small mission-link direction.

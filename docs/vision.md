@@ -67,9 +67,14 @@ Across the bottom, a **timeline** replays the session step by step — every len
 
 ## Who it is for
 
-**First: the individual developer using Claude Code** who wants to answer, in under a minute, "what did the agent just do to my project, what did it cost, and what do I need to review?" Local, private, free to try.
+**Developers and engineering teams building with coding agents.** A developer
+needs to know what changed, what it cost and what deserves review. A team owner
+needs visibility across members' agent usage. The local app supports Claude Code,
+Codex, OpenCode and Pi; opt-in team summary sharing is delivered (see [teams.md](teams.md)).
+Detailed shared session review remains future work.
 
-**Later: the team lead** who wants the same view across several developers' agents — which requires the hosted version.
+Quoli is a proprietary product. Its marketing is aimed at professional development
+workflows, not student projects or open-source contributors.
 
 ## Principles
 
@@ -108,11 +113,10 @@ Each phase is something a developer can use on its own.
 
 ## Landing presentation
 
-Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) presents Quoli's
-connected record through original animated pixel scenery, a physical session
-recorder and an interactive product example. Owner correction 2026-11-12:
-replace the rejected game-like city and follow the reference site's actual page structure
-and animated pixel material. Speak to coding-agent users and engineering teams,
-while separating current Claude Code/local support from planned adapters,
-shared sessions and hosted sync. The marketing page is isolated from the app;
-its demonstrations are synthetic, never evidence of a real captured session.
+Phase 1 [#107](https://github.com/ICEQ-JO/quoli/issues/107) introduced the separate
+marketing surface. Owner direction in [#159](https://github.com/ICEQ-JO/quoli/issues/159)
+retains original pixel scenery and the working recorder, while establishing a
+baby-blue Quoli identity and distinct page composition instead of following the reference site.
+Present current local Claude Code, Codex, OpenCode and Pi capture separately from
+planned hosted sync and live provider connections. Demonstrations remain synthetic;
+the landing page never reads captured evidence. See [landing-design.md](landing-design.md).

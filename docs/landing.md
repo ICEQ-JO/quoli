@@ -4,23 +4,24 @@ Issue [#107](https://github.com/ICEQ-JO/quoli/issues/107), PR [#111](https://git
 
 ## Direction
 
-The owner rejected the first city/robot/cottage design on 2026-11-12 and requested
-a complete rebuild following the reference site's actual structure, pixel material and
-substantive animation. The rejected assets, components and comps have been removed.
-The original Quoli content and code now follow the reference's compact twin hero
-panels, dotted white ground, green mechanical-demo chapter, blue product chapter,
-large mission link and multi-column footer.
+The owner-approved baby-blue identity in [#159](https://github.com/ICEQ-JO/quoli/issues/159)
+supersedes the earlier reference-site structural direction. Original pixel scenery and the
+working recorder remain, recolored in ice blue, baby blue, denim, midnight and cream.
+A continuous hero places the promise and actions beside the scenery; a stepped open Q
+and connected pixel form the landing mark. Left-side tabs introduce the product
+tour. An original signal valley, four observatory rooms, animated archive field guide
+and rounded contour-art footer give the page one illustrated world. The team section
+shows local evidence flowing into opt-in summaries, rather than a decorative workspace. See [landing-design.md](landing-design.md).
 
-The reference site is a structural/material reference, not source code or artwork to copy.
-Quoli's forest, contour fields, recorder and signal motion are original code.
-The hero uses Jost sans like the reference; section headings use Jersey 10 pixel
-lettering. Both are self-hosted under their included OFL licenses.
+Jost sans carries explanation and the hero; Jersey 10 carries section headings and
+the wordmark. Both are self-hosted under their included OFL licenses.
 
 ## Run and entries
 
     QUOLI_HOME=/tmp/quoli-landing-preview pnpm landing
 
 Open http://127.0.0.1:4420/landing/. Override QUOLI_PORT when needed.
+The `/landing` address redirects to `/landing/`, preserving page query parameters.
 The main app remains at / with its existing styles. The landing has its own
 Vite HTML/React entry and never fetches captured evidence or installs hooks.
 
@@ -41,35 +42,60 @@ in scene-model.ts. The clock is time-based and preserved across pause/resume.
 
 The recorder observes the entire recording section: on phones its terminal still
 progresses while the mechanical drawing is above the viewport. Other scenes stop
-offscreen, and all stop in hidden tabs. The page pause control reaches every canvas
-and CSS animation; replay restarts the demonstration. Reduced motion draws a
+offscreen, and all stop in hidden tabs. At the owner’s request there is no floating
+page-pause control: decorative animation runs while visible. The walkthrough keeps
+its own Pause/Play and Replay controls, without stopping other scenery. Reduced motion draws a
 readable final recorder state and stops continuous updates. Terminal and product
 data are synthetic and labeled. The terminal shows only the steps reached so far, so it
 fills as the session plays; reduced motion shows every step.
 
-## Product tour and screenshots
+## Product proof and screenshots
 
-The blue chapter is a tour of the real app: six tabs (Review, Agents, Code, Git, Infra,
-Dashboard) switch a screenshot in the blue frame, with a caption saying what it shows.
-Tabs support arrow keys, Home and End, and the lens links under the hero (`#tour-tab-code`
-and so on) open the matching tab. The screenshot itself links to the full-size image.
+The six-tab product tour keeps desktop navigation on the left and a compact mobile
+grid. Tabs support arrow keys, Home and End; existing lens deep links still select
+the matching tab. Dedicated Usage and Insights sections now demonstrate spend,
+cache usage, failures, possible loops and cross-session trends. Captions label all
+figures as synthetic demonstrations, not customer benchmarks.
 
-The images in `web/public/landing/product/<view>-<light|dark>.webp` (plus a `.jpg` fallback for browsers without WebP) come from
-`pnpm demo --large` only (synthetic data, never a real session), captured at 1440×900
-at 2× and resized to 1600 px wide WebP and JPEG, with colour profiles stripped (`magick in.png -resize 1600x -strip …`). If a download fails the page retries once, then shows "The screenshot didn't load" with a Try again button instead of a broken image. The landing theme toggle picks the matching
-set. Retake them whenever the app's look changes noticeably; the page says they are
-screenshots of the synthetic demo.
+`ProductScreenshot.tsx` reuses the existing retry-once, error and retry-button
+behavior across the tour and evidence sections. Theme changes select the matching
+image set. Every image opens at full size.
 
-## Collaborate
+The original six views in `web/public/landing/product/` use WebP with JPEG fallback
+at 1600×1000. The new Usage/Insights light/dark images are native 1440×900 JPEG
+captures of the current app running `--demo --large`, with no real sessions or user
+accounts. No generated chart values or performance claims are substituted for the
+real UI. Capture new evidence on an isolated Quoli data directory and avoid regular
+server startup refreshing the user's agent integrations; use the landing mode to
+skip user-level setup refresh. The synthetic preview is never a capture source for
+private sessions.
 
-The "Work on it with us" section invites research, student projects and course pilots.
-Its contact button uses `VITE_PUBLIC_CONTACT_EMAIL`; without it the button falls back to
-the waitlist and no address is shown. The footer adds a Contact link when it is set.
+## Content narrative
+
+The page now explains the problem, recorded review workflow, four lenses, token
+usage/spend, failures and Insights, opt-in team summaries, evidence/privacy boundaries,
+setup and seven practical FAQs. The content is a review draft, not owner-approved
+final copy. The November 13 owner revision replaces the workspace and optical rail
+with signal-valley illustrations, rebuilds the team explanation, and adds an animated
+keyboard-operable FAQ accordion. One answer opens at a time; hidden answers are inert.
+
+## Developers and engineering teams
+
+The former academic collaboration pitch is replaced with product benefits: review
+changes with context, track usage and estimated spend, and see team activity through
+opt-in session summaries. The team action links to the existing `/app/` account page.
+Prompts, source code, commands and tool output stay local; detailed hosted session
+review remains future work. See [teams.md](teams.md) for the delivered summary model.
+
+Quoli is proprietary. Public source-repository links and `VITE_PUBLIC_REPO_URL`
+behavior have been removed from this entry. An optional `VITE_PUBLIC_CONTACT_EMAIL`
+adds a workflow contact in the team section and footer. The `#collaborate` anchor is
+retained for existing links; visible navigation calls it "For teams".
 
 ## Link previews
 
 `web/landing/index.html` carries Open Graph and Twitter tags with `web/public/landing/og.png`
-(1200×630, the hero forest and headline). Vite replaces `%SITE%` with
+(1200×630, the baby-blue hero and headline). Vite replaces `%SITE%` with
 `VITE_PUBLIC_SITE_URL`, or on Vercel with `https://$VERCEL_PROJECT_PRODUCTION_URL` (the
 production domain, including a custom one), so previews get an absolute image URL.
 
@@ -88,9 +114,49 @@ The form reports success only after the address is stored; otherwise it shows a 
 - No analytics are included, and no automatic email is sent.
 
 Before sending launch updates, the operator still needs to:
-- publish a contact address for removal requests (setting `VITE_PUBLIC_CONTACT_EMAIL` shows one in the Collaborate section and footer);
+- publish a contact address for removal requests (setting `VITE_PUBLIC_CONTACT_EMAIL` shows one in the developer/team section and footer);
 - connect an email provider with an unsubscribe link in every message.
 
-- Repository links (Docs, GitHub, Development) appear only when `VITE_PUBLIC_REPO_URL` is set at build time. While the repository is private they are hidden, so visitors never land on a GitHub 404.
+
 
 Never expose the private evidence server publicly.
+
+## Validation of the baby-blue identity (#159)
+
+Typecheck, production build, Biome and all 165 existing tests passed. Playwright
+verified no horizontal overflow at 320, 390, 760, 1000 and 1440px in both themes,
+keyboard tab navigation, reduced-motion evidence visibility, and axe-core reported
+no WCAG A/AA violations in either theme at 1440px. Synthetic screenshots only; no
+real emails submitted, private evidence read, deployment or real-screen-reader test.
+
+Owner refinement in PR #160 restores left-side desktop tour tabs and left-aligned
+product copy, and adds original optical-instrument and workbench scenes plus a
+square workspace and rounded animated contour footer. The two new drawing tests bring the suite to 167 passing
+tests. Browser checks confirm animation progresses, freezes on pause, and stays
+static under reduced motion; both themes pass axe and 320–1440px overflow checks.
+
+The latest owner correction restores the large mission link and rounded contour
+footer, and replaces the 5:3 workbench drawing with a full 1:1 animated workspace.
+The private repository is never exposed, even through a configured repository URL.
+Browser assertions verify commercial developer/team copy and no public repository
+links; summary-sharing claims are grounded in the current team implementation.
+
+The square scene passes animation, pause and reduced-motion checks. Footer text
+was checked against the brightest composited contour shade at WCAG AA contrast.
+Both themes pass axe; tested widths from 320 to 1440px have no horizontal overflow.
+
+Content-rebuild validation: 167 tests, typecheck, lint and build passed. Browser
+checks covered both themes, no overflow at 320–1440px, axe zero A/AA violations,
+keyboard tour and FAQ operation, screenshot loading, forced image-failure recovery
+and reduced-motion evidence visibility. Synthetic screenshot capture must not change the user's installed agent integrations.
+
+## November 13 artwork and layout revision
+
+The hero has layered mountains, trees, two signal stations, moving clouds, a cable
+packet, waterfall and river highlights. Four observatory rooms replace the optical
+rail; the FAQ has its own animated archive console and field guide. All are original
+canvas drawings, tested for finite coordinates, deterministic stills and time changes.
+The team section now diagrams local evidence → opt-in summaries → team view and
+labels the drawing as illustrative. Footer text/hover colors are explicitly light
+in either theme, and its contour canvas has reduced opacity. Mobile hero art keeps
+its full aspect ratio so the station is not cropped away.
