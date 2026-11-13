@@ -107,6 +107,21 @@ test("an upload carries only the allow-listed summary, never content, paths or t
   }
 });
 
+test("a live session sends its length so far instead of no duration", () => {
+  const { d, done } = recorded("git@github.com:student/hw1.git");
+  try {
+    const live = {
+      ...d,
+      live: true,
+      endedAt: null,
+      lastAt: new Date(Date.parse(d.startedAt) + 90_000).toISOString(),
+    };
+    assert.equal(toUpload(live).durationMs, 90_000);
+  } finally {
+    done();
+  }
+});
+
 test("a repository without a GitHub remote is sent as null, not its folder name", () => {
   const { d, done } = recorded(null);
   try {

@@ -39,6 +39,7 @@ import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
 import { liveSession } from "./steps.ts";
 import { HOSTED, loadSync, saveSync, syncOnce, syncStatus } from "./sync.ts";
 import { usageReport } from "./usage.ts";
+import { groupRoot } from "./worktrees.ts";
 
 const version: string = JSON.parse(
   readFileSync(resolve(fileURLToPath(import.meta.url), "../../package.json"), "utf8"),
@@ -156,6 +157,10 @@ export function createApp(store: Store, port: () => number) {
           agents,
           connectedAt: registered.get(root) ?? null,
           github: githubRepo(root),
+          worktreeOf: (() => {
+            const main = groupRoot(root, roots);
+            return main ? projectId(main) : null;
+          })(),
         };
       })
       .sort(

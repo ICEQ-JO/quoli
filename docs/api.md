@@ -6,7 +6,7 @@ Mutating routes (`POST`, `PUT`, `DELETE` under `/api/`) require `Content-Type: a
 
 | Method & path | Body | Returns |
 | --- | --- | --- |
-| `GET /api/projects` | | `Project[]`, registered projects plus any root that has events, most recent first. `github` is `owner/repo` when the `origin` remote is on github.com, otherwise `null` |
+| `GET /api/projects` | | `Project[]`, registered projects plus any root that has events, most recent first. `github` is `owner/repo` when the `origin` remote is on github.com, otherwise `null`. `worktreeOf` is the id of the project a linked Git worktree belongs to (the sidebar lists it under that project), otherwise `null` |
 | `POST /api/projects` | `{ "path": "/abs/path", "agents"?: ["claude-code", "codex", "opencode", "pi"] }` | `Project`. Path must be absolute, exist, and be a git repository top level (`git rev-parse --show-toplevel` equals its real path); otherwise `400 { error }`. Installs hooks for each listed agent (default Claude Code only) exactly like `pnpm connect --agent`, and registers the project. Posting again with another agent adds it. `Project.agents` lists each agent recording the repository, `everywhere: true` when that is through the user-level setup rather than hooks in the repository, with `status` `installed` (no event yet; for Codex usually waiting for `/hooks` trust) or `receiving`. Disconnect removes every agent's hooks. |
 | `POST /api/projects/:id/disconnect` | `{}` | `Project`. Removes Quoli's hooks from the repository, keeps data. Agents recorded through the user-level setup keep recording. |
 | `GET /api/prices/live` | | `LivePriceStatus`: whether live prices are on (`Settings.livePrices`, default `true`), their `source`, `fetchedAt`, number of `models` and the last fetch `error` |

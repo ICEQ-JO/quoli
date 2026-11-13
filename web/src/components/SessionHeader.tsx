@@ -61,7 +61,8 @@ export function SessionHeader({
           </span>
         )}
         <span title={when}>
-          started {ago(session.startedAt)} · {duration(session.startedAt, session.endedAt)}
+          started {ago(session.startedAt)} ·{" "}
+          {duration(session.startedAt, session.endedAt ?? (session.live ? null : session.lastAt))}
         </span>
         <span>
           {session.toolCount} {session.toolCount === 1 ? "call" : "calls"}

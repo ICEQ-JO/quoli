@@ -87,6 +87,18 @@
   gap: 1px;
 }
 
+.nav-worktrees {
+  list-style: none;
+  margin: 1px 0 0;
+  padding: 0 0 0 14px;
+  display: grid;
+  gap: 1px;
+}
+
+.nav-worktrees .nav-item {
+  font-size: var(--fs-xs);
+}
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -514,6 +526,11 @@
   height: 18px;
   font-size: var(--fs-xs);
   color: var(--faint);
+}
+
+.sc-note {
+  margin: 6px 0 0;
+  font-size: var(--fs-xs);
 }
 
 .sc-axis span {

@@ -298,3 +298,30 @@ test("the review diff never reads through a symlink that leaves the repository",
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test("a session that never ended is not credited with commits made after its last activity", () => {
+  const dir = repo();
+  try {
+    // The agent edited one file and stopped without an end event; later, other work was committed.
+    writeFileSync(join(dir, "src/a.ts"), "one\ntwo\nthree\nfour\n");
+    sh(dir, ["commit", "-qam", "agent work"], at(5));
+    for (const [i, name] of ["x", "y", "z"].entries()) {
+      writeFileSync(join(dir, `${name}.ts`), "later\n");
+      sh(dir, ["add", "."]);
+      sh(dir, ["commit", "-q", "-m", `later ${name}`], at(24 * 60 + i));
+    }
+    const s = session(dir, [edit("e1", 4, join(dir, "src/a.ts"))], {
+      endedAt: null,
+      live: false,
+      lastAt: at(6),
+    });
+    const r = buildReview(s);
+    assert.equal(r.source, "git");
+    assert.deepEqual(
+      r.files.map((f) => f.path),
+      ["src/a.ts"],
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
