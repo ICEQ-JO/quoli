@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ToolCall } from "../../../../shared/model.ts";
 import { api, useData } from "../../api.ts";
 import { RecordedChange, UnifiedDiff } from "../../components/Diff.tsx";
-import { ErrorState, Icon } from "../../components/ui.tsx";
+import { ErrorState, Icon, Loading } from "../../components/ui.tsx";
 import { CATEGORY, clock } from "../../format.ts";
 import { highlight } from "./highlight.ts";
 
@@ -157,9 +157,9 @@ export function Reader({
         ) : error && !data ? (
           <ErrorState title="Could not read this file" message={error} retry={reload} />
         ) : !data ? (
-          <p className="rd-empty" role="status">
-            Loading…
-          </p>
+          <div className="pad">
+            <Loading lines={8} />
+          </div>
         ) : data.content === null ? (
           <p className="rd-empty">No preview: the file is binary, over 1 MB, or no longer there.</p>
         ) : (

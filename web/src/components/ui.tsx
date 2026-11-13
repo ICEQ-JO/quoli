@@ -16,11 +16,16 @@ export function useNow(ms = 30_000) {
   return now;
 }
 
-export function Loading({ label = "Loading…" }: { label?: string }) {
+/** A skeleton of a few text lines; the label is read by screen readers only. */
+export function Loading({ label = "Loading…", lines = 3 }: { label?: string; lines?: number }) {
   return (
-    <p className="state" role="status">
-      {label}
-    </p>
+    <div className="skeleton" role="status" aria-busy="true">
+      <span className="sr-only">{label}</span>
+      {Array.from({ length: lines }, (_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder lines
+        <i key={i} aria-hidden="true" />
+      ))}
+    </div>
   );
 }
 

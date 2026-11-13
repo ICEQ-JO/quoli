@@ -2160,6 +2160,40 @@ p.state {
   padding: 18px 0;
 }
 
+/* Skeleton: the shape of content that is on its way, instead of the word "Loading". */
+.skeleton {
+  display: grid;
+  gap: 10px;
+  padding: 16px 0;
+}
+.skeleton i {
+  display: block;
+  height: 12px;
+  border-radius: 4px;
+  background:
+    linear-gradient(90deg, var(--raised) 0%, var(--hover) 50%, var(--raised) 100%) 0 0 / 200% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+}
+.skeleton i:nth-child(3n + 1) {
+  width: 72%;
+}
+.skeleton i:nth-child(3n + 2) {
+  width: 54%;
+}
+.skeleton i:nth-child(3n) {
+  width: 63%;
+}
+@keyframes skeleton {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton i {
+    animation: none;
+  }
+}
+
 .notice {
   margin: 0;
   padding: 10px 14px;
@@ -2621,20 +2655,18 @@ textarea.input {
 
 .sum-sec h2 {
   margin: 0 0 10px;
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--faint);
-  font-weight: 650;
+  font-size: var(--fs-md);
+  letter-spacing: -0.005em;
+  color: var(--text);
+  font-weight: 600;
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 }
 
 .sum-sec h2 .aside {
-  text-transform: none;
-  letter-spacing: 0;
-  font: 450 var(--fs-sm) var(--mono);
+  font: 450 var(--fs-sm) var(--sans);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
