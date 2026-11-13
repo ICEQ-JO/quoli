@@ -20,7 +20,9 @@ metadata and its own cover. No app redesign or semantic activity-token changes.
 
 Index → article → numbered source notes → product. Desktop articles use a sticky
 contents rail and 720px reading column; mobile stacks content and makes contents
-static. Three decorative SVG covers depict context, review and measurement.
+static. Three decorative SVG covers depict context, review and measurement. Owner sizing
+revision: equal desktop covers (360×225px), consistent 32px story titles and 48px
+gaps, in a narrower 1140px index frame; mobile story titles are 30px.
 Reduced motion disables their CSS loops; an offscreen animation pause is not
 implemented. Artwork is not product evidence.
 

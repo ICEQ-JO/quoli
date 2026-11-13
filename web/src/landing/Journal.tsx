@@ -11,9 +11,9 @@ function ArticleMeta({ article }: { article: JournalArticle }) {
     </div>
   );
 }
-function StoryLink({ article, featured = false }: { article: JournalArticle; featured?: boolean }) {
+function StoryLink({ article }: { article: JournalArticle }) {
   return (
-    <article className={`journal-story${featured ? " journal-feature" : ""}`}>
+    <article className="journal-story">
       <a
         className="journal-cover-link"
         href={articleHref(article)}
@@ -78,7 +78,7 @@ function JournalIndex() {
           <span>Research, perspectives & practical review</span>
         </div>
       </header>
-      <StoryLink article={articles[0]} featured />
+      <StoryLink article={articles[0]} />
       <div className="journal-stories">
         {articles.slice(1).map((article) => (
           <StoryLink key={article.slug} article={article} />

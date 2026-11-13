@@ -17,16 +17,18 @@ cream palette in both themes. They do not encode app activity categories.
 
 ## Typography
 
-The index masthead uses Jersey 10 (`Quoli Pixel`), scaling from 60–96px on desktop.
-Jost (`Quoli Sans`) carries article titles (42–65px), story titles (34px; featured
-36–48px) and reading copy (19px/1.8). Article section headings inherit pixel type
+The index masthead uses Jersey 10 (`Quoli Pixel`), scaling from 56–80px on desktop.
+Jost (`Quoli Sans`) carries article titles (42–65px), story titles (32px throughout the index) and reading copy (19px/1.8). Article section headings inherit pixel type
 at 35px. Metadata is 13px; source explanations are 15px/1.75. Quotations use
 29px/1.45 Jost with a stepped quote mark and explicit attribution.
 
 ## Layout
 
-The index fits a 1240px container with 36px side padding. A large masthead leads
-to one featured story, then alternating illustration/text rows divided by rules.
+The index fits a 1140px container with 36px side padding; article pages retain
+the 1240px reading frame. A large masthead leads
+to alternating illustration/text rows divided by rules. All desktop covers use
+360×225px (8:5), 48px column gaps and 36px row padding. The first article leads
+through position, without a larger cover or headline.
 Article headers pair title, introduction, topic, reading time and byline with a
 cover. Below, a sticky 180px contents column sits beside reading copy capped at
 720px, separated by 80px. The contents use native expandable `details`.
@@ -34,7 +36,7 @@ cover. Below, a sticky 180px contents column sits beside reading copy capped at
 At 1000px, gaps and the contents column narrow. At 760px, content becomes one
 column with 24px side padding; alternating artwork returns to document order.
 The contents become static with two-column links, reading text becomes 18px/1.8,
-and article titles scale from 39–52px. Related stories stack. Covers preserve their
+article titles scale from 39–52px, and index story titles use 30px. Related stories stack. Covers preserve their
 640:400 SVG view box; article covers are capped at 300px high on mobile.
 
 ## Elevation & Depth
