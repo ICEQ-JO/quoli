@@ -120,3 +120,8 @@ baby-blue Quoli identity and distinct page composition instead of following the 
 Present current local Claude Code, Codex, OpenCode and Pi capture separately from
 planned hosted sync and live provider connections. Demonstrations remain synthetic;
 the landing page never reads captured evidence. See [landing-design.md](landing-design.md).
+
+Phase 1 [#182](https://github.com/ICEQ-JO/quoli/issues/182) extends this public surface
+with an illustrated journal and research-backed articles. External findings explain
+the problem; original Quoli outcome claims require measured evidence. See
+[journal.md](journal.md).

@@ -139,7 +139,11 @@ product tabs, signal-valley and observatory illustrations, an animated FAQ field
 guide, a local-to-team summary schematic and a contour-art footer. Decorative
 scenery runs while visible, respects reduced motion and has no floating pause button. The page describes the existing opt-in team summary
 model and links to `/app/`, without public source-repository links. Dedicated Usage and Insights figures, workflow/setup content and FAQs explain
-shipped capabilities. The app's separate styles and activity colors are unchanged.
+shipped capabilities. Phase 1 [#182](https://github.com/ICEQ-JO/quoli/issues/182) adds
+a static `/journal/` index and three source-backed articles. A Vite plugin renders
+the same typed React content into public HTML with per-page metadata; the existing
+landing client supplies theme and chrome. No private evidence is read. Details:
+[journal.md](journal.md). The app's separate styles and activity colors are unchanged.
 
 The page reads no captured evidence. Explicit email submission uses the existing
 same-origin size-limited waitlist handler: separate local SQLite storage in preview,

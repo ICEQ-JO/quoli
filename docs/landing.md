@@ -49,6 +49,14 @@ readable final recorder state and stops continuous updates. Terminal and product
 data are synthetic and labeled. The terminal shows only the steps reached so far, so it
 fills as the session plays; reduced motion shows every step.
 
+## Journal
+
+The public `/journal/` index and three complete articles extend the landing identity
+with original pixel plates, readable article layouts and dated primary-source notes.
+Header/footer links and a landing teaser connect them to the product. Journal HTML
+is rendered at build time for direct links and no-JavaScript reading; the landing
+client supplies the shared chrome and theme. See [journal.md](journal.md).
+
 ## Product proof and screenshots
 
 The six-tab product tour keeps desktop navigation on the left and a compact mobile
