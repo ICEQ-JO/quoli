@@ -518,8 +518,9 @@ export function Landing() {
     }
   });
   const page = new URLSearchParams(location.search).get("page");
-  const journal = location.pathname.startsWith("/journal/");
-  const article = articleAt(location.pathname);
+  const pathname = location.pathname.replace(/\/?$/, "/");
+  const journal = pathname.startsWith("/journal/");
+  const article = articleAt(pathname);
   useEffect(() => {
     document.title = journal
       ? article
@@ -576,7 +577,7 @@ export function Landing() {
         </div>
       </header>
       {journal ? (
-        <Journal pathname={location.pathname} />
+        <Journal pathname={pathname} />
       ) : page && ["mission", "roadmap", "privacy"].includes(page) ? (
         <InformationPage page={page} />
       ) : (

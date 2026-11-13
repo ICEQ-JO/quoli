@@ -149,7 +149,8 @@ model and links to `/app/`, without public source-repository links. Dedicated Us
 shipped capabilities. Phase 1 [#182](https://github.com/ICEQ-JO/quoli/issues/182) adds
 a static `/journal/` index and three source-backed articles. A Vite plugin renders
 the same typed React content into public HTML with per-page metadata; the existing
-landing client supplies theme and chrome. No private evidence is read. Details:
+landing client supplies theme and chrome and accepts journal URLs with or without
+a trailing slash. No private evidence is read. Details:
 [journal.md](journal.md). The app's separate styles and activity colors are unchanged.
 
 The page reads no captured evidence. Explicit email submission uses the existing
