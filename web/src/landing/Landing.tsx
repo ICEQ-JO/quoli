@@ -3,7 +3,7 @@ import { articleAt } from "./articles.tsx";
 import { Journal, JournalTeaser } from "./Journal.tsx";
 import { PixelScene, SESSION_STEPS } from "./PixelScene.tsx";
 import { ProductScreenshot } from "./ProductScreenshot.tsx";
-import { Arrow, Brand, Mark, Moon } from "./ui.tsx";
+import { Arrow, Brand, GitHubIcon, Mark, Moon, REPO } from "./ui.tsx";
 import { Waitlist } from "./Waitlist.tsx";
 
 /** Optional product contact address, set at build time. */
@@ -218,7 +218,7 @@ function SiteFooter() {
           <small>
             Claude Code · Codex · OpenCode · Pi.
             <br />
-            Local evidence. A connected view.
+            Local evidence. A connected view. Open source.
           </small>
         </div>
         <div className="footer-column">
@@ -236,6 +236,7 @@ function SiteFooter() {
           <a href="/landing/#collaborate">For developers &amp; teams</a>
           <a href="/landing/?page=privacy">Privacy</a>
           <a href="/landing/?page=terms">License</a>
+          <a href={REPO}>GitHub</a>
         </div>
         <div className="footer-column">
           <h3>Quoli</h3>
@@ -618,6 +619,10 @@ export function Landing() {
             <a href="/landing/?page=roadmap">Roadmap</a>
             <a href="/landing/?page=mission">Mission</a>
           </nav>
+          <a className="nav-github" href={REPO} aria-label="Quoli on GitHub (open source)">
+            <GitHubIcon />
+            <span>GitHub</span>
+          </a>
           <button
             className="theme-toggle"
             type="button"
@@ -658,7 +663,8 @@ export function Landing() {
                 </a>
               </div>
               <small>
-                Claude Code, Codex, OpenCode and Pi. Local detail. Opt-in team summaries.
+                Claude Code, Codex, OpenCode and Pi. Local detail. Opt-in team summaries. Free and
+                open source.
               </small>
               <a className="hero-research-link" href="/journal/">
                 Why agent review needs context: research &amp; insights <Arrow diagonal />
@@ -1039,6 +1045,12 @@ export function Landing() {
                   Linux, with Node.js 22.13 or newer.
                 </p>
                 <InstallCommand />
+                <p className="install-note">
+                  Free and open source under the MIT license.{" "}
+                  <a href={REPO}>
+                    Read the code on GitHub <Arrow diagonal />
+                  </a>
+                </p>
               </li>
               <li>
                 <h3>Build as you normally do.</h3>
