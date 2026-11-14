@@ -221,6 +221,36 @@ svg {
   padding: 13px 19px;
   min-height: 46px;
 }
+.nav-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 6px;
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav-github:hover span {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.install-note {
+  margin-top: 12px;
+  font-size: 14px;
+}
+.install-note a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  text-underline-offset: 3px;
+}
+.install-note svg {
+  width: 14px;
+  height: 14px;
+}
 .nav-cta {
   white-space: nowrap;
   font-size: 14px;
@@ -1167,6 +1197,13 @@ main {
   }
   .theme-toggle {
     flex-shrink: 0;
+  }
+  .nav-github {
+    flex-shrink: 0;
+    padding: 0 12px;
+  }
+  .nav-github span {
+    display: none;
   }
   .brand {
     font-size: 32px;
