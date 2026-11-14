@@ -425,6 +425,44 @@ test("mutating API calls need a JSON content type and a same-origin Origin heade
   }
 });
 
+test("only the Quoli website may read and change this server from another origin", async () => {
+  const { call, close } = await start();
+  try {
+    const { port } = (await call("GET", "/api/settings")).body.info;
+    const at = (path: string, init: RequestInit = {}) =>
+      fetch(`http://127.0.0.1:${port}${path}`, init);
+    const site = "https://iceq.best";
+    const read = await at("/api/projects", { headers: { Origin: site } });
+    assert.equal(read.headers.get("access-control-allow-origin"), site);
+    const pre = await at("/api/settings", {
+      method: "OPTIONS",
+      headers: { Origin: site, "Access-Control-Request-Private-Network": "true" },
+    });
+    assert.equal(pre.status, 204);
+    assert.equal(pre.headers.get("access-control-allow-private-network"), "true");
+    assert.equal((await call("PUT", "/api/settings", {}, { Origin: site })).status, 200);
+    // Any other website gets no CORS headers (so the browser hides the answer) and no changes.
+    const evil = await at("/api/projects", {
+      headers: { Origin: "https://iceq.best.evil.example" },
+    });
+    assert.equal(evil.headers.get("access-control-allow-origin"), null);
+    const evilPre = await at("/api/settings", {
+      method: "OPTIONS",
+      headers: { Origin: "https://evil.example" },
+    });
+    assert.equal(evilPre.headers.get("access-control-allow-origin"), null);
+    assert.equal(
+      (await call("PUT", "/api/settings", {}, { Origin: "http://iceq.best" })).status,
+      403,
+    );
+    // The hooks' endpoint stays closed to web pages.
+    const ingest = await at("/ingest", { method: "OPTIONS", headers: { Origin: site } });
+    assert.equal(ingest.headers.get("access-control-allow-origin"), null);
+  } finally {
+    close();
+  }
+});
+
 test("sessions list spans projects and filters by project id", async () => {
   const { store, call, close } = await start();
   store0 = store;

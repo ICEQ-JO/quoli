@@ -86,7 +86,7 @@ if (cmd === "connect") {
   console.log(`Quoli ${VERSION}: one map of what your coding agents did.
 
   ${Q}               the first time: choose what to record, link your account, start;
-                     after that: open Quoli on http://127.0.0.1:4400
+                     after that: start Quoli; open it at https://iceq.best/studio/
   ${Q} connect       link this computer to your Quoli account (again, with --again)
   ${Q} setup         install the agents' hooks without an account
   ${Q} setup --remove   stop recording and take Quoli out of every agent

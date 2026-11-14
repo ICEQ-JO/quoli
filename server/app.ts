@@ -106,6 +106,18 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
   return next;
 }
 
+/**
+ * The Quoli website opens the full app from the web (/studio/ on iceq.best, or app.iceq.best) and
+ * reads this server straight from the browser; nothing passes through the site. These origins,
+ * and only these, get CORS headers. QUOLI_SITE_ORIGINS (comma separated) adds more for tests.
+ */
+export const siteOrigins = () => [
+  "https://iceq.best",
+  "https://www.iceq.best",
+  "https://app.iceq.best",
+  ...(process.env.QUOLI_SITE_ORIGINS ?? "").split(",").filter(Boolean),
+];
+
 /** The product's HTTP API. `port` is read per request so tests can listen on port 0. */
 export function createApp(store: Store, port: () => number) {
   // Live updates: a numbered feed of recent changes that pages poll (GET /api/changes). Polling
@@ -260,10 +272,28 @@ export function createApp(store: Store, port: () => number) {
       return true;
     }
 
+    const origin = req.headers?.origin;
+    const site = typeof origin === "string" && siteOrigins().includes(origin);
+    if (site && path.startsWith("/api/")) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      if (method === "OPTIONS") {
+        res.writeHead(204, {
+          "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE",
+          "Access-Control-Allow-Headers": "Content-Type",
+          // Chrome's older Private Network Access preflight asks for this before a public page
+          // may reach a loopback address; its newer Local Network Access asks the person instead.
+          "Access-Control-Allow-Private-Network": "true",
+          "Access-Control-Max-Age": "600",
+        });
+        res.end();
+        return true;
+      }
+    }
+
     if (path.startsWith("/api/") && method !== "GET") {
       const own = [`http://127.0.0.1:${port()}`, `http://localhost:${port()}`];
-      const origin = req.headers.origin;
-      if (typeof origin !== "string" || !own.includes(origin)) {
+      if (typeof origin !== "string" || !(own.includes(origin) || site)) {
         return json(res, 403, { error: "Cross-origin request refused" });
       }
       if (!req.headers["content-type"]?.startsWith("application/json")) {

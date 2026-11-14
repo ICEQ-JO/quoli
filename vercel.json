@@ -5,9 +5,47 @@
   "buildCommand": "pnpm build:site",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/", "destination": "/landing/", "permanent": false },
-    { "source": "/class", "destination": "/app/", "permanent": true },
-    { "source": "/class/", "destination": "/app/", "permanent": true },
-    { "source": "/class/:path*", "destination": "/app/", "permanent": true }
+    {
+      "source": "/",
+      "destination": "/landing/",
+      "permanent": false,
+      "missing": [
+        {
+          "type": "host",
+          "value": "app.iceq.best"
+        }
+      ]
+    },
+    {
+      "source": "/class",
+      "destination": "/app/",
+      "permanent": true
+    },
+    {
+      "source": "/class/",
+      "destination": "/app/",
+      "permanent": true
+    },
+    {
+      "source": "/class/:path*",
+      "destination": "/app/",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/studio/:path*",
+      "destination": "/studio/index.html"
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.iceq.best"
+        }
+      ],
+      "destination": "/studio/index.html"
+    }
   ]
 }

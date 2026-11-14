@@ -57,7 +57,7 @@ Then open http://127.0.0.1:4471. The demo data is fully synthetic and needs no A
 npx https://iceq.best/quoli.tgz
 ```
 
-One command, run inside the project you work on. The first time, it asks whether to record only that project or every project on this computer (`--here` / `--all` answer without asking), offers to link your Quoli account, and opens Quoli at http://127.0.0.1:4400. After that the same command just opens Quoli; run inside a project that is not recorded, it offers to add it. Projects → Stop recording leaves a project out again.
+One command, run inside the project you work on. The first time, it asks whether to record only that project or every project on this computer (`--here` / `--all` answer without asking), offers to link your Quoli account, and starts Quoli. Open it at [iceq.best/studio](https://iceq.best/studio/): the page reads Quoli on your computer straight from your browser, so nothing is uploaded (your browser may ask to allow that once; `http://127.0.0.1:4400` is the same app without the website). After that the same command just starts Quoli; run inside a project that is not recorded, it offers to add it. Projects → Stop recording leaves a project out again.
 
 You do not need to keep Quoli open: the agents' hooks keep recording with the terminal closed, and a linked account keeps receiving summaries (the agents start a short `quoli sync` that exits by itself). Linking opens your browser to sign in at [iceq.best/app](https://iceq.best/app/) and approve the code it shows; your prompts and code stay on your machine, and only session summaries reach your account. `connect` links (or re-links) an account later; `setup --remove` stops recording and takes Quoli out of every agent. Needs Node.js 22.13 or newer.
 
