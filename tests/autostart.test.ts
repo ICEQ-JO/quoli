@@ -12,7 +12,7 @@ test("each operating system gets a login item that runs the app copy with the up
     assert.match(linux?.file ?? "", /systemd[\\/]user[\\/]quoli\.service$/);
     assert.match(
       linux?.content ?? "",
-      /^ExecStart="\/opt\/node 22\/bin\/node" ".*app\/server\/cli\.mjs" start$/m,
+      /^ExecStart="\/opt\/node 22\/bin\/node" ".*app[\\/]+server[\\/]+cli\.mjs" start$/m,
     );
     assert.match(linux?.content ?? "", /^Environment="QUOLI_NO_UPDATE_CHECK=1"$/m);
     assert.match(linux?.content ?? "", /^Environment="QUOLI_PORT=4455"$/m);

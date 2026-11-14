@@ -25,7 +25,7 @@ function tmp() {
 function repo() {
   const dir = tmp();
   execFileSync("git", ["init", "-q", dir]);
-  return dir;
+  return realpathSync.native(dir); // the spelling Quoli stores (Windows short names expanded)
 }
 
 /** Starts the API on a random loopback port with an in-memory store. */
