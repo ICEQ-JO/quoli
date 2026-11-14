@@ -20,7 +20,7 @@ test("journal pages contain readable article text, matching metadata and complet
     assert.ok(html.includes(`<link rel="canonical" href="${site}${path}"`));
     assert.ok(html.includes('property="og:type" content="article"'));
     assert.ok(html.includes('property="article:published_time" content="2026-11-13"'));
-    assert.ok(html.includes(`${article.title} — Quoli Journal</title>`));
+    assert.ok(html.includes(`${article.title} — Quoli Research</title>`));
     assert.ok(html.includes('<main id="main"'));
     for (const section of article.sections) assert.ok(html.includes(`id="${section.id}"`));
     for (let n = 1; n <= article.sources.length; n++) {
@@ -39,10 +39,13 @@ test("journal pages contain readable article text, matching metadata and complet
 test("journal index links every article; unknown article paths do not silently show an unrelated story", () => {
   assert.equal(journalPaths.length, articles.length + 1);
   const html = renderJournalPage(template, "/journal/", site);
+  assert.ok(html.includes("Research &amp; insights"));
+  assert.ok(html.includes("Research &amp; insights — Quoli</title>"));
+  assert.doesNotMatch(html, />Journal</);
   for (const article of articles) assert.ok(html.includes(`href="/journal/${article.slug}/"`));
   assert.equal(articleAt("/journal/missing/"), undefined);
   assert.equal(articleAt("/journal/beyond-the-diff/extra/"), undefined);
   assert.ok(
-    renderJournalPage(template, "/journal/missing/", site).includes("This field note isn’t here."),
+    renderJournalPage(template, "/journal/missing/", site).includes("This article isn’t here."),
   );
 });

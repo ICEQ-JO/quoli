@@ -42,13 +42,16 @@ export function JournalTeaser() {
     <section className="journal-teaser" aria-labelledby="journal-teaser-title">
       <div>
         <h2 id="journal-teaser-title">
-          The work behind
+          The research behind
           <br />
-          <em>the work.</em>
+          <em>the problem.</em>
         </h2>
-        <p>Research and field notes on coding agents, review and the evidence between them.</p>
+        <p>
+          Studies and perspectives on coding agents: what the evidence says about review, trust and
+          the work after generation.
+        </p>
         <a className="primary-link" href="/journal/">
-          Explore the journal <Arrow />
+          Explore research &amp; insights <Arrow />
         </a>
       </div>
       <a href={articleHref(articles[0])} className="journal-teaser-story">
@@ -66,9 +69,9 @@ function JournalIndex() {
     <>
       <header className="journal-masthead">
         <h1>
-          Field notes from
+          Research &amp; insights
           <br />
-          <em>the agent age.</em>
+          <em>on agent work.</em>
         </h1>
         <div>
           <p>
@@ -145,7 +148,7 @@ function ArticlePage({ article }: { article: JournalArticle }) {
           </details>
           <a href="/journal/" className="journal-back">
             <Arrow />
-            All field notes
+            All research &amp; insights
           </a>
         </aside>
         <div className="article-reading">
@@ -230,12 +233,12 @@ export function Journal({ pathname }: { pathname: string }) {
         <span aria-hidden="true">/</span>
         {article ? (
           <>
-            <a href="/journal/">Journal</a>
+            <a href="/journal/">Research &amp; insights</a>
             <span aria-hidden="true">/</span>
             <span aria-current="page">{article.topic}</span>
           </>
         ) : (
-          <span aria-current="page">Journal</span>
+          <span aria-current="page">Research &amp; insights</span>
         )}
       </nav>
       {index ? (
@@ -244,10 +247,10 @@ export function Journal({ pathname }: { pathname: string }) {
         <ArticlePage article={article} />
       ) : (
         <div className="journal-not-found">
-          <h1>This field note isn’t here.</h1>
-          <p>The address may have changed. Find the latest articles in the journal.</p>
+          <h1>This article isn’t here.</h1>
+          <p>The address may have changed. Find the latest research and insights.</p>
           <a className="button" href="/journal/">
-            Back to the journal <Arrow />
+            Back to research &amp; insights <Arrow />
           </a>
         </div>
       )}

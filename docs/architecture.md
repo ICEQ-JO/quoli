@@ -148,7 +148,7 @@ guide, a local-to-team summary schematic and a contour-art footer. Decorative
 scenery runs while visible, respects reduced motion and has no floating pause button. The page describes the existing opt-in team summary
 model and links to `/app/`, without public source-repository links. Dedicated Usage and Insights figures, workflow/setup content and FAQs explain
 shipped capabilities. Phase 1 [#182](https://github.com/ICEQ-JO/quoli/issues/182) adds
-a static `/journal/` index and three source-backed articles. A Vite plugin renders
+a static `/journal/` index and three source-backed articles, presented as Research & insights. A Vite plugin renders
 the same typed React content into public HTML with per-page metadata; the existing
 landing client supplies theme and chrome and accepts journal URLs with or without
 a trailing slash. No private evidence is read. Details:
@@ -162,3 +162,9 @@ private evidence APIs. See [landing.md](landing.md) and [landing-design.md](land
 
 - Agent replies (#166): each turn keeps the agent's final reply (`Turn.reply`, recorded). Claude Code and Codex send it on Stop as `last_assistant_message` (code.claude.com/docs/en/hooks; `openai/codex` `codex-rs/hooks/schema/generated/stop.command.input.schema.json`); OpenCode's plugin and Pi's extension send the last assistant text with the turn end. Text between tool calls, reasoning and subagent replies are not shown. Replies are redacted like prompts, stay local, and are never part of Team sync.
 
+Phase 1 [#197](https://github.com/ICEQ-JO/quoli/issues/197) replaces the marketing
+product captures with six owner-supplied screenshots approved for public use.
+Captures keep their original light/dark appearance independently of the site theme;
+lossless WebP and full-size JPEG fallbacks use the native 1600×900 ratio. No private
+session data is read. Research navigation also appears in the hero and immediately
+after the product tour; existing `/journal/` URLs remain unchanged.
