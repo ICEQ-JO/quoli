@@ -25,17 +25,22 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+      # Build with the same Node as the main check (Node 22.13's corepack can't verify pnpm).
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22.13.0
+          node-version: 24.16.0
       - name: Enable pinned pnpm
         run: corepack enable
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
       - name: Build the package
         run: node scripts/pack.mjs
-      - name: Install, record, restart, stop and remove
-        run: node scripts/smoke-install.mjs
       - name: Unit tests (informational)
         continue-on-error: true
         run: pnpm test
+      # Then install it the way people do, on the oldest Node Quoli supports.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install, record, restart, stop and remove
+        run: node scripts/smoke-install.mjs
