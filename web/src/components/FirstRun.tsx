@@ -20,12 +20,18 @@ export function FirstRun({
   returning = false,
   onRetry,
   onSkip,
+  asking = false,
+  checking = false,
 }: {
   mode: "offline" | "setup";
   /** Quoli answered this browser before: it stopped, it is not new. */
   returning?: boolean;
   onRetry?: () => void;
   onSkip?: () => void;
+  /** A check has been waiting a while: the browser is asking the person for permission. */
+  asking?: boolean;
+  /** A check is in flight (after Check now). */
+  checking?: boolean;
 }) {
   const offline = mode === "offline";
   const [setup, refreshSetup] = useData(offline ? null : "setup", api.setupStatus);
@@ -89,15 +95,29 @@ export function FirstRun({
                 background and starts by itself when you log in.
               </p>
               <Command text={START} />
-              <p className="fr-note">
-                <span className="fr-pulse" aria-hidden="true" />
-                <span role="status">Waiting for Quoli on port {localPort}</span>
-                {onRetry && (
-                  <button type="button" className="fr-link" onClick={onRetry}>
-                    Check now
-                  </button>
-                )}
-              </p>
+              {asking ? (
+                <p className="fr-note fr-asking" role="status">
+                  <span className="fr-pulse" aria-hidden="true" />
+                  <span>
+                    <strong>Your browser is asking for permission.</strong> Look for the prompt next
+                    to the address bar and choose <strong>Allow</strong>: that lets this page read
+                    Quoli on your computer. Missed it? Click the icon at the left of the address bar
+                    and turn on local network access.
+                  </span>
+                </p>
+              ) : (
+                <p className="fr-note">
+                  <span className="fr-pulse" aria-hidden="true" />
+                  <span role="status">
+                    {checking ? "Checking…" : `Waiting for Quoli on port ${localPort}`}
+                  </span>
+                  {onRetry && !checking && (
+                    <button type="button" className="fr-link" onClick={onRetry}>
+                      Check now
+                    </button>
+                  )}
+                </p>
+              )}
               <Trouble />
             </Step>
             {!returning && (

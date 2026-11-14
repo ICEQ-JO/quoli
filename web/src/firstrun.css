@@ -71,7 +71,7 @@
   justify-content: space-between;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px 4px 18px;
+  padding: 14px 4px 12px;
 }
 .fr-brand {
   display: inline-flex;
@@ -111,7 +111,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   max-width: 1400px;
-  min-height: min(640px, calc(100dvh - 120px));
+  min-height: min(600px, calc(100dvh - 96px));
   margin: 0 auto;
   overflow: hidden;
   border-radius: 24px;
@@ -119,28 +119,28 @@
   outline: none;
 }
 .fr-copy {
-  padding: clamp(36px, 5vw, 72px) clamp(24px, 4.5vw, 64px);
+  padding: clamp(28px, 4.5vh, 52px) clamp(24px, 4.5vw, 60px);
   max-width: 640px;
 }
 .fr-copy h1 {
   margin: 0;
-  font-size: clamp(36px, 3.6vw, 54px);
+  font-size: clamp(32px, min(3.2vw, 5.4vh), 48px);
   font-weight: 600;
   line-height: 1.06;
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
 .fr-lede {
-  margin: 18px 0 0;
-  max-width: 54ch;
+  margin: 14px 0 0;
+  max-width: 56ch;
   color: var(--fr-muted);
-  font-size: 17px;
-  line-height: 1.7;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 .fr-steps {
   list-style: none;
-  margin: 36px 0 0;
+  margin: 26px 0 0;
   padding: 0;
   display: grid;
 }
@@ -149,7 +149,7 @@
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr);
   column-gap: 16px;
-  padding-bottom: 22px;
+  padding-bottom: 16px;
 }
 /* The trail between markers, drawn in steps like the rest of the pixel world. */
 .fr-step:not(:last-child)::before {
@@ -533,4 +533,23 @@
 }
 :root[data-theme="dark"] .fr-command button {
   background: #13253a;
+}
+
+.fr-step-body p.fr-asking {
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  max-width: 60ch;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--fr-surface);
+  color: var(--fr-ink);
+  box-shadow: 0 8px 20px -16px rgb(23 45 67 / 0.6);
+}
+.fr-asking .fr-pulse {
+  flex: none;
+  margin-top: 8px;
+  background: #e0a63a;
+}
+.fr-asking strong {
+  font-weight: 600;
 }
