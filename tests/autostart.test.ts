@@ -6,6 +6,9 @@ const node = "/opt/node 22/bin/node";
 
 test("each operating system gets a login item that runs the app copy with the update check off", () => {
   process.env.QUOLI_PORT = "4455";
+  // Plans only (nothing is installed), so the default service name is safe here.
+  const service = process.env.QUOLI_SERVICE_NAME;
+  delete process.env.QUOLI_SERVICE_NAME;
   try {
     const linux = autostartPlan("linux", node);
     assert.equal(linux?.kind, "systemd");
@@ -44,5 +47,6 @@ test("each operating system gets a login item that runs the app copy with the up
     assert.equal(autostartPlan("aix", node), null);
   } finally {
     delete process.env.QUOLI_PORT;
+    if (service !== undefined) process.env.QUOLI_SERVICE_NAME = service;
   }
 });

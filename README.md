@@ -43,7 +43,7 @@ Run it **inside the project you work on**. It asks whether to record only this p
 | Stop Quoli until the next login | `npx https://iceq.best/quoli.tgz stop` |
 | Run it in the terminal instead | `npx https://iceq.best/quoli.tgz --foreground` |
 | Stop recording and remove it from every agent | `npx https://iceq.best/quoli.tgz setup --remove` |
-| Delete the recorded data | remove the `.quoli` folder in your home folder |
+| Remove Quoli completely, including what it recorded | `npx https://iceq.best/quoli.tgz uninstall` |
 | Everything else | `npx https://iceq.best/quoli.tgz --help` |
 
 Your browser may ask once whether app.iceq.best may reach this device: allow it, since that is how the page reads Quoli on your computer. `http://127.0.0.1:4400` is the same app without the website.
@@ -87,7 +87,7 @@ flowchart LR
 
 ## Privacy
 
-- Everything is stored on your computer in `~/.quoli`. Quoli listens only on `127.0.0.1`, and only the Quoli website may read it from a browser.
+- Everything is stored on your computer in `~/.quoli`. Quoli listens only on `127.0.0.1`, and only the app at app.iceq.best may read it from a browser.
 - Common secrets (API keys, tokens) are redacted before anything is stored. Redaction is best-effort.
 - Outbound requests: a version check at iceq.best when Quoli starts (`QUOLI_NO_UPDATE_CHECK=1` turns it off) and a daily download of public model prices from models.dev (Settings → Prices). Nothing else, unless you link an account and turn on Team sync, which shares session summaries (agent, model, repository, branch, counts, estimated spend), never prompts, code, commands or file paths.
 - Quoli observes passively: it never blocks, steers or replays an agent.

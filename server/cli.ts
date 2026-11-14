@@ -135,6 +135,9 @@ if (cmd === "connect") {
     await stopRunning();
   }
   process.exit(code);
+} else if (cmd === "uninstall") {
+  const { uninstallCli } = await import("./uninstall.ts");
+  process.exit(await uninstallCli(rest));
 } else if (cmd === "--version" || cmd === "-v") {
   console.log(VERSION);
 } else if (cmd === "--help" || cmd === "-h" || cmd === "help") {
@@ -147,12 +150,13 @@ if (cmd === "connect") {
   ${Q} connect       link this computer to your Quoli account (again, with --again)
   ${Q} setup         install the agents' hooks without an account
   ${Q} setup --remove   stop recording and take Quoli out of every agent
+  ${Q} uninstall     remove Quoli completely, including everything it recorded
   ${Q} demo          start with a synthetic demo project, in this terminal
   --foreground       run Quoli in this terminal instead of in the background
   --all / --here     record every project / only the current one
   --port <n>         use another port (or set QUOLI_PORT)
 
-Recording keeps working even with Quoli stopped. Data stays on this machine in ~/.quoli
+\`stop\` stops the app; recording goes on until \`setup --remove\`. Data stays on this machine in ~/.quoli
 (QUOLI_HOME to change); a linked account receives summaries, never prompts or code.`);
 } else if (cmd === undefined || cmd.startsWith("--")) {
   // The one command people need: the first time it sets Quoli up, afterwards it opens it.

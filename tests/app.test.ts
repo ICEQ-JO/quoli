@@ -431,7 +431,7 @@ test("only the Quoli website may read and change this server from another origin
     const { port } = (await call("GET", "/api/settings")).body.info;
     const at = (path: string, init: RequestInit = {}) =>
       fetch(`http://127.0.0.1:${port}${path}`, init);
-    const site = "https://iceq.best";
+    const site = "https://app.iceq.best";
     const read = await at("/api/projects", { headers: { Origin: site } });
     assert.equal(read.headers.get("access-control-allow-origin"), site);
     const pre = await at("/api/settings", {
@@ -441,6 +441,13 @@ test("only the Quoli website may read and change this server from another origin
     assert.equal(pre.status, 204);
     assert.equal(pre.headers.get("access-control-allow-private-network"), "true");
     assert.equal((await call("PUT", "/api/settings", {}, { Origin: site })).status, 200);
+    // The marketing site, journal and account pages are not the app: no access either.
+    const landing = await at("/api/projects", { headers: { Origin: "https://iceq.best" } });
+    assert.equal(landing.headers.get("access-control-allow-origin"), null);
+    assert.equal(
+      (await call("PUT", "/api/settings", {}, { Origin: "https://iceq.best" })).status,
+      403,
+    );
     // Any other website gets no CORS headers (so the browser hides the answer) and no changes.
     const evil = await at("/api/projects", {
       headers: { Origin: "https://iceq.best.evil.example" },

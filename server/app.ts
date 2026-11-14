@@ -111,9 +111,11 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
  * reads this server straight from the browser; nothing passes through the site. These origins,
  * and only these, get CORS headers. QUOLI_SITE_ORIGINS (comma separated) adds more for tests.
  */
+/**
+ * Web origins allowed to read and change this server: only the app's own page. The marketing site,
+ * journal and account pages never need it, so a bug there cannot reach anyone's recorded sessions.
+ */
 export const siteOrigins = () => [
-  "https://iceq.best",
-  "https://www.iceq.best",
   "https://app.iceq.best",
   ...(process.env.QUOLI_SITE_ORIGINS ?? "").split(",").filter(Boolean),
 ];
