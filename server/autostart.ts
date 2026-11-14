@@ -6,7 +6,7 @@ import { installSyncCommand } from "./background.ts";
 import { home } from "./db.ts";
 
 /**
- * Quoli in the background (#199): the website (app.iceq.best) reads Quoli on this computer, so it
+ * Quoli in the background (#201): the website (app.iceq.best) reads Quoli on this computer, so it
  * has to be running. `quoli` installs it as a login item of the user's own session (no admin
  * rights): a systemd user service on Linux, a LaunchAgent on macOS, a hidden script in the Startup
  * folder on Windows. It runs the app copy in `~/.quoli/app` (server/background.ts), with the
