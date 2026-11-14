@@ -1,0 +1,41 @@
+name: macOS and Windows install
+
+# The install people do (npx … quoli.tgz) on the systems most of them use: Quoli set up in a
+# throwaway home, started in the background as a login item, recording a hook event, restarted,
+# stopped and removed. See scripts/smoke-install.mjs.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platforms-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Enable pinned pnpm
+        run: corepack enable
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build the package
+        run: node scripts/pack.mjs
+      - name: Install, record, restart, stop and remove
+        run: node scripts/smoke-install.mjs
+      - name: Unit tests (informational)
+        continue-on-error: true
+        run: pnpm test
