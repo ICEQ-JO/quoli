@@ -4,7 +4,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 test("app.iceq.best's content security policy allows exactly the app page's inline scripts", () => {
-  const html = readFileSync("web/studio/index.html", "utf8");
+  // Vercel builds on Linux (LF); a Windows checkout may have CRLF, which would change the hash.
+  const html = readFileSync("web/studio/index.html", "utf8").replace(/\r\n/g, "\n");
   const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(
     (m) => `'sha256-${createHash("sha256").update(m[1]).digest("base64")}'`,
   );
