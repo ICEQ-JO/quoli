@@ -3,6 +3,12 @@ import { isTypingTarget, modalOpen } from "./a11y.ts";
 import { Toasts, useAlerts } from "./alerts.tsx";
 import { api, useData, useLiveEvents } from "./api.ts";
 import { ShortcutOverlay } from "./components/Dialog.tsx";
+import {
+  FirstRun,
+  PixelDissolve,
+  setFirstRunSkipped,
+  useFirstRunSkipped,
+} from "./components/FirstRun.tsx";
 import { NavSidebar } from "./components/NavSidebar.tsx";
 import { type PaletteItem, PaletteView, pageItems } from "./components/Palette.tsx";
 import { BoardPage } from "./pages/Board.tsx";
@@ -45,6 +51,21 @@ export function App() {
   }, [route.name]);
   const Main = route.name === "board" ? "div" : "main";
 
+  // No session yet: the first run takes the whole window, and dissolves into the app once the
+  // first session arrives (or the person skips it).
+  const skipped = useFirstRunSkipped();
+  const firstRun = overview?.counts.projects === 0 && !skipped && route.name === "home";
+  const wasFirstRun = useRef(false);
+  const [dissolve, setDissolve] = useState(false);
+  useEffect(() => {
+    if (firstRun) wasFirstRun.current = true;
+    else if (wasFirstRun.current) {
+      wasFirstRun.current = false;
+      setDissolve(true);
+    }
+  }, [firstRun]);
+  if (firstRun) return <FirstRun mode="setup" onSkip={() => setFirstRunSkipped(true)} />;
+
   return (
     <div className="shell">
       {/* biome-ignore lint/a11y/useValidAnchor: a real in-page link that also moves focus */}
@@ -82,6 +103,7 @@ export function App() {
       <Toasts {...alerts} />
       <ShortcutsHost />
       {route.name !== "board" && <GlobalPalette />}
+      {dissolve && <PixelDissolve onDone={() => setDissolve(false)} />}
     </div>
   );
 }

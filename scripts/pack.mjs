@@ -23,7 +23,11 @@ mkdirSync(join(out, "server"), { recursive: true });
 execFileSync("pnpm", ["build"], { cwd: root, stdio: "inherit" });
 cpSync(join(root, "dist"), join(out, "dist"), {
   recursive: true,
-  filter: (src) => !src.includes(`${join(root, "dist", "landing")}`),
+  // The landing page stays out, except its two fonts, which the app's first run uses.
+  filter: (src) => {
+    const landing = join(root, "dist", "landing");
+    return !src.startsWith(landing) || src === landing || src.endsWith(".ttf");
+  },
 });
 
 // 2. The server, one ESM bundle with chunks so `quoli setup` does not load the web server.
