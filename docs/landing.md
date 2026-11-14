@@ -95,8 +95,8 @@ opt-in session summaries. The team action links to the existing `/app/` account 
 Prompts, source code, commands and tool output stay local; detailed hosted session
 review remains future work. See [teams.md](teams.md) for the delivered summary model.
 
-Quoli is proprietary. Public source-repository links and `VITE_PUBLIC_REPO_URL`
-behavior have been removed from this entry. An optional `VITE_PUBLIC_CONTACT_EMAIL`
+Quoli is open source under the MIT license (2026-11-14); the License page
+(`?page=terms`) summarises it. An optional `VITE_PUBLIC_CONTACT_EMAIL`
 adds a workflow contact in the team section and footer. The `#collaborate` anchor is
 retained for existing links; visible navigation calls it "For teams".
 

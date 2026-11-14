@@ -73,8 +73,9 @@ needs visibility across members' agent usage. The local app supports Claude Code
 Codex, OpenCode and Pi; opt-in team summary sharing is delivered (see [teams.md](teams.md)).
 Detailed shared session review remains future work.
 
-Quoli is a proprietary product. Its marketing is aimed at professional development
-workflows, not student projects or open-source contributors.
+Quoli is free and open source under the MIT license (owner decision 2026-11-14, replacing the
+earlier proprietary positioning): readable code earns trust for a tool that hooks into coding
+agents, and students and instructors are an intended audience alongside professional teams.
 
 ## Principles
 

@@ -91,7 +91,7 @@ writeFileSync(
       version: pkg.version,
       description:
         "One local map of what your coding agents did: Claude Code, Codex, OpenCode and Pi sessions, cost, failures and loops.",
-      license: "SEE LICENSE IN LICENSE",
+      license: "MIT",
       publishConfig: { access: "public" },
       homepage: "https://iceq.best",
       type: "module",
@@ -125,7 +125,7 @@ npx https://iceq.best/quoli.tgz   # choose what to record, link your account, an
 - Recording keeps working with Quoli closed. \`setup --remove\` stops it and takes Quoli out of
   every agent; \`--help\` lists the rest.
 
-Free to use, not open source: see LICENSE (https://iceq.best/landing/?page=terms).
+Free and open source under the MIT license (see LICENSE).
 
 More: https://iceq.best
 `,

@@ -158,9 +158,9 @@ the shipped model; no invented member metrics or activity counts.
 
 ## Commercial product presentation
 
-Quoli is a proprietary product for developers and engineering teams. Content leads
-with review context, agent effort/spend and opt-in team visibility; no academic
-pilot or open-source contributor pitch. The footer restores the owner's rounded
+Quoli is an open-source (MIT) product for developers, engineering teams and
+students. Content leads with review context, agent effort/spend and opt-in team
+visibility. The footer restores the owner's rounded
 animated contour treatment, with ice-blue text over a darkened blue canvas.
 The large pixel mission link replaces the compact text link. Canvas imagery is
 decorative and does not replace readable links. Repository links are absent.

@@ -173,4 +173,4 @@ Quoli is an early-stage project. Phase 1 (the MVP) is largely built, and phase 3
 
 ## License
 
-Quoli is free to use and not open source. See [LICENSE](LICENSE); the same terms are on the website at iceq.best/landing/?page=terms. This repository is private.
+Quoli is free and open source under the [MIT license](LICENSE).

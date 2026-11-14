@@ -235,7 +235,7 @@ function SiteFooter() {
           <a href="/landing/#product">Product tour</a>
           <a href="/landing/#collaborate">For developers &amp; teams</a>
           <a href="/landing/?page=privacy">Privacy</a>
-          <a href="/landing/?page=terms">Terms</a>
+          <a href="/landing/?page=terms">License</a>
         </div>
         <div className="footer-column">
           <h3>Quoli</h3>
@@ -278,9 +278,9 @@ function InformationPage({ page }: { page: string }) {
           </>
         ) : terms ? (
           <>
-            Free to use.
+            Free and
             <br />
-            Not open source.
+            open source.
           </>
         ) : (
           <>
@@ -362,20 +362,14 @@ function InformationPage({ page }: { page: string }) {
       ) : terms ? (
         <>
           <p className="information-lead">
-            Quoli is free for anyone to use. It is not open source. This is the plain version of the
-            license that comes with every copy (the LICENSE file in the package).
+            Quoli is free and open source under the MIT license. The code that runs on your computer
+            is public, so you can read exactly what it records and where it sends it.
           </p>
           <h2>You may</h2>
           <p>
-            Install and use Quoli free of charge on any number of computers, for personal, school
-            and company work. Share the install command or a link to iceq.best with anyone.
-          </p>
-          <h2>You may not</h2>
-          <p>
-            Without written permission: sell, rent, sublicense or redistribute Quoli or a changed
-            copy, or run it as a hosted service for others; modify, decompile or reverse engineer it
-            (except where the law allows it anyway); remove copyright notices or these terms; or use
-            it to build a competing product.
+            Use Quoli for anything, on any number of computers: personal, school and company work.
+            Read, change, copy and share the code, and build on it, as long as the copyright and
+            license notice stay with it.
           </p>
           <h2>Your data</h2>
           <p>
@@ -385,17 +379,9 @@ function InformationPage({ page }: { page: string }) {
           </p>
           <h2>No warranty</h2>
           <p>
-            Quoli is provided as is, without warranty of any kind, and to the extent the law allows
-            its authors are not liable for damages from using it. It shows evidence of what coding
-            agents did; it does not establish that code is correct, secure or complete, and costs
-            are estimates.
-          </p>
-          <h2>Changes and ending</h2>
-          <p>
-            Later versions may come with different terms, and Quoli may change or stop. A version
-            you already have keeps the terms it came with. The terms end if you break them; you can
-            end them any time by removing Quoli (<code>quoli setup --remove</code>, then delete the
-            .quoli folder).
+            Quoli is provided as is, without warranty of any kind, and its authors are not liable
+            for damages from using it. It shows evidence of what coding agents did; it does not
+            establish that code is correct, secure or complete, and costs are estimates.
           </p>
         </>
       ) : (
@@ -459,7 +445,7 @@ const questions = [
   {
     question: "Is Quoli free?",
     answer:
-      "Yes. Quoli is free to use on any number of computers, for personal, school and company work. It is not open source: the terms say what you may and may not do with it.",
+      "Yes, and open source under the MIT license. Use it on any number of computers, for personal, school and company work, and read the code to see exactly what it records.",
   },
   {
     question: "Does it work on macOS and Windows?",
@@ -595,7 +581,7 @@ export function Landing() {
           : page === "privacy"
             ? "Privacy — Quoli"
             : page === "terms"
-              ? "Terms — Quoli"
+              ? "License — Quoli"
               : "Quoli — See what your coding agents did.";
   }, [page, journal, article]);
   useEffect(() => {
