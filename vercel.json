@@ -38,6 +38,16 @@
       "destination": "/studio/index.html"
     },
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.iceq.best"
+        }
+      ],
+      "destination": "/studio/index.html"
+    },
+    {
       "source": "/:path*",
       "has": [
         {
