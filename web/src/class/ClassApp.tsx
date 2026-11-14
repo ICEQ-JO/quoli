@@ -113,6 +113,9 @@ export function ClassApp() {
         {session && client && (
           <div className="class-user">
             <span className="faint">{login(session)}</span>
+            <a className="btn primary" href="/studio/">
+              Open Quoli
+            </a>
             <button type="button" className="btn" onClick={() => client.auth.signOut()}>
               Sign out
             </button>

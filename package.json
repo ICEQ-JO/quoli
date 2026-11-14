@@ -1,7 +1,7 @@
 {
   "name": "quoli",
   "private": true,
-  "version": "0.2.9",
+  "version": "0.3.0",
   "type": "module",
   "packageManager": "pnpm@11.28.9",
   "engines": {
@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "test": "node --import tsx --test tests/*.test.ts",
+    "test": "node --import tsx --import ./tests/isolate.ts --test tests/*.test.ts",
     "landing": "node --import tsx server/main.ts --landing",
     "pack:release": "node scripts/pack.mjs",
     "build:site": "node scripts/pack.mjs && npm pack ./release --pack-destination release && QUOLI_BUILD=landing vite build && cp release/iceq-quoli-$npm_package_version.tgz dist/quoli-$npm_package_version.tgz && cp dist/quoli-$npm_package_version.tgz dist/quoli.tgz && cp release/quoli.json dist/quoli.json"

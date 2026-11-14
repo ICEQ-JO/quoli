@@ -5,6 +5,7 @@ import {
   useCallback,
   useSyncExternalStore,
 } from "react";
+import { BASE } from "./host.ts";
 import type { Lens, Selection } from "./state.ts";
 
 /** A tiny History API router: real URLs, real links, back/forward and reload all work. */
@@ -127,12 +128,14 @@ const subscribe = (cb: () => void) => {
     window.removeEventListener(CHANGE, cb);
   };
 };
-const snapshot = () => location.pathname + location.search;
+/** The app's own paths never include where the site mounts it (BASE, see host.ts). */
+const snapshot = () => (location.pathname.slice(BASE.length) || "/") + location.search;
+const href = (to: string) => (to.startsWith("/") ? BASE + to : to);
 
 export function navigate(to: string, opts: { replace?: boolean } = {}) {
   if (to === snapshot()) return;
-  if (opts.replace) history.replaceState(null, "", to);
-  else history.pushState(null, "", to);
+  if (opts.replace) history.replaceState(null, "", href(to));
+  else history.pushState(null, "", href(to));
   window.dispatchEvent(new Event(CHANGE));
 }
 
@@ -163,7 +166,7 @@ export function Link(props: {
     "a",
     {
       ...rest,
-      href: to,
+      href: href(to),
       onClick: (e: MouseEvent<HTMLAnchorElement>) => {
         onClick?.();
         if (

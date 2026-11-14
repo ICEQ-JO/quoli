@@ -114,7 +114,12 @@ server.on("error", (error: NodeJS.ErrnoException) => {
   process.exit(1);
 });
 server.listen(PORT, HOST, () => {
-  console.log(`\n  Quoli → http://${HOST}:${PORT}${landing ? "/landing/" : ""}\n`);
+  if (landing) console.log(`\n  Quoli → http://${HOST}:${PORT}/landing/\n`);
+  else
+    console.log(
+      `\n  Quoli is running. Open https://iceq.best/studio/${PORT === 4400 ? "" : ` (port ${PORT})`}\n` +
+        `  (or this computer's own page: http://${HOST}:${PORT})\n`,
+    );
   if (!landing && !store.roots().length && HOOK_AGENTS.some(isSetUp)) {
     console.log(
       `  No sessions yet: start your coding agent ${
