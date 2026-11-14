@@ -171,6 +171,10 @@ Quoli is an early-stage project. Phase 1 (the MVP) is largely built, and phase 3
 - **Deeper observability:** per-step cost and time, failures and loops, cross-session trends, live alerts;
 - **Later phases:** symbol-level code maps, live hosting-provider data, and opt-in team sharing.
 
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
 ## License
 
 Quoli is free and open source under the [MIT license](LICENSE).
