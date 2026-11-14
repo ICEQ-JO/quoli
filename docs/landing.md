@@ -120,6 +120,16 @@ The form reports success only after the address is stored; otherwise it shows a 
 
 - `vercel.json` builds with `QUOLI_BUILD=landing pnpm build`, which uses only the landing entry, serves `dist/` and redirects `/` to `/landing/`. The local app and the evidence server are never deployed.
 - No analytics are included, and no automatic email is sent.
+- To use your own domain, add it under the Vercel project's **Settings → Domains**.
+
+Optional settings (Vercel → Settings → Environment Variables, then redeploy):
+
+| Variable | What it does |
+| --- | --- |
+| `VITE_PUBLIC_CONTACT_EMAIL` | The address behind "Get in touch" in the team section and the footer's Contact link. |
+| `VITE_PUBLIC_SITE_URL` | The site's address for link previews. On Vercel the production domain is used automatically. |
+
+The waitlist (now "Get updates") needs **Storage → Upstash for Redis** connected to the project, which provides `KV_REST_API_URL` and `KV_REST_API_TOKEN`. Signups are in the Redis hash `quoli:waitlist`. Preview the site locally with `QUOLI_HOME=/tmp/quoli-landing-preview QUOLI_PORT=4473 pnpm landing` and open http://127.0.0.1:4473/landing/.
 
 Before sending launch updates, the operator still needs to:
 - publish a contact address for removal requests (setting `VITE_PUBLIC_CONTACT_EMAIL` shows one in the developer/team section and footer);

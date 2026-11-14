@@ -1,180 +1,136 @@
+<div align="center">
+
+<img src="docs/assets/logo.svg" width="88" height="88" alt="Quoli logo">
+
 # Quoli
 
-**One visual map of what your coding agents did.**
+**See what your coding agents did.**
 
-Coding agents such as Claude Code read files, run commands, edit code, spend tokens and commit to branches. Today that trail is scattered across terminal scrollback, Git diffs, cloud consoles and billing pages. Quoli records it as it happens and draws it on one board. You can see what the agent did, where in the code it happened, which branch and commits it produced, and which services run that code. You can also see what it cost and what deserves a review.
+One visual map of every Claude Code, Codex, OpenCode and Pi session: what it changed, what it ran, what failed, what it cost, and where it happened in your code, Git and infrastructure. Local-first: your prompts and code never leave your computer.
 
-Everything runs locally. Nothing leaves your machine.
+[**Open the app**](https://app.iceq.best) · [Website](https://iceq.best) · [Get started](#get-started) · [How it works](#how-it-works) · [Docs](docs/architecture.md)
 
-## What works today
+[![MIT license](https://img.shields.io/badge/license-MIT-477da8)](LICENSE)
+![macOS, Windows, Linux](https://img.shields.io/badge/runs%20on-macOS%20%7C%20Windows%20%7C%20Linux-477da8)
+![Node.js 22.13+](https://img.shields.io/badge/node-%E2%89%A522.13-477da8)
+![Claude Code, Codex, OpenCode, Pi](https://img.shields.io/badge/agents-Claude%20Code%20%7C%20Codex%20%7C%20OpenCode%20%7C%20Pi-477da8)
 
-**Pages**
-- **Dashboard:** spend today, this week and this month, plus live sessions, sessions that need a review, recent sessions and projects.
-- **Sessions:** every recorded session across projects, with filters (project, agent, status, failures).
-- **Usage:** spend over time, by model and by project; how much prompt caching saved; the most expensive sessions; optional daily and monthly budgets.
-- **Live sessions:** the Dashboard and the sidebar show what each running agent is doing right now, for how long, and what it has spent (also in the last 10 minutes). Optional local alerts (Settings → Alerts, off by default) tell you when a session passes a cost, the daily budget is reached, a possible loop appears, a session goes quiet or ends, in Quoli and optionally as a system notification.
-- **Insights:** is it getting better or worse? Sessions per day, median and 90th-percentile cost per session, failure rate, tool mix, session length and possible loops, by agent and model. Click a day to see its sessions.
-- **Projects and Settings:** record every repository with one setup (or connect one), current model prices from models.dev with your own edits on top, data retention and redaction, the theme.
+<img src="web/public/landing/product/dashboard.jpg" alt="The Quoli dashboard: spend today and this month, the live session, sessions that need a review and recent sessions" width="900">
 
-**One board per project, with five lenses on the same selection**
+</div>
 
-| Lens | Answers |
-| --- | --- |
-| **Summary** | What was asked, what changed, what ran, where the time and money went (per prompt, and the slowest calls), the MCP servers, skills and subagents it called, possible loops (a command failing again and again, a file edited over and over), what it cost, and a checklist of things worth reviewing. |
-| **Agents** | What did the agent do? Every tool call in order, with full commands, results, subagents and failures. There is a step list and a lane graph. |
-| **Code** | Where did it happen? A change map: the files the session changed in the middle, the files they import on the left, the files that import them on the right. Click a file for its code and diff. |
-| **Git** | Which branch and commits? The local repository's history and branches, marked as pushed or local-only. Commits created during a session are tagged with it. |
-| **Infra** | Where does it run? Services declared in the repo's config files (Docker Compose, Vercel, Fly, Railway, Terraform and others), live CPU and memory for local Docker containers, and CI pipelines listed separately. You can also add any hosted service by hand. |
+## Why
 
-A replay bar steps through any session call by call, and every lens follows along.
+Coding agents read files, run commands, edit code, spend tokens and commit to branches. That trail ends up scattered across terminal scrollback, Git diffs, cloud consoles and billing pages. Quoli records it as it happens and puts it on one board, so you can answer the questions that matter before you merge:
 
-**Honest by design:** every fact is marked as recorded, derived or inferred. Unknown values stay empty, and costs are estimates at list prices, not invoices.
+- **What did the agent actually do?** Every prompt, tool call, command, result, subagent and failure, in order.
+- **What did it change, and is it safe?** The files it touched, ranked by risk, with the diff and the tests that ran (or didn't) after each edit.
+- **What did it cost?** Spend per session, prompt, model and project, live while it runs.
+- **Where does that land?** The branch and commits it produced and the services that run the code.
 
-**Supported agents:** Claude Code, Codex, OpenCode (version 2) and Pi.
+## Get started
 
-## Try it in two minutes
-
-Requires Node 24 (Node 22.13+ also works) and pnpm.
-
-```sh
-pnpm install
-pnpm demo                 # synthetic demo project: Claude Code, Codex, OpenCode and Pi sessions
-```
-
-Open http://127.0.0.1:4400.
-
-For a bigger example (about 2,400 files, 560+ commits, and a session with 500+ tool calls and subagents), run:
-
-```sh
-QUOLI_HOME=/tmp/quoli-demo QUOLI_PORT=4471 pnpm demo -- --large
-```
-
-Then open http://127.0.0.1:4471. The demo data is fully synthetic and needs no API keys.
-
-## Install
+You need [Node.js 22.13 or newer](https://nodejs.org) and one of the supported agents.
 
 ```sh
 npx https://iceq.best/quoli.tgz
 ```
 
-One command, run inside the project you work on. The first time, it asks whether to record only that project or every project on this computer (`--here` / `--all` answer without asking), offers to link your Quoli account, and starts Quoli in the background, where it starts again by itself at every login (a systemd user service on Linux, a LaunchAgent on macOS, a script in the Startup folder on Windows; `stop` stops it until the next login, `--foreground` runs it in the terminal instead). Open it at [app.iceq.best](https://app.iceq.best): the page reads Quoli on your computer straight from your browser, so nothing is uploaded (your browser may ask to allow that once; `http://127.0.0.1:4400` is the same app without the website). After that the same command just starts Quoli; run inside a project that is not recorded, it offers to add it. Projects → Stop recording leaves a project out again.
+Run it **inside the project you work on**. It asks whether to record only this project or every project, sets up your agents' hooks, and starts Quoli in the background, where it starts again at every login. Then open **[app.iceq.best](https://app.iceq.best)** and use your agent as usual: sessions appear live.
 
-You do not need to keep Quoli open: the agents' hooks keep recording with the terminal closed, and a linked account keeps receiving summaries (the agents start a short `quoli sync` that exits by itself). Linking opens your browser to sign in at [iceq.best/app](https://iceq.best/app/) and approve the code it shows; your prompts and code stay on your machine, and only session summaries reach your account. `connect` links (or re-links) an account later; `setup --remove` stops recording and takes Quoli out of every agent. Needs Node.js 22.13 or newer.
-
-`quoli.tgz` is a permanent link: `npx` keeps the first copy it downloads from a link, so on start the package reads the newest version number from `iceq.best/quoli.json` and hands over to `quoli-<version>.tgz` when it is newer (`QUOLI_NO_UPDATE_CHECK=1` turns that off). The package is served from the website for now; it will also be on npm as `@iceq/quoli` (the plain name `quoli` was refused as too close to `quill`). It contains only the built app (`pnpm pack:release` makes it in `release/`; see [docs/architecture.md](docs/architecture.md)). From a clone of this repository, use the `pnpm` commands below instead.
-
-## Use it with your own repositories
-
-```sh
-pnpm quoli-setup        # once: records every repository, for each agent found on this machine
-pnpm dev                # start Quoli on http://127.0.0.1:4400
-cd any/repo && claude   # or codex, opencode, pi: sessions appear live
-```
-
-`pnpm quoli-setup` (or **Projects → Record every repository → Set up** in the app) installs Quoli once per agent in that agent's own user-level location:
-
-| Agent | File |
+| | |
 | --- | --- |
-| Claude Code | `~/.claude/settings.json` (Quoli's hooks are added; your other settings and hooks are kept) |
-| Codex | `~/.codex/hooks.json` (or `$CODEX_HOME`); run `codex` once and approve Quoli's hooks with `/hooks` |
-| OpenCode | `~/.config/opencode/plugins/quoli.js` |
-| Pi | `~/.pi/agent/extensions/quoli.ts` (or `$PI_CODING_AGENT_DIR`) |
+| Stop Quoli until the next login | `npx https://iceq.best/quoli.tgz stop` |
+| Run it in the terminal instead | `npx https://iceq.best/quoli.tgz --foreground` |
+| Stop recording and remove it from every agent | `npx https://iceq.best/quoli.tgz setup --remove` |
+| Delete the recorded data | remove the `.quoli` folder in your home folder |
+| Everything else | `npx https://iceq.best/quoli.tgz --help` |
 
-After that, any repository you open with those agents appears under Projects on its first session, named by its GitHub repository when it has one. Sessions run while Quoli is closed are queued in `~/.quoli/spool.jsonl` and recorded when Quoli next starts. `pnpm quoli-setup codex pi` sets up only the agents named; `pnpm quoli-setup --remove` takes all of it out again. A plugin or extension file Quoli did not write is never touched.
+Your browser may ask once whether app.iceq.best may reach this device: allow it, since that is how the page reads Quoli on your computer. `http://127.0.0.1:4400` is the same app without the website.
 
-### Connecting one repository instead
+**Just looking?** Try the synthetic demo from a clone, no agent or API key needed:
 
 ```sh
-pnpm connect /path/to/your/repo   # adds Quoli's hooks to <repo>/.claude/settings.local.json
+pnpm install && pnpm demo     # then open http://127.0.0.1:4400
 ```
 
-For Codex, run `pnpm connect /path/to/your/repo --agent codex`, then start `codex` in the repo and approve Quoli's hooks with `/hooks` (Codex runs project hooks only once you trust them). The hook file, `.codex/hooks.json`, is kept out of Git. Hosted tools such as Codex's web search don't fire hooks, so they don't appear.
+## One board, six lenses
 
-For OpenCode, run `pnpm connect /path/to/your/repo --agent opencode`. That installs a small plugin as `.opencode/plugins/quoli.js` (kept out of Git), which OpenCode loads the next time it starts in that repo.
+Every project gets one board. Pick a session and six lenses show the same work from different sides; a replay bar steps through the session call by call and every lens follows along.
 
-For Pi, run `pnpm connect /path/to/your/repo --agent pi`. That installs a small extension as `.pi/extensions/quoli.ts` (kept out of Git), which Pi loads the next time it starts in that repo.
+| | |
+| --- | --- |
+| <img src="web/public/landing/product/agents.jpg" alt="Agents lens: each tool call of a session in order, with a failed test highlighted"> | <img src="web/public/landing/product/review.jpg" alt="Review lens: changed files ranked by risk, with the diff and the commands that ran after each edit"> |
+| **Agents:** every tool call in order, with full commands, results, subagents and failures, as steps or lanes. | **Review:** the files a session changed, ranked by risk, each with its diff, the prompt that asked for it and what ran afterwards. |
+| <img src="web/public/landing/product/git.jpg" alt="Git lens: branch history with commits made by a session marked"> | <img src="web/public/landing/product/infra.jpg" alt="Infra lens: services from the repository's config files, with live status for local Docker containers"> |
+| **Git:** branches and commits, pushed or local-only; commits a session created are marked. | **Infra:** services declared in the repo (Docker Compose, Vercel, Fly, Terraform and more), live CPU and memory for local containers, CI pipelines. |
 
-You can also connect a repository from **Projects → Connect** in the app and choose the agents there. `pnpm connect /path/to/your/repo --remove` (with `--agent codex`, `opencode` or `pi`) removes them again.
+Plus **Summary** (what was asked, changed, run and spent, and a review checklist) and **Map** (the code a session touched, with what it imports and what imports it).
 
-Press `?` in the app for all keyboard shortcuts. The main ones:
-- `1`–`5` switch lenses;
-- `Ctrl/⌘ K` searches files, tool calls, sessions and pages;
-- `Esc` clears the selection;
-- `←`/`→` on the replay bar step through a session.
+Across projects: **Dashboard** (spend, live sessions, what needs review), **Sessions** (every session, filterable), **Usage** (spend by model and project, cache savings, budgets), **Insights** (cost and failure trends, possible loops) and optional **alerts** when a session passes a cost or seems stuck.
 
-## Classes
+**Honest by design.** Every fact is marked as recorded, derived or inferred. Unknown values stay empty instead of becoming a made-up zero, and costs are estimates at list prices, not invoices.
 
-Sign in with GitHub at [iceq.best/app](https://iceq.best/app/) to create or join a team (a class, a company, a group of friends). Members opt in from Settings → Team sync, and only session summaries are shared (never prompts or code); the team owner sees how the team uses coding agents. Setup: [docs/teams.md](docs/teams.md).
+## How it works
+
+```mermaid
+flowchart LR
+  A["Your coding agent<br/>Claude Code · Codex · OpenCode · Pi"] -- "hook events" --> Q["Quoli on your computer<br/>127.0.0.1 · data in ~/.quoli"]
+  Q -- "reads Git, config files, Docker" --> R[("Your repositories")]
+  B["app.iceq.best<br/>in your browser"] -- "reads directly from your computer" --> Q
+  Q -. "optional: session summaries only" .-> T["Your team (opt-in)"]
+```
+
+1. Quoli installs a small hook (or plugin) into each agent. The agent calls it on every prompt, tool call and result; the hook hands the event to Quoli on your computer and never blocks or changes what the agent does.
+2. Quoli stores events in a local database and derives sessions, costs, changes and review items from them, reading Git and your config files when needed.
+3. The app at app.iceq.best runs in your browser and reads Quoli **straight from your computer**. The website only serves the page; your sessions never pass through it.
 
 ## Privacy
 
-- All data stays on your machine, in `~/.quoli` (override with `QUOLI_HOME`). The server listens only on `127.0.0.1`.
-- Prompts and tool input and output are stored locally so you can read them. Common credential formats are redacted before anything is stored.
-- Quoli observes passively: it never blocks, steers or replays the agent.
-- The only outbound request is a once-a-day GET of the public model price list at models.dev, which sends nothing about you. Turn it off in Settings → Prices.
+- Everything is stored on your computer in `~/.quoli`. Quoli listens only on `127.0.0.1`, and only the Quoli website may read it from a browser.
+- Common secrets (API keys, tokens) are redacted before anything is stored. Redaction is best-effort.
+- Outbound requests: a version check at iceq.best when Quoli starts (`QUOLI_NO_UPDATE_CHECK=1` turns it off) and a daily download of public model prices from models.dev (Settings → Prices). Nothing else, unless you link an account and turn on Team sync, which shares session summaries (agent, model, repository, branch, counts, estimated spend), never prompts, code, commands or file paths.
+- Quoli observes passively: it never blocks, steers or replays an agent.
 
-## Landing page
+Found a security problem? Please report it privately: see [SECURITY.md](SECURITY.md).
 
-The public website lives in `web/landing/` and `web/src/landing/`, separate from the app. It is an animated pixel page with an interactive, synthetic product example, plus Mission, Roadmap and Privacy pages and a waitlist form.
+## Teams and classes
 
-To preview it locally:
+Sign in at [iceq.best/app](https://iceq.best/app/) to create or join a team: a class, a company or a group of friends. Members opt in from Settings → Team sync, and the team sees how it uses coding agents through session summaries only. Setup: [docs/teams.md](docs/teams.md).
 
-```sh
-QUOLI_HOME=/tmp/quoli-landing-preview QUOLI_PORT=4473 pnpm landing
-```
+## Develop
 
-Then open http://127.0.0.1:4473/landing/.
-
-### Deploying it to Vercel
-
-`vercel.json` is ready. Import the repository in Vercel and deploy. The build (`QUOLI_BUILD=landing pnpm build`) publishes **only** the landing page; the local app is never deployed. `/` redirects to `/landing/`.
-
-The waitlist form posts to a Vercel Function, `api/waitlist.ts`, which stores email addresses in Redis. To turn it on:
-1. In the Vercel project, open **Storage** (Marketplace) and add **Upstash for Redis**, connected to the project. It provides `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
-2. Redeploy.
-
-Until a database is connected, the form says "The waitlist isn't open yet", and it never claims to have saved an address. Signups live in the Redis hash `quoli:waitlist` (email → joined time). You can read them in the Upstash console.
-
-Optional settings (Vercel → Settings → Environment Variables, then redeploy):
-
-| Variable | What it does |
-| --- | --- |
-| `VITE_PUBLIC_CONTACT_EMAIL` | The address behind "Get in touch" in the Collaborate section and the footer's Contact link. Without it, the button points to the waitlist. |
-| `VITE_PUBLIC_SITE_URL` | Your site's address, for example `https://quoli.dev`, used for link previews. On Vercel the production domain is picked up automatically, so this is only needed elsewhere. |
-| `VITE_PUBLIC_REPO_URL` | Shows the Docs and GitHub links. The repository is private for now, so leave it unset until it is public. |
-
-To use your own domain, add it under the Vercel project's **Settings → Domains** and follow the DNS instructions there; the redirect from `/` to `/landing/` works on any domain.
-
-See [docs/landing.md](docs/landing.md) for the design, motion and launch notes.
-
-## Development
+Node.js 24 (22.13+ works) and pnpm.
 
 ```sh
-pnpm dev          # server + UI with hot reload
-pnpm test         # unit and API tests
-pnpm typecheck
-pnpm lint
-pnpm build        # app + landing
+pnpm install
+pnpm demo               # synthetic demo project on http://127.0.0.1:4400
+pnpm dev                # the app against your real data, with hot reload
+pnpm test               # unit and API tests
+pnpm typecheck && pnpm lint
+pnpm build              # app + website
 ```
+
+A larger synthetic example (about 2,400 files, 560+ commits, a 500-call session):
+
+```sh
+QUOLI_HOME=/tmp/quoli-demo QUOLI_PORT=4471 pnpm demo -- --large
+```
+
+To record your own repositories from a clone, run `pnpm quoli-setup` once (installs Quoli for every agent it finds; `--remove` undoes it) and then `pnpm dev`. To connect a single repository instead, use `pnpm connect /path/to/repo` (add `--agent codex`, `opencode` or `pi`). Where each agent's hook lives, and how the website and package are built and deployed, is in [docs/architecture.md](docs/architecture.md) and [docs/landing.md](docs/landing.md).
 
 ## Documentation
 
 - [Product vision and roadmap](docs/vision.md)
-- [Architecture, decisions and limitations](docs/architecture.md)
+- [Architecture, decisions and known limitations](docs/architecture.md)
 - [HTTP API](docs/api.md)
-- [App design system](DESIGN.md) and [landing design system](docs/landing-design.md)
-- [Working agreements for contributors and agents](AGENTS.md)
+- [App design system](DESIGN.md) and [website design](docs/landing-design.md)
+- [Website, waitlist and deployment](docs/landing.md)
 
-## Status
+## Contributing
 
-Quoli is an early-stage project. Phase 1 (the MVP) is largely built, and phase 3 now records Codex, OpenCode and Pi alongside Claude Code. Next on the roadmap:
-- **Deeper observability:** per-step cost and time, failures and loops, cross-session trends, live alerts;
-- **Later phases:** symbol-level code maps, live hosting-provider data, and opt-in team sharing.
-
-## Contributing and security
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) to get set up; [AGENTS.md](AGENTS.md) holds the working agreements for coding agents working in this repository.
 
 ## License
 
-Quoli is free and open source under the [MIT license](LICENSE).
+[MIT](LICENSE). Free to use, change and share.
