@@ -1,4 +1,4 @@
-# Quoli journal — Phase 1
+# Quoli research & insights — Phase 1
 
 Issue [#182](https://github.com/ICEQ-JO/quoli/issues/182), built on the landing identity
 in #159 / PR #160. This is a public editorial surface, separate from private evidence.
@@ -65,3 +65,26 @@ material fixes were confirmed resolved; it did not independently verify research
 
 Owner editorial/visual approval and real screen-reader testing remain outstanding.
 No publishing or merge is implied by this implementation.
+
+## Owner refresh — 2026-11-14 (#197)
+
+The visitor-facing name is **Research & insights** (Research in the compact main
+navigation). Existing `/journal/` article URLs remain stable. The header, hero,
+footer and an illustrated preview immediately after the product tour link here.
+These remain source-backed perspectives, not customer case studies.
+
+The product tour now uses six screenshots explicitly supplied and authorized by
+the owner for public marketing: Review, Agents, Git, Infra, Sessions and Dashboard.
+The Dashboard and Sessions captures also illustrate the spending and investigation
+sections; their captions distinguish these screens from the app’s Usage and
+Insights views. These captures include owner-visible app data and code; no session
+store was accessed or uploaded. Original editorial/pixel artwork is preserved.
+
+Refresh validation: typecheck, lint (one existing MapLens unused-import warning),
+the three focused research/screenshot tests and `build:site` passed. Browser checks
+covered all six screenshots and their dimensions, hero-to-index-to-article links,
+light/dark at 390/760/1440px, and visible mobile Research navigation at 320px with
+no horizontal overflow. Lossless WebP captures match the supplied PNGs pixel for
+pixel. The full suite has 183 passing and 14 failing tests; unchanged main at
+`8dc66ff` has the identical 14 ingestion/sync failures (182 passing). No baseline
+backend or test-fixture changes are included in this marketing refresh.

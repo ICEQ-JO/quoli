@@ -23,52 +23,49 @@ const lenses = [
   ["Infra", "See the services your repository declares and how they connect."],
 ] as const;
 
-/**
- * Real screenshots of the app running its built-in synthetic demo (`pnpm demo --large`).
- * Each view's id names its image: /landing/product/<id>-<light|dark>.webp.
- */
+/** Owner-supplied product captures, approved for public marketing use (#197). */
 const views = [
   {
-    id: "summary",
+    id: "review",
     name: "Review",
-    line: "What it was asked, what changed, what ran, what it cost.",
+    line: "Changed files, exact diffs and a review checklist.",
     caption:
-      "One page per session: the prompts, recorded file edits with line counts, commands with their exit status, and an estimated cost by model.",
+      "Review changed files beside their Git diff, recorded agent edits or source. Sort by risk, size or path and track what you have reviewed.",
   },
   {
     id: "agents",
     name: "Agents",
-    line: "Recorded steps, subagents and failures.",
+    line: "Prompts, recorded steps, subagents and failures.",
     caption:
-      "The session in order. Subagents nest under the call that started them, failures are marked, and the strip at the bottom replays it step by step.",
-  },
-  {
-    id: "code",
-    name: "Code",
-    line: "Changed files, and the code around them.",
-    caption:
-      "Files the agent changed glow orange; files it only read are outlined blue. Import edges show what the change depends on and what depends on it.",
+      "Follow prompts and tool calls in order, filter failures, edits, commands or subagents, and use the replay strip to inspect the session over time.",
   },
   {
     id: "git",
     name: "Git",
-    line: "The branch and commits it worked on.",
+    line: "Branches, commits and uncommitted changes.",
     caption:
-      "Read from your local repository with git: branches, commits and the uncommitted changes the session left behind.",
+      "Read local Git history with branch lanes, commit messages and session markers. Remote references reflect the last fetch.",
   },
   {
     id: "infra",
     name: "Infra",
-    line: "Where the changed code runs.",
+    line: "Services, dependencies and local Docker status.",
     caption:
-      "Services declared in compose files, workflows and platform configs, plus any you add by hand. Hosted providers are shown as not connected, because they aren't yet.",
+      "Explore services declared in the repository, inferred connections and local Docker metrics. Hosted providers stay marked as not connected until connected support is available.",
+  },
+  {
+    id: "sessions",
+    name: "Sessions",
+    line: "Recorded work across projects and agents.",
+    caption:
+      "Search recorded sessions by title or branch, filter by project, agent, status or failure signals, and compare reported usage and estimated cost.",
   },
   {
     id: "dashboard",
     name: "Dashboard",
-    line: "What's running, what needs review, what it cost.",
+    line: "Live work, review signals and estimated spend.",
     caption:
-      "Across every connected repository: live sessions, sessions worth reviewing, and estimated spend over the last two weeks.",
+      "See estimated spend, live sessions, work that needs review and recent activity across connected projects. Unpriced usage is called out separately.",
   },
 ] as const;
 
@@ -158,15 +155,7 @@ function Terminal({
   );
 }
 
-function ProductTour({
-  dark,
-  view,
-  onView,
-}: {
-  dark: boolean;
-  view: number;
-  onView: (i: number) => void;
-}) {
+function ProductTour({ view, onView }: { view: number; onView: (i: number) => void }) {
   const current = views[view];
   return (
     <div className="tour">
@@ -205,7 +194,7 @@ function ProductTour({
       <div className="board-frame">
         <PixelScene kind="field" />
         <div id="tour-panel" role="tabpanel" aria-labelledby={`tour-tab-${current.id}`}>
-          <ProductScreenshot screen={current} dark={dark} />
+          <ProductScreenshot screen={current} />
         </div>
       </div>
     </div>
@@ -242,7 +231,7 @@ function SiteFooter() {
         </div>
         <div className="footer-column">
           <h3>Resources</h3>
-          <a href="/journal/">Journal</a>
+          <a href="/journal/">Research &amp; insights</a>
           <a href="/landing/#product">Product tour</a>
           <a href="/landing/#collaborate">For developers &amp; teams</a>
           <a href="/landing/?page=privacy">Privacy</a>
@@ -498,7 +487,7 @@ export function Landing() {
   const [step, setStep] = useState(0);
   const [replay, setReplay] = useState(0);
   const [view, setView] = useState(0);
-  // Lens links point at their tab in the product tour (#tour-tab-code); select it on arrival.
+  // Lens links point at their tab in the product tour (#tour-tab-review); select it on arrival.
   useEffect(() => {
     const pick = () => {
       const i = views.findIndex((v) => location.hash === `#tour-tab-${v.id}`);
@@ -524,8 +513,8 @@ export function Landing() {
   useEffect(() => {
     document.title = journal
       ? article
-        ? `${article.title} — Quoli Journal`
-        : "Journal — Quoli"
+        ? `${article.title} — Quoli Research`
+        : "Research & insights — Quoli"
       : page === "mission"
         ? "Our mission — Quoli"
         : page === "roadmap"
@@ -558,7 +547,7 @@ export function Landing() {
             <a href="/landing/#product">Product</a>
             <a href="/landing/#collaborate">For teams</a>
             <a href="/journal/" aria-current={journal ? "page" : undefined}>
-              Journal
+              Research
             </a>
             <a href="/landing/?page=roadmap">Roadmap</a>
             <a href="/landing/?page=mission">Mission</a>
@@ -605,6 +594,9 @@ export function Landing() {
               <small>
                 Claude Code, Codex, OpenCode and Pi. Local detail. Opt-in team summaries.
               </small>
+              <a className="hero-research-link" href="/journal/">
+                Why agent review needs context: research &amp; insights <Arrow diagonal />
+              </a>
             </div>
             <div className="hero-art">
               <PixelScene kind="forest" />
@@ -627,7 +619,7 @@ export function Landing() {
             <ul>
               {lenses.map(([name, line]) => (
                 <li key={name}>
-                  <a href={`#tour-tab-${name.toLowerCase()}`}>
+                  <a href={`#tour-tab-${name === "Code" ? "review" : name.toLowerCase()}`}>
                     <svg viewBox="0 0 20 20" aria-hidden="true">
                       <path d={LENS_ICONS[name]} fill="currentColor" fillRule="evenodd" />
                     </svg>
@@ -739,12 +731,13 @@ export function Landing() {
                 <PixelScene kind="signal" />
               </div>
             </div>
-            <ProductTour dark={dark} view={view} onView={setView} />
+            <ProductTour view={view} onView={setView} />
             <p className="tour-note">
-              Every screen above is Quoli running its built-in synthetic demo: no real sessions, no
-              real company. Unknown values stay unknown, and inferred ones are labelled.
+              Quoli in use. Costs are estimates, not invoices. Unknown values stay unknown, and
+              inferred connections are labelled.
             </p>
           </section>
+          <JournalTeaser />
           <section className="workflow-section" id="usage" aria-labelledby="usage-title">
             <div className="workflow-copy">
               <h2 id="usage-title">
@@ -779,13 +772,11 @@ export function Landing() {
             <div className="board-frame">
               <PixelScene kind="field" />
               <ProductScreenshot
-                dark={dark}
-                webp={false}
                 screen={{
-                  id: "usage",
-                  name: "Usage",
+                  id: "dashboard",
+                  name: "Dashboard",
                   caption:
-                    "The real Usage page running synthetic sessions: daily spend, model and project breakdowns, cache usage and the most expensive runs.",
+                    "The Dashboard brings estimated spend, unpriced usage and live-session costs together. Open Usage in the app for model, project and cache breakdowns.",
                 }}
               />
             </div>
@@ -828,13 +819,11 @@ export function Landing() {
             <div className="board-frame">
               <PixelScene kind="field" />
               <ProductScreenshot
-                dark={dark}
-                webp={false}
                 screen={{
-                  id: "insights",
-                  name: "Insights",
+                  id: "sessions",
+                  name: "Sessions",
                   caption:
-                    "The real Insights page with synthetic data: session trends, failure rate, possible loops and the mix of tools used. This is a demonstration, not a performance benchmark.",
+                    "The Sessions list lets you filter for failures and possible loops, then open the recorded work. Insights in the app provides the aggregate trends.",
                 }}
               />
             </div>
@@ -1000,7 +989,6 @@ export function Landing() {
             </ol>
           </section>
           <FieldGuide />
-          <JournalTeaser />
           <section className="waitlist-section" id="waitlist" aria-labelledby="waitlist-title">
             <div>
               <h2 id="waitlist-title">

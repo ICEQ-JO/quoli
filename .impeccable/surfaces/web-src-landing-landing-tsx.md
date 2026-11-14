@@ -18,3 +18,9 @@ Design tokens and material: docs/landing-design.md. Implementation: web/src/land
 Owner positioning: Quoli is proprietary, built for developers and engineering teams. No student/research/open-source pitch or public source-repository links. Explain review context, usage/cost and current team summary sharing; prompts, source code, commands and tool output stay local.
 
 Content draft: full narrative now covers the problem, recorded review, four lenses, Usage/estimated spend, Insights/failures/loops, team summaries, evidence/privacy boundaries, setup and seven FAQs. New figures use the real synthetic demo, not fabricated metrics. The November 13 owner review replaces the square desk and optical rail with an original signal-valley world: inhabited mountain scenery, four observatory rooms and an archive field guide. The FAQ is a single-open animated accordion. Remove the floating Pause motion control; scenery runs while visible and still respects device reduced-motion preferences. Footer links and hover states must remain light and readable in both themes.
+
+2026-11-14 owner refinement (#197): use the six supplied Review/Agents/Git/Infra/
+Sessions/Dashboard captures at native 16:9, preserving their actual theme. The
+owner authorized their public display; this does not authorize accessing private
+session stores. Keep pixel artwork. Research & insights replaces the public Journal
+label, with compact Research navigation, a hero link and an early illustrated preview.

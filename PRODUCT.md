@@ -78,3 +78,9 @@ must not link to the private source repository or suggest an open-source project
 Use a square animated workspace with an outdoor view, and the requested rounded
 contour-art footer and large mission link in the established blue identity. This
 supersedes the previous flat footer and small mission-link direction.
+
+Owner screenshot refresh (2026-11-14, #197): the six captures supplied directly by
+the owner are approved for public marketing, including their visible app data and
+code. This is an explicit exception for those assets only; never read or upload
+private session stores. Research & insights is the visitor-facing name of the
+editorial section. Its existing `/journal/` URLs remain stable.

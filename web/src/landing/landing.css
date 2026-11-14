@@ -760,7 +760,7 @@ main {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   animation: tour-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tour-window figcaption {
@@ -785,7 +785,7 @@ main {
   outline-offset: -4px;
 }
 .tour-missing {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   display: grid;
   place-content: center;
   justify-items: center;
@@ -1154,10 +1154,19 @@ main {
     gap: 10px;
   }
   .nav-inner nav {
+    display: flex;
+  }
+  .nav-inner nav a:not([href="/journal/"]) {
     display: none;
   }
+  .nav-inner nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 13px;
+  }
   .theme-toggle {
-    margin-left: auto;
+    flex-shrink: 0;
   }
   .brand {
     font-size: 32px;
@@ -2058,4 +2067,19 @@ main {
   .sigil-vertical {
     transition: none;
   }
+}
+
+.hero-research-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.6;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.hero-research-link:hover {
+  color: var(--brand);
 }

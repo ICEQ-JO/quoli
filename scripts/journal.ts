@@ -14,10 +14,10 @@ const escapeHtml = (text: string) =>
     .replaceAll(">", "&gt;");
 export function renderJournalPage(template: string, pathname: string, site: string) {
   const article = articleAt(pathname);
-  const title = article ? `${article.title} — Quoli Journal` : "Journal — Quoli";
+  const title = article ? `${article.title} — Quoli Research` : "Research & insights — Quoli";
   const description =
     article?.description ??
-    "Research and field notes on coding agents, review and the evidence between them.";
+    "Studies and perspectives on coding agents, review, trust and the work after generation.";
   const url = `${site}${pathname}`;
   let html = template
     .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(title)}</title>`)
