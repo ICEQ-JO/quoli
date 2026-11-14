@@ -103,8 +103,8 @@ One local map of what your coding agents did: every Claude Code, Codex, OpenCode
 what it changed, what it cost, what failed and where it looped.
 
 \`\`\`sh
-npx https://iceq.best/quoli.tgz   # first time: choose what to record, link your account, start
-                                  # after that: open http://127.0.0.1:4400
+npx https://iceq.best/quoli.tgz   # choose what to record, link your account, and run Quoli in
+                                  # the background (it starts at login); then open app.iceq.best
 \`\`\`
 
 - Requires Node.js 22.13 or newer.

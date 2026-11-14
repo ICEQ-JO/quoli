@@ -45,8 +45,9 @@ export function installSyncCommand() {
   if (bundled()) {
     const app = join(home(), "app");
     rmSync(app, { recursive: true, force: true });
-    for (const part of ["server", "package.json"]) {
-      cpSync(join(appRoot, part), join(app, part), { recursive: true });
+    for (const part of ["server", "dist", "package.json"]) {
+      if (existsSync(join(appRoot, part)))
+        cpSync(join(appRoot, part), join(app, part), { recursive: true });
     }
   }
   writeFileSync(syncCommandFile(), `${JSON.stringify(syncCommand(), null, 2)}\n`);

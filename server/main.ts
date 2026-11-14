@@ -61,6 +61,19 @@ const server = createServer(async (req, res) => {
     res.writeHead(307, { Location: `${url.pathname}/${url.search}` });
     return res.end();
   }
+  if (url.pathname === "/api/shutdown" && req.method === "POST") {
+    // `quoli` asks a running copy to exit before it starts the background one (server/autostart.ts).
+    // Only Quoli's own origin: neither the website nor any other page may stop it.
+    const own = [`http://${HOST}:${PORT}`, `http://localhost:${PORT}`];
+    if (
+      !own.includes(req.headers.origin ?? "") ||
+      !req.headers["content-type"]?.startsWith("application/json")
+    )
+      return json(res, 403, { error: "Refused" });
+    json(res, 202, {});
+    setTimeout(() => process.exit(0), 100);
+    return;
+  }
   try {
     if (url.pathname === "/api/waitlist") return await waitlistRequest(req, res);
     if (await app.api(req, res, url)) return;
@@ -117,7 +130,7 @@ server.listen(PORT, HOST, () => {
   if (landing) console.log(`\n  Quoli → http://${HOST}:${PORT}/landing/\n`);
   else
     console.log(
-      `\n  Quoli is running. Open https://iceq.best/studio/${PORT === 4400 ? "" : ` (port ${PORT})`}\n` +
+      `\n  Quoli is running. Open https://app.iceq.best${PORT === 4400 ? "" : ` (port ${PORT})`}\n` +
         `  (or this computer's own page: http://${HOST}:${PORT})\n`,
     );
   if (!landing && !store.roots().length && HOOK_AGENTS.some(isSetUp)) {
