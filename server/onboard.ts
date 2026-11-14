@@ -3,6 +3,7 @@ import { basename } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { syncCommandFile } from "./background.ts";
 import { git } from "./ingest.ts";
+import { nativePath } from "./paths.ts";
 import {
   describeScope,
   hasScopeFile,
@@ -41,7 +42,10 @@ export const yes = async (question: string, fallback = true) =>
   /^y/i.test(await ask(`${question} ${fallback ? "[Y/n]" : "[y/N]"} `, fallback ? "y" : "n"));
 
 /** The repository the command runs in, or null outside one. */
-export const hereRepo = () => git(process.cwd(), ["rev-parse", "--show-toplevel"]);
+export const hereRepo = () => {
+  const top = git(process.cwd(), ["rev-parse", "--show-toplevel"]);
+  return top ? nativePath(top) : null;
+};
 
 /**
  * Settles which repositories to record. `--all` and `--here` answer without asking. Returns a line

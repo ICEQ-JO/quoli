@@ -9,21 +9,21 @@ test("each operating system gets a login item that runs the app copy with the up
   try {
     const linux = autostartPlan("linux", node);
     assert.equal(linux?.kind, "systemd");
-    assert.match(linux?.file ?? "", /systemd\/user\/quoli\.service$/);
+    assert.match(linux?.file ?? "", /systemd[\\/]user[\\/]quoli\.service$/);
     assert.match(
       linux?.content ?? "",
-      /^ExecStart="\/opt\/node 22\/bin\/node" ".*app\/server\/cli\.mjs" start$/m,
+      /^ExecStart="\/opt\/node 22\/bin\/node" ".*app[\\/]+server[\\/]+cli\.mjs" start$/m,
     );
     assert.match(linux?.content ?? "", /^Environment="QUOLI_NO_UPDATE_CHECK=1"$/m);
     assert.match(linux?.content ?? "", /^Environment="QUOLI_PORT=4455"$/m);
     assert.match(linux?.content ?? "", /^Restart=on-failure$/m);
     // systemd refuses a quoted WorkingDirectory (checked with systemd-analyze verify).
-    assert.match(linux?.content ?? "", /^WorkingDirectory=\/[^"]*app$/m);
+    assert.match(linux?.content ?? "", /^WorkingDirectory=[^"]*app$/m);
     assert.match(linux?.content ?? "", /^WantedBy=default\.target$/m);
 
     const mac = autostartPlan("darwin", node);
     assert.equal(mac?.kind, "launchd");
-    assert.match(mac?.file ?? "", /LaunchAgents\/best\.iceq\.quoli\.plist$/);
+    assert.match(mac?.file ?? "", /LaunchAgents[\\/]best\.iceq\.quoli\.plist$/);
     assert.match(
       mac?.content ?? "",
       /<string>\/opt\/node 22\/bin\/node<\/string><string>.*cli\.mjs<\/string><string>start<\/string>/,

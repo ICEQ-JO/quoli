@@ -7,7 +7,14 @@
 // Quoli home; that copy queues events in spool.jsonl beside it while Quoli is not running and
 // starts a short `quoli sync` that records them (and sends Team sync) without Quoli open.
 import { spawn } from "node:child_process";
-import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -70,7 +77,18 @@ function wanted() {
     const scope = JSON.parse(readFileSync(file, "utf8"));
     const cwd = JSON.parse(body.toString("utf8"))?.cwd;
     if (typeof cwd !== "string") return true;
-    const under = (r) => cwd === r || cwd.startsWith(r.endsWith(sep) ? r : r + sep);
+    // The same folder can be spelled differently: symlinks (macOS /var → /private/var) and, on
+    // Windows and macOS, letter case. Same rule as `records` in server/scope.ts.
+    const fold = (p) => (process.platform === "linux" ? p : p.toLowerCase());
+    const real = (p) => {
+      try {
+        return realpathSync.native(p);
+      } catch {
+        return p;
+      }
+    };
+    const within = (p, r) => p === r || p.startsWith(r.endsWith(sep) ? r : r + sep);
+    const under = (r) => within(fold(cwd), fold(r)) || within(fold(real(cwd)), fold(real(r)));
     if (Array.isArray(scope.only)) return scope.only.some(under);
     return !(Array.isArray(scope.ignore) && scope.ignore.some(under));
   } catch {

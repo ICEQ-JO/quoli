@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import type { AgentKind } from "../shared/model.ts";
 import { adapterFor } from "./adapters.ts";
 import type { Store } from "./db.ts";
+import { nativePath } from "./paths.ts";
 import { records } from "./scope.ts";
 import { syncTranscript } from "./transcript.ts";
 
@@ -10,7 +11,8 @@ const rootCache = new Map<string, string>();
 export function repoRoot(cwd: string): string {
   let root = rootCache.get(cwd);
   if (!root) {
-    root = git(cwd, ["rev-parse", "--show-toplevel"]) ?? cwd;
+    const top = git(cwd, ["rev-parse", "--show-toplevel"]);
+    root = top ? nativePath(top) : cwd;
     rootCache.set(cwd, root);
   }
   return root;

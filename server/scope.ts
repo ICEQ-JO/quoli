@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join, resolve, sep } from "node:path";
 import { home } from "./db.ts";
 
@@ -61,10 +69,25 @@ const unique = (roots: string[]) => [...new Set(roots.map((r) => resolve(r)))];
 export const inside = (path: string, root: string) =>
   path === root || path.startsWith(root.endsWith(sep) ? root : root + sep);
 
+const fold = (p: string) => (process.platform === "linux" ? p : p.toLowerCase());
+const real = (p: string) => {
+  try {
+    return realpathSync.native(p);
+  } catch {
+    return p;
+  }
+};
+/**
+ * `inside`, also when the two are spelled differently: through a symlink (macOS /var is
+ * /private/var) or, on Windows and macOS, in another letter case. server/hook.mjs does the same.
+ */
+const under = (path: string, root: string) =>
+  inside(fold(path), fold(root)) || inside(fold(real(path)), fold(real(root)));
+
 /** Whether events from this folder are recorded. */
 export function records(path: string, scope = loadScope()): boolean {
-  if (scope.only) return scope.only.some((r) => inside(path, r));
-  return !(scope.ignore ?? []).some((r) => inside(path, r));
+  if (scope.only) return scope.only.some((r) => under(path, r));
+  return !(scope.ignore ?? []).some((r) => under(path, r));
 }
 
 /** Record only `root` (and any roots already chosen the same way). */

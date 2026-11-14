@@ -1,15 +1,13 @@
-import { isAbsolute, relative } from "node:path";
 import type { SessionContext, UsagePoint } from "../shared/model.ts";
 import type { RawEvent } from "./db.ts";
+import { repoRelative } from "./paths.ts";
 
 const MAX_POINTS = 400;
 const str = (v: unknown) => (typeof v === "string" && v ? v : null);
 
 /** A path inside the repository as repo-relative, others (user memory, ~/.claude) as given. */
 function shown(path: string, root: string) {
-  if (!isAbsolute(path)) return path;
-  const r = relative(root, path);
-  return r && !r.startsWith("..") && !isAbsolute(r) ? r : path;
+  return repoRelative(path, root) ?? path;
 }
 
 const sizeOf = (u: UsagePoint) => u.tokens.input + u.tokens.cacheRead + u.tokens.cacheWrite;

@@ -32,7 +32,9 @@ const entry = () => join(app(), "server", "cli.mjs");
 export function serviceEnv(): Record<string, string> {
   const env: Record<string, string> = { NODE_ENV: "production", QUOLI_NO_UPDATE_CHECK: "1" };
   if (process.env.QUOLI_PORT) env.QUOLI_PORT = process.env.QUOLI_PORT;
-  if (process.env.QUOLI_HOME) env.QUOLI_HOME = process.env.QUOLI_HOME;
+  // Always the installer's own Quoli home: a service manager does not pass HOME on (launchd), so
+  // the service would otherwise pick its own default and read another scope and database.
+  env.QUOLI_HOME = home();
   return env;
 }
 

@@ -41,8 +41,15 @@ function sandbox() {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "quoli-setup-")));
   const saved = { ...process.env };
   process.env.HOME = root;
+  process.env.USERPROFILE = root; // os.homedir() on Windows
   process.env.QUOLI_HOME = join(root, ".quoli");
-  for (const k of ["XDG_CONFIG_HOME", "CODEX_HOME", "PI_CODING_AGENT_DIR", "QUOLI_PORT"]) {
+  for (const k of [
+    "APPDATA",
+    "XDG_CONFIG_HOME",
+    "CODEX_HOME",
+    "PI_CODING_AGENT_DIR",
+    "QUOLI_PORT",
+  ]) {
     delete process.env[k];
   }
   return {
@@ -80,7 +87,7 @@ test("setup installs Quoli for every agent at user level and remove restores the
     assert.match(codex.hooks.PostModelRequest[0].hooks[0].command, /quoli-hook\.mjs" 4400 codex$/);
     assert.ok(existsSync(join(box.root, ".quoli", "quoli-hook.mjs")));
     const pi = readFileSync(globalTarget("pi").file, "utf8");
-    assert.ok(pi.includes(`const SPOOL = "${spoolFile()}"`));
+    assert.ok(pi.includes(`const SPOOL = "${spoolFile().replaceAll("\\", "/")}"`));
     assert.ok(setupStatus().every((s) => s.installed));
 
     setup(["claude-code", "codex", "opencode", "pi"], true);

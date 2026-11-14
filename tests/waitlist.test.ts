@@ -46,7 +46,8 @@ test("waitlist writes once, stores no agent evidence, and creates a private data
         ["synthetic@example.com"],
       );
       assert.equal(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().length, 1);
-      assert.equal(statSync(file).mode & 0o777, 0o600);
+      // Windows has no Unix file modes; the file sits in the user's own profile there.
+      if (process.platform !== "win32") assert.equal(statSync(file).mode & 0o777, 0o600);
     } finally {
       db.close();
     }

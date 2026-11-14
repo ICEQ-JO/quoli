@@ -10,7 +10,7 @@ const sh = (cwd: string, args: string[]) =>
   execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd });
 
 test("a linked worktree, live or removed, groups under its repository", () => {
-  const main = realpathSync(mkdtempSync(join(tmpdir(), "quoli-wt-")));
+  const main = realpathSync.native(mkdtempSync(join(tmpdir(), "quoli-wt-")));
   try {
     sh(main, ["init", "-q", "-b", "main"]);
     writeFileSync(join(main, "a.txt"), "a\n");
