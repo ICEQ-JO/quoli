@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /**
  * The `quoli` command of the published package (npm: quoli). Bundled by scripts/pack.mjs.
- *   quoli               first run: choose what to record, link an account, start; later: start
- *   quoli demo          start with the synthetic demo project
+ *   quoli               first run: choose what to record, link an account; then (every time) run
+ *                       Quoli in the background, started at login (server/autostart.ts)
+ *   quoli stop          stop the background Quoli until the next login
+ *   quoli demo          start with the synthetic demo project, in this terminal
  *   quoli connect       choose what to record + link this computer to a Quoli account + start
  *   quoli setup [...]   install the agents' hooks without an account (see setup.ts)
  *   quoli --version
@@ -67,34 +69,90 @@ if (
   }
 }
 
+/**
+ * Starts Quoli: from the package, in the background and at every login, so the website always
+ * finds it; from a clone, or with --foreground, in this terminal.
+ */
+async function open() {
+  if (process.env.QUOLI_BUNDLED === "1" && !process.argv.includes("--foreground")) {
+    const port = Number(process.env.QUOLI_PORT ?? 4400);
+    const site = `https://app.iceq.best${port === 4400 ? "" : ` (set port ${port} on the page)`}`;
+    const { startInBackground } = await import("./autostart.ts");
+    const result = await startInBackground();
+    if (result.ok) {
+      console.log(`
+  Quoli is running in the background, and starts by itself when you log in.
+  Open ${site}
+
+  You can close this terminal. To stop Quoli: ${Q} stop
+`);
+      process.exit(0);
+    }
+    if (result.reason === "busy") {
+      console.log(`
+  Another Quoli is still running on port ${port}, most likely an older one in another terminal.
+  Close it (Ctrl+C in that terminal)${
+    process.platform === "win32"
+      ? ", then run this again."
+      : ": this one takes over by itself a few seconds later."
+  }
+  Then open ${site}
+`);
+      process.exit(0);
+    }
+    console.log(
+      result.reason === "unsupported"
+        ? "Quoli can't run in the background on this system; it runs here instead (keep this terminal open).\n"
+        : `Quoli could not start in the background (${result.detail}); it runs here instead (keep this terminal open).\n`,
+    );
+  }
+  process.env.NODE_ENV = "production";
+  await import("./main.ts");
+}
+
 if (cmd === "connect") {
   const { connectCli } = await import("./link.ts");
   const next = await connectCli(rest);
   if (next !== "start") process.exit(next);
-  process.env.NODE_ENV = "production";
-  await import("./main.ts");
+  await open();
+} else if (cmd === "stop") {
+  const { stopBackground } = await import("./autostart.ts");
+  console.log(
+    (await stopBackground())
+      ? `Quoli stopped. It starts again when you log in, or with ${Q}. Recording goes on either way.`
+      : "Quoli is still running: it may be an older version in a terminal (Ctrl+C there).",
+  );
 } else if (cmd === "sync") {
   // Started by the hooks while Quoli is closed (server/background.ts); not for people.
   const { runSync } = await import("./background.ts");
   process.exit(await runSync());
 } else if (cmd === "setup") {
   const { setupCli } = await import("./setup.ts");
-  process.exit(setupCli(rest));
+  const code = setupCli(rest);
+  if (rest.includes("--remove") && process.env.QUOLI_BUNDLED === "1") {
+    const { removeAutostart, stopRunning } = await import("./autostart.ts");
+    removeAutostart();
+    await stopRunning();
+  }
+  process.exit(code);
 } else if (cmd === "--version" || cmd === "-v") {
   console.log(VERSION);
 } else if (cmd === "--help" || cmd === "-h" || cmd === "help") {
   console.log(`Quoli ${VERSION}: one map of what your coding agents did.
 
-  ${Q}               the first time: choose what to record, link your account, start;
-                     after that: start Quoli; open it at https://iceq.best/studio/
+  ${Q}               the first time: choose what to record, link your account; every time:
+                     run Quoli in the background (it starts at login), then open
+                     https://app.iceq.best
+  ${Q} stop          stop the background Quoli until the next login
   ${Q} connect       link this computer to your Quoli account (again, with --again)
   ${Q} setup         install the agents' hooks without an account
   ${Q} setup --remove   stop recording and take Quoli out of every agent
-  ${Q} demo          start with a synthetic demo project
+  ${Q} demo          start with a synthetic demo project, in this terminal
+  --foreground       run Quoli in this terminal instead of in the background
   --all / --here     record every project / only the current one
   --port <n>         use another port (or set QUOLI_PORT)
 
-Recording keeps working with Quoli closed. Data stays on this machine in ~/.quoli
+Recording keeps working even with Quoli stopped. Data stays on this machine in ~/.quoli
 (QUOLI_HOME to change); a linked account receives summaries, never prompts or code.`);
 } else if (cmd === undefined || cmd.startsWith("--")) {
   // The one command people need: the first time it sets Quoli up, afterwards it opens it.
@@ -110,8 +168,7 @@ Recording keeps working with Quoli closed. Data stays on this machine in ~/.quol
     const line = await chooseScope(args);
     if (args.includes("--all") || args.includes("--here")) console.log(`${line}\n`);
   }
-  process.env.NODE_ENV = "production";
-  await import("./main.ts");
+  await open();
 } else if (cmd === "start" || cmd === "demo") {
   process.env.NODE_ENV = "production";
   if (cmd === "demo") process.argv.push("--demo");

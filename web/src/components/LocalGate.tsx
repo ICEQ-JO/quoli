@@ -56,10 +56,13 @@ export function LocalGate({ children }: { children: ReactNode }) {
             </span>
             <div className="step-body">
               <h2>Start Quoli</h2>
-              <p>Run this in a terminal, inside the project you work on.</p>
+              <p>
+                Run this in a terminal, inside the project you work on. Quoli then runs in the
+                background and starts by itself when you log in.
+              </p>
               <Command text={START} />
               <p className="faint">
-                Already running? Run it again: versions before 0.3 can't talk to this page.
+                Already ran it before? Run it again: older versions can't talk to this page.
               </p>
             </div>
           </li>

@@ -136,7 +136,7 @@ export async function connectCli(
   args: string[],
   { askToLink = false } = {},
 ): Promise<number | "start"> {
-  const { setupCli, START } = await import("./setup.ts");
+  const { setupCli } = await import("./setup.ts");
   const { Store } = await import("./db.ts");
   const { chooseScope, yes } = await import("./onboard.ts");
   console.log("1. Which projects to record\n");
@@ -181,22 +181,6 @@ export async function connectCli(
     console.log("\n   ✓ Connected. Summaries of your new sessions now go to your account.");
   }
 
-  const port = Number(process.env.QUOLI_PORT ?? 4400);
-  const running = await fetch(`http://127.0.0.1:${port}/api/sync`, {
-    signal: AbortSignal.timeout(1000),
-  }).then(
-    (r) => r.ok,
-    () => false,
-  );
-  if (running) {
-    console.log(`\n3. Quoli is already open at http://127.0.0.1:${port}. You are all set.`);
-    return 0;
-  }
-  console.log(
-    `\n3. Done. Recording is on, and it keeps working with this terminal closed: you do not
-   need to keep Quoli open. Run ${START} again whenever you want to look.
-
-   Opening Quoli now:`,
-  );
+  console.log("\n3. Done. Recording is on.");
   return "start";
 }
