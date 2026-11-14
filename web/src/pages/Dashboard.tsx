@@ -1,7 +1,7 @@
 import type { Overview, Project } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
+import { setFirstRunSkipped } from "../components/FirstRun.tsx";
 import { LiveRow } from "../components/Live.tsx";
-import { Onboarding } from "../components/Onboarding.tsx";
 import { SpendChart } from "../components/SpendChart.tsx";
 import {
   EmptyState,
@@ -36,7 +36,21 @@ export function DashboardPage() {
       </div>
     );
   }
-  if (overview.counts.projects === 0) return <Onboarding />;
+  if (overview.counts.projects === 0)
+    return (
+      <div className="page">
+        <PageHead title="Dashboard" />
+        <EmptyState title="No sessions yet">
+          <p>
+            Start your coding agent in a project Quoli records, and its sessions appear here as they
+            happen.
+          </p>
+          <button type="button" className="btn" onClick={() => setFirstRunSkipped(false)}>
+            Show the setup steps
+          </button>
+        </EmptyState>
+      </div>
+    );
 
   const { live, needsReview, recent } = overview;
   const budgets = settings?.settings;
