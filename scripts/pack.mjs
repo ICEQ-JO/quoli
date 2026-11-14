@@ -81,7 +81,8 @@ cpSync(
   join(out, "server", "grammars", "web-tree-sitter.wasm"),
 );
 
-// 4. package.json and README for npm.
+// 4. package.json, README and LICENSE for npm.
+cpSync(join(root, "LICENSE"), join(out, "LICENSE"));
 writeFileSync(
   join(out, "package.json"),
   `${JSON.stringify(
@@ -90,14 +91,14 @@ writeFileSync(
       version: pkg.version,
       description:
         "One local map of what your coding agents did: Claude Code, Codex, OpenCode and Pi sessions, cost, failures and loops.",
-      license: "UNLICENSED",
+      license: "SEE LICENSE IN LICENSE",
       publishConfig: { access: "public" },
       homepage: "https://iceq.best",
       type: "module",
       bin: { quoli: "server/cli.mjs" },
       engines: { node: ">=22.13" },
       keywords: ["claude-code", "codex", "opencode", "coding-agents", "observability"],
-      files: ["server", "dist", "README.md"],
+      files: ["server", "dist", "README.md", "LICENSE"],
     },
     null,
     2,
@@ -123,6 +124,8 @@ npx https://iceq.best/quoli.tgz   # choose what to record, link your account, an
 - Run it inside a project to record only that project, or choose every project.
 - Recording keeps working with Quoli closed. \`setup --remove\` stops it and takes Quoli out of
   every agent; \`--help\` lists the rest.
+
+Free to use, not open source: see LICENSE (https://iceq.best/landing/?page=terms).
 
 More: https://iceq.best
 `,

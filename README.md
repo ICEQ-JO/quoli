@@ -167,6 +167,10 @@ pnpm build        # app + landing
 
 ## Status
 
-Quoli is an early-stage project, built in the open. Phase 1 (the MVP) is largely built, and phase 3 now records Codex, OpenCode and Pi alongside Claude Code. Next on the roadmap:
+Quoli is an early-stage project. Phase 1 (the MVP) is largely built, and phase 3 now records Codex, OpenCode and Pi alongside Claude Code. Next on the roadmap:
 - **Deeper observability:** per-step cost and time, failures and loops, cross-session trends, live alerts;
 - **Later phases:** symbol-level code maps, live hosting-provider data, and opt-in team sharing.
+
+## License
+
+Quoli is free to use and not open source. See [LICENSE](LICENSE); the same terms are on the website at iceq.best/landing/?page=terms. This repository is private.
