@@ -20,7 +20,11 @@ rmSync(out, { recursive: true, force: true });
 mkdirSync(join(out, "server"), { recursive: true });
 
 // 1. The web app (app + class page + landing), built fresh.
-execFileSync("pnpm", ["build"], { cwd: root, stdio: "inherit" });
+execFileSync("pnpm", ["build"], {
+  cwd: root,
+  stdio: "inherit",
+  shell: process.platform === "win32",
+});
 cpSync(join(root, "dist"), join(out, "dist"), {
   recursive: true,
   // The landing page stays out, except its two fonts, which the app's first run uses.
