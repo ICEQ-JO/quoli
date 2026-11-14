@@ -2,7 +2,7 @@
   "name": "quoli",
   "private": true,
   "license": "MIT",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "type": "module",
   "packageManager": "pnpm@11.28.9",
   "engines": {

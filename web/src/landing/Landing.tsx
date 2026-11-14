@@ -453,6 +453,11 @@ const questions = [
       "Yes: macOS, Windows and Linux, with Node.js 22.13 or newer. One command sets it up and keeps Quoli running in the background, starting again at login. Then open app.iceq.best.",
   },
   {
+    question: "How do I stop or remove it?",
+    answer:
+      "Settings in the app lists every command. `stop` pauses Quoli until the next login, `setup --remove` stops recording and takes it out of every agent, and `uninstall` removes Quoli completely, including everything it recorded.",
+  },
+  {
     question: "Which coding agents does Quoli support?",
     answer:
       "Claude Code, Codex, OpenCode and Pi. Capture depends on the events each agent exposes; supported tools, usage reporting and subagent relationships differ between agents. Quoli does not capture hidden model reasoning.",

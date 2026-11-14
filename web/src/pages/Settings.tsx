@@ -111,6 +111,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                   </div>
                 </dl>
               </section>
+              <StopOrRemove dataDir={data.info.dataDir} />
               <BudgetForm settings={data.settings} saved={refresh} />
             </>
           )}
@@ -454,5 +455,76 @@ function BudgetForm({
         )}
       </div>
     </form>
+  );
+}
+
+const Q = "npx https://iceq.best/quoli.tgz";
+
+/** How to stop, pause recording or remove Quoli: the commands people otherwise only find in --help. */
+function StopOrRemove({ dataDir }: { dataDir: string }) {
+  const rows: { what: string; effect: string; command: string }[] = [
+    {
+      what: "Stop Quoli",
+      effect: "Until the next login. Your agents keep recording; nothing is lost.",
+      command: `${Q} stop`,
+    },
+    {
+      what: "Start it again",
+      effect: "Or just log in again: it starts by itself.",
+      command: Q,
+    },
+    {
+      what: "Stop recording",
+      effect: "Takes Quoli out of every coding agent. What was recorded stays here.",
+      command: `${Q} setup --remove`,
+    },
+    {
+      what: "Remove Quoli completely",
+      effect: `Also deletes everything it recorded (${dataDir}). Asks first.`,
+      command: `${Q} uninstall`,
+    },
+  ];
+  return (
+    <section className="card" aria-labelledby="set-stop">
+      <h2 id="set-stop">Stop or remove Quoli</h2>
+      <p className="faint">
+        Quoli runs in the background on this computer and starts when you log in. Run these in a
+        terminal.
+      </p>
+      <ul className="cmd-list">
+        {rows.map((r) => (
+          <li key={r.what}>
+            <div>
+              <strong>{r.what}</strong>
+              <span className="faint">{r.effect}</span>
+            </div>
+            <CopyCommand text={r.command} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function CopyCommand({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="cmd-copy">
+      <code className="mono">{text}</code>
+      <button
+        type="button"
+        className="btn"
+        aria-label={`Copy ${text}`}
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1600);
+          } catch {}
+        }}
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
   );
 }
