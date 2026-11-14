@@ -733,8 +733,8 @@ export function Landing() {
             </div>
             <ProductTour view={view} onView={setView} />
             <p className="tour-note">
-              Quoli in use. Costs are estimates, not invoices.
-              Unknown values stay unknown, and inferred connections are labelled.
+              Quoli in use. Costs are estimates, not invoices. Unknown values stay unknown, and
+              inferred connections are labelled.
             </p>
           </section>
           <JournalTeaser />
