@@ -223,7 +223,8 @@ function SiteFooter() {
         </div>
         <div className="footer-column">
           <h3>Product</h3>
-          <a href="/landing/#product">The app</a>
+          <a href="https://app.iceq.best">Open the app</a>
+          <a href="/landing/#product">Product tour</a>
           <a href="/landing/?page=roadmap">Roadmap</a>
           <a href="/landing/#how-it-works">How it works</a>
           <a href="/app/">Team dashboard</a>
@@ -560,8 +561,8 @@ export function Landing() {
           >
             <Moon dark={dark} />
           </button>
-          <a className="nav-cta" href="/landing/#waitlist">
-            Join the waitlist
+          <a className="nav-cta" href="https://app.iceq.best">
+            Open the app
           </a>
         </div>
       </header>
@@ -584,8 +585,8 @@ export function Landing() {
                 your team visibility into how agents are being used.
               </p>
               <div className="hero-actions">
-                <a className="hero-cta" href="#waitlist">
-                  Join the waitlist <Arrow />
+                <a className="hero-cta" href="#get-started">
+                  Get started <Arrow />
                 </a>
                 <a className="hero-link" href="#product">
                   Explore the app <Arrow />
@@ -958,7 +959,7 @@ export function Landing() {
               </div>
             </dl>
           </section>
-          <section className="getting-started" aria-labelledby="start-title">
+          <section className="getting-started" id="get-started" aria-labelledby="start-title">
             <h2 id="start-title">
               Keep your workflow.
               <br />
@@ -968,9 +969,11 @@ export function Landing() {
               <li>
                 <h3>Connect your agent.</h3>
                 <p>
-                  Use Quoli's setup to connect supported agent hooks. Keep working in your own
-                  terminal and editor.
+                  Run this in a terminal, inside your project. It connects Claude Code, Codex,
+                  OpenCode and Pi, then keeps Quoli running in the background. macOS, Windows and
+                  Linux, with Node.js 22.13 or newer.
                 </p>
+                <InstallCommand />
               </li>
               <li>
                 <h3>Build as you normally do.</h3>
@@ -982,8 +985,9 @@ export function Landing() {
               <li>
                 <h3>Review with context.</h3>
                 <p>
-                  Open the session, inspect the changes and follow the work across the board. Enable
-                  team summary sharing only if you want it.
+                  Open <a href="https://app.iceq.best">app.iceq.best</a> to inspect each session,
+                  its changes and the work across the board. It reads Quoli on your computer, so
+                  prompts and code stay there. Enable team summary sharing only if you want it.
                 </p>
               </li>
             </ol>
@@ -1012,5 +1016,29 @@ export function Landing() {
       )}
       <SiteFooter />
     </>
+  );
+}
+
+const INSTALL = "npx https://iceq.best/quoli.tgz";
+
+/** The install command with a copy button (getting started). */
+function InstallCommand() {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="install-command">
+      <code>{INSTALL}</code>
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(INSTALL);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1600);
+          } catch {}
+        }}
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
   );
 }

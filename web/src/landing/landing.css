@@ -1634,6 +1634,42 @@ main {
   color: var(--muted);
   margin-top: 12px;
 }
+.install-command {
+  display: flex;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #172d43;
+}
+.install-command code {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 11px 14px;
+  color: #edf7fc;
+  font:
+    13.5px / 1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.install-command button {
+  flex: none;
+  border: 0;
+  border-left: 1px solid #35526c;
+  padding: 0 14px;
+  background: #1c354d;
+  color: #edf7fc;
+}
+.install-command button:hover {
+  background: #294e70;
+}
+:root[data-mode="dark"] .install-command {
+  background: #0b1726;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
 @media (max-width: 1000px) {
   .workflow-section {
     gap: 30px;
