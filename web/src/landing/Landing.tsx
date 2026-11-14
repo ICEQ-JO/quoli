@@ -228,7 +228,6 @@ function SiteFooter() {
           <a href="/landing/?page=roadmap">Roadmap</a>
           <a href="/landing/#how-it-works">How it works</a>
           <a href="/app/">Team dashboard</a>
-          <a href="/landing/#waitlist">Early access</a>
         </div>
         <div className="footer-column">
           <h3>Resources</h3>
@@ -236,6 +235,7 @@ function SiteFooter() {
           <a href="/landing/#product">Product tour</a>
           <a href="/landing/#collaborate">For developers &amp; teams</a>
           <a href="/landing/?page=privacy">Privacy</a>
+          <a href="/landing/?page=terms">Terms</a>
         </div>
         <div className="footer-column">
           <h3>Quoli</h3>
@@ -243,7 +243,7 @@ function SiteFooter() {
           <a href="/landing/#collaborate">For teams</a>
           {contact && <a href={`mailto:${contact}`}>Contact</a>}
           <a href="/landing/?page=roadmap">What's next</a>
-          <a href="/landing/#waitlist">Join the waitlist</a>
+          <a href="/landing/#waitlist">Get updates</a>
         </div>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Quoli</span>
@@ -257,6 +257,7 @@ function SiteFooter() {
 function InformationPage({ page }: { page: string }) {
   const mission = page === "mission";
   const privacy = page === "privacy";
+  const terms = page === "terms";
   return (
     <main className="information-page" id="main">
       <a className="back-link" href="/landing/">
@@ -274,6 +275,12 @@ function InformationPage({ page }: { page: string }) {
             Your work stays
             <br />
             on your machine.
+          </>
+        ) : terms ? (
+          <>
+            Free to use.
+            <br />
+            Not open source.
           </>
         ) : (
           <>
@@ -313,27 +320,82 @@ function InformationPage({ page }: { page: string }) {
       ) : privacy ? (
         <>
           <p className="information-lead">
-            The local application and this waitlist have different jobs. Here is what each stores.
+            Quoli runs on your computer. Here is what it stores, what leaves your computer, and what
+            this website keeps.
           </p>
           <h2>Agent evidence</h2>
           <p>
             Quoli stores supported agent events, prompts, tool input/output and reported token usage
-            locally. Common credential formats are redacted before persistence; redaction is
-            best-effort. This website demonstration never reads captured sessions.
+            on your computer, in the .quoli folder of your home folder. Common credential formats
+            are redacted before they are stored; redaction is best-effort.
           </p>
-          <h2>The waitlist</h2>
+          <h2>The app at app.iceq.best</h2>
+          <p>
+            The page comes from this website, but your browser reads Quoli straight from your own
+            computer. Sessions, prompts and code never pass through our servers. Your browser may
+            ask once whether the site may reach this device.
+          </p>
+          <h2>What leaves your computer</h2>
+          <p>
+            When Quoli starts, it checks iceq.best for the newest version number. Once a day it
+            downloads public model prices from models.dev (Settings can turn this off). Nothing
+            else, unless you link a Quoli account and turn on Team sync: then session summaries are
+            shared with your account and teams (agent, model, repository, branch, activity counts
+            and estimated spend). Prompts, code, commands, tool output, file names and folder paths
+            are never shared. An account keeps your email address so you can sign in.
+          </p>
+          <h2>The updates list</h2>
           <p>
             Submitting the form stores your email address and the time you joined, nothing else. On
             the public website it is kept in the site's database (Redis hosted by Upstash through
             Vercel); in a local preview it goes to a separate file on that computer. We use it only
-            for Quoli launch updates. No analytics, no tracking cookies, no advertising and no
-            mailing-list service.
+            for Quoli updates. No analytics, no tracking cookies, no advertising and no mailing-list
+            service.
           </p>
           <h2>Removing your address</h2>
           <p>
             Ask the Quoli team to remove it at any time and it is deleted from the list. No
-            automatic emails are sent yet; when launch updates start, each one will include a way to
-            stop them.
+            automatic emails are sent yet; when updates start, each one will include a way to stop
+            them.
+          </p>
+        </>
+      ) : terms ? (
+        <>
+          <p className="information-lead">
+            Quoli is free for anyone to use. It is not open source. This is the plain version of the
+            license that comes with every copy (the LICENSE file in the package).
+          </p>
+          <h2>You may</h2>
+          <p>
+            Install and use Quoli free of charge on any number of computers, for personal, school
+            and company work. Share the install command or a link to iceq.best with anyone.
+          </p>
+          <h2>You may not</h2>
+          <p>
+            Without written permission: sell, rent, sublicense or redistribute Quoli or a changed
+            copy, or run it as a hosted service for others; modify, decompile or reverse engineer it
+            (except where the law allows it anyway); remove copyright notices or these terms; or use
+            it to build a competing product.
+          </p>
+          <h2>Your data</h2>
+          <p>
+            What Quoli records stays on your computer unless you link an account and turn on Team
+            sync, and it is yours. The <a href="/landing/?page=privacy">Privacy</a> page says what
+            is stored and what leaves your computer.
+          </p>
+          <h2>No warranty</h2>
+          <p>
+            Quoli is provided as is, without warranty of any kind, and to the extent the law allows
+            its authors are not liable for damages from using it. It shows evidence of what coding
+            agents did; it does not establish that code is correct, secure or complete, and costs
+            are estimates.
+          </p>
+          <h2>Changes and ending</h2>
+          <p>
+            Later versions may come with different terms, and Quoli may change or stop. A version
+            you already have keeps the terms it came with. The terms end if you break them; you can
+            end them any time by removing Quoli (<code>quoli setup --remove</code>, then delete the
+            .quoli folder).
           </p>
         </>
       ) : (
@@ -386,14 +448,24 @@ function InformationPage({ page }: { page: string }) {
           </div>
         </>
       )}
-      <a className="primary-link" href="/landing/#waitlist">
-        Follow the next chapter <Arrow />
+      <a className="primary-link" href="/landing/#get-started">
+        Get started <Arrow />
       </a>
     </main>
   );
 }
 
 const questions = [
+  {
+    question: "Is Quoli free?",
+    answer:
+      "Yes. Quoli is free to use on any number of computers, for personal, school and company work. It is not open source: the terms say what you may and may not do with it.",
+  },
+  {
+    question: "Does it work on macOS and Windows?",
+    answer:
+      "Yes: macOS, Windows and Linux, with Node.js 22.13 or newer. One command sets it up and keeps Quoli running in the background, starting again at login. Then open app.iceq.best.",
+  },
   {
     question: "Which coding agents does Quoli support?",
     answer:
@@ -522,7 +594,9 @@ export function Landing() {
           ? "Roadmap — Quoli"
           : page === "privacy"
             ? "Privacy — Quoli"
-            : "Quoli — See what your coding agents did.";
+            : page === "terms"
+              ? "Terms — Quoli"
+              : "Quoli — See what your coding agents did.";
   }, [page, journal, article]);
   useEffect(() => {
     document.documentElement.dataset.mode = dark ? "dark" : "light";
@@ -568,7 +642,7 @@ export function Landing() {
       </header>
       {journal ? (
         <Journal pathname={pathname} />
-      ) : page && ["mission", "roadmap", "privacy"].includes(page) ? (
+      ) : page && ["mission", "roadmap", "privacy", "terms"].includes(page) ? (
         <InformationPage page={page} />
       ) : (
         <main id="main">
@@ -1001,7 +1075,7 @@ export function Landing() {
                 <em>Keep the work in view.</em>
               </h2>
               <p>
-                Join the list for product updates and the next Quoli releases.
+                Leave your email to hear when a new version of Quoli ships.
                 <br />
                 Built for your next session—and your team's next review.
               </p>

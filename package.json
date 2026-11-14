@@ -1,6 +1,7 @@
 {
   "name": "quoli",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "version": "0.3.4",
   "type": "module",
   "packageManager": "pnpm@11.28.9",
