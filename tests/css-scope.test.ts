@@ -54,7 +54,7 @@ test("lens stylesheets never restyle classes the pages and shared components use
     .flatMap((f) =>
       [...leadingClasses(readFileSync(f, "utf8"))]
         .filter((c) => shared.has(c))
-        .map((c) => `${f}: .${c}`),
+        .map((c) => `${f.replaceAll("\\", "/")}: .${c}`),
     )
     .filter((c) => !ALLOWED.has(c));
   assert.deepEqual(clashes, []);

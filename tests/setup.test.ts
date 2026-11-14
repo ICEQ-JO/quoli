@@ -41,8 +41,15 @@ function sandbox() {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "quoli-setup-")));
   const saved = { ...process.env };
   process.env.HOME = root;
+  process.env.USERPROFILE = root; // os.homedir() on Windows
   process.env.QUOLI_HOME = join(root, ".quoli");
-  for (const k of ["XDG_CONFIG_HOME", "CODEX_HOME", "PI_CODING_AGENT_DIR", "QUOLI_PORT"]) {
+  for (const k of [
+    "APPDATA",
+    "XDG_CONFIG_HOME",
+    "CODEX_HOME",
+    "PI_CODING_AGENT_DIR",
+    "QUOLI_PORT",
+  ]) {
     delete process.env[k];
   }
   return {

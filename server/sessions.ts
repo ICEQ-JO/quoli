@@ -1,4 +1,3 @@
-import { isAbsolute, relative } from "node:path";
 import {
   type AgentKind,
   type AgentNode,
@@ -17,6 +16,7 @@ import {
 import { contextOf } from "./context.ts";
 import { projectId, type RawEvent, type UsageRow } from "./db.ts";
 import { findLoops } from "./loops.ts";
+import { repoRelative } from "./paths.ts";
 import { costOf } from "./prices.ts";
 import { buildReport } from "./report.ts";
 import { turnStats } from "./steps.ts";
@@ -248,10 +248,7 @@ function add(into: TokenTotals, t: TokenTotals) {
   into.cacheWrite += t.cacheWrite;
 }
 
-function rel(path: string, root: string): string | null {
-  const r = isAbsolute(path) ? relative(root, path) : path;
-  return r && !r.startsWith("..") && !isAbsolute(r) ? r : null;
-}
+const rel = repoRelative;
 
 /** The file a call names. Adapters map other agents' fields (OpenCode `path`) to `file_path`. */
 const pathOf = (i: Record<string, unknown>) => str(i.file_path) ?? str(i.notebook_path);

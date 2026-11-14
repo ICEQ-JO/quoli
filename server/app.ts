@@ -1,6 +1,6 @@
 import { readFileSync, statSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { basename, isAbsolute, normalize, resolve } from "node:path";
+import { basename, isAbsolute, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   isAgentKind,
@@ -417,7 +417,7 @@ export function createApp(store: Store, port: () => number) {
     if (path === "/api/file") {
       const rel = normalize(url.searchParams.get("path") ?? "");
       const full = resolve(root, rel);
-      if (rel.startsWith("..") || !full.startsWith(`${root}/`)) return json(res, 400, {});
+      if (rel.startsWith("..") || !full.startsWith(root + sep)) return json(res, 400, {});
       let content: string | null = null;
       try {
         if (statSync(full).size < 1024 * 1024) content = readFileSync(full, "utf8");

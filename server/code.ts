@@ -1,5 +1,5 @@
 import { readFileSync, statSync } from "node:fs";
-import { dirname, extname, join, normalize } from "node:path";
+import { extname, join, posix } from "node:path";
 import type { CodeFile, CodeMap } from "../shared/model.ts";
 import { git } from "./ingest.ts";
 
@@ -87,7 +87,7 @@ export function codeMap(root: string): CodeMap {
 export function resolveImports(from: string, text: string, known: Set<string>): string[] {
   const out = new Set<string>();
   for (const m of text.matchAll(JS_IMPORT)) {
-    const base = normalize(join(dirname(from), m[1])).replace(/\.(m?js)$/, "");
+    const base = posix.normalize(posix.join(posix.dirname(from), m[1])).replace(/\.(m?js)$/, "");
     const hit =
       RESOLVE.map((s) => base + s).find((p) => known.has(p)) ??
       [".js", ".mjs"].map((s) => base + s).find((p) => known.has(p));

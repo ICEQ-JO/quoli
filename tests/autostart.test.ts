@@ -9,7 +9,7 @@ test("each operating system gets a login item that runs the app copy with the up
   try {
     const linux = autostartPlan("linux", node);
     assert.equal(linux?.kind, "systemd");
-    assert.match(linux?.file ?? "", /systemd\/user\/quoli\.service$/);
+    assert.match(linux?.file ?? "", /systemd[\\/]user[\\/]quoli\.service$/);
     assert.match(
       linux?.content ?? "",
       /^ExecStart="\/opt\/node 22\/bin\/node" ".*app\/server\/cli\.mjs" start$/m,

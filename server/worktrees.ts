@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { git } from "./ingest.ts";
+import { nativePath } from "./paths.ts";
 
 const cache = new Map<string, string | null>();
 
@@ -17,10 +18,10 @@ export function mainCheckout(root: string): string | null {
     const common = git(root, ["rev-parse", "--git-common-dir"]);
     if (dir && common) {
       const abs = (p: string) => (isAbsolute(p) ? p : resolve(root, p));
-      if (abs(dir) !== abs(common)) main = dirname(abs(common));
+      if (abs(dir) !== abs(common)) main = nativePath(dirname(abs(common)));
     }
   } else {
-    main = /^(.+)\/\.claude\/worktrees\/[^/]+$/.exec(root)?.[1] ?? null;
+    main = /^(.+)[\\/]\.claude[\\/]worktrees[\\/][^\\/]+$/.exec(root)?.[1] ?? null;
   }
   // Only a removed folder's answer can change, and only by reappearing; keep both answers.
   cache.set(root, main);

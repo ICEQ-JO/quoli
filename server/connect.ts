@@ -1,8 +1,9 @@
-import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Store } from "./db.ts";
 import { git } from "./ingest.ts";
+import { nativePath } from "./paths.ts";
 
 /**
  * `pnpm connect <repo>` adds Quoli's hook to <repo>/.claude/settings.local.json
@@ -94,9 +95,7 @@ export const commandFor = (agent: HookFileAgent, script = hook) =>
   `"${process.execPath}" "${script}" ${port()}${agent === "claude-code" ? "" : ` ${agent}`}`;
 /** Quoli's hook: the repo's `server/hook.mjs`, or the copy the user-level install keeps in its home. */
 const isOurs = (group: { hooks?: { command?: string }[] }) =>
-  group.hooks?.some(
-    (h) => h.command?.includes("server/hook.mjs") || h.command?.includes("quoli-hook.mjs"),
-  ) ?? false;
+  group.hooks?.some((h) => /server[\\/]hook\.mjs|quoli-hook\.mjs/.test(h.command ?? "")) ?? false;
 
 const settingsFile = (repo: string, agent: HookFileAgent = "claude-code") =>
   join(resolve(repo), TARGETS[agent].file);
@@ -182,11 +181,11 @@ export function refreshHooks(roots: string[]): string[] {
 export function validateRepo(path: unknown): string {
   if (typeof path !== "string" || !isAbsolute(path)) throw new Error("Path must be absolute");
   if (!existsSync(path)) throw new Error("Path does not exist");
-  const real = realpathSync(path);
+  const real = nativePath(path);
   const top = git(real, ["rev-parse", "--show-toplevel"]);
   if (!top) throw new Error("Not a git repository");
-  if (realpathSync(top) !== real) {
-    throw new Error(`Not the repository top level; use ${realpathSync(top)}`);
+  if (nativePath(top) !== real) {
+    throw new Error(`Not the repository top level; use ${nativePath(top)}`);
   }
   return real;
 }

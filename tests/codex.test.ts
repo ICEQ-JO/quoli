@@ -178,7 +178,7 @@ test("connecting Codex writes .codex/hooks.json, keeps it out of Git and removes
     const handler = hooks.PostToolUse[0].hooks[0];
     assert.equal(handler.type, "command");
     assert.equal(handler.timeout, 3);
-    assert.match(handler.command, /server\/hook\.mjs" \d+ codex$/);
+    assert.match(handler.command, /server[\\/]hook\.mjs" \d+ codex$/);
     assert.match(
       readFileSync(join(dir, ".git", "info", "exclude"), "utf8"),
       /^\/\.codex\/hooks\.json$/m,
