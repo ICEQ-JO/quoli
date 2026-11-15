@@ -2098,3 +2098,27 @@ ul.reasons li {
 .connect-one > summary {
   max-width: 100%;
 }
+
+.nav-brand .q-mark {
+  width: 25px;
+  height: 25px;
+  flex: none;
+}
+.nav-scope {
+  display: grid;
+  gap: 5px;
+  margin: 0 6px 12px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.nav-scope strong {
+  color: var(--text-2);
+  font-weight: 550;
+}
+.nav-scope a {
+  color: inherit;
+  width: fit-content;
+}
+.nav-scope a:hover {
+  color: var(--text);
+}

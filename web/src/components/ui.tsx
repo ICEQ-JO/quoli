@@ -91,13 +91,10 @@ export function LiveDot({ live }: { live: boolean }) {
   );
 }
 
-/**
- * Which coding agent recorded a session. Lists show it only for agents other than Claude Code,
- * so a Claude-only history reads as before; `always` shows it regardless.
- */
+/** Every recorder has an explicit identity, including Claude Code. */
 export function AgentTag({
   session,
-  always = false,
+  always = true,
 }: {
   session: Pick<SessionSummary, "agent" | "agentVersion">;
   always?: boolean;

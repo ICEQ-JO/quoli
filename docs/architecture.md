@@ -197,3 +197,8 @@ Phase 1 #32 makes analysis headers reflow before controls squeeze their descript
 Project tables scroll inside a named keyboard-accessible region; repository paths
 stay within their cards. Compact/coarse-pointer controls have 44px targets. Checked
 with synthetic data at 320–1920px in both themes, including enlarged root text.
+
+Phase 1 #33 shares the stepped Q geometry between marketing, first-run and the
+local app. The navigation identifies this computer, reads summary-sync status and
+links to sync settings and the existing account page. Navigation never enables
+sharing. Claude Code now has the same explicit recorder label as other agents.
