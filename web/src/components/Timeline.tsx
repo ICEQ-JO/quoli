@@ -75,7 +75,7 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
     setPlaying(!playing);
   };
   return (
-    <section className="timeline" aria-label="Replay">
+    <section className={`timeline ${cursor === null ? "" : "replaying"}`} aria-label="Replay">
       <div className="tl-controls">
         <button
           type="button"
@@ -119,7 +119,7 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
         ) : (
           <>
             <b>
-              Replaying step {at + 1} of {n}
+              Replay · step {at + 1} of {n}
               {current ? ` · ${clock(current.startedAt)}` : ""}
             </b>
             <span title={current ? `${current.name}: ${current.summary}` : undefined}>
@@ -146,7 +146,7 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
             : "No tool calls"
         }
         aria-disabled={!n}
-        title="Session timeline (← → step, Home first, End latest, Space play)"
+        title="Session timeline (← → step, Home first, End latest, Space play, Esc leave replay)"
         tabIndex={0}
         onKeyDown={(e) => {
           if (!n) return;
@@ -159,7 +159,10 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
             End: n - 1,
           };
           if (e.key === " ") togglePlay();
-          else if (e.key in to) step(to[e.key]);
+          else if (e.key === "Escape" && cursor !== null) {
+            setPlaying(false);
+            setCursor(null);
+          } else if (e.key in to) step(to[e.key]);
           else return;
           e.preventDefault();
         }}
@@ -230,7 +233,7 @@ export function Timeline({ session, calls, cursor, setCursor, selection, select 
             setCursor(null);
           }}
         >
-          {session.live ? "Back to live" : "Show all"}
+          {session.live ? "Leave replay · back to live" : "Leave replay · whole session"}
         </button>
       )}
     </section>

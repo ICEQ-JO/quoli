@@ -45,7 +45,10 @@ function Sec({
 
 const EXT_KIND = { mcp: "MCP", skill: "Skill", subagent: "Subagent" } as const;
 
-/** The session Summary: a readable page of what was asked, changed, run and spent. */
+/**
+ * The session Summary: what was asked, then what to review (#37), then what changed, ran and
+ * cost. Token, context and extension detail come last.
+ */
 export function Summary({
   session,
   review,
@@ -106,6 +109,97 @@ export function Summary({
             </ol>
           )}
         </Sec>
+
+        <Sec id="sum-review" title="What to review" aside={report.checklist.length || undefined}>
+          <p className="sum-note lead">
+            Derived — prompts for your review, not proof anything works.
+          </p>
+          {report.checklist.length === 0 ? (
+            <p className="faint">Nothing stood out. That does not mean the change is correct.</p>
+          ) : (
+            <ul className="sum-review">
+              {report.checklist.map((item) => (
+                <li key={item.id}>
+                  <p>{item.text}</p>
+                  {(item.files.length > 0 || item.toolCallIds.length > 0) && (
+                    <p className="refs">
+                      {item.files.map((f) => (
+                        <Link
+                          key={f}
+                          to={href("map", { kind: "file", id: f })}
+                          className="ref mono"
+                          title={f}
+                        >
+                          {fileName(f)}
+                        </Link>
+                      ))}
+                      {item.toolCallIds.map((id, i) => (
+                        <Link
+                          key={id}
+                          to={href("agents", { kind: "tool", id })}
+                          className="ref"
+                          title={`Open tool call ${id} in the Agents lens`}
+                        >
+                          tool call {i + 1}
+                        </Link>
+                      ))}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {changes.length > 0 && (
+            <p className="sum-action">
+              <Link to={href("review", null)} className="btn primary">
+                Review {changes.length} changed {changes.length === 1 ? "file" : "files"}
+              </Link>
+            </p>
+          )}
+        </Sec>
+
+        {report.loops.length > 0 && (
+          <Sec id="sum-loops" title="Possible loops" aside={report.loops.length}>
+            <p className="sum-note lead">
+              Inferred by simple rules: patterns worth a look, not proof the agent was stuck.
+            </p>
+            <ul className="sum-review">
+              {report.loops.map((item) => (
+                <li key={item.id}>
+                  <p>{item.text}</p>
+                  <p className="refs">
+                    <span className="faint" title="The rule that found this">
+                      Rule: {item.rule}.
+                    </span>
+                    {item.files.map((f) => (
+                      <Link
+                        key={f}
+                        to={href("map", { kind: "file", id: f })}
+                        className="ref mono"
+                        title={f}
+                      >
+                        {fileName(f)}
+                      </Link>
+                    ))}
+                    {item.toolCallIds.slice(0, 8).map((id, i) => (
+                      <Link
+                        key={id}
+                        to={href("agents", { kind: "tool", id })}
+                        className="ref"
+                        title={`Open tool call ${id} in the Agents lens`}
+                      >
+                        call {i + 1}
+                      </Link>
+                    ))}
+                    {item.toolCallIds.length > 8 && (
+                      <span className="faint">+{item.toolCallIds.length - 8} more</span>
+                    )}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </Sec>
+        )}
 
         <Sec
           id="sum-changed"
@@ -298,49 +392,6 @@ export function Summary({
           </p>
         </Sec>
 
-        {report.loops.length > 0 && (
-          <Sec id="sum-loops" title="Possible loops" aside={report.loops.length}>
-            <p className="sum-note lead">
-              Inferred by simple rules: patterns worth a look, not proof the agent was stuck.
-            </p>
-            <ul className="sum-review">
-              {report.loops.map((item) => (
-                <li key={item.id}>
-                  <p>{item.text}</p>
-                  <p className="refs">
-                    <span className="faint" title="The rule that found this">
-                      Rule: {item.rule}.
-                    </span>
-                    {item.files.map((f) => (
-                      <Link
-                        key={f}
-                        to={href("map", { kind: "file", id: f })}
-                        className="ref mono"
-                        title={f}
-                      >
-                        {fileName(f)}
-                      </Link>
-                    ))}
-                    {item.toolCallIds.slice(0, 8).map((id, i) => (
-                      <Link
-                        key={id}
-                        to={href("agents", { kind: "tool", id })}
-                        className="ref"
-                        title={`Open tool call ${id} in the Agents lens`}
-                      >
-                        call {i + 1}
-                      </Link>
-                    ))}
-                    {item.toolCallIds.length > 8 && (
-                      <span className="faint">+{item.toolCallIds.length - 8} more</span>
-                    )}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </Sec>
-        )}
-
         {session.context && (
           <Sec id="sum-ctx" title="Context window">
             <ContextCard context={session.context} />
@@ -390,47 +441,6 @@ export function Summary({
             </ul>
           </Sec>
         )}
-
-        <Sec id="sum-review" title="Review checklist" aside={report.checklist.length || undefined}>
-          <p className="sum-note lead">
-            Derived — prompts for your review, not proof anything works.
-          </p>
-          {report.checklist.length === 0 ? (
-            <p className="faint">Nothing stood out. That does not mean the change is correct.</p>
-          ) : (
-            <ul className="sum-review">
-              {report.checklist.map((item) => (
-                <li key={item.id}>
-                  <p>{item.text}</p>
-                  {(item.files.length > 0 || item.toolCallIds.length > 0) && (
-                    <p className="refs">
-                      {item.files.map((f) => (
-                        <Link
-                          key={f}
-                          to={href("map", { kind: "file", id: f })}
-                          className="ref mono"
-                          title={f}
-                        >
-                          {fileName(f)}
-                        </Link>
-                      ))}
-                      {item.toolCallIds.map((id, i) => (
-                        <Link
-                          key={id}
-                          to={href("agents", { kind: "tool", id })}
-                          className="ref"
-                          title={`Open tool call ${id} in the Agents lens`}
-                        >
-                          tool call {i + 1}
-                        </Link>
-                      ))}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Sec>
       </div>
     </div>
   );
