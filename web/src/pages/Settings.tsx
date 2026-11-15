@@ -92,6 +92,8 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           {!data && (error ? <ErrorState message={error} retry={refresh} /> : <Loading />)}
           {data && section === "general" && (
             <>
+              {/* Everyday settings first; installation administration last (#40). */}
+              <BudgetForm settings={data.settings} saved={refresh} />
               <section className="card" aria-labelledby="set-where">
                 <h2 id="set-where">This install</h2>
                 <dl className="kv wide">
@@ -112,7 +114,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                 </dl>
               </section>
               <StopOrRemove dataDir={data.info.dataDir} />
-              <BudgetForm settings={data.settings} saved={refresh} />
             </>
           )}
           {data && section === "appearance" && (
@@ -423,7 +424,10 @@ function BudgetForm({
             placeholder="None"
             value={daily}
             aria-invalid={bad(daily)}
-            onChange={(e) => setDaily(e.target.value)}
+            onChange={(e) => {
+              setDaily(e.target.value);
+              setStatus(null);
+            }}
           />
         </div>
         <div className="field">
@@ -435,7 +439,10 @@ function BudgetForm({
             placeholder="None"
             value={monthly}
             aria-invalid={bad(monthly)}
-            onChange={(e) => setMonthly(e.target.value)}
+            onChange={(e) => {
+              setMonthly(e.target.value);
+              setStatus(null);
+            }}
           />
         </div>
       </div>
@@ -448,6 +455,11 @@ function BudgetForm({
         <button type="submit" className="btn primary" disabled={busy || invalid || !dirty}>
           {busy ? "Saving…" : "Save budgets"}
         </button>
+        {dirty && !invalid && !busy && !status && (
+          <span className="price-dirty" role="status">
+            Unsaved changes
+          </span>
+        )}
         {status && (
           <span className={status.ok ? "ok" : "form-error"} role={status.ok ? "status" : "alert"}>
             {status.text}
@@ -490,8 +502,11 @@ function StopOrRemove({ dataDir }: { dataDir: string }) {
     },
   ];
   return (
-    <section className="card" aria-labelledby="set-stop">
-      <h2 id="set-stop">Stop or remove Quoli</h2>
+    <details className="card settings-admin" id="stop">
+      <summary>
+        <h2 id="set-stop">Stop or remove Quoli</h2>
+        <span className="faint">Stop it, open it elsewhere, stop recording or uninstall</span>
+      </summary>
       <p className="faint">
         Quoli runs in the background on this computer and starts when you log in. Run these in a
         terminal.
@@ -507,7 +522,7 @@ function StopOrRemove({ dataDir }: { dataDir: string }) {
           </li>
         ))}
       </ul>
-    </section>
+    </details>
   );
 }
 
