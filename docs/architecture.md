@@ -202,3 +202,8 @@ Phase 1 #33 shares the stepped Q geometry between marketing, first-run and the
 local app. The navigation identifies this computer, reads summary-sync status and
 links to sync settings and the existing account page. Navigation never enables
 sharing. Claude Code now has the same explicit recorder label as other agents.
+
+Phase 1 #34 replaces Dashboard's large spend chart with a compact USD estimate
+strip and a Usage link. Live work, file overlaps and review reasons retain their
+evidence semantics; the other-recent queue excludes sessions already in live or
+review queues. A session may still be live and need review, because both matter.

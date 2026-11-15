@@ -2122,3 +2122,20 @@ ul.reasons li {
 .nav-scope a:hover {
   color: var(--text);
 }
+
+.spend-compact .spend-body {
+  display: block;
+}
+.spend-compact .spend-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+.spend-compact .figure-stat dd {
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .spend-compact .spend-stats {
+    grid-template-columns: 1fr;
+  }
+}
