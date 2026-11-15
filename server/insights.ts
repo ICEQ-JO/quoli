@@ -6,10 +6,9 @@ import {
   type SessionDetail,
   type ToolCategory,
 } from "../shared/model.ts";
+import { reportingZone } from "../shared/reporting.ts";
 import { lastActivityAt } from "./steps.ts";
 import { localDate } from "./usage.ts";
-
-const DAY = 86_400_000;
 
 /** Nearest-rank percentile of an ascending list; null when it is empty. */
 export function percentile(sorted: number[], p: number): number | null {
@@ -108,7 +107,7 @@ export function insightsReport(
 ): InsightsReport {
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
-  start.setTime(start.getTime() - (days - 1) * DAY);
+  start.setDate(start.getDate() - (days - 1));
   start.setHours(0, 0, 0, 0);
   const startIso = start.toISOString();
   const inRange = sessions.filter((d) => d.startedAt >= startIso);
@@ -129,6 +128,7 @@ export function insightsReport(
   const all = group("all", "All", list);
 
   return {
+    timeZone: reportingZone(),
     days: [...byDay].map(([date, ds]) => {
       const c = asc(ds.map(knownUsd).filter((u): u is number => u !== null));
       const mix = emptyMix();

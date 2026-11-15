@@ -348,7 +348,14 @@ export function createApp(store: Store, port: () => number, token?: string) {
       }
       const agent = url.searchParams.get("agent");
       if (agent !== null && !isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
-      return json(res, 200, usageReport(store, days, details, new Date(), agent));
+      return json(
+        res,
+        200,
+        usageReport(store, days, details, new Date(), agent, {
+          project: url.searchParams.get("project"),
+          model: url.searchParams.get("model"),
+        }),
+      );
     }
     if (path === "/api/insights") {
       const q = url.searchParams;

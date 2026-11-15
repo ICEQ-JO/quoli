@@ -207,3 +207,11 @@ Phase 1 #34 replaces Dashboard's large spend chart with a compact USD estimate
 strip and a Usage link. Live work, file overlaps and review reasons retain their
 evidence semantics; the other-recent queue excludes sessions already in live or
 review queues. A session may still be live and need review, because both matter.
+
+Phase 1 #36 connects Spend & tokens and Session trends with URL-backed range,
+agent, project and model context. Usage filters token rows by project/model; trends
+filter sessions that used a model. Both reports expose the server's IANA reporting
+zone. Day links carry that zone and model into Sessions; original timestamps stay
+unchanged. Calendar-day subtraction uses calendar arithmetic across DST. Charts
+have one tab entry each, arrow/Home/End exploration, and daily table alternatives.
+Usage activation inspects token-day values; trend activation opens start-day sessions.

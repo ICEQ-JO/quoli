@@ -100,3 +100,24 @@ test("the usage route validates days and budgets are validated settings", async 
   assert.throws(() => mergeSettings(DEFAULT_SETTINGS, { budgetDailyUsd: 0 }));
   assert.throws(() => mergeSettings(DEFAULT_SETTINGS, { budgetMonthlyUsd: "10" }));
 });
+
+test("usage project and model context filters rows before totals", () => {
+  const store = seed();
+  try {
+    const project = usageReport(store, 7, () => [], NOW).byProject.find((p) => p.name === "alpha");
+    assert.ok(project);
+    const r = usageReport(store, 7, () => [], NOW, null, {
+      project: project.projectId,
+      model: "claude-opus-5-5",
+    });
+    assert.equal(r.total.cost.usd, 26);
+    assert.equal(r.byProject.length, 1);
+    assert.equal(r.byModel.length, 1);
+    assert.equal(
+      usageReport(store, 7, () => [], NOW, null, { project: "missing" }).total.tokens.input,
+      0,
+    );
+  } finally {
+    store.db.close();
+  }
+});
