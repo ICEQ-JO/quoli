@@ -58,6 +58,11 @@ export function autostartPlan(
       file: join(config, "systemd", "user", `${name()}.service`),
       content: `[Unit]
 Description=Quoli: records coding agent sessions; app.iceq.best reads it
+# Not started at all when Quoli's files are gone (~/.quoli deleted by hand), instead of failing
+# and restarting forever; and never more than 10 restarts in 5 minutes.
+ConditionPathExists=${unitText(entry())}
+StartLimitIntervalSec=300
+StartLimitBurst=10
 
 [Service]
 ExecStart=${unitQuote(node)} ${unitQuote(entry())} start
