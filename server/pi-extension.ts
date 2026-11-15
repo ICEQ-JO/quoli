@@ -12,12 +12,24 @@ const MAX_TEXT = 100_000;
 // Set only by the user-level install: where events wait while Quoli is not running.
 const SPOOL = "__QUOLI_SPOOL__";
 const SPOOL_MAX = 50 * 1024 * 1024;
+// Redacted before the queue touches the disk; keep equal to SECRETS in server/ingest.ts
+// (tests/redact.test.ts checks).
+const SECRETS = [
+  /sk-[A-Za-z0-9_-]{20,}/g,
+  /(?:ghp|gho|ghs|ghu)_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/g,
+  /AKIA[0-9A-Z]{16}/g,
+  /xox[abprs]-[A-Za-z0-9-]{10,}/g,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
+];
+const redact = (t: string) => SECRETS.reduce((s, re) => s.replace(re, "[redacted]"), t);
 
 /** Queues an event for Quoli to read when it next starts; never throws. */
 const spool = (body: string, at: string) => {
   try {
     if (!SPOOL || (existsSync(SPOOL) && statSync(SPOOL).size >= SPOOL_MAX)) return;
-    appendFileSync(SPOOL, `${JSON.stringify({ agent: "pi", at, body })}\n`, { mode: 0o600 });
+    appendFileSync(SPOOL, `${JSON.stringify({ agent: "pi", at, body: redact(body) })}\n`, {
+      mode: 0o600,
+    });
     kick();
   } catch {}
 };

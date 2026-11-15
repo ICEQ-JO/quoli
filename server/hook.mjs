@@ -19,6 +19,16 @@ import { basename, dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SPOOL_MAX = 50 * 1024 * 1024;
+// Redacted before the queue touches the disk; keep equal to SECRETS in server/ingest.ts
+// (tests/redact.test.ts checks).
+const SECRETS = [
+  /sk-[A-Za-z0-9_-]{20,}/g,
+  /(?:ghp|gho|ghs|ghu)_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/g,
+  /AKIA[0-9A-Z]{16}/g,
+  /xox[abprs]-[A-Za-z0-9-]{10,}/g,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
+];
+const redact = (t) => SECRETS.reduce((s, re) => s.replace(re, "[redacted]"), t);
 const port = process.argv[2] ?? process.env.QUOLI_PORT ?? "4400";
 const kind = /^[a-z-]+$/.test(process.argv[3] ?? "") ? process.argv[3] : "";
 const chunks = [];
@@ -46,7 +56,7 @@ try {
         size = statSync(spool).size;
       } catch {}
       if (size < SPOOL_MAX) {
-        const line = { agent: kind || "claude-code", at, body: body.toString("utf8") };
+        const line = { agent: kind || "claude-code", at, body: redact(body.toString("utf8")) };
         appendFileSync(spool, `${JSON.stringify(line)}\n`, { mode: 0o600 });
       }
       kick(dirname(self));
