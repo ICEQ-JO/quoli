@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Settings, TokenTotals } from "../shared/model.ts";
 
@@ -18,6 +18,18 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export const home = () => process.env.QUOLI_HOME ?? join(homedir(), ".quoli");
+
+/**
+ * Only this account may read Quoli's data: the folder 0700, the database files 0600. Existing
+ * installs are tightened on every start. Windows keeps the user profile's own access rules.
+ */
+export function makePrivate(file: string) {
+  if (process.platform === "win32") return;
+  try {
+    chmodSync(dirname(file), 0o700);
+    for (const f of [file, `${file}-wal`, `${file}-shm`]) if (existsSync(f)) chmodSync(f, 0o600);
+  } catch {}
+}
 
 export interface RawEvent {
   seq: number;
@@ -47,8 +59,9 @@ export class Store {
   private readonly revisions = new Map<string, number>();
 
   constructor(file = join(home(), "quoli.db")) {
-    if (file !== ":memory:") mkdirSync(join(file, ".."), { recursive: true });
+    if (file !== ":memory:") mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
     this.db = new DatabaseSync(file);
+    if (file !== ":memory:") makePrivate(file);
     this.db.exec(`
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS events (

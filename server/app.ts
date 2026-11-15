@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, realpathSync, statSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { basename, isAbsolute, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -422,7 +422,10 @@ export function createApp(store: Store, port: () => number) {
       if (rel.startsWith("..") || !full.startsWith(root + sep)) return json(res, 400, {});
       let content: string | null = null;
       try {
-        if (statSync(full).size < 1024 * 1024) content = readFileSync(full, "utf8");
+        // A symlink in the repository must not lead outside it (to ~/.ssh, say).
+        const real = realpathSync(full);
+        if (real.startsWith(realpathSync(root) + sep) && statSync(real).size < 1024 * 1024)
+          content = readFileSync(real, "utf8");
       } catch {}
       const diff = git(root, ["diff", "HEAD", "--", rel]) || null;
       return json(res, 200, { path: rel, content, diff });
