@@ -192,3 +192,8 @@ Survey contours carry animated signals behind the terminal, product captures,
 team view and footer. A visibility observer in the isolated landing entry also
 pauses CSS/SVG art when offscreen, hidden or reduced motion is requested. Artwork
 is static before hydration; canvas clocks and recorder transport remain local.
+
+Phase 1 #32 makes analysis headers reflow before controls squeeze their descriptions.
+Project tables scroll inside a named keyboard-accessible region; repository paths
+stay within their cards. Compact/coarse-pointer controls have 44px targets. Checked
+with synthetic data at 320–1920px in both themes, including enlarged root text.

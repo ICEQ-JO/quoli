@@ -164,105 +164,110 @@ export function ProjectsPage() {
         </EmptyState>
       )}
       {projects && projects.length > 0 && (
-        <table className="table projects">
-          <caption className="sr-only">Connected projects</caption>
-          <thead>
-            <tr>
-              <th scope="col">Project</th>
-              <th scope="col">Hooks</th>
-              <th scope="col" className="num">
-                Sessions
-              </th>
-              <th scope="col">Last activity</th>
-              <th scope="col">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects.map((p) => (
-              <tr key={p.id}>
-                <td className="cell-main">
-                  <Link to={paths.board(p.id)} className="strong" title={p.name}>
-                    {p.name}
-                  </Link>
-                  {p.github && (
-                    <a
-                      className="gh-repo"
-                      href={`https://github.com/${p.github}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="Open on GitHub"
-                    >
-                      {p.github}
-                    </a>
-                  )}
-                  <code className="path" title={p.root}>
-                    {p.root}
-                  </code>
-                </td>
-                <td className="hooks">
-                  <HookBadge project={p} />
-                  <AgentHooks project={p} />
-                  {rowError[p.id] && (
-                    <p className="form-error" role="alert">
-                      {rowError[p.id]}
-                    </p>
-                  )}
-                </td>
-                <td className="num">{p.sessions}</td>
-                <td className="nowrap">{p.lastActivity ? ago(p.lastActivity) : "never"}</td>
-                <td className="actions">
-                  <Link to={paths.board(p.id)} className="btn">
-                    Open
-                  </Link>
-                  {p.agents.length < HOOK_AGENTS.length && (
-                    <select
-                      className="input add-agent"
-                      aria-label={`Record another agent's sessions in ${p.name}`}
-                      disabled={busy === p.id}
-                      value=""
-                      onChange={(e) => addAgent(p, e.target.value as AgentKind)}
-                    >
-                      <option value="">Add agent…</option>
-                      {HOOK_AGENTS.filter((a) => !p.agents.some((x) => x.agent === a)).map((a) => (
-                        <option key={a} value={a}>
-                          {AGENT_NAMES[a]}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={busy === p.id}
-                    onClick={() => toggleRecording(p)}
-                  >
-                    {p.recording === false ? "Record again" : "Stop recording"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={!p.agents.some((a) => !a.everywhere) || busy === p.id}
-                    title={
-                      p.agents.some((a) => !a.everywhere)
-                        ? "Remove Quoli's hooks from this repository; keep the recorded data"
-                        : p.agents.length
-                          ? "Recorded through the setup for every repository; remove that above"
-                          : "Hooks are not installed"
-                    }
-                    onClick={() => disconnect(p)}
-                  >
-                    Disconnect
-                  </button>
-                  <button type="button" className="btn danger" onClick={() => setDeleting(p)}>
-                    Delete data
-                  </button>
-                </td>
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users must be able to scroll this overflow region.
+        <section className="table-scroll" aria-label="Connected projects" tabIndex={0}>
+          <table className="table projects">
+            <caption className="sr-only">Connected projects</caption>
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">Hooks</th>
+                <th scope="col" className="num">
+                  Sessions
+                </th>
+                <th scope="col">Last activity</th>
+                <th scope="col">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {projects.map((p) => (
+                <tr key={p.id}>
+                  <td className="cell-main">
+                    <Link to={paths.board(p.id)} className="strong" title={p.name}>
+                      {p.name}
+                    </Link>
+                    {p.github && (
+                      <a
+                        className="gh-repo"
+                        href={`https://github.com/${p.github}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Open on GitHub"
+                      >
+                        {p.github}
+                      </a>
+                    )}
+                    <code className="path" title={p.root}>
+                      {p.root}
+                    </code>
+                  </td>
+                  <td className="hooks">
+                    <HookBadge project={p} />
+                    <AgentHooks project={p} />
+                    {rowError[p.id] && (
+                      <p className="form-error" role="alert">
+                        {rowError[p.id]}
+                      </p>
+                    )}
+                  </td>
+                  <td className="num">{p.sessions}</td>
+                  <td className="nowrap">{p.lastActivity ? ago(p.lastActivity) : "never"}</td>
+                  <td className="actions">
+                    <Link to={paths.board(p.id)} className="btn">
+                      Open
+                    </Link>
+                    {p.agents.length < HOOK_AGENTS.length && (
+                      <select
+                        className="input add-agent"
+                        aria-label={`Record another agent's sessions in ${p.name}`}
+                        disabled={busy === p.id}
+                        value=""
+                        onChange={(e) => addAgent(p, e.target.value as AgentKind)}
+                      >
+                        <option value="">Add agent…</option>
+                        {HOOK_AGENTS.filter((a) => !p.agents.some((x) => x.agent === a)).map(
+                          (a) => (
+                            <option key={a} value={a}>
+                              {AGENT_NAMES[a]}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    )}
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={busy === p.id}
+                      onClick={() => toggleRecording(p)}
+                    >
+                      {p.recording === false ? "Record again" : "Stop recording"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={!p.agents.some((a) => !a.everywhere) || busy === p.id}
+                      title={
+                        p.agents.some((a) => !a.everywhere)
+                          ? "Remove Quoli's hooks from this repository; keep the recorded data"
+                          : p.agents.length
+                            ? "Recorded through the setup for every repository; remove that above"
+                            : "Hooks are not installed"
+                      }
+                      onClick={() => disconnect(p)}
+                    >
+                      Disconnect
+                    </button>
+                    <button type="button" className="btn danger" onClick={() => setDeleting(p)}>
+                      Delete data
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       )}
 
       {deleting && (

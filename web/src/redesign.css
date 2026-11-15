@@ -2015,3 +2015,86 @@ ul.reasons li {
   font-size: var(--fs-sm);
   color: var(--warn);
 }
+
+/* Reflow the page header before filters can squeeze its description. */
+.page {
+  width: 100%;
+  min-width: 0;
+}
+.page-head {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.page-head > div:first-child {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+.page-actions {
+  flex: 0 1 auto;
+  max-width: 100%;
+  justify-content: flex-start;
+}
+.page-actions .input,
+.filters .input {
+  min-width: 0;
+  max-width: 100%;
+}
+.filters input[type="search"] {
+  width: min(280px, 100%);
+}
+.segmented {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.table-scroll {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.table-scroll > .table {
+  min-width: 760px;
+}
+.every-head > div,
+.every-row > span {
+  min-width: 0;
+}
+.every-state {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1100px) {
+  .page-actions {
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 760px), (pointer: coarse) {
+  .page :is(.btn, .input, .segmented button),
+  .nav :is(button, .nav-item, .nav-add) {
+    min-height: 44px;
+  }
+  .page .check {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .page-actions {
+    gap: 10px;
+  }
+  .page-actions > .input {
+    flex: 1 1 10rem;
+  }
+  .page-actions .segmented {
+    flex: 1 1 auto;
+  }
+  .page-actions .segmented button {
+    flex: 1;
+  }
+}
+
+.every-row .path {
+  max-width: 100%;
+}
+.connect-one > summary {
+  max-width: 100%;
+}
