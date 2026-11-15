@@ -34,6 +34,7 @@ Approving shares as you: the page asks to check that the terminal shows the same
 - **Everyone**: sign in at `/app/`; the page shows one command, `npx https://iceq.best/quoli-<version>.tgz connect`. It records every repository for the agents, opens the browser on `/app/?connect=CODE`, and once the signed-in user approves that code it collects a sync key, turns Team sync on and starts Quoli (#154). Settings → Team sync → Connect does the same from a running Quoli. Pasting a sync key made under "Sync keys and shared data" still works.
 - **Your activity** (#167): once a computer has uploaded, the account page shows the signed-in person's own sessions over 7, 30 or 90 days: sessions, agent time, estimated cost (token counts when a model has no price), tokens and failed calls; cost per day; the top agents, repositories and models; and recent sessions. It reads only their own `session_summaries` rows (row-level security), and refreshes every minute.
 - **Member**: join with the code. Only sessions that start after that are shared; a member can leave a team, revoke keys or delete what they shared at any time.
+- **Working now** (#25): each team shows who has an agent working right now, with agent, model, GitHub repository, branch, start time and spend so far, refreshed every 30 seconds, and says when two people work in the same repository (more strongly on the same branch). It needs no new upload: Team sync re-sends a session's summary every minute while it has activity, and a session counts as live while it has no end and was updated in the last 5 minutes (`team_live`, `20261115180000_team_live.sql`). The owner always sees it; members see it only when the owner turns on "Members see this too" (`classes.members_see_live`, off by default). Even then members cannot read each other's other summaries.
 - The owner sees, per member, sessions, last activity, calls, failures, possible loops and estimated spend, for sessions since the member joined; plus the most recent sessions with agent, model, GitHub repository and branch.
 
 ## Local development
@@ -45,6 +46,7 @@ Approving shares as you: the page asks to check that the terminal shows the same
 - Free tiers: Supabase pauses a free project after a week without activity (data kept), 500 MB database (summaries are a few KB each). Vercel Hobby is for non-commercial use; charging customers needs Vercel Pro.
 - Costs are list-price estimates from each member's Quoli; sessions with unpriced models show as `+` or `—`.
 - Members who sign in but never turn on sync appear with no sessions.
+- An agent waiting for its user shows as working for up to 5 minutes after its last activity, then drops out of Working now until it does something again.
 - A sync key sends to every team the member is in; there is no per-team choice yet.
 - Reconnecting the same computer adds a connection; the page counts connections, not machines.
 - Owners see a member by GitHub login, else name, else email address (email-only sign-in), and only for teams the member joined.

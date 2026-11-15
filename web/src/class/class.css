@@ -156,6 +156,7 @@ body {
 }
 .class-list li {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
@@ -385,4 +386,65 @@ body {
 .class-start h2 {
   margin: 0;
   font-size: var(--fs-lg);
+}
+
+/* Working now (#25) */
+.class-live {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 0 0 16px;
+}
+.class-list .class-live {
+  flex-basis: 100%;
+  margin: 8px 0 0;
+}
+.class-live-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+}
+.class-live h3 {
+  margin: 0;
+  font-size: var(--fs-md);
+}
+.class-live-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.class-live-overlap {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--warn, #d29922);
+  font-size: var(--fs-sm);
+}
+.class-live-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+.class-live-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.class-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok, #3fb950);
+  align-self: center;
+}
+.class-live > p.faint {
+  margin: 8px 0 0;
+  font-size: var(--fs-sm);
 }
