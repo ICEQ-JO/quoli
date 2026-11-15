@@ -45,12 +45,15 @@ export function PricesSection() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [edited, setEdited] = useState(false);
 
   const adopt = (t: PriceTable) => {
     const r = toRows(t);
     setRows(r);
     setBase(r);
     setVersion(t.version);
+    setEdited(t.edited ?? false);
   };
   // biome-ignore lint/correctness/useExhaustiveDependencies: adopt only sets state
   useEffect(() => {
@@ -73,6 +76,10 @@ export function PricesSection() {
   const clientInvalid = rows.some(
     (r) => !r.model.trim() || FIELDS.some((f) => invalidNumber(r[f])),
   );
+
+  // Search narrows what is shown; every row is still saved (#40). New, empty rows always show.
+  const q = query.trim().toLowerCase();
+  const shown = q ? rows.filter((r) => !r.model.trim() || r.model.toLowerCase().includes(q)) : rows;
 
   const save = async () => {
     setBusy(true);
@@ -101,7 +108,9 @@ export function PricesSection() {
   const reset = async () => {
     if (
       !window.confirm(
-        "Replace your prices with the built-in defaults? Your edits to the table will be lost.",
+        dirty
+          ? "Replace your prices with the built-in defaults? Your unsaved changes and your saved prices will be lost."
+          : "Replace your prices with the built-in defaults? Your saved prices will be lost.",
       )
     )
       return;
@@ -127,6 +136,20 @@ export function PricesSection() {
         are estimates, not invoices.
       </p>
       <LivePrices />
+      {table && (
+        <div className="price-source">
+          <p>
+            <b>This table:</b>{" "}
+            {edited ? "your own prices (saved by you)" : "the built-in list prices"}.
+          </p>
+          <p className="faint">
+            Which price a session uses:{" "}
+            {edited
+              ? "your row for the model, else a live price from models.dev (when on), else none (unpriced)."
+              : "a live price from models.dev (when on), else this built-in row, else none (unpriced). Saving your own prices puts your rows first."}
+          </p>
+        </div>
+      )}
       {!table && (loadError ? <ErrorState message={loadError} retry={refresh} /> : <Loading />)}
       {table && (
         <form
@@ -135,6 +158,24 @@ export function PricesSection() {
             if (!clientInvalid) save();
           }}
         >
+          <div className="price-search">
+            <label htmlFor="price-q" className="sr-only">
+              Find a model
+            </label>
+            <input
+              id="price-q"
+              className="input"
+              type="search"
+              placeholder="Find a model, e.g. sonnet or gpt-5"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              spellCheck={false}
+              autoComplete="off"
+            />
+            <span className="faint" aria-live="polite">
+              {q ? `${shown.length} of ${rows.length} models` : `${rows.length} models`}
+            </span>
+          </div>
           <div className="price-wrap">
             <table className="price-table">
               <caption className="sr-only">Model prices in USD per million tokens</caption>
@@ -152,7 +193,7 @@ export function PricesSection() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r, i) => (
+                {shown.map((r, i) => (
                   <tr key={r.key}>
                     <td>
                       <input
@@ -195,6 +236,13 @@ export function PricesSection() {
                     </td>
                   </tr>
                 ))}
+                {rows.length > 0 && shown.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="faint">
+                      No model matches “{query.trim()}”.
+                    </td>
+                  </tr>
+                )}
                 {rows.length === 0 && (
                   <tr>
                     <td colSpan={6} className="faint">
@@ -209,7 +257,8 @@ export function PricesSection() {
             <button
               type="button"
               className="btn"
-              onClick={() =>
+              onClick={() => {
+                setQuery("");
                 setRows((rs) => [
                   ...rs,
                   {
@@ -220,11 +269,24 @@ export function PricesSection() {
                     cacheRead: "0",
                     cacheWrite: "0",
                   },
-                ])
-              }
+                ]);
+              }}
             >
               Add model
             </button>
+            {dirty && (
+              <button
+                type="button"
+                className="btn"
+                disabled={busy}
+                onClick={() => {
+                  setRows(base);
+                  setMessage(null);
+                }}
+              >
+                Discard changes
+              </button>
+            )}
             <button type="button" className="btn" disabled={busy} onClick={reset}>
               Reset to defaults
             </button>
@@ -235,6 +297,11 @@ export function PricesSection() {
             >
               {busy ? "Working…" : "Save prices"}
             </button>
+            {dirty && !clientInvalid && !busy && (
+              <span className="price-dirty" role="status">
+                Unsaved changes
+              </span>
+            )}
             {clientInvalid && dirty && (
               <span className="faint">
                 Every row needs a model id and four numbers of 0 or more.

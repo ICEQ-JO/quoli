@@ -3321,3 +3321,56 @@ textarea.input {
 .table.projects .row-more-menu .add-agent {
   margin: 0;
 }
+
+/* Settings (#40): installation administration collapsed at the end; unsaved-change status. */
+.settings-admin > summary {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  cursor: pointer;
+}
+.settings-admin > summary::-webkit-details-marker {
+  display: none;
+}
+.settings-admin > summary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: translateY(-2px) rotate(-45deg);
+  transition: transform 0.15s ease-out;
+  align-self: center;
+}
+.settings-admin[open] > summary::before {
+  transform: translateY(-3px) rotate(45deg);
+}
+.settings-admin > summary h2 {
+  margin: 0;
+}
+.settings-admin[open] > summary {
+  margin-bottom: 8px;
+}
+.price-dirty {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+.price-source {
+  margin: 10px 0;
+}
+.price-source p {
+  margin: 2px 0;
+  font-size: var(--fs-sm);
+}
+.price-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+.price-search .input {
+  max-width: 320px;
+}
