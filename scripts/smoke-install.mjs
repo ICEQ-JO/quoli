@@ -59,9 +59,21 @@ function quoli(...args) {
 }
 
 const url = (path) => `http://127.0.0.1:${PORT}${path}`;
-async function get(path, headers = {}) {
+// This computer's Quoli token (server/token.ts), as a paired browser sends it.
+const token = () => {
   try {
-    const res = await fetch(url(path), { headers, signal: AbortSignal.timeout(3000) });
+    return readFileSync(join(home, ".quoli", "token"), "utf8").trim();
+  } catch {
+    return "";
+  }
+};
+async function get(path, headers = {}, paired = true) {
+  try {
+    const auth = paired ? { "X-Quoli-Token": token() } : {};
+    const res = await fetch(url(path), {
+      headers: { ...auth, ...headers },
+      signal: AbortSignal.timeout(3000),
+    });
     return { status: res.status, headers: res.headers, body: await res.json().catch(() => null) };
   } catch {
     return null;
@@ -97,6 +109,7 @@ try {
   ok("first run returns", first.status === 0);
   ok("says it runs in the background", /running in the background/.test(first.out));
   ok("Quoli answers", await until(async () => (await get("/api/settings"))?.status === 200));
+  ok("unpaired requests refused", (await get("/api/settings", {}, false))?.status === 401);
   const info = (await get("/api/settings"))?.body?.info;
   ok("data lives in the new home", info?.dataDir?.startsWith(home), info?.dataDir);
   if (loginItem) ok("login item written", existsSync(loginItem), loginItem);
