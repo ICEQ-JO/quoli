@@ -11,7 +11,11 @@ export function sessionFilters(search: string) {
     agent: AGENT_KINDS.find((a) => a === q.get("agent")) ?? "",
     status: ["live", "ended"].includes(q.get("status") ?? "") ? (q.get("status") ?? "") : "",
     day:
-      /^\d{4}-\d{2}-\d{2}$/.test(day) && !Number.isNaN(Date.parse(`${day}T12:00:00Z`)) ? day : "",
+      /^\d{4}-\d{2}-\d{2}$/.test(day) &&
+      !Number.isNaN(Date.parse(`${day}T12:00:00Z`)) &&
+      new Date(`${day}T12:00:00Z`).toISOString().slice(0, 10) === day
+        ? day
+        : "",
     zone: zone && validZone(zone) ? zone : "",
     model: q.get("model") ?? "",
     failedOnly: q.get("failed") === "1",

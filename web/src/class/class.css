@@ -21,13 +21,10 @@ body {
   color: var(--text);
   text-decoration: none;
 }
-.class-logo {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  background:
-    radial-gradient(circle at 34% 34%, #ff6a2b 0 22%, transparent 23%),
-    radial-gradient(circle at 66% 66%, var(--text) 0 22%, transparent 23%), var(--panel-2, #1a1a1d);
+.class-brand .q-mark {
+  width: 24px;
+  height: 24px;
+  flex: none;
 }
 .class-user {
   display: flex;

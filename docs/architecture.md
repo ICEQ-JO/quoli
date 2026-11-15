@@ -215,3 +215,19 @@ zone. Day links carry that zone and model into Sessions; original timestamps sta
 unchanged. Calendar-day subtraction uses calendar arithmetic across DST. Charts
 have one tab entry each, arrow/Home/End exploration, and daily table alternatives.
 Usage activation inspects token-day values; trend activation opens start-day sessions.
+
+Phase 1 #35 saves optional session display names in browser localStorage, separately
+from append-only evidence. Rename is available in the selected session header;
+clearing the override restores the recorded title. Names apply to local lists and
+title search, are limited to 120 characters and never enter server/sync payloads.
+They do not follow users to other browsers. Sessions filters round-trip through
+URLs; typed query changes replace the current history entry, discrete filters push
+one. Search identifies its scope and separates recorded-search loading/failure from
+successful zero matches, while keeping available local results usable.
+
+The Sessions table uses the same keyboard-scroll containment as Projects so its
+task column cannot collapse underneath agent and timing columns on narrow screens.
+On phones the navigation wraps, keeps Projects reachable and omits the duplicate
+live strip; the Sessions live count and Dashboard live queue remain available.
+The hosted account/team header also reuses the shared mark, so following the new
+account destination retains the same identity.

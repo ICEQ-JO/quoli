@@ -8,6 +8,7 @@ import { isAdded } from "../lenses/infra/split.ts";
 import { Link, paths } from "../router.ts";
 import { editedUnder, type Lens, type LensContext, type Selection } from "../state.ts";
 import { RecordedChange, UnifiedDiff } from "./Diff.tsx";
+import { SessionName } from "./SessionName.tsx";
 import { ErrorState, Icon, Loading } from "./ui.tsx";
 
 interface Props extends LensContext {
@@ -145,7 +146,10 @@ function LensPanel(p: Props & { session: SessionDetail }) {
                       className={s.id === session.id ? "current" : ""}
                       onClick={() => openSession(s.id)}
                     >
-                      <b>{s.title}</b> <span className="faint">{ago(s.startedAt)}</span>
+                      <b>
+                        <SessionName session={s} />
+                      </b>{" "}
+                      <span className="faint">{ago(s.startedAt)}</span>
                     </button>
                   </li>
                 ))}
@@ -547,7 +551,9 @@ function CommitPanel({ sha, git, root, sessions, openSession }: Props & { sha: s
             {madeBy.map((s) => (
               <li key={s.id}>
                 <button type="button" onClick={() => openSession(s.id)} title={s.title}>
-                  <b>{s.title}</b>
+                  <b>
+                    <SessionName session={s} />
+                  </b>
                 </button>
               </li>
             ))}
@@ -649,7 +655,10 @@ function BranchPanel({ name, git, sessions, openSession }: Props & { name: strin
             {ran.map((s) => (
               <li key={s.id}>
                 <button type="button" title={s.title} onClick={() => openSession(s.id)}>
-                  <b>{s.title}</b> <span className="faint">{ago(s.startedAt)}</span>
+                  <b>
+                    <SessionName session={s} />
+                  </b>{" "}
+                  <span className="faint">{ago(s.startedAt)}</span>
                 </button>
               </li>
             ))}

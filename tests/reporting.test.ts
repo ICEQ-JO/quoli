@@ -69,6 +69,7 @@ test("session filters round-trip and changing one filter preserves the others", 
   });
   assert.equal(sessionFilters(filterQuery(query, "day", "")).day, "");
   assert.equal(sessionFilters(filterQuery(query, "day", "")).project, "p1");
+  assert.equal(sessionFilters("?day=2026-02-30").day, "");
   assert.equal(sessionFilters("?agent=bad&zone=bad&day=bad").agent, "");
   assert.equal(sessionFilters("?agent=bad&zone=bad&day=bad").zone, "");
 });

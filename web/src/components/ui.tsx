@@ -4,6 +4,7 @@ import { api } from "../api.ts";
 import { ago, compact, money, plural } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import { useDialog } from "./Dialog.tsx";
+import { SessionName } from "./SessionName.tsx";
 import { Trace } from "./Trace.tsx";
 
 /** Re-render every `ms` so relative times ("2m ago") stay honest. */
@@ -134,7 +135,7 @@ export function SessionRow({
           className="srow-title"
           title={session.title}
         >
-          {session.title}
+          <SessionName session={session} />
         </Link>
         <span className="srow-meta">
           {showProject && <span title={session.root}>{name}</span>}

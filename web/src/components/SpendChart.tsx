@@ -43,7 +43,13 @@ export function SpendChart({
         <b>{d.usd === null ? (tokenSum(d.tokens) ? "price unknown" : usd(0)) : usd(d.usd)}</b>
         <span className="faint">{compact(tokenSum(d.tokens))} tokens</span>
       </figcaption>
-      <div className="sc-plot" style={{ height }} onPointerLeave={() => setHover(null)}>
+      <div
+        className="sc-plot"
+        style={{ height }}
+        onPointerLeave={(e) => {
+          if (!e.currentTarget.contains(document.activeElement)) setHover(null);
+        }}
+      >
         {budget && !byTokens ? (
           <div className="sc-budget" style={{ bottom: `${(budget / max) * 100}%` }}>
             <span>Daily budget {usd(budget)}</span>

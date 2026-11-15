@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AGENT_KINDS, AGENT_NAMES, type SessionSummary } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
+import { SessionName } from "../components/SessionName.tsx";
 import {
   AgentTag,
   EmptyState,
@@ -14,6 +15,7 @@ import {
 import { ago, compact, duration, money, tokenSum } from "../format.ts";
 import { Link, navigate, paths, useLocation } from "../router.ts";
 import { filterQuery, matchesSessionDay, sessionFilters } from "../session-filters.ts";
+import { displayTitle, useTitleVersion } from "../session-titles.ts";
 
 const PAGE = 100;
 
@@ -35,6 +37,8 @@ export function SessionsPage() {
     refreshProjects();
   });
 
+  const titlesVersion = useTitleVersion();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: browser display names can change without evidence changing.
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (sessions ?? []).filter(
@@ -46,9 +50,23 @@ export function SessionsPage() {
         (!loopsOnly || s.loops > 0) &&
         matchesSessionDay(s, day, zone) &&
         (!model || s.models.includes(model)) &&
-        (!q || s.title.toLowerCase().includes(q) || (s.branch ?? "").toLowerCase().includes(q)),
+        (!q ||
+          displayTitle(s).toLowerCase().includes(q) ||
+          (s.branch ?? "").toLowerCase().includes(q)),
     );
-  }, [sessions, query, project, status, agent, failedOnly, loopsOnly, day, zone, model]);
+  }, [
+    sessions,
+    query,
+    project,
+    status,
+    agent,
+    failedOnly,
+    loopsOnly,
+    day,
+    zone,
+    model,
+    titlesVersion,
+  ]);
 
   const filtered = query || project || status || agent || failedOnly || loopsOnly || day || model;
   // The server lists only the newest sessions; projects count all of them.
@@ -73,10 +91,7 @@ export function SessionsPage() {
           className="input"
           placeholder="Search title or branch"
           value={query}
-          onChange={(e) => {
-            set("q", e.target.value);
-            setShown(PAGE);
-          }}
+          onChange={(e) => set("q", e.target.value)}
         />
         <label className="sr-only" htmlFor="s-p">
           Project
@@ -202,56 +217,60 @@ export function SessionsPage() {
       )}
       {rows.length > 0 && (
         <>
-          <table className="table sessions">
-            <caption className="sr-only">Sessions, newest first</caption>
-            <thead>
-              <tr>
-                <th scope="col" className="c-dot">
-                  <span className="sr-only">Status</span>
-                </th>
-                <th scope="col">Title</th>
-                <th scope="col" className="c-agent">
-                  Agent
-                </th>
-                <th scope="col" className="c-proj">
-                  Project
-                </th>
-                <th scope="col" className="c-branch">
-                  Branch
-                </th>
-                <th scope="col" className="c-when">
-                  Started
-                </th>
-                <th scope="col" className="num c-dur">
-                  Duration
-                </th>
-                <th scope="col" className="num c-n">
-                  Tools
-                </th>
-                <th
-                  scope="col"
-                  className="num c-n c-opt"
-                  title="Files the agent read or edited. Changed files are in the Review lens"
-                >
-                  Touched
-                </th>
-                <th scope="col" className="num c-n c-opt">
-                  Tokens
-                </th>
-                <th scope="col" className="num c-n" title="Estimate from list prices">
-                  Cost
-                </th>
-                <th scope="col" className="num c-n">
-                  Failed
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.slice(0, shown).map((s) => (
-                <Row key={s.id} s={s} name={projectName(projects, s.projectId)} />
-              ))}
-            </tbody>
-          </table>
+          <p className="table-hint faint">Scroll the table for agent, project and usage details.</p>
+          {/* biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users must be able to scroll the session table. */}
+          <section className="table-scroll" aria-label="Sessions, scroll for details" tabIndex={0}>
+            <table className="table sessions">
+              <caption className="sr-only">Sessions, newest first</caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="c-dot">
+                    <span className="sr-only">Status</span>
+                  </th>
+                  <th scope="col">Title</th>
+                  <th scope="col" className="c-agent">
+                    Agent
+                  </th>
+                  <th scope="col" className="c-proj">
+                    Project
+                  </th>
+                  <th scope="col" className="c-branch">
+                    Branch
+                  </th>
+                  <th scope="col" className="c-when">
+                    Started
+                  </th>
+                  <th scope="col" className="num c-dur">
+                    Duration
+                  </th>
+                  <th scope="col" className="num c-n">
+                    Tools
+                  </th>
+                  <th
+                    scope="col"
+                    className="num c-n c-opt"
+                    title="Files the agent read or edited. Changed files are in the Review lens"
+                  >
+                    Touched
+                  </th>
+                  <th scope="col" className="num c-n c-opt">
+                    Tokens
+                  </th>
+                  <th scope="col" className="num c-n" title="Estimate from list prices">
+                    Cost
+                  </th>
+                  <th scope="col" className="num c-n">
+                    Failed
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.slice(0, shown).map((s) => (
+                  <Row key={s.id} s={s} name={projectName(projects, s.projectId)} />
+                ))}
+              </tbody>
+            </table>
+          </section>
           {rows.length > shown && (
             <p className="card-foot center">
               <button type="button" className="btn" onClick={() => setShown((n) => n + PAGE)}>
@@ -279,7 +298,7 @@ function Row({ s, name }: { s: SessionSummary; name: string }) {
       </td>
       <td className="ellip" title={s.title}>
         <Link to={to} className="strong">
-          {s.title}
+          <SessionName session={s} />
         </Link>
         {s.loops > 0 && (
           <span

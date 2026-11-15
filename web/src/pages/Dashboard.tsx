@@ -212,7 +212,7 @@ function Stat({
   budget?: number | null;
   budgetLabel?: string;
 }) {
-  const share = budget && spent !== undefined ? (spent ?? 0) / budget : null;
+  const share = budget && spent !== undefined && spent !== null ? spent / budget : null;
   const tone = share === null ? "" : share >= 1 ? "over" : share >= 0.8 ? "near" : "";
   return (
     <div className="figure-stat">

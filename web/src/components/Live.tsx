@@ -1,6 +1,7 @@
 import type { LiveSession, Project } from "../../../shared/model.ts";
 import { CATEGORY, duration, plural, span, usd } from "../format.ts";
 import { Link, paths } from "../router.ts";
+import { SessionName } from "./SessionName.tsx";
 import { AgentTag, LiveDot, projectName, useNow } from "./ui.tsx";
 
 const QUIET_MS = 2 * 60_000;
@@ -36,7 +37,7 @@ export function LiveRow({ s, projects }: { s: LiveSession; projects: Project[] |
       <LiveDot live />
       <div className="srow-main">
         <Link to={paths.board(s.projectId, s.id)} className="srow-title" title={s.title}>
-          {s.title}
+          <SessionName session={s} />
         </Link>
         <span className="srow-meta">
           <span title={s.root}>{projectName(projects, s.projectId)}</span>
@@ -68,7 +69,9 @@ export function LiveStrip({ live }: { live: LiveSession[] }) {
         <Link key={s.id} to={paths.board(s.projectId, s.id)} className="ls-item" title={s.title}>
           <span className="ls-title">
             <LiveDot live />
-            <span>{s.title}</span>
+            <span>
+              <SessionName session={s} />
+            </span>
           </span>
           <span className="ls-now">
             {s.step ? (

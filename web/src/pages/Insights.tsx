@@ -117,6 +117,11 @@ export function InsightsPage() {
           sessions started that day.
         </p>
       )}
+      {model && (
+        <p className="faint">
+          Includes sessions that used {model}; session totals include any other models they used.
+        </p>
+      )}
       {!report && (error ? <ErrorState message={error} retry={refresh} /> : <Loading />)}
       {report && error && (
         <ErrorState title="Showing the last data we had" message={error} retry={refresh} />
@@ -322,7 +327,12 @@ function DayChart({
         <span className="sc-date">{shown === days.length - 1 ? "Today" : long(d.date)}</span>
         <span>{readout(d)}</span>
       </p>
-      <div className="ins-plot" onPointerLeave={() => setHover(null)}>
+      <div
+        className="ins-plot"
+        onPointerLeave={(e) => {
+          if (!e.currentTarget.contains(document.activeElement)) setHover(null);
+        }}
+      >
         <span className="ins-top" aria-hidden>
           {top(max)}
         </span>
@@ -414,7 +424,12 @@ function MixChart({ days, hover, setHover, open }: Hover & { days: Day[] }) {
             : "no calls"}
         </span>
       </p>
-      <div className="ins-plot" onPointerLeave={() => setHover(null)}>
+      <div
+        className="ins-plot"
+        onPointerLeave={(e) => {
+          if (!e.currentTarget.contains(document.activeElement)) setHover(null);
+        }}
+      >
         {days.map((day, i) => (
           <button
             type="button"

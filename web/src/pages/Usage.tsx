@@ -1,6 +1,7 @@
 import { AGENT_KINDS, AGENT_NAMES, type TokenTotals } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { AnalysisNav, useAnalysis } from "../components/AnalysisNav.tsx";
+import { SessionName } from "../components/SessionName.tsx";
 import { SpendChart } from "../components/SpendChart.tsx";
 import { EmptyState, ErrorState, Loading, PageHead } from "../components/ui.tsx";
 import { ago, compact, money, tokenSum, usd } from "../format.ts";
@@ -85,7 +86,7 @@ export function UsagePage() {
       <AnalysisNav />
       {model && (
         <p className="filter-chip">
-          Model: {model}{" "}
+          Model: {model} · token usage only{" "}
           <button type="button" onClick={() => set("model", "")}>
             Clear model filter
           </button>
@@ -96,6 +97,9 @@ export function UsagePage() {
           Reporting zone: {report.timeZone} · USD estimates · Usage is grouped by token timestamp;
           session trends by session start.
         </p>
+      )}
+      {(agent || project || model) && (
+        <p className="faint">Budget targets are global; the spend amounts follow these filters.</p>
       )}
       {!report && (error ? <ErrorState message={error} retry={refresh} /> : <Loading />)}
       {report && (
@@ -231,7 +235,7 @@ export function UsagePage() {
                         <tr key={s.id}>
                           <td className="t-title">
                             <Link to={paths.board(s.projectId, s.id)} title={s.title}>
-                              {s.title}
+                              <SessionName session={s} />
                             </Link>
                             <span className="faint">{s.startedAt ? ago(s.startedAt) : ""}</span>
                           </td>

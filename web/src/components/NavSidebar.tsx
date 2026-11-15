@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { Overview, Project } from "../../../shared/model.ts";
 import { modKey } from "../a11y.ts";
 import { api, useData } from "../api.ts";
@@ -15,7 +16,16 @@ interface Props {
 
 /** The app's main navigation: pages, then every project, then settings. */
 export function NavSidebar({ pathname, projects, overview }: Props) {
-  const [sync, , syncError] = useData(`shell:sync:${pathname}`, api.sync);
+  const [sync, refreshSync, syncError] = useData(`shell:sync:${pathname}`, api.sync);
+  useEffect(() => {
+    const timer = setInterval(refreshSync, 30_000);
+    const onShow = () => document.visibilityState === "visible" && refreshSync();
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [refreshSync]);
   const live = overview?.live ?? [];
   const liveIn = (id: string) => live.filter((s) => s.projectId === id).length;
   const projectLink = (p: Project, worktrees: number) => {
