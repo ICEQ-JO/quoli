@@ -53,7 +53,7 @@ if (
     return false;
   };
   if (latest && /^\d+\.\d+\.\d+$/.test(latest) && newer(latest, VERSION)) {
-    console.log(`Quoli ${latest} is out (this is ${VERSION}); starting it.\n`);
+    console.log(`Starting the newest Quoli, ${latest} (npx had kept ${VERSION}).\n`);
     const { spawnSync } = await import("node:child_process");
     const run = spawnSync(
       "npx",
@@ -106,7 +106,11 @@ async function open() {
     console.log(
       result.reason === "unsupported"
         ? "Quoli can't run in the background on this system; it runs here instead (keep this terminal open).\n"
-        : `Quoli could not start in the background (${result.detail}); it runs here instead (keep this terminal open).\n`,
+        : /systemctl.*ETIMEDOUT/.test(result.detail ?? "")
+          ? "Quoli could not start in the background: this computer's service manager (systemd) is not responding.\n" +
+            "It runs here instead (keep this terminal open). To fix it, run `systemctl --user daemon-reexec`\n" +
+            `(or log out and back in), then run ${Q} again.\n`
+          : `Quoli could not start in the background (${result.detail}); it runs here instead (keep this terminal open).\n`,
     );
   }
   process.env.NODE_ENV = "production";
