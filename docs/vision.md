@@ -70,7 +70,7 @@ Across the bottom, a **timeline** replays the session step by step — every len
 **Developers and engineering teams building with coding agents.** A developer
 needs to know what changed, what it cost and what deserves review. A team owner
 needs visibility across members' agent usage. The local app supports Claude Code,
-Codex, OpenCode and Pi; opt-in team summary sharing is delivered (see [teams.md](teams.md)).
+Codex, OpenCode and Pi; opt-in team summary sharing is delivered (see [teams.md](teams.md)), with multiplayer warnings for agents and people on the same repository (see [multiplayer.md](multiplayer.md); further multiplayer work paused 2026-11-15).
 Detailed shared session review remains future work.
 
 Quoli is free and open source under the MIT license (owner decision 2026-11-14, replacing the

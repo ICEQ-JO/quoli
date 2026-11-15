@@ -97,7 +97,7 @@ Found a security problem? Please report it privately: see [SECURITY.md](SECURITY
 
 ## Teams and classes
 
-Sign in at [iceq.best/app](https://iceq.best/app/) to create or join a team: a class, a company or a group of friends. Members opt in from Settings → Team sync, and the team sees how it uses coding agents through session summaries only. Setup: [docs/teams.md](docs/teams.md).
+Sign in at [iceq.best/app](https://iceq.best/app/) to create or join a team: a class, a company or a group of friends. Members opt in from Settings → Team sync, and the team sees how it uses coding agents through session summaries only. Setup: [docs/teams.md](docs/teams.md). Several agents or people on one repository: [docs/multiplayer.md](docs/multiplayer.md).
 
 ## Develop
 
