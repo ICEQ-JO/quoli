@@ -20,7 +20,7 @@ const TOKEN_KEY = "quoli.token";
  * The fragment never reaches any server; the token is kept in this browser for this site and the
  * fragment is removed from the address at once.
  */
-(function pairFromLink() {
+function pairFromLink() {
   const hash = new URLSearchParams(location.hash.slice(1));
   const token = hash.get("pair");
   if (!token || !/^[A-Za-z0-9_-]{32,}$/.test(token)) return;
@@ -30,7 +30,10 @@ const TOKEN_KEY = "quoli.token";
     if (port && /^\d{2,5}$/.test(port)) localStorage.setItem(PORT_KEY, port);
   } catch {}
   history.replaceState(null, "", location.pathname + location.search);
-})();
+}
+pairFromLink();
+// A link pasted into a tab already on this page only changes the fragment: no reload.
+window.addEventListener("hashchange", pairFromLink);
 
 /** Headers that prove this browser was paired with this computer's Quoli (server/token.ts). */
 export function authHeaders(): Record<string, string> {

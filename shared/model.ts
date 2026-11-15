@@ -506,8 +506,40 @@ export interface LiveSession extends SessionSummary {
   recentUsd: number | null;
 }
 
+/** One side of a collision: a session and where it works. */
+export interface CollisionSide {
+  sessionId: string;
+  title: string;
+  agent: AgentKind;
+  branch: string | null;
+  /** The folder it works in: the main checkout or a worktree. */
+  root: string;
+  live: boolean;
+  lastAt: string;
+}
+
+/**
+ * Two sessions in the same repository (worktrees included) that edited the same files while
+ * working at the same time or on branches that are not merged yet (#17).
+ */
+export interface Collision {
+  projectId: string;
+  repo: string;
+  a: CollisionSide;
+  b: CollisionSide;
+  /** Files both sessions edited, repo-relative. Recorded. */
+  files: string[];
+  /**
+   * Files Git predicts would conflict when the two branches' committed work is merged
+   * (`git merge-tree`). Inferred; null when not checked: same branch, or Git could not tell.
+   */
+  conflicts: string[] | null;
+}
+
 export interface Overview {
   live: LiveSession[];
+  /** Parallel sessions that edited the same files, most urgent first (#17). */
+  collisions: Collision[];
   /** Derived; each reason is a plain sentence, e.g. "2 failed tool calls". */
   needsReview: { session: SessionSummary; reasons: string[] }[];
   /** Most recent sessions first, at most 10. */
