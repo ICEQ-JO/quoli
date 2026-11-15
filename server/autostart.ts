@@ -1,5 +1,5 @@
 import { execFileSync, spawn } from "node:child_process";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { installSyncCommand } from "./background.ts";
@@ -135,7 +135,7 @@ sh.Run ${vbs(`${vbs(node)} ${vbs(entry())} start`)}, 0, False
 }
 
 const run = (cmd: string, args: string[]) =>
-  execFileSync(cmd, args, { stdio: "ignore", timeout: 15_000 });
+  execFileSync(cmd, args, { stdio: "ignore", timeout: 10_000 });
 const uid = () => process.getuid?.() ?? 0;
 
 async function answering(): Promise<boolean> {
@@ -182,7 +182,9 @@ export async function stopRunning(): Promise<boolean> {
 /** Stops the service manager's copy too, so it is not restarted behind our back. */
 function stopService(plan: AutostartPlan) {
   try {
-    if (plan.kind === "systemd") run("systemctl", ["--user", "stop", `${name()}.service`]);
+    // --no-block: a stuck service manager queues the job instead of hanging here (#27).
+    if (plan.kind === "systemd")
+      run("systemctl", ["--user", "--no-block", "stop", `${name()}.service`]);
     if (plan.kind === "launchd") run("launchctl", ["bootout", `gui/${uid()}/${label()}`]);
   } catch {}
 }
@@ -191,7 +193,7 @@ function startService(plan: AutostartPlan) {
   if (plan.kind === "systemd") {
     run("systemctl", ["--user", "daemon-reload"]);
     run("systemctl", ["--user", "enable", `${name()}.service`]);
-    run("systemctl", ["--user", "restart", `${name()}.service`]);
+    run("systemctl", ["--user", "--no-block", "restart", `${name()}.service`]);
   } else if (plan.kind === "launchd") {
     run("launchctl", ["bootstrap", `gui/${uid()}`, plan.file]);
   } else {
@@ -200,7 +202,8 @@ function startService(plan: AutostartPlan) {
 }
 
 export type BackgroundResult =
-  | { ok: true }
+  /** detached: the service manager did not start it, so it runs on its own until logout. */
+  | { ok: true; detached?: boolean }
   | { ok: false; reason: "unsupported" | "failed" | "busy"; detail?: string };
 
 /**
@@ -212,22 +215,50 @@ export async function startInBackground(): Promise<BackgroundResult> {
   if (!plan) return { ok: false, reason: "unsupported" };
   stopService(plan);
   const free = await stopRunning();
+  let managerError: unknown = null;
   try {
     installSyncCommand();
     mkdirSync(dirname(plan.file), { recursive: true });
     writeFileSync(plan.file, plan.content);
-    startService(plan);
   } catch (error) {
     removeAutostart();
     return { ok: false, reason: "failed", detail: String(error) };
   }
+  try {
+    startService(plan);
+  } catch (error) {
+    managerError = error;
+  }
   // An old Quoli still holding the port: the service takes over once it is closed (it retries
   // on Linux and macOS; on Windows the next login starts it).
   if (!free) return { ok: false, reason: "busy" };
-  if (await until(answering, 15_000)) return { ok: true };
+  if (await until(answering, managerError ? 1000 : 15_000)) return { ok: true };
+  // systemd stuck or slow (#27): run the same app copy on its own now; the login item stays,
+  // so the next login starts it the usual way.
+  if (plan.kind === "systemd") {
+    startDetached();
+    if (await until(answering, 15_000)) return { ok: true, detached: true };
+  }
   // Leave nothing half-installed: the caller runs Quoli in the terminal instead.
   removeAutostart();
-  return { ok: false, reason: "failed", detail: "it did not answer within 15 seconds" };
+  return {
+    ok: false,
+    reason: "failed",
+    detail: managerError ? String(managerError) : "it did not answer within 15 seconds",
+  };
+}
+
+/** Starts the app copy as its own process, outside this terminal and the service manager. */
+function startDetached() {
+  if (!existsSync(entry())) return;
+  spawn(process.execPath, [entry(), "start"], {
+    cwd: app(),
+    env: { ...process.env, ...serviceEnv() },
+    detached: true,
+    stdio: "ignore",
+  })
+    .on("error", () => {})
+    .unref();
 }
 
 /** `quoli stop`: until the next login. */
