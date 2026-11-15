@@ -9,6 +9,7 @@ import { startLivePrices } from "./liveprices.ts";
 import { loadScope } from "./scope.ts";
 import { isSetUp, refreshSetup, START, spoolFile } from "./setup.ts";
 import { drainSpool } from "./spool.ts";
+import { localToken, pairLink, sameToken } from "./token.ts";
 import { waitlistRequest } from "./waitlist.ts";
 
 const landing = process.argv.includes("--landing");
@@ -27,7 +28,8 @@ if (process.argv.includes("--demo")) {
   }
 }
 
-const app = createApp(store, () => PORT);
+const TOKEN = localToken();
+const app = createApp(store, () => PORT, TOKEN);
 
 function guard(req: IncomingMessage): boolean {
   // Rejects DNS-rebinding: only loopback host names may talk to this server.
@@ -67,6 +69,7 @@ const server = createServer(async (req, res) => {
     const own = [`http://${HOST}:${PORT}`, `http://localhost:${PORT}`];
     if (
       !own.includes(req.headers.origin ?? "") ||
+      !sameToken(req.headers["x-quoli-token"], TOKEN) ||
       !req.headers["content-type"]?.startsWith("application/json")
     )
       return json(res, 403, { error: "Refused" });
@@ -130,8 +133,9 @@ server.listen(PORT, HOST, () => {
   if (landing) console.log(`\n  Quoli → http://${HOST}:${PORT}/landing/\n`);
   else
     console.log(
-      `\n  Quoli is running. Open https://app.iceq.best${PORT === 4400 ? "" : ` (port ${PORT})`}\n` +
-        `  (or this computer's own page: http://${HOST}:${PORT})\n`,
+      `\n  Quoli is running. Open ${pairLink(PORT, TOKEN)}\n` +
+        `  (or this computer's own page: ${pairLink(PORT, TOKEN, true)})\n` +
+        "  The link pairs this browser with Quoli once; keep it to yourself.\n",
     );
   if (!landing && !store.roots().length && HOOK_AGENTS.some(isSetUp)) {
     console.log(

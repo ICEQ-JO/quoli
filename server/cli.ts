@@ -76,15 +76,18 @@ if (
 async function open() {
   if (process.env.QUOLI_BUNDLED === "1" && !process.argv.includes("--foreground")) {
     const port = Number(process.env.QUOLI_PORT ?? 4400);
-    const site = `https://app.iceq.best${port === 4400 ? "" : ` (set port ${port} on the page)`}`;
+    const { localToken, pairLink } = await import("./token.ts");
+    const site = pairLink(port, localToken());
     const { startInBackground } = await import("./autostart.ts");
     const result = await startInBackground();
     if (result.ok) {
       console.log(`
   Quoli is running in the background, and starts by itself when you log in.
   Open ${site}
+  (the link connects this browser to Quoli once; keep it to yourself)
 
   You can close this terminal. To stop Quoli: ${Q} stop
+  To open it again later: https://app.iceq.best, or ${Q} open
 `);
       process.exit(0);
     }
@@ -138,6 +141,17 @@ if (cmd === "connect") {
 } else if (cmd === "uninstall") {
   const { uninstallCli } = await import("./uninstall.ts");
   process.exit(await uninstallCli(rest));
+} else if (cmd === "open") {
+  // Opens the app already paired with this computer's Quoli (server/token.ts).
+  const { localToken, pairLink } = await import("./token.ts");
+  const { openBrowser } = await import("./link.ts");
+  const link = pairLink(
+    Number(process.env.QUOLI_PORT ?? 4400),
+    localToken(),
+    rest.includes("--local"),
+  );
+  openBrowser(link);
+  console.log(`Opening Quoli in your browser. If nothing opens, open this link:\n  ${link}`);
 } else if (cmd === "--version" || cmd === "-v") {
   console.log(VERSION);
 } else if (cmd === "--help" || cmd === "-h" || cmd === "help") {
@@ -146,6 +160,7 @@ if (cmd === "connect") {
   ${Q}               the first time: choose what to record, link your account; every time:
                      run Quoli in the background (it starts at login), then open
                      https://app.iceq.best
+  ${Q} open          open the app in your browser, connected to this computer's Quoli
   ${Q} stop          stop the background Quoli until the next login
   ${Q} connect       link this computer to your Quoli account (again, with --again)
   ${Q} setup         install the agents' hooks without an account

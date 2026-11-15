@@ -36,17 +36,18 @@ You need [Node.js 22.13 or newer](https://nodejs.org) and one of the supported a
 npx https://iceq.best/quoli.tgz
 ```
 
-Run it **inside the project you work on**. It asks whether to record only this project or every project, sets up your agents' hooks, and starts Quoli in the background, where it starts again at every login. Then open **[app.iceq.best](https://app.iceq.best)** and use your agent as usual: sessions appear live.
+Run it **inside the project you work on**. It asks whether to record only this project or every project, sets up your agents' hooks, and starts Quoli in the background, where it starts again at every login. Then open the link it prints: it opens **[app.iceq.best](https://app.iceq.best)** connected to Quoli on your computer (once per browser), and sessions appear live as you use your agent.
 
 | | |
 | --- | --- |
+| Open the app in another browser | `npx https://iceq.best/quoli.tgz open` |
 | Stop Quoli until the next login | `npx https://iceq.best/quoli.tgz stop` |
 | Run it in the terminal instead | `npx https://iceq.best/quoli.tgz --foreground` |
 | Stop recording and remove it from every agent | `npx https://iceq.best/quoli.tgz setup --remove` |
 | Remove Quoli completely, including what it recorded | `npx https://iceq.best/quoli.tgz uninstall` |
 | Everything else | `npx https://iceq.best/quoli.tgz --help` |
 
-Your browser may ask once whether app.iceq.best may reach this device: allow it, since that is how the page reads Quoli on your computer. `http://127.0.0.1:4400` is the same app without the website.
+Your browser may ask once whether app.iceq.best may reach this device: allow it, since that is how the page reads Quoli on your computer. `npx https://iceq.best/quoli.tgz open --local` opens the same app from Quoli itself, without the website.
 
 **Just looking?** Try the synthetic demo from a clone, no agent or API key needed:
 
@@ -87,7 +88,7 @@ flowchart LR
 
 ## Privacy
 
-- Everything is stored on your computer in `~/.quoli`. Quoli listens only on `127.0.0.1`, and only the app at app.iceq.best may read it from a browser.
+- Everything is stored on your computer in `~/.quoli`. Quoli listens only on `127.0.0.1` and answers only browsers paired with it through the link it prints, and only from app.iceq.best or its own page. Other programs and accounts on the computer can't read it, and only your account can open `~/.quoli`.
 - Common secrets (API keys, tokens) are redacted before anything is stored. Redaction is best-effort.
 - Outbound requests: a version check at iceq.best when Quoli starts (`QUOLI_NO_UPDATE_CHECK=1` turns it off) and a daily download of public model prices from models.dev (Settings → Prices). Nothing else, unless you link an account and turn on Team sync, which shares session summaries (agent, model, repository, branch, counts, estimated spend), never prompts, code, commands or file paths.
 - Quoli observes passively: it never blocks, steers or replays an agent.

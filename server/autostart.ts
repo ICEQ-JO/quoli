@@ -138,7 +138,8 @@ async function answering(): Promise<boolean> {
     const res = await fetch(`http://127.0.0.1:${port()}/api/sync`, {
       signal: AbortSignal.timeout(1000),
     });
-    return res.ok;
+    // Quoli answers 401 without its token (server/token.ts), versions before 0.3.7 answer 200.
+    return res.ok || res.status === 401;
   } catch {
     return false;
   }
@@ -160,10 +161,12 @@ async function until(test: () => Promise<boolean>, ms: number): Promise<boolean>
 export async function stopRunning(): Promise<boolean> {
   if (!(await answering())) return true;
   const origin = `http://127.0.0.1:${port()}`;
+  const { localToken } = await import("./token.ts");
+  const token = localToken();
   try {
     await fetch(`${origin}/api/shutdown`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Origin: origin },
+      headers: { "Content-Type": "application/json", Origin: origin, "X-Quoli-Token": token },
       body: "{}",
       signal: AbortSignal.timeout(2000),
     });

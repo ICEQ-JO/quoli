@@ -464,6 +464,11 @@ const Q = "npx https://iceq.best/quoli.tgz";
 function StopOrRemove({ dataDir }: { dataDir: string }) {
   const rows: { what: string; effect: string; command: string }[] = [
     {
+      what: "Open Quoli in another browser",
+      effect: "Opens this app there, connected to Quoli on this computer.",
+      command: `${Q} open`,
+    },
+    {
       what: "Stop Quoli",
       effect: "Until the next login. Your agents keep recording; nothing is lost.",
       command: `${Q} stop`,

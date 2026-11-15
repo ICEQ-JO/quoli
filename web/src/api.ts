@@ -23,10 +23,13 @@ import type {
   SyncStatus,
   UsageReport,
 } from "../../shared/model.ts";
-import { API_BASE } from "./host.ts";
+import { API_BASE, authHeaders } from "./host.ts";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(API_BASE + path, init);
+  const res = await fetch(API_BASE + path, {
+    ...init,
+    headers: { ...authHeaders(), ...(init?.headers as Record<string, string> | undefined) },
+  });
   if (!res.ok) {
     let message = `${res.status} ${path}`;
     try {
@@ -171,7 +174,10 @@ async function poll() {
   let failed = false;
   while (listeners.size) {
     try {
-      const res = await fetch(`${API_BASE}/api/changes?after=${after}`, { cache: "no-store" });
+      const res = await fetch(`${API_BASE}/api/changes?after=${after}`, {
+        cache: "no-store",
+        headers: authHeaders(),
+      });
       if (!res.ok) throw new Error(String(res.status));
       const { seq, changes } = (await res.json()) as { seq: number; changes: LiveMessage[] };
       // Back after the server was down: anything fetched meanwhile failed, so reload it.

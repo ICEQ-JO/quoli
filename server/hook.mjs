@@ -7,6 +7,7 @@
 // Quoli home; that copy queues events in spool.jsonl beside it while Quoli is not running and
 // starts a short `quoli sync` that records them (and sends Team sync) without Quoli open.
 import { spawn } from "node:child_process";
+import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import {
   appendFileSync,
   existsSync,
@@ -15,12 +16,13 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SPOOL_MAX = 50 * 1024 * 1024;
 // Redacted before the queue touches the disk; keep equal to SECRETS in server/ingest.ts
-// (tests/redact.test.ts checks).
+// (tests/local-files.test.ts checks).
 const SECRETS = [
   /sk-[A-Za-z0-9_-]{20,}/g,
   /(?:ghp|gho|ghs|ghu)_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/g,
@@ -29,6 +31,25 @@ const SECRETS = [
   /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
 ];
 const redact = (t) => SECRETS.reduce((s, re) => s.replace(re, "[redacted]"), t);
+// Events go out sealed (AES-256-GCM) with this computer's Quoli token (server/token.ts): only
+// the real Quoli can read them, even if another program holds the port while Quoli is closed.
+const seal = (text, token) => {
+  const key = createHash("sha256").update(`quoli-seal:${token}`).digest();
+  const iv = randomBytes(12);
+  const c = createCipheriv("aes-256-gcm", key, iv);
+  const data = Buffer.concat([c.update(text, "utf8"), c.final()]);
+  const tag = c.getAuthTag();
+  const b64 = (b) => b.toString("base64");
+  return JSON.stringify({ sealed: { iv: b64(iv), data: b64(data), tag: b64(tag) } });
+};
+const readToken = (file) => {
+  try {
+    const t = readFileSync(file, "utf8").trim();
+    return /^[A-Za-z0-9_-]{32,}$/.test(t) ? t : null;
+  } catch {
+    return null;
+  }
+};
 const port = process.argv[2] ?? process.env.QUOLI_PORT ?? "4400";
 const kind = /^[a-z-]+$/.test(process.argv[3] ?? "") ? process.argv[3] : "";
 const chunks = [];
@@ -38,17 +59,25 @@ const at = new Date().toISOString();
 // scope.json beside the user-level copy says which repositories to record (server/scope.ts);
 // events from any other folder are dropped here, before they are sent or queued.
 if (!wanted()) process.exit(0);
+// The user-level copy lives in the Quoli home; a project's hook finds it the way Quoli does.
+const self = fileURLToPath(import.meta.url);
+const quoliHome =
+  basename(self) === "quoli-hook.mjs"
+    ? dirname(self)
+    : (process.env.QUOLI_HOME ?? join(homedir(), ".quoli"));
 try {
-  await fetch(`http://127.0.0.1:${port}/ingest${kind ? `?agent=${kind}` : ""}`, {
+  const token = readToken(join(quoliHome, "token"));
+  if (!token) throw new Error("Quoli has not started yet");
+  const res = await fetch(`http://127.0.0.1:${port}/ingest${kind ? `?agent=${kind}` : ""}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body,
+    body: seal(body.toString("utf8"), token),
     signal: AbortSignal.timeout(1500),
   });
+  if (res.status === 401) throw new Error("refused");
 } catch {
-  // Quoli is not running; the agent continues unaffected.
+  // Quoli is not running (or refused the event); the agent continues unaffected.
   try {
-    const self = fileURLToPath(import.meta.url);
     if (basename(self) === "quoli-hook.mjs") {
       const spool = join(dirname(self), "spool.jsonl");
       let size = 0;
