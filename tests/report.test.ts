@@ -380,7 +380,10 @@ test("prices API: guarded mutations, validation, reset, overview cost", async ()
     return { status: res.status, body: (await res.json()) as any };
   };
   try {
-    assert.deepEqual((await call("GET", "/api/prices")).body, defaultPrices());
+    assert.deepEqual((await call("GET", "/api/prices")).body, {
+      ...defaultPrices(),
+      edited: false,
+    });
     const mine: PriceTable = {
       version: "mine",
       currency: "USD",
@@ -390,10 +393,16 @@ test("prices API: guarded mutations, validation, reset, overview cost", async ()
     const bad = await call("PUT", "/api/prices", { ...mine, currency: "EUR" });
     assert.equal(bad.status, 400);
     assert.match(bad.body.error, /USD/);
-    assert.deepEqual((await call("PUT", "/api/prices", mine)).body, mine);
-    assert.deepEqual((await call("GET", "/api/prices")).body, mine);
-    assert.deepEqual((await call("DELETE", "/api/prices", {})).body, defaultPrices());
-    assert.deepEqual((await call("GET", "/api/prices")).body, defaultPrices());
+    assert.deepEqual((await call("PUT", "/api/prices", mine)).body, { ...mine, edited: true });
+    assert.deepEqual((await call("GET", "/api/prices")).body, { ...mine, edited: true });
+    assert.deepEqual((await call("DELETE", "/api/prices", {})).body, {
+      ...defaultPrices(),
+      edited: false,
+    });
+    assert.deepEqual((await call("GET", "/api/prices")).body, {
+      ...defaultPrices(),
+      edited: false,
+    });
     const overview = (await call("GET", "/api/overview")).body;
     assert.deepEqual(overview.cost, {
       today: { usd: null, unpriced: [] },

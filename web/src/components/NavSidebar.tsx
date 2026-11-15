@@ -117,7 +117,7 @@ export function NavSidebar({ pathname, projects, overview }: Props) {
           Projects
         </Link>
         <Link
-          to={paths.projects()}
+          to={`${paths.projects()}?connect`}
           className="nav-add"
           title="Connect a repository"
           aria-label="Connect a repository"

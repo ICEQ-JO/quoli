@@ -24,7 +24,7 @@ const LENSES: { id: Lens; label: string; hint: string }[] = [
   { id: "summary", label: "Summary", hint: "What was asked, changed, run and spent" },
   { id: "review", label: "Review", hint: "What to read before you merge" },
   { id: "agents", label: "Agents", hint: "What the agent did" },
-  { id: "map", label: "Map", hint: "Every function, who calls it, what the agent touched" },
+  { id: "map", label: "Code map", hint: "Every function, who calls it, what the agent touched" },
   { id: "git", label: "Git", hint: "Which branch and commits" },
   { id: "infra", label: "Infra", hint: "Where it runs" },
 ];

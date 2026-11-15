@@ -614,6 +614,8 @@ export interface PriceTable {
   version: string;
   currency: "USD";
   prices: ModelPrice[];
+  /** From GET/PUT/DELETE /api/prices: true when the table is the user's own saved one (#40). */
+  edited?: boolean;
 }
 
 export interface Cost {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AGENT_NAMES,
   type AgentKind,
@@ -15,7 +15,7 @@ import {
   useNow,
 } from "../components/ui.tsx";
 import { ago, plural } from "../format.ts";
-import { Link, paths } from "../router.ts";
+import { Link, navigate, paths, useLocation } from "../router.ts";
 
 export function hookLabel(p: Project): string {
   if (p.recording === false) return "Not recording · you stopped it";
@@ -80,6 +80,34 @@ export function ProjectsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   useNow();
   useLiveEvents(refresh);
+  // The sidebar's + opens /projects?connect (#39): the form is open and focused, also after reload.
+  const { search } = useLocation();
+  const connecting = new URLSearchParams(search).has("connect");
+  const connectRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (!connecting || !connectRef.current) return;
+    connectRef.current.open = true;
+    connectRef.current.scrollIntoView({ block: "nearest" });
+    // After App moves focus to the page's main region on navigation (App.tsx).
+    const raf = requestAnimationFrame(() => document.getElementById("connect-path")?.focus());
+    return () => cancelAnimationFrame(raf);
+  }, [connecting]);
+
+  // A row's More menu closes on a click elsewhere or Escape.
+  useEffect(() => {
+    const close = (except: EventTarget | null) => {
+      for (const d of document.querySelectorAll<HTMLDetailsElement>(".row-more[open]"))
+        if (!(except instanceof Node && d.contains(except))) d.open = false;
+    };
+    const onDown = (e: PointerEvent) => close(e.target);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close(null);
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   const addAgent = async (p: Project, agent: AgentKind) => {
     setBusy(p.id);
@@ -135,7 +163,13 @@ export function ProjectsPage() {
         Repositories Quoli has recorded. Projects appear here on their first session.
       </PageHead>
       <EveryRepository onChange={refresh} />
-      <details className="connect-one">
+      <details
+        className="connect-one"
+        ref={connectRef}
+        onToggle={(e) => {
+          if (!e.currentTarget.open && connecting) navigate(paths.projects(), { replace: true });
+        }}
+      >
         <summary>Connect one repository instead</summary>
         <ConnectForm
           onConnected={(p) => {
@@ -218,50 +252,83 @@ export function ProjectsPage() {
                     <Link to={paths.board(p.id)} className="btn">
                       Open
                     </Link>
-                    {p.agents.length < HOOK_AGENTS.length && (
-                      <select
-                        className="input add-agent"
-                        aria-label={`Record another agent's sessions in ${p.name}`}
-                        disabled={busy === p.id}
-                        value=""
-                        onChange={(e) => addAgent(p, e.target.value as AgentKind)}
-                      >
-                        <option value="">Add agent…</option>
-                        {HOOK_AGENTS.filter((a) => !p.agents.some((x) => x.agent === a)).map(
-                          (a) => (
-                            <option key={a} value={a}>
-                              {AGENT_NAMES[a]}
-                            </option>
-                          ),
-                        )}
-                      </select>
-                    )}
                     <button
                       type="button"
                       className="btn"
                       disabled={busy === p.id}
+                      title={
+                        p.recording === false
+                          ? "Save new sessions in this repository again"
+                          : "New sessions here are not saved. Hooks and recorded sessions stay."
+                      }
                       onClick={() => toggleRecording(p)}
                     >
                       {p.recording === false ? "Record again" : "Stop recording"}
                     </button>
-                    <button
-                      type="button"
-                      className="btn"
-                      disabled={!p.agents.some((a) => !a.everywhere) || busy === p.id}
-                      title={
-                        p.agents.some((a) => !a.everywhere)
-                          ? "Remove Quoli's hooks from this repository; keep the recorded data"
-                          : p.agents.length
-                            ? "Recorded through the setup for every repository; remove that above"
-                            : "Hooks are not installed"
-                      }
-                      onClick={() => disconnect(p)}
-                    >
-                      Disconnect
-                    </button>
-                    <button type="button" className="btn danger" onClick={() => setDeleting(p)}>
-                      Delete data
-                    </button>
+                    <details className="row-more">
+                      <summary className="btn" aria-label={`More actions for ${p.name}`}>
+                        More
+                      </summary>
+                      <div className="row-more-menu">
+                        {p.agents.length < HOOK_AGENTS.length && (
+                          <div className="row-more-item">
+                            <select
+                              className="input add-agent"
+                              aria-label={`Record another agent's sessions in ${p.name}`}
+                              disabled={busy === p.id}
+                              value=""
+                              onChange={(e) => addAgent(p, e.target.value as AgentKind)}
+                            >
+                              <option value="">Add agent…</option>
+                              {HOOK_AGENTS.filter((a) => !p.agents.some((x) => x.agent === a)).map(
+                                (a) => (
+                                  <option key={a} value={a}>
+                                    {AGENT_NAMES[a]}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                            <p>Installs that agent's hooks in this repository.</p>
+                          </div>
+                        )}
+                        <div className="row-more-item">
+                          <button
+                            type="button"
+                            className="btn"
+                            disabled={!p.agents.some((a) => !a.everywhere) || busy === p.id}
+                            onClick={(e) => {
+                              e.currentTarget.closest("details")?.removeAttribute("open");
+                              disconnect(p);
+                            }}
+                          >
+                            Disconnect
+                          </button>
+                          <p>
+                            {p.agents.some((a) => !a.everywhere)
+                              ? "Removes Quoli's hooks from this repository's files. Recorded sessions stay."
+                              : p.agents.length
+                                ? "Recorded through the setup for every repository; remove that at the top of this page."
+                                : "No hooks are installed in this repository."}
+                          </p>
+                        </div>
+                        <div className="row-more-item">
+                          <button
+                            type="button"
+                            className="btn danger"
+                            onClick={(e) => {
+                              e.currentTarget.closest("details")?.removeAttribute("open");
+                              setDeleting(p);
+                            }}
+                          >
+                            Delete data…
+                          </button>
+                          <p>
+                            Permanently erases this project's recorded sessions and removes its
+                            hooks. Your repository files are not touched. Asks first.
+                          </p>
+                        </div>
+                      </div>
+                    </details>
                   </td>
                 </tr>
               ))}

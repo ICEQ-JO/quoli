@@ -336,7 +336,8 @@ export function createApp(store: Store, port: () => number, token?: string) {
     if (path === "/api/setup") return json(res, 200, setupStatus());
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
-    if (path === "/api/prices") return json(res, 200, loadPrices(store));
+    if (path === "/api/prices")
+      return json(res, 200, { ...loadPrices(store), edited: store.getSetting("prices") !== null });
     if (path === "/api/sync") return json(res, 200, syncState());
     if (path === "/api/prices/live") {
       return json(res, 200, liveStatusOf(store.settings().livePrices));
@@ -658,12 +659,12 @@ export function createApp(store: Store, port: () => number, token?: string) {
       }
       savePrices(store, table);
       broadcast({ type: "projects" });
-      return json(res, 200, loadPrices(store));
+      return json(res, 200, { ...loadPrices(store), edited: true });
     }
     if (method === "DELETE" && path === "/api/prices") {
       resetPrices(store);
       broadcast({ type: "projects" });
-      return json(res, 200, defaultPrices());
+      return json(res, 200, { ...defaultPrices(), edited: false });
     }
     if (method === "POST" && path === "/api/redact-preview") {
       const { text } = await payload();

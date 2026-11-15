@@ -417,7 +417,9 @@ body {
 .class-live-overlap {
   margin: 10px 0 0;
   padding: 8px 10px;
-  border-left: 3px solid var(--warn, #d29922);
+  border: 1px solid color-mix(in srgb, var(--warn, #d29922) 45%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--warn, #d29922) 8%, transparent);
   font-size: var(--fs-sm);
 }
 .class-live-list {

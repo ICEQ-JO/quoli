@@ -379,7 +379,7 @@ export function ReviewLens(p: Props) {
                 <b>
                   {done}/{review.files.length}
                 </b>{" "}
-                reviewed
+                reviewed by you
               </span>
               <fieldset className="segmented">
                 <legend className="sr-only">Sort files by</legend>
@@ -405,6 +405,10 @@ export function ReviewLens(p: Props) {
             >
               <i style={{ width: `${(done / review.files.length) * 100}%` }} />
             </div>
+            <p className="rv-scope">
+              Your own checklist, kept in this browser. It is not shared with anyone and is not an
+              approval.
+            </p>
             <FileGroups
               groups={groups}
               visible={visible}
@@ -535,7 +539,7 @@ const FileDetail = forwardRef<
 >(function FileDetail({ session, projectId, file, review, reviewed, toggle }, ref) {
   const [choice, setChoice] = useState<Tab | null>(null);
   const [wrap, setWrap] = useState(false);
-  const [diff, , diffError] = useData(
+  const [diff, retryDiff, diffError] = useData(
     `rvd:${session.id}:${file.path}:${file.added}:${file.removed}`,
     () => api.reviewDiff(session.id, file.path),
   );
@@ -577,7 +581,7 @@ const FileDetail = forwardRef<
       );
     }
     if (diffError && !diff)
-      return <ErrorState title="Could not read the file" message={diffError} />;
+      return <ErrorState title="Could not read the file" message={diffError} retry={retryDiff} />;
     if (!diff) return <Loading label="Reading the file…" />;
     if (tab === "git") {
       if (!hasGit)
@@ -623,7 +627,7 @@ const FileDetail = forwardRef<
           </h2>
           <label className="rv-check">
             <input type="checkbox" checked={reviewed} onChange={toggle} />
-            Reviewed
+            Reviewed by me
           </label>
         </div>
         <p className="rv-meta">

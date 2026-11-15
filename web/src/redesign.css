@@ -2233,3 +2233,9 @@ ul.reasons li {
     margin-bottom: -12px;
   }
 }
+/* Expanded maintenance actions stay inside the scroll region instead of being clipped. */
+.table-scroll .row-more-menu {
+  position: static;
+  margin-top: 8px;
+  box-shadow: none;
+}

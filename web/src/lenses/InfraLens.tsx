@@ -241,10 +241,74 @@ function InfraSide({
   projectId: string;
   onAdded: () => void;
 }) {
+  // Hosts found in the repository or added by hand first; the rest is a collapsed reference (#39).
   const list = providers(infra);
+  const used = list.filter((p) => p.seenIn.length + p.added.length > 0);
+  const absent = list.filter((p) => p.seenIn.length + p.added.length === 0);
   const [adding, setAdding] = useState(false);
   return (
-    <aside className="infra-side" aria-label="Pipelines and connections">
+    <aside className="infra-side" aria-label="Where it runs and pipelines">
+      <section>
+        <h3>
+          Where it runs <span className="sec-count">{used.length}</span>
+          {!adding && (
+            <button type="button" className="btn sm side-add" onClick={() => setAdding(true)}>
+              Add service
+            </button>
+          )}
+        </h3>
+        <p className="side-note">
+          Hosts your files mention or you added. None is connected: live status needs a provider
+          connection (roadmap phase 4). Local Docker containers show live CPU and memory on the
+          board.
+        </p>
+        {adding && (
+          <ServiceForm
+            projectId={projectId}
+            onDone={(changed) => {
+              setAdding(false);
+              if (changed) onAdded();
+            }}
+          />
+        )}
+        {used.length === 0 ? (
+          <p className="faint">No hosting provider found in this repository's files.</p>
+        ) : (
+          <ul className="providers">
+            {used.map((p) => (
+              <li key={p.id}>
+                <span className="prov-name">{p.name}</span>
+                <span className="prov-state">
+                  {p.added.length ? (
+                    <span title={p.added.join("\n")}>
+                      added by you: {p.added[0]}
+                      {p.added.length > 1 ? ` +${p.added.length - 1}` : ""}
+                    </span>
+                  ) : (
+                    <span title={p.seenIn.join("\n")}>
+                      mentioned in {p.seenIn[0]}
+                      {p.seenIn.length > 1 ? ` +${p.seenIn.length - 1}` : ""}
+                    </span>
+                  )}
+                  <span className="prov-tag">not connected</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {absent.length > 0 && (
+          <details className="prov-reference">
+            <summary>
+              Other providers Quoli recognises <span className="sec-count">{absent.length}</span>
+            </summary>
+            <p className="side-note">
+              Not found in this repository. Listed so you know what Quoli can detect; connections
+              are planned, not available.
+            </p>
+            <p className="prov-names">{absent.map((p) => p.name).join(" · ")}</p>
+          </details>
+        )}
+      </section>
       <section>
         <h3>
           Checks and pipelines <span className="sec-count">{pipelines.length}</span>
@@ -280,53 +344,6 @@ function InfraSide({
             ))}
           </ul>
         )}
-      </section>
-      <section>
-        <h3>
-          Hosted connections
-          {!adding && (
-            <button type="button" className="btn sm side-add" onClick={() => setAdding(true)}>
-              Add service
-            </button>
-          )}
-        </h3>
-        <p className="side-note">
-          Add any place your app runs by hand: no keys, no connection. Live status and metrics need
-          a provider connection, planned for roadmap phase 4; until then the board shows what your
-          files declare and what you add, plus live CPU and memory for local Docker containers.
-        </p>
-        {adding && (
-          <ServiceForm
-            projectId={projectId}
-            onDone={(changed) => {
-              setAdding(false);
-              if (changed) onAdded();
-            }}
-          />
-        )}
-        <ul className="providers">
-          {list.map((p) => (
-            <li key={p.id}>
-              <span className="prov-name">{p.name}</span>
-              <span className="prov-state">
-                {p.added.length ? (
-                  <span title={p.added.join("\n")}>
-                    added by you: {p.added[0]}
-                    {p.added.length > 1 ? ` +${p.added.length - 1}` : ""}
-                  </span>
-                ) : p.seenIn.length ? (
-                  <span title={p.seenIn.join("\n")}>
-                    mentioned in {p.seenIn[0]}
-                    {p.seenIn.length > 1 ? ` +${p.seenIn.length - 1}` : ""}
-                  </span>
-                ) : (
-                  <span className="faint">not in this repo</span>
-                )}
-                <span className="prov-tag">not connected</span>
-              </span>
-            </li>
-          ))}
-        </ul>
       </section>
     </aside>
   );

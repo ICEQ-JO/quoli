@@ -314,7 +314,7 @@ function Lenses() {
       icon: "M4 2h8l4 4v12H4zM7 8h6v2H7zm0 4h6v2H7z",
     },
     {
-      name: "Map",
+      name: "Code map",
       text: "The code the agent touched, and every function that calls it.",
       icon: "M2 2h6v6H2zm10 0h6v6h-6zM7 12h6v6H7zM4 8v3h6v1h2V9H6V8z",
     },

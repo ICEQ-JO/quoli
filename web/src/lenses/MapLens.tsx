@@ -71,6 +71,15 @@ export function MapLens(ctx: LensContext) {
     for (const [path, t] of touched) m.set(path, t.edited > 0 ? "edit" : "read");
     return m;
   }, [touched]);
+  // The first thing to pick when a session changed code (#38): its edited files, in path order.
+  const changedFiles = useMemo(
+    () =>
+      [...fileMarks]
+        .filter(([, m]) => m === "edit")
+        .map(([p]) => p)
+        .sort(),
+    [fileMarks],
+  );
   const folderMarks = useMemo(() => {
     const m = new Map<string, Mark>();
     for (const [path, mark] of fileMarks) {
@@ -352,6 +361,25 @@ export function MapLens(ctx: LensContext) {
               {Icon.inspector}
             </button>
           </div>
+          {!sel && changedFiles.length > 0 && (
+            <nav className="map-start" aria-label="Changed files">
+              <span className="faint">Start with a changed file:</span>
+              {changedFiles.slice(0, 6).map((path) => (
+                <button
+                  key={path}
+                  type="button"
+                  className="map-start-file mono"
+                  title={path}
+                  onClick={() => select({ kind: "file", id: path })}
+                >
+                  {path.slice(path.lastIndexOf("/") + 1)}
+                </button>
+              ))}
+              {changedFiles.length > 6 && (
+                <span className="faint">+{changedFiles.length - 6} more in the explorer</span>
+              )}
+            </nav>
+          )}
           <div className="map-board">
             <FocusCanvas
               idx={idx}
