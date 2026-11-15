@@ -194,3 +194,21 @@ an unrelated existing unused-import warning in MapLens.tsx). Chromium checks cov
 WCAG A/AA violations at 1440px in both themes, moving canvas frames, reduced-motion
 stills, CTA focus and keyboard-operated product tabs and FAQ. No deployment,
 private evidence access, real-screen-reader or physical low-end-device test.
+
+The owner's follow-up extends #14 to all landing artwork: night-workshop recorder,
+working observatories, research plates, team machinery, FAQ archive and animated
+survey contours behind the terminal, screenshots and footer. The same shared
+research plates improve journal pages. CSS/SVG loops now stop offscreen and in
+hidden tabs and honor reduced motion; recorder controls retain their session clock.
+Terminal/screenshot arrivals and FAQ expansion are quicker, with 180ms arrow
+feedback on primary actions.
+
+Full-page validation: 205 tests pass, including deterministic finite-coordinate
+checks for the workshop and contours; typecheck, lint and build pass with the same
+pre-existing MapLens unused-import warning. Chromium verified every scene moves
+and becomes still for reduced motion, recorder Pause/Play/Replay, offscreen CSS
+pause, keyboard tabs/FAQ, journal motion and both-theme 320–1440px layouts. Axe
+reports zero WCAG A/AA violations in either theme at 1440px. Desktop/mobile art
+screenshots were inspected, and the recorder caption was separated from the bench
+to preserve contrast. Physical low-end hardware and real screen readers remain
+untested. No deployment or private evidence access.

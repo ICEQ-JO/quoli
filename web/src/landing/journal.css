@@ -506,20 +506,20 @@
   margin-top: 25px;
 }
 .plate-clouds {
-  animation: journal-cloud 18s ease-in-out infinite alternate;
+  animation: journal-cloud 12s ease-in-out infinite alternate;
 }
 .plate-packet {
-  animation: journal-packet 4s linear infinite;
+  animation: journal-packet 1.6s linear infinite;
 }
 .plate-steam {
-  animation: journal-steam 3s steps(6, end) infinite;
+  animation: journal-steam 1.8s steps(6, end) infinite;
 }
 .plate-lens {
-  animation: journal-lens 9s ease-in-out infinite alternate;
+  animation: journal-lens 4s ease-in-out infinite alternate;
   transform-origin: 210px 150px;
 }
 .plate-gauge {
-  animation: journal-gauge 7s steps(7, end) infinite alternate;
+  animation: journal-gauge 3.8s steps(7, end) infinite alternate;
 }
 .gauge-1 {
   animation-delay: -3s;
@@ -745,5 +745,71 @@
 @media (prefers-reduced-motion: reduce) {
   .journal-art * {
     animation: none;
+  }
+}
+
+.plate-birds {
+  animation: journal-birds 16s linear infinite;
+}
+.plate-wind {
+  animation: journal-wind 3s ease-in-out infinite alternate;
+}
+.plate-beacon {
+  animation: journal-beacon 1.8s ease-in-out infinite alternate;
+}
+.packet-1 {
+  animation-delay: -0.53s;
+}
+.packet-2 {
+  animation-delay: -1.06s;
+}
+.plate-review-scan {
+  animation: journal-review-scan 2.8s steps(10, end) infinite;
+}
+.plate-level {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: journal-level 3.8s steps(8, end) infinite alternate;
+}
+@keyframes journal-birds {
+  from {
+    transform: translateX(-100px);
+  }
+  to {
+    transform: translateX(220px);
+  }
+}
+@keyframes journal-wind {
+  to {
+    transform: translateX(24px);
+  }
+}
+@keyframes journal-beacon {
+  to {
+    opacity: 0.35;
+  }
+}
+@keyframes journal-review-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(113px);
+    opacity: 0;
+  }
+}
+@keyframes journal-level {
+  from {
+    transform: scaleY(0.45);
+  }
+  to {
+    transform: scaleY(1);
   }
 }

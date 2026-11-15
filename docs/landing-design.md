@@ -191,3 +191,30 @@ visibility, hidden-tab and reduced-motion controls. The recorder keeps its reada
 session timing. The hero trace plays three 2.4-second passes; action arrows respond
 in 180ms. Reduced motion disables both effects. At 320px, Research remains in the
 hero and footer while the header keeps the brand, GitHub, theme and app controls.
+
+## Full-page art extension — Phase 1 #14
+
+The approved panorama now has companion mechanisms throughout the landing page:
+
+- Recorder: a night workshop, mountain window, signal lights, moving meter and
+  stacked field guides frame the existing twin-reel transport. Its clock, event
+  order and Pause/Play/Replay controls remain unchanged. The readout has its own
+  solid paper strip below the canvas.
+- Observatory: sun, moving clouds, snow and foreground planting surround four
+  instruments: receiving aerial, code reader, branching signal and spinning fan.
+- Research plates: warm highlights, birds, wind, beacons and staggered packets
+  extend the valley; the review plate scans papers and measurement plates move
+  their levels. Shared journal plates receive the same treatment.
+- Screenshot/terminal frames, team schematic and footer: fine survey contours,
+  reference crosses and moving packets replace the broad filled bands. The team
+  diagram adds monitor scan lines, lamps and sequential receiving lines; its
+  local-evidence/opt-in-summary meaning is unchanged.
+- FAQ archive: a sunlit mountain background, scan head, receiving antenna,
+  turning page edge and feeding paper record give the field guide a working life.
+
+CSS and SVG loops now pause outside the viewport, in hidden tabs and for reduced
+motion, alongside the existing canvas lifecycle. Before JavaScript runs, CSS art
+is still. Terminal and screenshot arrivals take 240ms, FAQ expansion 260ms and
+arrow feedback 180ms. The existing palette, copy, real product captures and clear
+privacy boundaries remain the visual and factual foundation. No motion library,
+remote asset service or evidence access was added.

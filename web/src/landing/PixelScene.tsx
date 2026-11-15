@@ -3,32 +3,76 @@ import { drawArchive, drawOptics, drawValley } from "./pixel-art.ts";
 import { SESSION_STEPS, sessionAt } from "./scene-model.ts";
 
 type Scene = "forest" | "field" | "recorder" | "signal" | "archive";
-function contours(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
+export function contours(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
   ctx.fillStyle = "#294e70";
   ctx.fillRect(0, 0, w, h);
-  for (let band = 0; band < 4; band++) {
-    ctx.fillStyle = ["#477da8", "#294e70", "#172d43", "#294e70"][band];
+  // Survey contours share the valley's stepped relief, with signals following the land.
+  for (let band = 0; band < 18; band++) {
+    ctx.strokeStyle = band % 4 === 0 ? "#75acd0" : "#477da8";
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let x = 0; x <= w; x += 3) {
-      const y =
-        Math.round(
-          ((band - 2) * h * 0.27 +
-            x * 0.18 +
-            Math.sin(x / 100 + time * 0.045 + band * 0.25) * h * 0.3) /
-            2,
-        ) * 2;
-      if (!x) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    const heightAt = (x: number) =>
+      Math.round(
+        (band * h) / 12 -
+          h * 0.28 +
+          Math.sin(x / 71 + band * 0.15) * h * 0.17 +
+          Math.cos(x / 39 - band * 0.11) * h * 0.06,
+      );
+    for (let x = -3; x <= w + 3; x += 3) {
+      if (x === -3) ctx.moveTo(x, heightAt(x));
+      else ctx.lineTo(x, heightAt(x));
     }
-    ctx.lineTo(w, h);
-    ctx.lineTo(0, h);
-    ctx.closePath();
-    ctx.fill();
+    ctx.stroke();
+    const x = ((time * (24 + (band % 3) * 11) + band * 47) % (w + 20)) - 10;
+    const y = heightAt(x);
+    ctx.fillStyle = band % 4 === 0 ? "#ffe5ad" : "#a9d8f2";
+    ctx.fillRect(Math.round(x), y - 1, band % 4 === 0 ? 5 : 2, 2);
+  }
+  for (let i = 0; i < 7; i++) {
+    const x = 25 + i * 61;
+    const y = 29 + ((i * 41) % Math.max(1, h - 40));
+    ctx.fillStyle = "#75acd0";
+    ctx.fillRect(x - 3, y, 7, 1);
+    ctx.fillRect(x, y - 3, 1, 7);
+    ctx.fillStyle = "#a9d8f2";
+    ctx.fillRect(x, y, 1, 1);
   }
 }
 
-function recorder(ctx: CanvasRenderingContext2D, w: number, h: number, seconds: number) {
+export function recorder(ctx: CanvasRenderingContext2D, w: number, h: number, seconds: number) {
   const state = sessionAt(seconds);
+  // The transport lives in a listening workshop looking out over the signal valley.
+  ctx.fillStyle = "#c7e6f7";
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = "#477da8";
+  ctx.fillRect(13, 9, w - 26, 106);
+  ctx.fillStyle = "#294e70";
+  ctx.fillRect(17, 13, w - 34, 98);
+  for (let i = 0; i < 24; i++) {
+    const sx = 23 + ((i * 53) % (w - 48));
+    const sy = 19 + ((i * 19) % 61);
+    ctx.fillStyle = i % 5 === Math.floor(seconds * 2) % 5 ? "#ffe5ad" : "#75acd0";
+    ctx.fillRect(sx, sy, 1, 1);
+  }
+  for (let layer = 0; layer < 2; layer++) {
+    ctx.fillStyle = layer ? "#477da8" : "#75acd0";
+    for (let px = 18; px < w - 18; px += 2) {
+      const ridge = 61 + layer * 22 + Math.sin(px / 33 + layer * 2) * 13;
+      ctx.fillRect(px, Math.round(ridge), 2, 111 - Math.round(ridge));
+    }
+  }
+  ctx.fillStyle = "#edf7fc";
+  ctx.fillRect(w - 57, 24, 14, 14);
+  ctx.fillStyle = "#a9d8f2";
+  ctx.fillRect(18, 111, w - 36, 3);
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = "#ffe5ad";
+    ctx.fillRect(20 + ((seconds * 29 + i * 83) % (w - 44)), 104, 4, 2);
+  }
+  ctx.fillStyle = "#75acd0";
+  ctx.fillRect(0, h - 19, w, 3);
+  ctx.fillStyle = "#477da8";
+  ctx.fillRect(0, h - 16, w, 16);
   const x = (w - 234) / 2;
   const y = h * 0.38;
   const p = {
@@ -38,7 +82,7 @@ function recorder(ctx: CanvasRenderingContext2D, w: number, h: number, seconds: 
     light: "#a9d8f2",
     paper: "#edf7fc",
     brass: "#88b5d0",
-    highlight: "#fff4de",
+    highlight: "#ffe5ad",
   };
   const rect = (rx: number, ry: number, rw: number, rh: number, color: string) => {
     ctx.fillStyle = color;
@@ -135,16 +179,22 @@ function recorder(ctx: CanvasRenderingContext2D, w: number, h: number, seconds: 
   for (let button = 0; button < 4; button++) {
     rect(151 + button * 16, 62, 12, 11, p.mid);
     rect(151 + button * 16, 60, 11, 10, button === state.step % 4 ? p.deep : p.paper);
-    rect(154 + button * 16, 63, 4, 3, button === state.step % 4 ? "#fff4de" : p.mid);
+    rect(154 + button * 16, 63, 4, 3, button === state.step % 4 ? "#ffe5ad" : p.mid);
   }
   rect(211, 16, 7, 33, p.mid);
   rect(213, 18, 3, 28, p.deep);
-  const lamp = Math.floor(state.progress * 25);
-  rect(213, 44 - lamp, 3, 3, "#fff4de");
+  // A fast meter responds to the transport without advancing the recorded steps.
+  const lamp = Math.floor((0.5 + Math.sin(state.time * 8) * 0.3) * 25);
+  rect(213, 44 - lamp, 3, 3, "#ffe5ad");
   // Paper feeds below the tape head; recorded marks advance with the same session clock.
   rect(88, 87, 61, 5, p.dark);
   rect(92, 91, 53, 40, p.paper);
   rect(143, 92, 3, 40, p.light);
+  for (let i = 0; i < 5; i++) {
+    rect(-31, 63 + i * 5, 15 + (i % 2) * 5, 3, p.mid);
+    rect(243, 42 + i * 7, 21, 5, i % 2 ? p.light : p.deep);
+    rect(245, 43 + i * 7, 16, 1, p.paper);
+  }
   const colors = ["#7c9270", "#426f8b", "#b77735", "#39877a", "#b77735", "#846735"];
   for (let i = 0; i <= state.step; i++) {
     const row = 97 + ((i * 6 + state.time * 2) % 30);
@@ -259,13 +309,13 @@ export function PixelScene({
   }, [kind, seconds, paused]);
   const label =
     kind === "recorder"
-      ? "Animated twin-reel recorder: reels turn, tape moves through the head, and a paper strip records the session's steps."
+      ? "Animated twin-reel recorder in a night workshop: signal lights cross the mountain window, reels turn, a meter moves, and a paper strip records the session's steps."
       : kind === "forest"
         ? "An original animated pixel valley with snowy peaks, signal stations, a cable crossing, pine trees and a flowing river."
         : kind === "signal"
-          ? "Four original pixel observatory rooms represent Agents, Code, Git and Infra, connected by one moving signal."
+          ? "Four working pixel observatories in a sunlit valley: an aerial, code reader, branching signal and spinning infrastructure fan connect Agents, Code, Git and Infra."
           : kind === "archive"
-            ? "An animated pixel archive console with a receiving antenna, an open field guide and a steaming cup against blue hills."
+            ? "An animated pixel archive in a mountain valley: an antenna receives signals, a console scans records, a field guide turns a page and a paper strip feeds below the desk."
             : undefined;
   return (
     <canvas

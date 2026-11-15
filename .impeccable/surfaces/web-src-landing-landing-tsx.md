@@ -29,3 +29,9 @@ label, with compact Research navigation, a hero link and an early illustrated pr
 panoramic signal valley, readable sky behind the copy and foreground across both
 sides. Use softer paper, deeper night, warm cream highlights and quick signal/water
 accents. Keep the recorder clock readable and honor reduced motion.
+
+Owner follow-up: extend this approved direction to every landing illustration and
+animation. Night workshop, working observatories, moving research plates, contour
+fields, team monitors and receiving lines, and the scanning/printing archive form
+one visual world. CSS/SVG loops share offscreen/hidden/reduced-motion stopping;
+keep the existing recorder sequence, controls, claims and product captures intact.

@@ -9,7 +9,7 @@ const ink = "#172d43",
   blue = "#a9d8f2",
   pale = "#c7e6f7",
   ice = "#edf7fc",
-  cream = "#fff4de";
+  cream = "#ffe5ad";
 const random = (n: number) => {
   const v = Math.sin(n * 83.7 + 127.1) * 43758.5453;
   return v - Math.floor(v);
@@ -93,6 +93,21 @@ export function JournalArt({ kind, className = "" }: { kind: Kind; className?: s
           fill={mid}
         />
         <path d="M0 358h640v42H0z" fill={denim} />
+        <g className="plate-birds" stroke={deep} strokeWidth="2">
+          <path d="m338 64 4 2 4-2m8 7 4 2 4-2m8 7 4 2 4-2m8 7 4 2 4-2" />
+        </g>
+        <g className="plate-wind" fill={ice}>
+          <path d="M14 130h19v2H14zm19-4h9v2h-9zm526-22h34v2h-34zm41 8h15v2h-15z" />
+        </g>
+        <path d="M20 264h3v70h-3zm-7 4h17v3H13zm592-47h3v112h-3zm-7 4h17v3h-17z" fill={deep} />
+        <path
+          d="M23 271h21v3h24v3h23v3h25m489-47h-21v3h-24v3h-23v3h-25"
+          stroke={denim}
+          strokeWidth="2"
+        />
+        <g className="plate-beacon" fill={cream}>
+          <path d="M16 253h3v3h-3zm9 0h3v3h-3zm576-43h3v3h-3zm9 0h3v3h-3z" />
+        </g>
         {Array.from({ length: 22 }, (_, i) => (
           <Pine
             key={i}
@@ -158,10 +173,13 @@ export function JournalArt({ kind, className = "" }: { kind: Kind; className?: s
               ))}
             </g>
             <path d="M254 224h90v3h-90z" fill={deep} />
-            <g className="plate-packet">
-              <path d="M263 220h10v10h-10z" fill={cream} />
-              <path d="M266 223h4v4h-4z" fill={mid} />
-            </g>
+            {[0, 1, 2].map((i) => (
+              <g className={`plate-packet packet-${i}`} key={i}>
+                <path d="M263 220h10v10h-10z" fill={cream} />
+                <path d="M266 223h4v4h-4z" fill={mid} />
+                <path d="M251 224h8v2h-8z" fill={blue} />
+              </g>
+            ))}
             <Paper x={292} y={276} small />
           </>
         )}
@@ -172,6 +190,9 @@ export function JournalArt({ kind, className = "" }: { kind: Kind; className?: s
             <path d="M97 331h12v47H97zm430 0h12v47h-12z" fill={deep} />
             <Paper x={201} y={126} />
             <Paper x={345} y={146} />
+            <g className="plate-review-scan" fill={cream}>
+              <path d="M218 149h93v3h-93zm144 20h92v3h-92z" />
+            </g>
             <g className="plate-lens">
               <path
                 d="M171 72h79v8h24v13h15v20h10v67h-10v21h-15v14h-23v8h-79v-8h-24v-14h-15v-21h-9v-67h9V93h15V80h23z"
@@ -225,6 +246,7 @@ export function JournalArt({ kind, className = "" }: { kind: Kind; className?: s
                     fill={deep}
                   />
                 ))}
+                <path className={`plate-level gauge-${i}`} d="M22 84h30v92H22z" fill={blue} />
                 <g className={`plate-gauge gauge-${i}`}>
                   <path d={`M24 ${[89, 54, 112][i]}h26v9H24z`} fill={cream} />
                   <path d={`M29 ${[92, 57, 115][i]}h16v2H29z`} fill={mid} />

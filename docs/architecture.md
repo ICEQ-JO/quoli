@@ -181,3 +181,10 @@ wash preserve readable copy; the landing palette uses softer paper, deeper night
 and warmer artwork highlights. Faster signal/water motion stays decorative and
 separate from the synthetic recorder clock. Canvas scenes still stop offscreen,
 in hidden tabs and for reduced motion. No dependencies or evidence access added.
+
+The owner's full-page extension of #14 gives the recorder a night workshop and
+updates the observatory, archive, shared journal plates and team schematic.
+Survey contours carry animated signals behind the terminal, product captures,
+team view and footer. A visibility observer in the isolated landing entry also
+pauses CSS/SVG art when offscreen, hidden or reduced motion is requested. Artwork
+is static before hydration; canvas clocks and recorder transport remain local.

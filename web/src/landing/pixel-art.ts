@@ -166,8 +166,20 @@ export function drawValley(ctx: CanvasRenderingContext2D, time: number) {
 
 export function drawOptics(ctx: CanvasRenderingContext2D, time: number) {
   const r = brush(ctx);
-  // Four distinct observatory rooms share one signal conduit, fitted into a hillside.
+  // Four working instruments sit in the same sunlit valley as the hero.
   r(0, 0, 480, 240, p.pale);
+  r(410, 16, 18, 18, p.cream);
+  r(407, 20, 24, 10, p.cream);
+  for (let i = 0; i < 4; i++) {
+    const cloud = ((i * 137 + time * 4) % 620) - 90;
+    r(cloud, 22 + i * 12, 51, 2, p.ice);
+    r(cloud + 12, 19 + i * 12, 22, 3, p.ice);
+  }
+  for (let x = 0; x < 480; x += 2) {
+    const ridge = 54 + Math.abs(x - 310) * 0.2 + Math.sin(x / 29) * 9;
+    r(x, ridge, 2, 186 - ridge, p.blue);
+    if (x > 255 && x < 340) r(x, ridge, 2, 3 + noise(x) * 4, p.ice);
+  }
   for (let x = 0; x < 480; x += 2) {
     const y = 105 + Math.sin(x / 64) * 18 + noise(Math.floor(x / 8)) * 3;
     r(x, y, 2, 135, p.blue);
@@ -186,6 +198,8 @@ export function drawOptics(ctx: CanvasRenderingContext2D, time: number) {
     r(x - 22, 108, 52, 3, p.blue);
     r(x - 22, 150, 52, 4, p.blue);
     r(x - 31, 88, 74, 6, p.deep);
+    for (let j = 0; j < 5; j++) r(x - 19 + j * 10, 103, 4, 1, p.ice);
+    for (let j = 0; j < 4; j++) r(x + 35, 112 + j * 12, 3, 3, p.deep);
     // Each roof has its own silhouette: aerial, angled solar roof, dome, twin stacks.
     if (i === 0) {
       r(x, 49, 3, 39, p.deep);
@@ -219,6 +233,31 @@ export function drawOptics(ctx: CanvasRenderingContext2D, time: number) {
         r(x + nx, ny, 7, 6, p.cream);
       if (i === 3) r(x, 124, 7, 6, p.blue);
     }
+    // Each room translates the signal into its own visual mechanism.
+    if (i === 0) {
+      const pulse = (time * 18) % 25;
+      r(x - 15 - pulse, 47 - pulse / 2, 2, 2, p.cream);
+      r(x + 17 + pulse, 47 - pulse / 2, 2, 2, p.cream);
+    } else if (i === 1) {
+      const row = Math.floor(time * 3) % 3;
+      r(x - 14 + row * 3, 118 + row * 9, 29 - row * 3, 2, p.ice);
+    } else if (i === 2) {
+      const step = (time * 24) % 40;
+      r(x - 10 + Math.max(0, step - 23), 117 + Math.min(23, step), 3, 3, p.cream);
+      r(x - 20, 75, 43, 1, p.ice);
+    } else {
+      ctx.save();
+      ctx.translate(x + 5, 135);
+      ctx.rotate(time * 3);
+      for (let spoke = 0; spoke < 4; spoke++) {
+        ctx.rotate(Math.PI / 2);
+        r(2, -1, 8, 2, p.mid);
+      }
+      ctx.restore();
+      r(x + 3, 133, 4, 4, p.cream);
+    }
+    const scan = (time * 21 + i * 9) % 35;
+    r(x - 17, 114 + scan, 41, 1, p.denim);
     r(x - 16, 158, 39, 4, p.mid);
     r(x - 16, 197, 44, 12, p.deep);
     ctx.font = "7px monospace";
@@ -230,11 +269,16 @@ export function drawOptics(ctx: CanvasRenderingContext2D, time: number) {
       r(x + 50, 129, 4, 10, p.cream);
     }
   }
-  const packet = 25 + ((time * 65) % 425);
-  r(packet, 177, 9, 3, p.cream);
+  for (let i = 0; i < 3; i++) {
+    const packet = 25 + ((time * 65 + i * 141) % 425);
+    r(packet - 8, 178, 6, 1, p.mid);
+    r(packet, 177, 7, 3, p.cream);
+  }
   for (let i = 0; i < 32; i++) {
     const x = i * 16;
     r(x, 231 + Math.sin(x / 20) * 2, 9, 2, p.mid);
+    r(x + 3, 217 + noise(i) * 10, 1, 7, p.denim);
+    if (i % 4 === 0) r(x + 2, 216 + noise(i) * 10, 3, 2, p.cream);
   }
   ctx.textAlign = "start";
 }
@@ -243,7 +287,17 @@ export function drawArchive(ctx: CanvasRenderingContext2D, time: number) {
   const r = brush(ctx);
   // A field guide rests on an archive console; a signal resolves into paper records.
   r(0, 0, 300, 240, p.pale);
-  for (let x = 0; x < 300; x += 2) r(x, 118 + Math.sin(x / 40) * 17, 2, 122, p.blue);
+  r(246, 16, 16, 16, p.cream);
+  for (let i = 0; i < 3; i++) {
+    const x = ((i * 133 + time * 5) % 440) - 90;
+    r(x, 22 + i * 13, 54, 2, p.ice);
+    r(x + 12, 19 + i * 13, 24, 3, p.ice);
+  }
+  for (let x = 0; x < 300; x += 2) {
+    const ridge = 72 + Math.abs(x - 218) * 0.25 + Math.sin(x / 33) * 9;
+    r(x, ridge, 2, 240 - ridge, p.blue);
+    r(x, 132 + Math.sin(x / 40) * 17, 2, 108, p.mid);
+  }
   for (let i = 0; i < 13; i++) pine(ctx, i * 26, 174, 12 + noise(i) * 24, p.mid);
   r(38, 183, 224, 10, p.deep);
   r(32, 178, 236, 6, p.ice);
@@ -254,14 +308,22 @@ export function drawArchive(ctx: CanvasRenderingContext2D, time: number) {
   r(77, 72, 146, 92, p.blue);
   r(82, 77, 136, 81, p.ink);
   for (let i = 0; i < 5; i++) {
-    r(89, 87 + i * 12, 7, 7, i === Math.floor(time / 2) % 5 ? p.cream : p.mid);
+    r(89, 87 + i * 12, 7, 7, i === Math.floor(time * 2) % 5 ? p.cream : p.mid);
     r(104, 89 + i * 12, 79 - i * 9, 2, p.blue);
     r(104, 93 + i * 12, 52 + i * 3, 1, p.denim);
   }
+  // The scan head resolves a received signal into rows of recorded evidence.
+  r(85, 81 + ((time * 29) % 73), 135, 1, p.mid);
+  for (const x of [74, 222])
+    for (const y of [69, 165]) {
+      r(x, y, 3, 3, p.ice);
+      r(x + 1, y, 1, 2, p.mid);
+    }
+  for (let i = 0; i < 8; i++) r(90 + i * 15, 169, 8, 2, p.mid);
   r(145, 39, 3, 27, p.deep);
   r(137, 43, 19, 2, p.denim);
   for (let i = 0; i < 4; i++) {
-    const step = (time * 6 + i * 11) % 42;
+    const step = (time * 19 + i * 11) % 42;
     r(145 - step, 32 - step / 3, 2, 2, p.cream);
     r(149 + step, 32 - step / 3, 2, 2, p.cream);
   }
@@ -276,8 +338,20 @@ export function drawArchive(ctx: CanvasRenderingContext2D, time: number) {
     r(102, 153 + i * 5, 31 - i * 3, 1, p.denim);
     r(155, 153 + i * 5, 31 - i * 3, 1, p.mid);
   }
+  // A page edge turns and paper feeds below the archive's console.
+  const page = Math.sin(time * 2.5);
+  r(148, 146, 18 + page * 14, 2, p.blue);
+  r(148, 148, 14 + page * 10, 1, p.ice);
+  r(116, 184, 62, 3, p.ink);
+  r(122, 187, 50, 36, p.ice);
+  r(169, 187, 3, 36, p.blue);
+  for (let i = 0; i < 5; i++) {
+    const y = 190 + ((i * 6 + time * 10) % 30);
+    r(128, y, 3, 2, p.denim);
+    r(135, y, 24 - i * 2, 1, p.mid);
+  }
   r(42, 148, 18, 28, p.mid);
   r(45, 145, 12, 6, p.cream);
   for (let i = 0; i < 3; i++)
-    r(49 + Math.sin(time + i) * 2, 138 - ((time * 4 + i * 6) % 19), 2, 4, p.ice);
+    r(49 + Math.sin(time + i) * 2, 138 - ((time * 8 + i * 6) % 19), 2, 4, p.ice);
 }
