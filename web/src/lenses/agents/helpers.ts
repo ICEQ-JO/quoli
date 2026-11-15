@@ -76,6 +76,21 @@ export function matchesFilter(call: ToolCall, filter: CallFilter, mainId: string
   }
 }
 
+/**
+ * The subagents filter counts calls (each spawn plus every call a subagent made), not agents
+ * (#38): one subagent with a spawn and three calls is 1 agent and 4 calls.
+ */
+export function subagentUnits(
+  agents: { id: string; kind: string }[],
+  calls: ToolCall[],
+  mainId: string,
+): { agents: number; calls: number } {
+  return {
+    agents: agents.filter((a) => a.kind === "subagent").length,
+    calls: calls.filter((c) => matchesFilter(c, "subagents", mainId)).length,
+  };
+}
+
 const tag = (text: string, name: string) =>
   text.match(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`))?.[1]?.trim() ?? null;
 

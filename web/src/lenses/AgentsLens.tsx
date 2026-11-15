@@ -10,6 +10,7 @@ import {
   GRAPH_RECENT,
   matchesFilter,
   readPrompt,
+  subagentUnits,
   took,
 } from "./agents/helpers.ts";
 import { KindIcon, Timeline } from "./agents/Timeline.tsx";
@@ -142,6 +143,7 @@ export function AgentsLens(ctx: LensContext) {
       edits: n("edits"),
       commands: n("commands"),
       subagents: n("subagents"),
+      subagentAgents: subagentUnits(session?.agents ?? [], all, mainId).agents,
     };
   }, [session, mainId]);
 
@@ -149,7 +151,10 @@ export function AgentsLens(ctx: LensContext) {
     <div className="ag-toolbar">
       {view === "timeline" ? (
         <fieldset className="segmented ag-filters">
-          <legend className="sr-only">Show</legend>
+          <legend className="sr-only">Show calls</legend>
+          <span className="ag-unit" aria-hidden="true">
+            Calls
+          </span>
           {FILTERS.map(([f, label]) => (
             <button
               type="button"
@@ -158,9 +163,17 @@ export function AgentsLens(ctx: LensContext) {
               className={`${filter === f ? "active" : ""} ${f === "failed" && counts.failed ? "has-fail" : ""}`}
               disabled={f !== "all" && counts[f] === 0}
               onClick={() => setFilter(f)}
+              title={
+                f === "subagents"
+                  ? `${counts.subagentAgents} ${counts.subagentAgents === 1 ? "subagent" : "subagents"} ran; ${counts.subagents} calls started them or were made by them`
+                  : `${counts[f]} ${counts[f] === 1 ? "call" : "calls"}`
+              }
             >
               {label}
-              <span className="seg-count">{counts[f]}</span>
+              <span className="seg-count">
+                {counts[f]}
+                <span className="sr-only"> {counts[f] === 1 ? "call" : "calls"}</span>
+              </span>
             </button>
           ))}
         </fieldset>
@@ -240,7 +253,7 @@ const FILTERS: [CallFilter, string][] = [
   ["failed", "Failed"],
   ["edits", "Edits"],
   ["commands", "Commands"],
-  ["subagents", "Subagents"],
+  ["subagents", "Subagent calls"],
 ];
 
 function ToolNode({ data }: NodeProps) {

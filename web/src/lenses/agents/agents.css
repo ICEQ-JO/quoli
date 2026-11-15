@@ -488,3 +488,11 @@
   color: var(--search);
   background: color-mix(in srgb, var(--search) 14%, transparent);
 }
+
+/* The filters count calls, not agents (#38). */
+.ag-unit {
+  align-self: center;
+  padding: 0 6px 0 4px;
+  color: var(--faint);
+  font-size: var(--fs-xs);
+}

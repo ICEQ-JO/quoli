@@ -720,3 +720,30 @@
     transition: none;
   }
 }
+
+/* Changed files as the first selection (#38). */
+.map-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+.map-start-file {
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--edit) 45%, var(--line));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--edit) 8%, transparent);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.map-start-file:hover {
+  background: color-mix(in srgb, var(--edit) 16%, transparent);
+}
+.map-start-file:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
