@@ -79,10 +79,17 @@ async function open() {
     const { localToken, pairLink } = await import("./token.ts");
     const site = pairLink(port, localToken());
     const { startInBackground } = await import("./autostart.ts");
+    console.log("\nStarting Quoli in the background (this takes a few seconds)…");
     const result = await startInBackground();
     if (result.ok) {
       console.log(`
-  Quoli is running in the background, and starts by itself when you log in.
+  Quoli is running in the background${
+    result.detached
+      ? ". This computer's service manager (systemd) did not respond, so it runs on its own\n" +
+        "  until you log out. To have it start at login again, run `systemctl --user daemon-reexec`\n" +
+        "  (or log out and back in)."
+      : ", and starts by itself when you log in."
+  }
   Open ${site}
   (the link connects this browser to Quoli once; keep it to yourself)
 
