@@ -326,6 +326,14 @@ function Approve({
 }) {
   const [state, setState] = useState<"ask" | "done">("ask");
   const [error, setError] = useState<string | null>(null);
+  // Seconds since the terminal started this code; null when there is no such open code (#16).
+  const [age, setAge] = useState<number | null | undefined>(undefined);
+  useEffect(() => {
+    void client.rpc("link_age", { p_pair: pair }).then(({ data, error }) => {
+      setAge(error ? undefined : typeof data === "number" ? data : null);
+    });
+  }, [client, pair]);
+  const minutes = age ? Math.max(1, Math.round(age / 60)) : 0;
   return (
     <section className="card class-approve" aria-labelledby="approve-h">
       {state === "done" ? (
@@ -342,6 +350,23 @@ function Approve({
           <p>
             Check that your terminal shows the same code: <code className="class-pair">{pair}</code>
           </p>
+          {age === null && (
+            <p className="form-error" role="alert">
+              This code has expired or was already used. Run <code>connect</code> again.
+            </p>
+          )}
+          {typeof age === "number" && (
+            <p
+              className={age > 180 ? "form-error" : "faint"}
+              role={age > 180 ? "alert" : undefined}
+            >
+              {age < 60
+                ? "Started less than a minute ago."
+                : `Started ${minutes} minute${minutes === 1 ? "" : "s"} ago.`}
+              {age > 180 &&
+                " If you did not just run connect in your own terminal, someone may be trying to link their computer to your account: cancel."}
+            </p>
+          )}
           <p className="faint">
             Only approve a code from a <code>connect</code> you just ran yourself. Approving lets
             that computer share session summaries as you.
@@ -350,6 +375,7 @@ function Approve({
             <button
               type="button"
               className="btn primary"
+              disabled={age === null}
               onClick={async () => {
                 setError(null);
                 const { error } = await client.rpc("link_approve", { p_pair: pair });
