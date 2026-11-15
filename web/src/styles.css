@@ -1546,6 +1546,10 @@ kbd {
 
 /* ---------- Timeline ---------- */
 
+.timeline.replaying {
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+}
+
 .timeline {
   grid-area: timeline;
   display: grid;
@@ -3273,4 +3277,9 @@ textarea.input {
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
+}
+
+/* Summary: the Review action right under what to review (#37). */
+.sum-sec .sum-action {
+  margin-top: 12px;
 }

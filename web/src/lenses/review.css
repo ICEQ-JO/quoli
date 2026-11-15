@@ -140,6 +140,13 @@
   border-radius: 1px;
 }
 
+.rv-scope {
+  margin: 2px 12px 8px;
+  font-size: var(--fs-xs);
+  color: var(--faint);
+  line-height: 1.4;
+}
+
 .rv-groups ul {
   list-style: none;
   margin: 0;
