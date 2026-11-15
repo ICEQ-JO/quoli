@@ -24,3 +24,8 @@ Sessions/Dashboard captures at native 16:9, preserving their actual theme. The
 owner authorized their public display; this does not authorize accessing private
 session stores. Keep pixel artwork. Research & insights replaces the public Journal
 label, with compact Research navigation, a hero link and an early illustrated preview.
+
+2026-11-15 owner art refinement (#14): scenery spans the whole hero card, with a
+panoramic signal valley, readable sky behind the copy and foreground across both
+sides. Use softer paper, deeper night, warm cream highlights and quick signal/water
+accents. Keep the recorder clock readable and honor reduced motion.

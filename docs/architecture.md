@@ -174,3 +174,10 @@ Captures keep their original light/dark appearance independently of the site the
 lossless WebP and full-size JPEG fallbacks use the native 1600×900 ratio. No private
 session data is read. Research navigation also appears in the hero and immediately
 after the product tour; existing `/journal/` URLs remain unchanged.
+
+Phase 1 [#14](https://github.com/ICEQ-JO/quoli/issues/14) extends the landing hero
+into a full-card 840×420 procedural panorama. Responsive cropping and a local sky
+wash preserve readable copy; the landing palette uses softer paper, deeper night
+and warmer artwork highlights. Faster signal/water motion stays decorative and
+separate from the synthetic recorder clock. Canvas scenes still stop offscreen,
+in hidden tabs and for reduced motion. No dependencies or evidence access added.

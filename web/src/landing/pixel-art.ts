@@ -7,7 +7,7 @@ const p = {
   blue: "#a9d8f2",
   pale: "#c7e6f7",
   ice: "#edf7fc",
-  cream: "#fff4de",
+  cream: "#ffe5ad",
 };
 const noise = (n: number) => {
   const v = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -80,81 +80,87 @@ function station(ctx: CanvasRenderingContext2D, x: number, y: number, scale: num
 
 export function drawValley(ctx: CanvasRenderingContext2D, time: number) {
   const r = brush(ctx);
-  r(0, 0, 420, 340, p.pale);
-  // Slow clouds occupy open sky; a stepped sun sits above the mountain ridge.
-  r(325, 26, 20, 24, p.cream);
-  r(321, 30, 28, 16, p.cream);
-  for (let i = 0; i < 4; i++) {
-    const x = ((i * 139 + time * 1.2) % 560) - 80;
-    r(x, 26 + i * 16, 65, 3, p.ice);
-    r(x + 14, 22 + i * 16, 29, 5, p.ice);
+  r(0, 0, 840, 420, p.pale);
+  // A single panorama: open sky for the promise, inhabited ridges for the product world.
+  r(695, 48, 28, 28, p.cream);
+  r(691, 52, 36, 20, p.cream);
+  for (let i = 0; i < 6; i++) {
+    const x = ((i * 173 + time * (2 + i * 0.3)) % 1100) - 130;
+    const y = 25 + (i % 3) * 33;
+    r(x, y, 65 + i * 7, 2, p.ice);
+    r(x + 17, y - 4, 31 + i * 3, 4, p.ice);
   }
-  // Jagged mountain silhouettes and a narrow snowcap, rather than repeating sine bands.
-  for (let layer = 0; layer < 3; layer++) {
-    for (let x = 0; x < 420; x += 2) {
+  for (let layer = 0; layer < 4; layer++) {
+    for (let x = 0; x < 840; x += 2) {
       const ridge =
-        72 +
-        layer * 41 +
-        Math.abs(x - (285 - layer * 64)) * 0.3 +
-        Math.sin(x / 31 + layer * 3) * 14 +
-        noise(Math.floor(x / 8) + layer * 700) * 4;
-      r(x, ridge, 2, 340 - ridge, [p.blue, p.mid, p.denim][layer]);
-      if (layer === 0 && x > 215 && x < 325) r(x, ridge, 2, 4 + noise(x) * 7, p.ice);
+        113 +
+        layer * 47 +
+        Math.abs(x - (699 - layer * 39)) * 0.34 +
+        Math.sin(x / 43 + layer * 3) * 17 +
+        noise(Math.floor(x / 7) + layer * 700) * 4;
+      r(x, ridge, 2, 420 - ridge, [p.blue, p.mid, p.denim, p.deep][layer]);
+      if (layer === 0 && x > 593 && x < 752) r(x, ridge, 2, 3 + noise(x) * 9, p.ice);
+      if (layer === 1 && x % 14 === 0) r(x, ridge + 4, 7, 1, p.blue);
     }
   }
-  // A waterfall empties into a winding river below the inhabited ridge.
-  for (let y = 165; y < 340; y++) {
-    const center = 230 + Math.sin(y / 42) * (y - 130) * 0.34;
-    const width = 3 + (y - 165) * 0.25;
+  // Water accelerates through the falls, then spreads into longer river reflections.
+  for (let y = 224; y < 420; y++) {
+    const center = 672 + Math.sin(y / 48) * (y - 180) * 0.31;
+    const width = 3 + (y - 224) * 0.3;
     r(center - width / 2, y, width, 1, p.blue);
-    if (y % 11 === Math.floor(time * 4) % 11) r(center - width / 3, y, width * 0.65, 1, p.ice);
+    if ((y + Math.floor(time * 25)) % 15 < 2) r(center - width / 3, y, width * 0.65, 1, p.ice);
   }
-  // Rocky plateau supports a tiny signal station, bridge and trail.
-  for (let x = 20; x < 231; x++) {
-    const top = 221 + Math.sin(x / 33) * 8 + noise(Math.floor(x / 5)) * 3;
-    const bottom = 278 + Math.sin(x / 21) * 12;
+  for (let x = 422; x < 634; x++) {
+    const top = 304 + Math.sin(x / 33) * 8 + noise(Math.floor(x / 5)) * 3;
+    const bottom = 369 + Math.sin(x / 21) * 12;
     r(x, top, 1, bottom - top, p.deep);
-    r(x, top, 1, 5, p.mid);
+    r(x, top, 1, 4, p.mid);
     if (x % 9 === 0) r(x, top + 14, 2, bottom - top - 18, p.denim);
   }
   for (let i = 0; i < 55; i++) {
-    const x = 23 + noise(i + 80) * 200;
-    r(x, 237 + noise(i + 200) * 27, 2 + noise(i) * 5, 1, p.mid);
+    const x = 425 + noise(i + 80) * 200;
+    r(x, 323 + noise(i + 200) * 27, 2 + noise(i) * 5, 1, p.mid);
   }
-  // Cable spans the valley. A cream packet travels to the receiving tower.
-  for (let x = 135; x < 397; x++)
-    r(x, 175 + Math.sin(((x - 135) / 262) * Math.PI) * 22, 1, 1, p.deep);
-  for (const x of [139, 389]) {
-    r(x, 166, 3, 86, p.deep);
-    r(x - 6, 167, 15, 3, p.blue);
-    r(x - 4, 205, 11, 2, p.mid);
+  for (let x = 538; x < 806; x++)
+    r(x, 256 + Math.sin(((x - 538) / 268) * Math.PI) * 20, 1, 1, p.ink);
+  for (const x of [541, 799]) {
+    r(x, 247, 3, 88, p.deep);
+    r(x - 6, 248, 15, 3, p.blue);
+    r(x - 4, 286, 11, 2, p.mid);
   }
-  const packetX = 140 + ((time * 11) % 248);
-  const packetY = 173 + Math.sin(((packetX - 135) / 262) * Math.PI) * 22;
-  r(packetX, packetY, 7, 5, p.cream);
-  r(packetX + 2, packetY + 5, 3, 4, p.deep);
-  station(ctx, 120, 228, 1.05, time);
-  station(ctx, 365, 249, 0.55, time + 2);
-  for (let i = 0; i < 28; i++) {
-    const x = i * 16 + noise(i) * 8;
-    if (x > 75 && x < 175) continue;
-    pine(ctx, x, 246 + Math.sin(x / 28) * 10, 15 + noise(i + 70) * 25, p.deep);
+  // Three short trails make the fast signal legible without moving the landscape.
+  for (let i = 0; i < 3; i++) {
+    const x = 542 + ((time * 62 + i * 87) % 254);
+    const y = 254 + Math.sin(((x - 538) / 268) * Math.PI) * 20;
+    r(x - 10, y + 1, 8, 1, p.blue);
+    r(x, y, 6, 3, p.cream);
   }
-  // Foreground frames the valley with distinct branches, stones and cream flowers.
-  for (let i = 0; i < 19; i++) {
+  station(ctx, 518, 309, 1.05, time * 1.6);
+  station(ctx, 775, 332, 0.58, time * 1.6 + 2);
+  for (let i = 0; i < 53; i++) {
+    const x = i * 17 + noise(i) * 8;
+    if ((x > 467 && x < 564) || (x > 640 && x < 720)) continue;
+    const y = 375 - Math.min(x / 11, 64) + Math.sin(x / 30) * 12;
+    pine(ctx, x, y, 13 + noise(i + 70) * 27, p.deep);
+  }
+  // Low foreground silhouettes connect both sides without competing with the copy.
+  for (let i = 0; i < 38; i++) {
     const x = i * 25 - 12;
-    if (x > 180 && x < 330) continue;
-    pine(ctx, x, 345, 42 + noise(i + 9) * 49, p.ink);
+    if (x > 630 && x < 770) continue;
+    pine(ctx, x, 438, 19 + noise(i + 9) * 36, p.ink);
   }
-  for (let i = 0; i < 85; i++) {
-    const x = noise(i + 3) * 420;
-    const y = 320 + noise(i + 600) * 20;
+  for (let i = 0; i < 150; i++) {
+    const x = noise(i + 3) * 840;
+    const y = 404 + noise(i + 600) * 16;
     r(x, y, 1, 3 + noise(i) * 6, p.mid);
-    if (i % 7 === 0) r(x - 1, y - 2, 3, 2, p.cream);
+    if (i % 9 === 0) r(x - 1, y - 2, 3, 2, p.cream);
   }
-  for (let i = 0; i < 9; i++) {
-    const x = (noise(i + 300) * 420 + time * 3) % 420;
-    r(x, 130 + noise(i) * 140 + Math.sin(time + i) * 4, 1, 1, p.cream);
+  // Small flocks cross the distant sky in staggered, stepped arcs.
+  for (let i = 0; i < 5; i++) {
+    const x = 440 + ((time * 16 + i * 13) % 360);
+    const y = 96 + i * 4 + Math.sin(time * 3 + i) * 2;
+    r(x, y, 2, 1, p.deep);
+    r(x + 3, y + (Math.floor(time * 7 + i) % 2 ? -1 : 1), 2, 1, p.deep);
   }
 }
 
@@ -224,7 +230,7 @@ export function drawOptics(ctx: CanvasRenderingContext2D, time: number) {
       r(x + 50, 129, 4, 10, p.cream);
     }
   }
-  const packet = 25 + ((time * 28) % 425);
+  const packet = 25 + ((time * 65) % 425);
   r(packet, 177, 9, 3, p.cream);
   for (let i = 0; i < 32; i++) {
     const x = i * 16;

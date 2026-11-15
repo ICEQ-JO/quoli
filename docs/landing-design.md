@@ -2,19 +2,19 @@
 name: Quoli landing
 description: A baby-blue pixel identity connecting coding-agent work.
 colors:
-  paper: "#edf7fc"
+  paper: "#f2f6f5"
   ink: "#172d43"
   muted: "#46627a"
   brand: "#315f85"
   baby-blue: "#a9d8f2"
   denim: "#477da8"
-  cream: "#fff4de"
-  tint: "#dceef9"
+  cream: "#ffe5ad"
+  tint: "#e0edf0"
   border: "#bdd5e5"
   surface: "#f7fbfe"
-  night-paper: "#101f30"
+  night-paper: "#101c28"
   night-muted: "#b0c8dc"
-  night-tint: "#1c354d"
+  night-tint: "#1a3042"
   night-border: "#35526c"
 typography:
   display:
@@ -81,10 +81,10 @@ labels 12–15px. The mobile headline is 38px; product headings reach 50px on de
 ## Layout
 
 A single continuous sky field opens the page: promise and actions on the left,
-original pixel scenery and a four-lens trace on the right. The hero reaches 1400px;
+a full-card original pixel panorama with a four-lens trace anchored at lower right. The hero reaches 1400px;
 main marketing sections are bounded between 1140px and 1240px. Navigation is
-1280px; informational pages are 820px. On mobile the illustration
-follows the copy inside the same clipped frame.
+1280px; informational pages are 820px. On mobile the same panorama fills the card behind the copy, with the signal station
+framed beneath it.
 
 The recording section leads with explanation above the working recorder, beside
 an entirely inset terminal. The product introduction is left-aligned beside four
@@ -102,9 +102,9 @@ Depth is local: the hero trace, terminal and screenshot use soft offset shadows.
 The page and text sections stay flat; the footer contains original animated
 contour art behind its content. Borders distinguish controls and
 selected tabs. Pixel canvases render at low resolution without smoothing; the
-hero uses object-fit cover to preserve its pixel proportions and a short edge
-mask to merge scenery into the copy field. The observatory panorama preserves a 2:1
-aspect ratio; the FAQ archive uses 5:4. The mobile hero preserves its 21:17 scene. Trace points and connector share one bordered row.
+hero uses an 840×420 panorama with object-fit cover. A local sky wash preserves
+text contrast while letting the foreground span the entire card. The observatory panorama preserves a 2:1
+aspect ratio; the FAQ archive uses 5:4. The mobile hero is at least 900px tall and crops toward the inhabited ridge. Trace points and connector share one bordered row.
 
 ## Shapes
 
@@ -179,3 +179,15 @@ sigil and a short content transition work with keyboard input. Reduced motion sk
 transitions. The archive illustration provides the pixel-art treatment requested
 for this section. Footer links and hover states use explicit ice-blue foregrounds
 in both themes; scenery stays subdued behind them.
+
+## November 15 panoramic art direction — Phase 1 #14
+
+The hero now paints one landscape across the whole card: open sky, four mountain
+layers, snow, two stations, pines and a winding river. Softer blue-white paper and
+deeper night surroundings frame warmer cream highlights. Signal packets move at
+62 scene pixels/second, the observatory conduit at 65; water and small bird flocks
+provide contrasting rhythms. Canvas painting is capped near 30fps and retains
+visibility, hidden-tab and reduced-motion controls. The recorder keeps its readable
+session timing. The hero trace plays three 2.4-second passes; action arrows respond
+in 180ms. Reduced motion disables both effects. At 320px, Research remains in the
+hero and footer while the header keeps the brand, GitHub, theme and app controls.

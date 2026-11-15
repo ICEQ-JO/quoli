@@ -176,7 +176,7 @@ export function PixelScene({
     const context = element.getContext("2d");
     if (!context) return;
     const [width, height] = {
-      forest: [420, 340],
+      forest: [840, 420],
       field: [420, 190],
       recorder: [350, 220],
       signal: [480, 240],
@@ -209,7 +209,7 @@ export function PixelScene({
       if (control.current.seconds !== undefined) time = control.current.seconds;
       else if (!paused && !media.matches) time += dt;
       clock.current = time;
-      if (now - lastPaint > 45 || media.matches || paused) {
+      if (now - lastPaint > 30 || media.matches || paused) {
         draw();
         lastPaint = now;
       }

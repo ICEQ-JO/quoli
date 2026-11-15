@@ -35,3 +35,14 @@ for (const draw of [drawArchive, drawOptics, drawValley]) {
     paint(draw, 1_000_000);
   });
 }
+
+test("hero paints a full panorama and signals move within a short interval", () => {
+  const still = paint(drawValley, 0);
+  assert.ok(
+    still.some(
+      ([op, x, y, w, h]) => op === "fillRect" && x === 0 && y === 0 && w === 840 && h === 420,
+    ),
+  );
+  assert.ok(still.some(([op, x, y]) => op === "fillRect" && Number(x) < 100 && Number(y) > 350));
+  assert.notDeepEqual(paint(drawValley, 0.1), still);
+});

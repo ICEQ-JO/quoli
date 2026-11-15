@@ -178,3 +178,19 @@ The team section now diagrams local evidence → opt-in summaries → team view 
 labels the drawing as illustrative. Footer text/hover colors are explicitly light
 in either theme, and its contour canvas has reduced opacity. Mobile hero art keeps
 its full aspect ratio so the station is not cropped away.
+
+## November 15 panoramic artwork — Phase 1 #14
+
+The full-card hero uses one original 840×420 landscape rather than a separate
+right-hand illustration. Faster cable packets, water highlights, birds and the
+observatory conduit add energy; the readable recorder timing stays unchanged.
+The light page uses softer paper and dark mode deeper midnight, with warmer cream
+artwork highlights. A 320px header adjustment and wrapping installation command
+keep the narrow layout usable.
+
+Validation: 203 tests pass; typecheck, lint and production build pass (lint retains
+an unrelated existing unused-import warning in MapLens.tsx). Chromium checks cover
+320, 390, 760, 1000 and 1440px in both themes without page overflow, zero axe
+WCAG A/AA violations at 1440px in both themes, moving canvas frames, reduced-motion
+stills, CTA focus and keyboard-operated product tabs and FAQ. No deployment,
+private evidence access, real-screen-reader or physical low-end-device test.
