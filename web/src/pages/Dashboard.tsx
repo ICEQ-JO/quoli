@@ -1,4 +1,10 @@
-import type { Overview, Project } from "../../../shared/model.ts";
+import {
+  AGENT_NAMES,
+  type Collision,
+  type CollisionSide,
+  type Overview,
+  type Project,
+} from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { setFirstRunSkipped } from "../components/FirstRun.tsx";
 import { LiveRow } from "../components/Live.tsx";
@@ -121,6 +127,7 @@ export function DashboardPage() {
               </ul>
             </section>
           )}
+          {overview.collisions.length > 0 && <CollisionsPanel collisions={overview.collisions} />}
           <section className="panel" aria-labelledby="d-review">
             <div className="sec-head">
               <h2 id="d-review">Needs review</h2>
@@ -270,5 +277,77 @@ function ProjectsPanel({ projects, overview }: { projects: Project[] | null; ove
         </ul>
       )}
     </section>
+  );
+}
+
+/** Parallel agents that edited the same files (#17): recorded overlap, inferred merge conflicts. */
+function CollisionsPanel({ collisions }: { collisions: Collision[] }) {
+  return (
+    <section className="panel" aria-labelledby="d-collide">
+      <div className="sec-head">
+        <h2 id="d-collide">Agents on the same files</h2>
+        <span className="sec-count">{collisions.length}</span>
+        <span className="faint" title="Sessions in the same repository, worktrees included">
+          last 24 hours
+        </span>
+      </div>
+      <ul className="slist collisions">
+        {collisions.map((c) => (
+          <li key={`${c.a.sessionId}:${c.b.sessionId}`} className="collision">
+            <p className="collision-pair">
+              <CollisionLink c={c} side={c.a} />
+              <span className="faint" aria-hidden="true">
+                and
+              </span>
+              <CollisionLink c={c} side={c.b} />
+            </p>
+            <p className="collision-files">
+              Both edited <FileList files={c.files} />
+            </p>
+            {c.conflicts && c.conflicts.length > 0 && (
+              <p
+                className="collision-conflict"
+                title="Inferred: Git's merge-tree on the two branches' committed work"
+              >
+                Merging these branches will conflict in <FileList files={c.conflicts} />
+              </p>
+            )}
+            {c.conflicts && c.conflicts.length === 0 && (
+              <p className="faint collision-note">Their committed work still merges cleanly.</p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function CollisionLink({ c, side }: { c: Collision; side: CollisionSide }) {
+  return (
+    <Link
+      to={paths.board(c.projectId, side.sessionId)}
+      className="collision-side"
+      title={side.title}
+    >
+      <LiveDot live={side.live} />
+      <span>{AGENT_NAMES[side.agent]}</span>
+      {side.branch && <code>{side.branch}</code>}
+    </Link>
+  );
+}
+
+/** Up to three repo-relative paths by file name (full path on hover), then how many more. */
+function FileList({ files }: { files: string[] }) {
+  const shown = files.slice(0, 3);
+  return (
+    <>
+      {shown.map((f, i) => (
+        <span key={f}>
+          {i > 0 && (i === shown.length - 1 && files.length <= 3 ? " and " : ", ")}
+          <code title={f}>{f.split("/").pop()}</code>
+        </span>
+      ))}
+      {files.length > 3 && ` and ${plural(files.length - 3, "more file")}`}
+    </>
   );
 }

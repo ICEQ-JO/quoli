@@ -1969,3 +1969,49 @@ ul.reasons li {
   color: var(--faint);
   font-size: var(--fs-sm);
 }
+
+/* ---------- Agents on the same files (#17) ---------- */
+.collisions .collision {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.collisions .collision:first-child {
+  border-top: 0;
+}
+.collision p {
+  margin: 0;
+}
+.collision-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.collision-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+.collision-side:hover span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.collision-side code,
+.collision-files code,
+.collision-conflict code {
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+}
+.collision-files,
+.collision-note {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.collision-conflict {
+  font-size: var(--fs-sm);
+  color: var(--warn);
+}

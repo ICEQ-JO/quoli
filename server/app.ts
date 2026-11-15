@@ -13,6 +13,7 @@ import {
 } from "../shared/model.ts";
 import { codeMap } from "./code.ts";
 import { codeGraphFor, scopeGraph } from "./codegraph/index.ts";
+import { findCollisions } from "./collisions.ts";
 import { connect, HOOK_AGENTS, type HookAgent, installedAgents, validateRepo } from "./connect.ts";
 import { home, projectId, type Store } from "./db.ts";
 import { githubRepo } from "./github.ts";
@@ -232,6 +233,7 @@ export function createApp(store: Store, port: () => number, token?: string) {
       .slice(0, 20);
     return {
       live: all.filter((d) => d.live).map((d) => liveSession(d, prices, now)),
+      collisions: findCollisions(all, now),
       needsReview,
       recent: all.slice(0, 10).map(summarizeSession),
       tokens: {

@@ -119,8 +119,12 @@ function write(root: string, files: Record<string, string>) {
   }
 }
 
+/** The worktree a second agent works in, beside the demo repository (#17). */
+const webhooksTree = (root: string) => join(dirname(root), "shop-webhooks");
+
 function buildRepo(root: string) {
   rmSync(root, { recursive: true, force: true });
+  rmSync(webhooksTree(root), { recursive: true, force: true });
   mkdirSync(root, { recursive: true });
   sh(root, "init", "-q", "-b", "main");
   const {
@@ -165,6 +169,15 @@ function buildRepo(root: string) {
   });
   ago(90 * 60_000);
   sh(root, "commit", "-qam", "Store payment intent on orders");
+  // A parallel agent in its own worktree, branched from main: its schema change lands on the same
+  // lines as the refunds branch's, so the two branches conflict (#17).
+  sh(root, "branch", "feature/webhooks", "main");
+  sh(root, "worktree", "add", "-q", webhooksTree(root), "feature/webhooks");
+  write(webhooksTree(root), {
+    "apps/api/src/db/schema.sql": `${BASE["apps/api/src/db/schema.sql"]}\nalter table orders add column refunded_at timestamptz;\n`,
+  });
+  ago(8 * 60_000);
+  sh(webhooksTree(root), "commit", "-qam", "Record when an order is refunded");
   // Working-tree changes left by the refunds session.
   write(root, {
     "apps/api/src/routes/refunds.ts": REFUNDS_ROUTE,
@@ -755,6 +768,45 @@ export function seedDemo(store: Store) {
         tool: "bash",
         input: { command: "pnpm --filter api typecheck" },
         output: "Done in 6.1s",
+        secs: 7,
+      },
+    ],
+  });
+
+  // A live Codex session in the webhooks worktree that edits the files the refunds session edited.
+  const w = (rel: string) => join(webhooksTree(root), rel);
+  record(store, {
+    id: "demo-codex-webhooks",
+    root: webhooksTree(root),
+    branch: "feature/webhooks",
+    start: now - 5 * 60_000,
+    end: false,
+    transcripts,
+    agent: { kind: "codex", version: "0.163.0", model: "gpt-5.3-codex" },
+    steps: [
+      { prompt: "Handle Stripe refund webhooks: mark the order refunded when Stripe confirms." },
+      {
+        tool: "shell",
+        input: { command: ["bash", "-lc", `cat ${w("apps/api/src/db/schema.sql")}`] },
+      },
+      {
+        tool: "apply_patch",
+        input: {
+          input:
+            "*** Begin Patch\n*** Update File: apps/api/src/db/schema.sql\n@@\n+alter table orders add column refunded_at timestamptz;\n*** End Patch",
+        },
+      },
+      {
+        tool: "apply_patch",
+        input: {
+          input:
+            "*** Begin Patch\n*** Update File: apps/api/src/services/payments.ts\n@@\n+export function onRefundSucceeded(event: { data: { object: { payment_intent: string } } }) {\n+  return event.data.object.payment_intent;\n+}\n*** End Patch",
+        },
+      },
+      {
+        tool: "shell",
+        input: { command: ["bash", "-lc", "pnpm --filter orders-api test"] },
+        output: "✔ webhook marks the order refunded\nℹ pass 1\nℹ fail 0",
         secs: 7,
       },
     ],
