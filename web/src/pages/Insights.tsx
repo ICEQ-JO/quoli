@@ -2,12 +2,13 @@ import { type ReactNode, useState } from "react";
 import {
   AGENT_KINDS,
   AGENT_NAMES,
-  type AgentKind,
   CATEGORY_ORDER,
   type InsightsGroup,
   type InsightsReport,
 } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
+import { AnalysisNav, useAnalysis } from "../components/AnalysisNav.tsx";
+import { chartKeys } from "../components/chart-keys.ts";
 import { EmptyState, ErrorState, Loading, PageHead } from "../components/ui.tsx";
 import { CATEGORY, span, usd } from "../format.ts";
 import { Link, navigate, paths } from "../router.ts";
@@ -25,17 +26,15 @@ const long = (date: string) => dayLabel(date, { weekday: "short", month: "short"
 
 /** Is this getting better or worse? Trends across sessions, each day linked to its sessions. */
 export function InsightsPage() {
-  const [days, setDays] = useState(30);
-  const [project, setProject] = useState("");
-  const [agent, setAgent] = useState<"" | AgentKind>("");
-  const [model, setModel] = useState("");
+  const { days, project, agent, model, set } = useAnalysis();
   const [projects] = useData("projects", api.projects);
   const [report, refresh, error] = useData(`insights:${days}:${project}:${agent}:${model}`, () =>
     api.insights(days, { project, agent, model }),
   );
   const [hover, setHover] = useState<number | null>(null);
   useLiveEvents(refresh);
-  const open = (date: string) => navigate(paths.sessionsWhere({ day: date, agent, project }));
+  const open = (date: string) =>
+    navigate(paths.sessionsWhere({ day: date, agent, project, model, zone: report?.timeZone }));
 
   return (
     <div className="page wide">
@@ -50,7 +49,7 @@ export function InsightsPage() {
               id="i-p"
               className="input"
               value={project}
-              onChange={(e) => setProject(e.target.value)}
+              onChange={(e) => set("project", e.target.value)}
             >
               <option value="">All projects</option>
               {projects?.map((p) => (
@@ -66,7 +65,7 @@ export function InsightsPage() {
               id="i-a"
               className="input"
               value={agent}
-              onChange={(e) => setAgent(e.target.value as typeof agent)}
+              onChange={(e) => set("agent", e.target.value)}
             >
               <option value="">All agents</option>
               {AGENT_KINDS.map((k) => (
@@ -82,7 +81,7 @@ export function InsightsPage() {
               id="i-m"
               className="input"
               value={model}
-              onChange={(e) => setModel(e.target.value)}
+              onChange={(e) => set("model", e.target.value)}
             >
               <option value="">All models</option>
               {(report?.models ?? (model ? [model] : [])).map((m) => (
@@ -99,7 +98,7 @@ export function InsightsPage() {
                   key={n}
                   aria-pressed={days === n}
                   className={days === n ? "active" : ""}
-                  onClick={() => setDays(n)}
+                  onClick={() => set("days", n)}
                 >
                   {n} days
                 </button>
@@ -111,6 +110,18 @@ export function InsightsPage() {
         Trends across sessions, by the day each one started. Click a day to see its sessions.
       </PageHead>
 
+      <AnalysisNav />
+      {report && (
+        <p className="faint">
+          Reporting zone: {report.timeZone} · USD estimates. Arrow keys inspect dates; Enter opens
+          sessions started that day.
+        </p>
+      )}
+      {model && (
+        <p className="faint">
+          Includes sessions that used {model}; session totals include any other models they used.
+        </p>
+      )}
       {!report && (error ? <ErrorState message={error} retry={refresh} /> : <Loading />)}
       {report && error && (
         <ErrorState title="Showing the last data we had" message={error} retry={refresh} />
@@ -301,6 +312,7 @@ function DayChart({
   readout: (d: Day) => ReactNode;
   tone?: "fail";
 }) {
+  const [entry, setEntry] = useState(days.length - 1);
   const max = Math.max(...days.map((d) => high?.(d) ?? value(d) ?? 0)) || 1;
   const shown = hover ?? days.length - 1;
   const d = days[shown];
@@ -315,7 +327,12 @@ function DayChart({
         <span className="sc-date">{shown === days.length - 1 ? "Today" : long(d.date)}</span>
         <span>{readout(d)}</span>
       </p>
-      <div className="ins-plot" onPointerLeave={() => setHover(null)}>
+      <div
+        className="ins-plot"
+        onPointerLeave={(e) => {
+          if (!e.currentTarget.contains(document.activeElement)) setHover(null);
+        }}
+      >
         <span className="ins-top" aria-hidden>
           {top(max)}
         </span>
@@ -329,7 +346,12 @@ function DayChart({
               className={`sc-col ${i === shown ? "on" : ""}`}
               style={{ left: `${i * w}%`, width: `${w}%` }}
               onPointerEnter={() => setHover(i)}
-              onFocus={() => setHover(i)}
+              tabIndex={i === Math.min(entry, days.length - 1) ? 0 : -1}
+              onKeyDown={(e) => chartKeys(e, i, days.length)}
+              onFocus={() => {
+                setEntry(i);
+                setHover(i);
+              }}
               onBlur={() => setHover(null)}
               onClick={() => open(day.date)}
               aria-label={`${long(day.date)}: ${title}, ${
@@ -380,6 +402,7 @@ function Axis({ days }: { days: Day[] }) {
 
 /** What the agents spent their calls on each day, as shares of that day's calls. */
 function MixChart({ days, hover, setHover, open }: Hover & { days: Day[] }) {
+  const [entry, setEntry] = useState(days.length - 1);
   const shown = hover ?? days.length - 1;
   const d = days[shown];
   const w = 100 / days.length;
@@ -401,7 +424,12 @@ function MixChart({ days, hover, setHover, open }: Hover & { days: Day[] }) {
             : "no calls"}
         </span>
       </p>
-      <div className="ins-plot" onPointerLeave={() => setHover(null)}>
+      <div
+        className="ins-plot"
+        onPointerLeave={(e) => {
+          if (!e.currentTarget.contains(document.activeElement)) setHover(null);
+        }}
+      >
         {days.map((day, i) => (
           <button
             type="button"
@@ -409,7 +437,12 @@ function MixChart({ days, hover, setHover, open }: Hover & { days: Day[] }) {
             className={`sc-col ${i === shown ? "on" : ""}`}
             style={{ left: `${i * w}%`, width: `${w}%` }}
             onPointerEnter={() => setHover(i)}
-            onFocus={() => setHover(i)}
+            tabIndex={i === Math.min(entry, days.length - 1) ? 0 : -1}
+            onKeyDown={(e) => chartKeys(e, i, days.length)}
+            onFocus={() => {
+              setEntry(i);
+              setHover(i);
+            }}
             onBlur={() => setHover(null)}
             onClick={() => open(day.date)}
             aria-label={`${long(day.date)}: ${day.calls} calls. Open its sessions.`}
