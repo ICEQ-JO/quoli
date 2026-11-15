@@ -72,7 +72,8 @@ async function quoliIsOpen(port: number) {
     const res = await fetch(`http://127.0.0.1:${port}/api/sync`, {
       signal: AbortSignal.timeout(1000),
     });
-    return res.ok;
+    // Quoli answers 401 without its token (server/token.ts), versions before 0.3.7 answer 200.
+    return res.ok || res.status === 401;
   } catch {
     return false;
   }

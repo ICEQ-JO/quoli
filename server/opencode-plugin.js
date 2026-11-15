@@ -4,6 +4,7 @@
 // blocks or delays the agent: hooks return at once, posts run in order in the background, and
 // every failure is swallowed. It does not read credentials or OpenCode's database.
 import { spawn } from "node:child_process";
+import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
 const PORT = Number("__QUOLI_PORT__");
@@ -11,9 +12,11 @@ const URL = `http://127.0.0.1:${PORT}/ingest?agent=opencode`;
 const MAX_TEXT = 100_000;
 // Set only by the user-level install: where events wait while Quoli is not running.
 const SPOOL = "__QUOLI_SPOOL__";
+// This computer's Quoli token (server/token.ts), filled in by the install.
+const TOKEN_FILE = "__QUOLI_TOKEN_FILE__";
 const SPOOL_MAX = 50 * 1024 * 1024;
 // Redacted before the queue touches the disk; keep equal to SECRETS in server/ingest.ts
-// (tests/redact.test.ts checks).
+// (tests/local-files.test.ts checks).
 const SECRETS = [
   /sk-[A-Za-z0-9_-]{20,}/g,
   /(?:ghp|gho|ghs|ghu)_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/g,
@@ -22,6 +25,25 @@ const SECRETS = [
   /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
 ];
 const redact = (t) => SECRETS.reduce((s, re) => s.replace(re, "[redacted]"), t);
+// Events go out sealed (AES-256-GCM) with this computer's Quoli token (server/token.ts): only
+// the real Quoli can read them, even if another program holds the port while Quoli is closed.
+const seal = (text, token) => {
+  const key = createHash("sha256").update(`quoli-seal:${token}`).digest();
+  const iv = randomBytes(12);
+  const c = createCipheriv("aes-256-gcm", key, iv);
+  const data = Buffer.concat([c.update(text, "utf8"), c.final()]);
+  const tag = c.getAuthTag();
+  const b64 = (b) => b.toString("base64");
+  return JSON.stringify({ sealed: { iv: b64(iv), data: b64(data), tag: b64(tag) } });
+};
+const readToken = (file) => {
+  try {
+    const t = readFileSync(file, "utf8").trim();
+    return /^[A-Za-z0-9_-]{32,}$/.test(t) ? t : null;
+  } catch {
+    return null;
+  }
+};
 
 /** Queues an event for Quoli to read when it next starts; never throws. */
 const spool = (body, at) => {
@@ -66,14 +88,18 @@ function post(payload) {
   const at = new Date().toISOString();
   const body = JSON.stringify(clip(payload));
   queue = queue
-    .then(() =>
-      fetch(URL, {
+    .then(() => {
+      const token = readToken(TOKEN_FILE);
+      if (!token) throw new Error("Quoli has not started yet");
+      return fetch(URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body,
+        body: seal(body, token),
         signal: AbortSignal.timeout(1500),
-      }),
-    )
+      }).then((res) => {
+        if (res.status === 401) throw new Error("refused");
+      });
+    })
     .catch(() => spool(body, at));
 }
 

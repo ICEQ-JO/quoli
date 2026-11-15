@@ -13,6 +13,33 @@ export const BASE =
   location.pathname === "/studio" || location.pathname.startsWith("/studio/") ? "/studio" : "";
 
 const PORT_KEY = "quoli.port";
+const TOKEN_KEY = "quoli.token";
+
+/**
+ * Pairing: `quoli open` (or the link Quoli prints) opens this page with #pair=<token>[&port=<n>].
+ * The fragment never reaches any server; the token is kept in this browser for this site and the
+ * fragment is removed from the address at once.
+ */
+(function pairFromLink() {
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const token = hash.get("pair");
+  if (!token || !/^[A-Za-z0-9_-]{32,}$/.test(token)) return;
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+    const port = hash.get("port");
+    if (port && /^\d{2,5}$/.test(port)) localStorage.setItem(PORT_KEY, port);
+  } catch {}
+  history.replaceState(null, "", location.pathname + location.search);
+})();
+
+/** Headers that prove this browser was paired with this computer's Quoli (server/token.ts). */
+export function authHeaders(): Record<string, string> {
+  try {
+    const t = localStorage.getItem(TOKEN_KEY);
+    if (t) return { "X-Quoli-Token": t };
+  } catch {}
+  return {};
+}
 function savedPort(): string {
   try {
     const p = localStorage.getItem(PORT_KEY);

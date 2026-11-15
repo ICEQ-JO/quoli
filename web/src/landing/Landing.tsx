@@ -1062,9 +1062,10 @@ export function Landing() {
               <li>
                 <h3>Review with context.</h3>
                 <p>
-                  Open <a href="https://app.iceq.best">app.iceq.best</a> to inspect each session,
-                  its changes and the work across the board. It reads Quoli on your computer, so
-                  prompts and code stay there. Enable team summary sharing only if you want it.
+                  Open the link Quoli prints: <a href="https://app.iceq.best">app.iceq.best</a>,
+                  connected to Quoli on your computer. Inspect each session, its changes and the
+                  work across the board. It reads Quoli on your computer, so prompts and code stay
+                  there. Enable team summary sharing only if you want it.
                 </p>
               </li>
             </ol>

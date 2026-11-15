@@ -39,6 +39,7 @@ import { deriveSession, isLive, summarizeSession } from "./sessions.ts";
 import { detectedAgents, isSetUp, setup, setupStatus } from "./setup.ts";
 import { liveSession } from "./steps.ts";
 import { HOSTED, loadSync, saveSync, syncOnce, syncStatus } from "./sync.ts";
+import { sameToken, unseal } from "./token.ts";
 import { usageReport } from "./usage.ts";
 import { groupRoot } from "./worktrees.ts";
 
@@ -121,7 +122,12 @@ export const siteOrigins = () => [
 ];
 
 /** The product's HTTP API. `port` is read per request so tests can listen on port 0. */
-export function createApp(store: Store, port: () => number) {
+/**
+ * The local API. With `token` (server/token.ts; main.ts always passes it) every /api request must
+ * carry it in X-Quoli-Token and every hook event must be sealed with it; without, as in tests and
+ * the hookless `quoli sync`, nothing is checked.
+ */
+export function createApp(store: Store, port: () => number, token?: string) {
   // Live updates: a numbered feed of recent changes that pages poll (GET /api/changes). Polling
   // instead of a held connection: browsers allow six connections per address, so a stream per
   // tab left a seventh tab, or a reload, waiting forever.
@@ -263,7 +269,13 @@ export function createApp(store: Store, port: () => number) {
       try {
         const agent = url.searchParams.get("agent") ?? "claude-code";
         if (!isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
-        const payload = JSON.parse(await body(req));
+        let payload = JSON.parse(await body(req));
+        if (token) {
+          // Hooks seal events with this computer's token (server/hook.mjs); anything else is refused.
+          const opened = unseal(payload?.sealed, token);
+          if (opened === null) return json(res, 401, {});
+          payload = JSON.parse(opened);
+        }
         const changed = () => broadcast({ type: "projects" });
         const sessionId = ingest(store, payload, undefined, changed, agent);
         if (sessionId) broadcast({ type: "event", sessionId });
@@ -282,7 +294,7 @@ export function createApp(store: Store, port: () => number) {
       if (method === "OPTIONS") {
         res.writeHead(204, {
           "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE",
-          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Allow-Headers": "Content-Type, X-Quoli-Token",
           // Chrome's older Private Network Access preflight asks for this before a public page
           // may reach a loopback address; its newer Local Network Access asks the person instead.
           "Access-Control-Allow-Private-Network": "true",
@@ -291,6 +303,11 @@ export function createApp(store: Store, port: () => number) {
         res.end();
         return true;
       }
+    }
+
+    if (token && path.startsWith("/api/") && !sameToken(req.headers["x-quoli-token"], token)) {
+      // The app is paired by `quoli open` (a #pair= link); LocalGate shows how on this answer.
+      return json(res, 401, { error: "This browser is not paired with Quoli", pair: true });
     }
 
     if (path.startsWith("/api/") && method !== "GET") {

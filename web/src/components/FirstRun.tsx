@@ -22,8 +22,11 @@ export function FirstRun({
   onSkip,
   asking = false,
   checking = false,
+  pair = false,
 }: {
   mode: "offline" | "setup";
+  /** Quoli answered, but this browser is not paired with it yet (server/token.ts). */
+  pair?: boolean;
   /** Quoli answered this browser before: it stopped, it is not new. */
   returning?: boolean;
   onRetry?: () => void;
@@ -59,12 +62,16 @@ export function FirstRun({
     setBusy(false);
   };
 
-  const title = returning
-    ? "Quoli isn't running on this computer."
-    : "Let's record your first session.";
-  const lede = returning
-    ? "Start it again and this page picks it up within a few seconds. Nothing is lost: your agents' sessions are still recorded while it is stopped."
-    : "Quoli records what your coding agents read, change, run and spend, and lays it out on one map. It runs on your own computer, and this page reads it from there: your prompts and code never leave it.";
+  const title = pair
+    ? "Connect this browser to Quoli."
+    : returning
+      ? "Quoli isn't running on this computer."
+      : "Let's record your first session.";
+  const lede = pair
+    ? "Quoli is running on this computer. Each browser is connected to it once, with a private link, so other programs and other people on this computer can't read your sessions."
+    : returning
+      ? "Start it again and this page picks it up within a few seconds. Nothing is lost: your agents' sessions are still recorded while it is stopped."
+      : "Quoli records what your coding agents read, change, run and spend, and lays it out on one map. It runs on your own computer, and this page reads it from there: your prompts and code never leave it.";
 
   return (
     <div className="first-run">
@@ -86,41 +93,61 @@ export function FirstRun({
           <p className="fr-lede">{lede}</p>
 
           <ol className="fr-steps">
-            <Step
-              status={computer}
-              title={computer === "done" ? "Quoli is running on this computer" : "Start Quoli"}
-            >
-              <p>
-                Run this in a terminal, inside the project you work on. Quoli then runs in the
-                background and starts by itself when you log in.
-              </p>
-              <Command text={START} />
-              {asking ? (
-                <p className="fr-note fr-asking" role="status">
-                  <span className="fr-pulse" aria-hidden="true" />
-                  <span>
-                    <strong>Your browser is asking for permission.</strong> Look for the prompt next
-                    to the address bar and choose <strong>Allow</strong>: that lets this page read
-                    Quoli on your computer. Missed it? Click the icon at the left of the address bar
-                    and turn on local network access.
-                  </span>
+            {pair && (
+              <Step status="current" title="Open Quoli from your terminal">
+                <p>
+                  Run this in a terminal on this computer. It opens Quoli in your browser, already
+                  connected; this page follows within a few seconds.
                 </p>
-              ) : (
+                <Command text={`${START} open`} />
                 <p className="fr-note">
                   <span className="fr-pulse" aria-hidden="true" />
-                  <span role="status">
-                    {checking ? "Checking…" : `Waiting for Quoli on port ${localPort}`}
-                  </span>
+                  <span role="status">{checking ? "Checking…" : "Waiting for the connection"}</span>
                   {onRetry && !checking && (
                     <button type="button" className="fr-link" onClick={onRetry}>
                       Check now
                     </button>
                   )}
                 </p>
-              )}
-              <Trouble />
-            </Step>
-            {!returning && (
+              </Step>
+            )}
+            {!pair && (
+              <Step
+                status={computer}
+                title={computer === "done" ? "Quoli is running on this computer" : "Start Quoli"}
+              >
+                <p>
+                  Run this in a terminal, inside the project you work on. Quoli then runs in the
+                  background and starts by itself when you log in.
+                </p>
+                <Command text={START} />
+                {asking ? (
+                  <p className="fr-note fr-asking" role="status">
+                    <span className="fr-pulse" aria-hidden="true" />
+                    <span>
+                      <strong>Your browser is asking for permission.</strong> Look for the prompt
+                      next to the address bar and choose <strong>Allow</strong>: that lets this page
+                      read Quoli on your computer. Missed it? Click the icon at the left of the
+                      address bar and turn on local network access.
+                    </span>
+                  </p>
+                ) : (
+                  <p className="fr-note">
+                    <span className="fr-pulse" aria-hidden="true" />
+                    <span role="status">
+                      {checking ? "Checking…" : `Waiting for Quoli on port ${localPort}`}
+                    </span>
+                    {onRetry && !checking && (
+                      <button type="button" className="fr-link" onClick={onRetry}>
+                        Check now
+                      </button>
+                    )}
+                  </p>
+                )}
+                <Trouble />
+              </Step>
+            )}
+            {!returning && !pair && (
               <Step
                 status={record}
                 title={record === "done" ? "Recording is on" : "Turn on recording"}
@@ -141,7 +168,7 @@ export function FirstRun({
                 )}
               </Step>
             )}
-            {!returning && (
+            {!returning && !pair && (
               <Step status={session} title="Start a session with your agent">
                 <p>
                   Open your coding agent in a project Quoli records and ask it anything. The session
@@ -178,7 +205,7 @@ export function FirstRun({
         </div>
       </main>
 
-      {!returning && <Lenses />}
+      {!returning && !pair && <Lenses />}
     </div>
   );
 }

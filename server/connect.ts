@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Store } from "./db.ts";
+import { home, Store } from "./db.ts";
 import { git } from "./ingest.ts";
 import { nativePath } from "./paths.ts";
 
@@ -81,7 +81,8 @@ export const PLUGINS: Record<PluginAgent, { file: string; mark: string; source: 
 export const pluginSource = (agent: PluginAgent, spool = "") =>
   readFileSync(join(here, PLUGINS[agent].source), "utf8")
     .replace("__QUOLI_PORT__", String(port()))
-    .replace("__QUOLI_SPOOL__", spool.split("\\").join("/"));
+    .replace("__QUOLI_SPOOL__", spool.split("\\").join("/"))
+    .replace("__QUOLI_TOKEN_FILE__", join(home(), "token").split("\\").join("/"));
 const readText = (file: string) => {
   try {
     return readFileSync(file, "utf8");

@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { API_BASE } from "../host.ts";
+import { API_BASE, authHeaders } from "../host.ts";
 import { FirstRun, PixelDissolve } from "./FirstRun.tsx";
 
 const SEEN = "quoli.connected";
@@ -32,7 +32,7 @@ async function localAccessDenied(): Promise<boolean> {
  * that runs long is that prompt, so the page says so.
  */
 export function LocalGate({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<"checking" | "ok" | "down">("checking");
+  const [state, setState] = useState<"checking" | "ok" | "down" | "pair">("checking");
   const [shownDown, setShownDown] = useState(false);
   const [dissolve, setDissolve] = useState(false);
   const [asking, setAsking] = useState(false);
@@ -46,23 +46,28 @@ export function LocalGate({ children }: { children: ReactNode }) {
     if (byHand) setManual(true);
     const slow = setTimeout(() => setAsking(true), 2500);
     let ok = false;
+    let unpaired = false;
     try {
-      const res = await fetch(`${API_BASE}/api/settings`, { cache: "no-store" });
+      const res = await fetch(`${API_BASE}/api/settings`, {
+        cache: "no-store",
+        headers: authHeaders(),
+      });
       ok = res.ok;
+      unpaired = res.status === 401;
     } catch {}
     clearTimeout(slow);
-    const denied = !ok && (await localAccessDenied());
+    const denied = !ok && !unpaired && (await localAccessDenied());
     inFlight.current = false;
     setAsking(denied);
     setManual(false);
-    setState(ok ? "ok" : "down");
+    setState(ok ? "ok" : unpaired ? "pair" : "down");
   }, []);
 
   useEffect(() => {
     void check();
   }, [check]);
   useEffect(() => {
-    if (state === "down") {
+    if (state === "down" || state === "pair") {
       setShownDown(true);
       const t = setInterval(() => void check(), 3000);
       return () => clearInterval(t);
@@ -81,6 +86,7 @@ export function LocalGate({ children }: { children: ReactNode }) {
       <FirstRun
         mode="offline"
         returning={returning}
+        pair={state === "pair"}
         asking={asking}
         checking={manual}
         onRetry={() => void check(true)}
