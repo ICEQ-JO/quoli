@@ -4,6 +4,7 @@ import { HOSTED_SUPABASE } from "../../../shared/hosted.ts";
 import { AGENT_NAMES, type AgentKind } from "../../../shared/model.ts";
 import { ago, compact, usd } from "../format.ts";
 import { Activity } from "./Activity.tsx";
+import { type LiveRow, overlaps } from "./live.ts";
 
 /**
  * The Quoli account page at /app/ (#144, #151), hosted on Vercel next to the landing page. Anyone
@@ -55,6 +56,8 @@ interface ClassRow {
   invite_code: string;
   owner: string;
   created_at: string;
+  /** Members see who is working now (#25); the owner always does. */
+  members_see_live: boolean;
 }
 interface Member {
   class_id: string;
@@ -767,6 +770,7 @@ function ClassView({
           <dd>{usd(total)}</dd>
         </div>
       </dl>
+      <LiveNow client={client} c={c} owner onChange={onChange} />
       {members && !members.length ? (
         <p className="faint">No members yet. Share the invite code above.</p>
       ) : (
@@ -928,6 +932,120 @@ function ClassView({
   );
 }
 
+/**
+ * Who is working now (#25): the team's live sessions, from the summaries Team sync re-sends every
+ * minute while a session has activity. Refreshed every 30 seconds.
+ */
+function LiveNow({
+  client,
+  c,
+  owner = false,
+  onChange,
+}: {
+  client: SupabaseClient;
+  c: ClassRow;
+  owner?: boolean;
+  onChange?: () => void;
+}) {
+  const [rows, setRows] = useState<LiveRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const load = useCallback(async () => {
+    const { data, error } = await client.rpc("team_live", { p_class: c.id });
+    if (error) setError(error.message);
+    else {
+      setError(null);
+      setRows(data as LiveRow[]);
+    }
+  }, [client, c.id]);
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 30_000);
+    return () => clearInterval(t);
+  }, [load]);
+  const shared = rows ? overlaps(rows) : [];
+  const people = new Set(rows?.map((r) => r.user_id)).size;
+  return (
+    <section className="class-live" aria-labelledby={`live-${c.id}`}>
+      <div className="class-live-head">
+        <h3 id={`live-${c.id}`}>
+          Working now
+          {rows && (
+            <span className="faint">
+              {rows.length
+                ? ` · ${people} ${people === 1 ? "person" : "people"}, ${rows.length} ${rows.length === 1 ? "agent" : "agents"}`
+                : " · nobody"}
+            </span>
+          )}
+        </h3>
+        {owner && (
+          <label className="class-live-switch">
+            <input
+              type="checkbox"
+              checked={c.members_see_live}
+              onChange={async (e) => {
+                const { error } = await client
+                  .from("classes")
+                  .update({ members_see_live: e.target.checked })
+                  .eq("id", c.id);
+                if (error) setError(error.message);
+                else onChange?.();
+              }}
+            />
+            Members see this too (their live repository, branch, agent and spend)
+          </label>
+        )}
+      </div>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      {shared.map((o) => (
+        <p key={`${o.repo}:${o.branch}`} className="class-live-overlap" role="status">
+          <b>{o.members.join(" and ")}</b>{" "}
+          {o.branch ? (
+            <>
+              are on the same branch, <code>{o.branch}</code>, of {o.repo}. Their changes will meet;
+              agree who changes what.
+            </>
+          ) : (
+            <>are working in {o.repo} on different branches. Merging may conflict.</>
+          )}
+        </p>
+      ))}
+      {rows && rows.length > 0 && (
+        <ul className="class-live-list">
+          {rows.map((r) => (
+            <li key={`${r.user_id}:${r.started_at}:${r.agent}:${r.model}`}>
+              <span className="class-live-dot" aria-hidden="true" />
+              <span className="strong">{r.member ?? "member"}</span>
+              <span className="faint">
+                {AGENT_NAMES[r.agent as AgentKind] ?? r.agent}
+                {r.model ? ` · ${r.model}` : ""}
+              </span>
+              <span>
+                {r.repo ?? <span className="faint">a repository without a GitHub remote</span>}
+                {r.branch && <span className="faint"> · {r.branch}</span>}
+              </span>
+              <span className="faint nowrap">
+                started {ago(r.started_at)}
+                {r.usd !== null ? ` · ${usd(Number(r.usd))}` : ""}
+                {r.failures ? ` · ${r.failures} failed` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {rows && !rows.length && (
+        <p className="faint">
+          No agent is working right now. A session shows here within about a minute of its first
+          activity, for members with Team sync on.
+        </p>
+      )}
+    </section>
+  );
+}
+
 /* ---------- Member ---------- */
 
 function Joined({
@@ -1013,6 +1131,7 @@ function Joined({
               >
                 Leave
               </button>
+              {c.members_see_live && <LiveNow client={client} c={c} />}
             </li>
           ))}
         </ul>
