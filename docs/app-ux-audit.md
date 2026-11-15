@@ -146,3 +146,34 @@ Each implementation needs its own scoped issue/branch, relevant unit regressions
 keyboard and accessibility checks, mobile/desktop validation and a PR. Start with
 responsive failures and task hierarchy, then finish with visual polish. Do not turn
 this audit into one oversized cosmetic rewrite.
+
+
+## Created implementation issues and execution order
+
+The owner requested concrete issues for every finding. All 21 findings are mapped
+below; each issue records user value, scope/non-goals, dependencies, acceptance
+criteria, test plan, privacy/security constraints and relative size M. Existing
+[#3](https://github.com/ICEQ-JO/quoli/issues/3) remains the coordinating umbrella.
+
+| Order | Issue | Audit findings | Deliverable |
+| --- | --- | --- | --- |
+| 1 | [#32 Responsive app layouts and reachable controls](https://github.com/ICEQ-JO/quoli/issues/32) | 1 | Wrapping headers/filters, contained tables, reachable controls and no page overflow. |
+| 2 | [#33 Consistent identity and local/team scope](https://github.com/ICEQ-JO/quoli/issues/33) | 3, 4, 6 | Shared stepped Q, explicit local scope/account entry and consistent agent labels. |
+| 3 | [#34 Decision-first Dashboard](https://github.com/ICEQ-JO/quoli/issues/34) | 2 | Live/review/overlap signals first, compact spend and less duplicate activity. |
+| 4 | [#36 Analysis, keyboard charts and time zones](https://github.com/ICEQ-JO/quoli/issues/36) | 9, 10, 21 | Shared analysis context, efficient chart keyboard access and consistent reporting days. |
+| 5 | [#35 Recognizable sessions, filters and search](https://github.com/ICEQ-JO/quoli/issues/35) | 5, 7, 8 | Clear task identity, local display-title override, URL-backed filters and explicit search scope. |
+| 6 | [#37 Actionable Summary and personal review](https://github.com/ICEQ-JO/quoli/issues/37) | 11, 12, 13, 15 | Earlier review signals, clear replay/context, browser-local marks and file-read retry. |
+| 7 | [#38 Subagent units and Code map entry](https://github.com/ICEQ-JO/quoli/issues/38) | 14, 16 | Accurate agent/call counts and a clearer changed-code entry. |
+| 8 | [#39 Project lifecycle and relevant Infra](https://github.com/ICEQ-JO/quoli/issues/39) | 17, 18, 19 | Direct connect form, understandable maintenance actions and detected-services-first Infra. |
+| 9 | [#40 Focused Settings and prices](https://github.com/ICEQ-JO/quoli/issues/40) | 20 | Common preferences first, separated administration and searchable/source-aware price editing. |
+
+**Next work: #32.** Fix the reproduced Usage, Insights and Projects layout failures,
+including the intermediate 780px layout; check 320–1920px, both themes, keyboard
+access and 200% text scaling. Keep existing data, APIs, controls and behavior.
+Then carry the stable layout into #33 and the Dashboard reordering in #34.
+
+The #35/#36 shared query/day contract should be agreed while #36 is implemented;
+the timezone fix must not wait for optional local display-title work. Immediate
+error-recovery work in #37 can likewise be separated from its layout changes.
+Each increment gets a separate implementation branch and PR. These issues are
+planned, not shipped; this documentation update does not authorize merging them.
