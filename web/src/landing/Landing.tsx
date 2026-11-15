@@ -83,7 +83,7 @@ function Terminal({
   return (
     <div className="terminal-shell">
       <PixelScene kind="field" />
-      <div className="terminal">
+      <div className="terminal" data-paused={paused || undefined}>
         <div className="terminal-header">
           <span className="window-controls" aria-hidden="true">
             <i />
@@ -574,6 +574,33 @@ export function Landing() {
   const page = new URLSearchParams(location.search).get("page");
   const pathname = location.pathname.replace(/\/?$/, "/");
   const journal = pathname.startsWith("/journal/");
+  useEffect(() => {
+    const visible = new Set<Element>();
+    const art = document.querySelectorAll<HTMLElement | SVGElement>(
+      ".hero-art, .terminal, .team-schematic, .journal-art",
+    );
+    const media = matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+      for (const element of art)
+        element.dataset.motion =
+          visible.has(element) && !document.hidden && !media.matches ? "running" : "paused";
+    };
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) visible.add(entry.target);
+        else visible.delete(entry.target);
+      }
+      update();
+    });
+    for (const element of art) observer.observe(element);
+    document.addEventListener("visibilitychange", update);
+    media.addEventListener("change", update);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", update);
+      media.removeEventListener("change", update);
+    };
+  }, []);
   const article = articleAt(pathname);
   useEffect(() => {
     document.title = journal
@@ -594,7 +621,7 @@ export function Landing() {
     document.documentElement.dataset.mode = dark ? "dark" : "light";
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", dark ? "#101f30" : "#edf7fc");
+      ?.setAttribute("content", dark ? "#101c28" : "#f2f6f5");
     try {
       localStorage.setItem("quoli.landing.theme", dark ? "dark" : "light");
     } catch {
@@ -923,6 +950,7 @@ export function Landing() {
               role="img"
               aria-label="Illustration: developers keep detailed evidence locally and optionally share session summaries with the team dashboard."
             >
+              <PixelScene kind="field" />
               <div className="team-machines" aria-hidden="true">
                 {["Agent activity", "Code & commands", "Local session history"].map((label, i) => (
                   <div className="local-machine" key={label}>
@@ -939,6 +967,9 @@ export function Landing() {
                         }
                         fill="#c7e6f7"
                       />
+                      <path d="M10 38h8v1h-8zm12 0h8v1h-8zm12 0h8v1h-8z" fill="#294e70" />
+                      <path className="machine-lamp" d="M49 29h4v3h-4z" fill="#ffe5ad" />
+                      <path className="machine-scan" d="M10 9h44v1H10z" fill="#75acd0" />
                     </svg>
                     <span>{label}</span>
                   </div>

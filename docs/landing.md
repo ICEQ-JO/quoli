@@ -178,3 +178,37 @@ The team section now diagrams local evidence → opt-in summaries → team view 
 labels the drawing as illustrative. Footer text/hover colors are explicitly light
 in either theme, and its contour canvas has reduced opacity. Mobile hero art keeps
 its full aspect ratio so the station is not cropped away.
+
+## November 15 panoramic artwork — Phase 1 #14
+
+The full-card hero uses one original 840×420 landscape rather than a separate
+right-hand illustration. Faster cable packets, water highlights, birds and the
+observatory conduit add energy; the readable recorder timing stays unchanged.
+The light page uses softer paper and dark mode deeper midnight, with warmer cream
+artwork highlights. A 320px header adjustment and wrapping installation command
+keep the narrow layout usable.
+
+Validation: 203 tests pass; typecheck, lint and production build pass (lint retains
+an unrelated existing unused-import warning in MapLens.tsx). Chromium checks cover
+320, 390, 760, 1000 and 1440px in both themes without page overflow, zero axe
+WCAG A/AA violations at 1440px in both themes, moving canvas frames, reduced-motion
+stills, CTA focus and keyboard-operated product tabs and FAQ. No deployment,
+private evidence access, real-screen-reader or physical low-end-device test.
+
+The owner's follow-up extends #14 to all landing artwork: night-workshop recorder,
+working observatories, research plates, team machinery, FAQ archive and animated
+survey contours behind the terminal, screenshots and footer. The same shared
+research plates improve journal pages. CSS/SVG loops now stop offscreen and in
+hidden tabs and honor reduced motion; recorder controls retain their session clock.
+Terminal/screenshot arrivals and FAQ expansion are quicker, with 180ms arrow
+feedback on primary actions.
+
+Full-page validation: 205 tests pass, including deterministic finite-coordinate
+checks for the workshop and contours; typecheck, lint and build pass with the same
+pre-existing MapLens unused-import warning. Chromium verified every scene moves
+and becomes still for reduced motion, recorder Pause/Play/Replay, offscreen CSS
+pause, keyboard tabs/FAQ, journal motion and both-theme 320–1440px layouts. Axe
+reports zero WCAG A/AA violations in either theme at 1440px. Desktop/mobile art
+screenshots were inspected, and the recorder caption was separated from the bench
+to preserve contrast. Physical low-end hardware and real screen readers remain
+untested. No deployment or private evidence access.
