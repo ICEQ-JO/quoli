@@ -64,7 +64,7 @@ export const shortcutGroups = (mod = modKey()): ShortcutGroup[] => [
     ],
   },
   {
-    title: "Map",
+    title: "Code map",
     items: [
       { keys: ["↑", "↓", "j", "k"], does: "Move through the explorer tree" },
       { keys: ["→", "←"], does: "Open or close a folder or file; Enter focuses the row" },

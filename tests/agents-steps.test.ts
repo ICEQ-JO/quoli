@@ -132,3 +132,18 @@ test("readableOutput unwraps Read results and text blocks, keeps anything else",
   assert.deepEqual(readableOutput("{not json"), { text: "{not json", note: null });
   assert.equal(readableOutput(null), null);
 });
+
+test("one subagent with a spawn and three calls is one agent and four calls (#38)", async () => {
+  const { subagentUnits } = await import("../web/src/lenses/agents/helpers.ts");
+  const spawn = call({ category: "agent", name: "Agent" });
+  const sub = [1, 2, 3].map(() => call({ agentId: "sub", category: "read" }));
+  const units = subagentUnits(
+    [
+      { id: "main", kind: "main" },
+      { id: "sub", kind: "subagent" },
+    ],
+    [spawn, ...sub, call({ category: "edit" })],
+    "main",
+  );
+  assert.deepEqual(units, { agents: 1, calls: 4 });
+});
