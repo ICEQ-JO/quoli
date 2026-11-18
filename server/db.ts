@@ -52,6 +52,17 @@ export interface UsageRow {
   cacheWrite: number;
 }
 
+/** Text the agent wrote between tool calls, or its recorded thinking (#46). */
+export interface NoteRow {
+  /** The transcript line's uuid (with the block index), so a line is stored once. */
+  id: string;
+  sessionId: string;
+  agentId: string;
+  at: string;
+  kind: "said" | "thinking";
+  text: string;
+}
+
 /** Append-only hook events plus deduplicated token usage read from transcripts. */
 export class Store {
   readonly db: DatabaseSync;
@@ -100,6 +111,15 @@ export class Store {
         connected_at TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS notes (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        at TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        text TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS notes_session ON notes(session_id, at);
     `);
   }
 
@@ -220,7 +240,7 @@ export class Store {
       .map((r) => String(r.session_id));
   }
 
-  /** Really deletes whole sessions: events, usage rows and transcript offsets. */
+  /** Really deletes whole sessions: events, usage rows, agent notes and transcript offsets. */
   deleteSessions(ids: string[]): { events: number; sessions: number } {
     let events = 0;
     this.db.exec("BEGIN");
@@ -231,6 +251,7 @@ export class Store {
           this.db.prepare("DELETE FROM events WHERE session_id = ?").run(id).changes,
         );
         this.db.prepare("DELETE FROM usage WHERE session_id = ?").run(id);
+        this.db.prepare("DELETE FROM notes WHERE session_id = ?").run(id);
         this.db.prepare("DELETE FROM transcripts WHERE session_id = ?").run(id);
       }
       this.db.exec("COMMIT");
@@ -409,6 +430,28 @@ export class Store {
         output: Number(r.output),
         cacheRead: Number(r.cache_read),
         cacheWrite: Number(r.cache_write),
+      }));
+  }
+
+  /** Stores a note the agent wrote (#46); a transcript line already stored is ignored. */
+  addNote(n: NoteRow) {
+    this.touch(n.sessionId);
+    this.db
+      .prepare("INSERT INTO notes VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING")
+      .run(n.id, n.sessionId, n.agentId, n.at, n.kind, n.text);
+  }
+
+  notes(sessionId: string): NoteRow[] {
+    return this.db
+      .prepare("SELECT * FROM notes WHERE session_id = ? ORDER BY at, id")
+      .all(sessionId)
+      .map((r) => ({
+        id: String(r.id),
+        sessionId: String(r.session_id),
+        agentId: String(r.agent_id),
+        at: String(r.at),
+        kind: r.kind === "thinking" ? "thinking" : "said",
+        text: String(r.text),
       }));
   }
 

@@ -25,7 +25,7 @@ const secretsOf = (file: string) =>
   /const SECRETS = \[[\s\S]*?\];/.exec(readFileSync(file, "utf8"))?.[0] ?? "";
 
 test("the hook and both plugins redact with the same rules as the server", () => {
-  const server = secretsOf("server/ingest.ts");
+  const server = secretsOf("server/redact.ts");
   assert.ok(server.includes("sk-"));
   for (const f of ["server/hook.mjs", "server/opencode-plugin.js", "server/pi-extension.ts"])
     assert.equal(secretsOf(f), server, f);

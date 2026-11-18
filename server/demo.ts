@@ -210,6 +210,9 @@ type Step =
       secs?: number;
       /** Claude Code's `mcp_server` field on MCP tool calls. */
       mcp?: { name: string; source: string };
+      /** What the agent wrote just before this call, and its thinking (transcript only, #46). */
+      say?: string;
+      think?: string;
     }
   | { subagent: string; type: string; start: boolean }
   /** Any other hook event as Claude Code sends it (instruction files, compaction, commands). */
@@ -322,6 +325,21 @@ function record(
     }
     const toolUseId = `toolu_${id}_${n++}`;
     const agent = step.agent;
+    if (!opts.agent && (step.say || step.think)) {
+      const content = [
+        ...(step.think ? [{ type: "thinking", thinking: step.think }] : []),
+        ...(step.say ? [{ type: "text", text: step.say }] : []),
+      ];
+      const line = JSON.stringify({
+        type: "assistant",
+        uuid: `note_${toolUseId}`,
+        timestamp: new Date(t - 1500).toISOString(),
+        ...(agent ? { isSidechain: true, agentId: agent } : {}),
+        message: { id: `msg_note_${toolUseId}`, content },
+      });
+      if (agent) subLines.set(agent, [...(subLines.get(agent) ?? []), line]);
+      else lines.push(line);
+    }
     usage(
       agent ?? "main",
       1800 + n * 120,
@@ -401,18 +419,23 @@ export function seedDemo(store: Store) {
         tool: "Grep",
         input: { pattern: "function total", path: "apps/api" },
         output: "apps/api/src/services/order.ts",
+        say: "I'll start by finding where order totals are calculated.",
       },
       { tool: "Read", input: { file_path: p("apps/api/src/services/order.ts") } },
       { tool: "Read", input: { file_path: p("apps/api/src/routes/orders.test.ts") } },
       {
         tool: "Bash",
         input: { command: "pnpm --filter orders-api test" },
+        say: "`total` multiplies floating-point prices directly, so a discount can leave fractions of a cent. Let me run the tests to see whether they catch it.",
         fail: true,
         output: "✖ totals round to cents\n  expected 53.97, got 53.973000000000006",
         secs: 9,
       },
       {
         tool: "Edit",
+        think:
+          "The test expects 53.97 and gets 53.973000000000006. Rounding each line would hide it but can drift by a cent on long orders. Safer: work in integer cents while summing, round once at the end.",
+        say: "The test confirms it: 53.973… instead of 53.97. I'll sum in whole cents and round once at the end.",
         input: {
           file_path: p("apps/api/src/services/order.ts"),
           old_string:
@@ -424,6 +447,7 @@ export function seedDemo(store: Store) {
       {
         tool: "Bash",
         input: { command: "pnpm --filter orders-api test" },
+        say: "Now the tests again.",
         output: { stdout: "✔ totals round to cents\nℹ pass 1\nℹ fail 0", stderr: "" },
         secs: 8,
       },

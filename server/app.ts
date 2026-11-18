@@ -24,6 +24,7 @@ import { insightsReport } from "./insights.ts";
 import { saveLinkedKey, startLink, waitForLink } from "./link.ts";
 import { liveStatusOf, updateLivePrices } from "./liveprices.ts";
 import { addManual, loadManual, mergeManual, saveManual, validateManual } from "./manual.ts";
+import { placeNotes } from "./notes.ts";
 import {
   costOf,
   defaultPrices,
@@ -374,7 +375,8 @@ export function createApp(store: Store, port: () => number, token?: string) {
     if (path === "/api/session") {
       const id = url.searchParams.get("id") ?? "";
       const [detail = null] = details([id]);
-      return json(res, detail ? 200 : 404, detail);
+      if (!detail) return json(res, 404, null);
+      return json(res, 200, { ...detail, notes: placeNotes(store.notes(id), detail.toolCalls) });
     }
     if (path === "/api/review" || path === "/api/review/diff") {
       const [detail = null] = details([url.searchParams.get("id") ?? ""]);

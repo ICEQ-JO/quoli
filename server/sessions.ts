@@ -236,6 +236,7 @@ export function summarizeSession(d: SessionDetail): SessionSummary {
     usage: _u,
     report: _r,
     context: _x,
+    notes: _n,
     ...rest
   } = d;
   return rest;
