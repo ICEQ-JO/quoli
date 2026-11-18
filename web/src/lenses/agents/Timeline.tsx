@@ -8,7 +8,14 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AgentNode, SessionDetail, ToolCall, ToolCategory } from "../../../../shared/model.ts";
+import { explainCall } from "../../../../shared/explain.ts";
+import type {
+  AgentNode,
+  AgentNote,
+  SessionDetail,
+  ToolCall,
+  ToolCategory,
+} from "../../../../shared/model.ts";
 import { onRoveKey, toolLabel } from "../../a11y.ts";
 import { RecordedChange } from "../../components/Diff.tsx";
 import { CATEGORY, clock, compact, fileName, plural, span, tokenSum } from "../../format.ts";
@@ -104,6 +111,23 @@ export function Timeline({ session, visible, selection, cursorId, select, filter
     return m;
   }, [session]);
   const mainId = session.agents.find((a) => a.kind === "main")?.id ?? "main";
+  // What the agent wrote, placed before the call it led to (#46); only in the unfiltered view.
+  const { notesBefore, notesAfter } = useMemo(() => {
+    const before = new Map<string, AgentNote[]>();
+    const after = new Map<number, AgentNote[]>();
+    if (filter !== "all") return { notesBefore: before, notesAfter: after };
+    for (const note of session.notes ?? []) {
+      if (note.beforeCallId) {
+        before.set(note.beforeCallId, [...(before.get(note.beforeCallId) ?? []), note]);
+        continue;
+      }
+      // Closing words: under the last prompt that started before them.
+      let n = 0;
+      for (const sec of sections) if (sec.at && sec.at <= note.at) n = sec.n;
+      after.set(n, [...(after.get(n) ?? []), note]);
+    }
+    return { notesBefore: before, notesAfter: after };
+  }, [session, sections, filter]);
   const shown = useMemo(() => {
     if (filter === "all") return sections;
     return sections
@@ -160,7 +184,13 @@ export function Timeline({ session, visible, selection, cursorId, select, filter
     [toggle],
   );
 
-  const row = (call: ToolCall) => (
+  const notes = (list: AgentNote[] | undefined, future: boolean) =>
+    list?.map((note) => (
+      <Note key={`${note.at}:${note.kind}:${note.text.slice(0, 24)}`} note={note} future={future} />
+    ));
+
+  const row = (call: ToolCall) => [
+    notes(notesBefore.get(call.id), !visible.has(call.id)),
     <CallRow
       key={call.id}
       call={call}
@@ -171,17 +201,19 @@ export function Timeline({ session, visible, selection, cursorId, select, filter
       loop={loopOf.get(call.id)}
       onToggle={toggleCall}
       select={stableSelect}
-    />
-  );
+    />,
+  ];
 
   const renderCalls = (calls: ToolCall[]) =>
     collapseRuns(calls).map((run) => {
       const head = run[0] as ToolCall;
       if (run.length === 1) return row(head);
+      const lead = notesBefore.get(head.id);
       const key = `run:${head.id}`;
       const expanded = open.has(key) || run.some((c) => c.id === selectedId);
       return (
         <div className="ag-run" key={key} data-ids={run.map((c) => c.id).join(" ")}>
+          {notes(lead, !visible.has(head.id))}
           <button
             type="button"
             className={`ag-run-head ${run.every((c) => !visible.has(c.id)) ? "future" : ""}`}
@@ -199,7 +231,11 @@ export function Timeline({ session, visible, selection, cursorId, select, filter
             </span>
             <Chevron open={expanded} />
           </button>
-          {expanded && <div className="ag-run-body">{run.map(row)}</div>}
+          {expanded && (
+            <div className="ag-run-body">
+              {run.map((c, i) => (i === 0 ? row(c).slice(1) : row(c)))}
+            </div>
+          )}
         </div>
       );
     });
@@ -239,6 +275,7 @@ export function Timeline({ session, visible, selection, cursorId, select, filter
                 </div>
               ),
             )}
+            {notes(notesAfter.get(sec.n), false)}
           </section>
         ))}
       </div>
@@ -253,6 +290,38 @@ const EMPTY: Record<CallFilter, string> = {
   commands: "This session ran no commands.",
   subagents: "This session started no subagents.",
 };
+
+/** Something the agent wrote: what it said between calls, or its recorded thinking (#46). */
+function Note({ note, future }: { note: AgentNote; future: boolean }) {
+  const [more, setMore] = useState(false);
+  if (note.kind === "thinking") {
+    const first = note.text.split("\n").find((l) => l.trim()) ?? "";
+    return (
+      <details className={`ag-note thinking ${future ? "future" : ""}`}>
+        <summary>
+          <span className="ag-note-label">Thinking</span>
+          <span className="ag-note-peek">{first}</span>
+        </summary>
+        <p className="ag-note-text">{note.text}</p>
+        <p className="ag-note-src faint">As recorded in the agent's transcript, {clock(note.at)}</p>
+      </details>
+    );
+  }
+  const long = note.text.length > 320 || note.text.split("\n").length > 4;
+  return (
+    <div className={`ag-note said ${future ? "future" : ""}`}>
+      <span className="ag-note-label">Agent</span>
+      <div>
+        <p className={`ag-note-text ${long && !more ? "clamped" : ""}`}>{note.text}</p>
+        {long && (
+          <button type="button" className="ag-more" onClick={() => setMore(!more)}>
+            {more ? "Show less" : "Show all"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function PromptHead({ n, at, prompt }: { n: number; at: string | null; prompt: PromptView }) {
   const [more, setMore] = useState(false);
@@ -319,10 +388,15 @@ const CallRow = memo(function CallRow({
         onKeyDown={onRoveKey}
       >
         <KindIcon category={call.category} />
-        <span className="ag-tool" title={call.name}>
-          {call.name.replace(/^mcp__/, "")}
+        <span className="ag-what">
+          <span className="ag-say">{explainCall(call)}</span>
+          <span className="ag-raw">
+            <span className="ag-tool" title={call.name}>
+              {call.name.replace(/^mcp__/, "")}
+            </span>
+            <span className={`ag-text ${call.files.length ? "" : "mono"}`}>{callText(call)}</span>
+          </span>
         </span>
-        <span className={`ag-text ${call.files.length ? "" : "mono"}`}>{callText(call)}</span>
         <span className="ag-end">
           {loop && (
             <span className="ag-badge loop" title={`Possible loop (inferred): ${loop}`}>
