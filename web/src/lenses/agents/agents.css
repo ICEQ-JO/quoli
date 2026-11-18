@@ -184,7 +184,7 @@
 
 .ag-call-head {
   display: grid;
-  grid-template-columns: 22px 84px minmax(0, 1fr) auto;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: start;
   gap: 10px;
   width: 100%;
@@ -229,32 +229,132 @@
   stroke-linejoin: round;
 }
 
-.ag-tool {
+/* The plain sentence (#47) leads; the exact tool and input follow in a quieter line. */
+.ag-what {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
   padding-top: 1px;
+}
+
+.ag-say {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.ag-raw {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--faint);
+}
+
+.ag-tool {
+  flex: none;
   font-weight: 500;
   color: var(--muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .ag-text {
-  padding-top: 1px;
+  min-width: 0;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ag-text.mono {
+  font: var(--fs-xs) / 1.5 var(--mono);
+}
+
+.ag-call.open .ag-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* What the agent wrote between calls (#46). */
+.ag-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  margin: 6px 0 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  font-size: var(--fs-md);
+  line-height: 1.55;
+}
+
+.ag-note.future {
+  opacity: 0.35;
+}
+
+.ag-note-label {
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--muted);
+  background: var(--hover);
+}
+
+.ag-note-text {
+  margin: 0;
   color: var(--text);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.ag-note-text.clamped {
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.ag-text.mono {
-  font: var(--fs-sm) / 1.5 var(--mono);
+.ag-note.thinking {
+  display: block;
+  background: transparent;
+  border-style: dashed;
 }
 
-.ag-call.open .ag-text {
-  display: block;
+.ag-note.thinking > summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ag-note.thinking > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ag-note-peek {
+  min-width: 0;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ag-note.thinking[open] .ag-note-peek {
+  visibility: hidden;
+}
+
+.ag-note.thinking .ag-note-text {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.ag-note-src {
+  margin: 6px 0 0;
+  font-size: var(--fs-xs);
 }
 
 .ag-end {
