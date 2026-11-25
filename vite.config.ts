@@ -44,6 +44,7 @@ export default defineConfig({
             }
           : {
               app: "web/index.html",
+              prototype: "web/prototype/index.html",
               landing: "web/landing/index.html",
               account: "web/app/index.html",
             },
