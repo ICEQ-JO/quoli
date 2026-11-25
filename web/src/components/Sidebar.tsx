@@ -1,6 +1,7 @@
 import type { SessionSummary } from "../../../shared/model.ts";
 import { ago, money, plural } from "../format.ts";
 import { Link } from "../router.ts";
+import { SessionName } from "./SessionName.tsx";
 import { Trace } from "./Trace.tsx";
 import { AgentTag, ErrorState, LiveDot, Loading } from "./ui.tsx";
 
@@ -52,7 +53,7 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error
               aria-current={s.id === activeId ? "true" : undefined}
             >
               <span className="title" title={s.title}>
-                {s.title}
+                <SessionName session={s} />
               </span>
               <span className="row meta">
                 <LiveDot live={s.live} />

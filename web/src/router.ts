@@ -110,7 +110,13 @@ export const paths = {
   usage: () => "/usage",
   insights: () => "/insights",
   /** The Sessions list, optionally pre-filtered (Insights links a day to its sessions). */
-  sessionsWhere: (f: { day?: string; agent?: string; project?: string }) => {
+  sessionsWhere: (f: {
+    day?: string;
+    agent?: string;
+    project?: string;
+    model?: string;
+    zone?: string;
+  }) => {
     const q = new URLSearchParams(Object.entries(f).filter((e): e is [string, string] => !!e[1]));
     return `/sessions${q.size ? `?${q}` : ""}`;
   },

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { UsageDay } from "../../../shared/model.ts";
 import { compact, tokenSum, usd } from "../format.ts";
+import { chartKeys } from "./chart-keys.ts";
 
 const dayLabel = (date: string, opts: Intl.DateTimeFormatOptions) =>
   new Date(`${date}T12:00:00`).toLocaleDateString([], opts);
@@ -21,6 +22,7 @@ export function SpendChart({
   budget?: number | null;
   height?: number;
 }) {
+  const [entry, setEntry] = useState(days.length - 1);
   const [hover, setHover] = useState<number | null>(null);
   const byTokens = !days.some((d) => (d.usd ?? 0) > 0) && days.some((d) => tokenSum(d.tokens) > 0);
   const value = (d: UsageDay) => (byTokens ? tokenSum(d.tokens) : (d.usd ?? 0));
@@ -41,7 +43,13 @@ export function SpendChart({
         <b>{d.usd === null ? (tokenSum(d.tokens) ? "price unknown" : usd(0)) : usd(d.usd)}</b>
         <span className="faint">{compact(tokenSum(d.tokens))} tokens</span>
       </figcaption>
-      <div className="sc-plot" style={{ height }} onPointerLeave={() => setHover(null)}>
+      <div
+        className="sc-plot"
+        style={{ height }}
+        onPointerLeave={(e) => {
+          if (!e.currentTarget.contains(document.activeElement)) setHover(null);
+        }}
+      >
         {budget && !byTokens ? (
           <div className="sc-budget" style={{ bottom: `${(budget / max) * 100}%` }}>
             <span>Daily budget {usd(budget)}</span>
@@ -57,7 +65,16 @@ export function SpendChart({
               className={`sc-col ${i === shown ? "on" : ""}`}
               style={{ left: `${i * w}%`, width: `${w}%` }}
               onPointerEnter={() => setHover(i)}
-              onFocus={() => setHover(i)}
+              tabIndex={i === Math.min(entry, days.length - 1) ? 0 : -1}
+              onKeyDown={(e) => chartKeys(e, i, days.length)}
+              onClick={() => {
+                setEntry(i);
+                setHover(i);
+              }}
+              onFocus={() => {
+                setEntry(i);
+                setHover(i);
+              }}
               onBlur={() => setHover(null)}
               aria-label={`${dayLabel(day.date, { weekday: "long", month: "long", day: "numeric" })}: ${
                 day.usd === null
@@ -88,6 +105,9 @@ export function SpendChart({
           ) : null,
         )}
       </div>
+      <p className="sc-note faint">
+        Arrow keys inspect dates. Activate a bar to inspect its USD estimate and tokens.
+      </p>
       {byTokens && <p className="sc-note faint">No cost in this range, so the bars show tokens.</p>}
     </figure>
   );

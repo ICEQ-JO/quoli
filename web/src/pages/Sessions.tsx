@@ -1,11 +1,7 @@
 import { useMemo, useState } from "react";
-import {
-  AGENT_KINDS,
-  AGENT_NAMES,
-  type AgentKind,
-  type SessionSummary,
-} from "../../../shared/model.ts";
+import { AGENT_KINDS, AGENT_NAMES, type SessionSummary } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
+import { SessionName } from "../components/SessionName.tsx";
 import {
   AgentTag,
   EmptyState,
@@ -18,34 +14,22 @@ import {
 } from "../components/ui.tsx";
 import { ago, compact, duration, money, tokenSum } from "../format.ts";
 import { Link, navigate, paths, useLocation } from "../router.ts";
+import { filterQuery, matchesSessionDay, sessionFilters } from "../session-filters.ts";
+import { displayTitle, useTitleVersion } from "../session-titles.ts";
 
 const PAGE = 100;
-
-/** YYYY-MM-DD in the browser's time zone, matching how Insights buckets days. */
-const localDay = (iso: string) => {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
 
 export function SessionsPage() {
   const [sessions, refresh, error] = useData("sessions:all", () => api.sessions());
   const [projects, refreshProjects] = useData("projects", api.projects);
   // Insights links here with ?day=YYYY-MM-DD (and its agent/project filters).
   const { search } = useLocation();
-  const linked = useMemo(() => new URLSearchParams(search), [search]);
-  const [query, setQuery] = useState("");
-  const [project, setProject] = useState(() => linked.get("project") ?? "");
-  const [status, setStatus] = useState<"" | "live" | "ended">("");
-  const [agent, setAgent] = useState<"" | AgentKind>(() => {
-    const a = linked.get("agent");
-    return AGENT_KINDS.find((k) => k === a) ?? "";
-  });
-  const [day, setDay] = useState(() => {
-    const d = linked.get("day") ?? "";
-    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
-  });
-  const [failedOnly, setFailedOnly] = useState(false);
-  const [loopsOnly, setLoopsOnly] = useState(false);
+  const { query, project, status, agent, day, zone, model, failedOnly, loopsOnly } =
+    sessionFilters(search);
+  const set = (key: string, value: string | boolean) => {
+    navigate(paths.sessions() + filterQuery(search, key, value), { replace: key === "q" });
+    setShown(PAGE);
+  };
   const [shown, setShown] = useState(PAGE);
   useNow();
   useLiveEvents(() => {
@@ -53,6 +37,8 @@ export function SessionsPage() {
     refreshProjects();
   });
 
+  const titlesVersion = useTitleVersion();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: browser display names can change without evidence changing.
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (sessions ?? []).filter(
@@ -62,27 +48,34 @@ export function SessionsPage() {
         (!status || s.live === (status === "live")) &&
         (!failedOnly || s.failures > 0) &&
         (!loopsOnly || s.loops > 0) &&
-        (!day || localDay(s.startedAt) === day) &&
-        (!q || s.title.toLowerCase().includes(q) || (s.branch ?? "").toLowerCase().includes(q)),
+        matchesSessionDay(s, day, zone) &&
+        (!model || s.models.includes(model)) &&
+        (!q ||
+          displayTitle(s).toLowerCase().includes(q) ||
+          (s.branch ?? "").toLowerCase().includes(q)),
     );
-  }, [sessions, query, project, status, agent, failedOnly, loopsOnly, day]);
+  }, [
+    sessions,
+    query,
+    project,
+    status,
+    agent,
+    failedOnly,
+    loopsOnly,
+    day,
+    zone,
+    model,
+    titlesVersion,
+  ]);
 
-  const filtered = query || project || status || agent || failedOnly || loopsOnly || day;
+  const filtered = query || project || status || agent || failedOnly || loopsOnly || day || model;
   // The server lists only the newest sessions; projects count all of them.
   const recorded = (projects ?? []).reduce((n, p) => n + p.sessions, 0);
   const reset = () => {
-    setQuery("");
-    setProject("");
-    setStatus("");
-    setAgent("");
-    setFailedOnly(false);
-    setLoopsOnly(false);
-    clearDay();
+    navigate(paths.sessions());
+    setShown(PAGE);
   };
-  const clearDay = () => {
-    setDay("");
-    if (search) navigate(paths.sessions(), { replace: true });
-  };
+  const clearDay = () => set("day", "");
 
   return (
     <div className="page wide">
@@ -98,10 +91,7 @@ export function SessionsPage() {
           className="input"
           placeholder="Search title or branch"
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setShown(PAGE);
-          }}
+          onChange={(e) => set("q", e.target.value)}
         />
         <label className="sr-only" htmlFor="s-p">
           Project
@@ -110,7 +100,7 @@ export function SessionsPage() {
           id="s-p"
           className="input"
           value={project}
-          onChange={(e) => setProject(e.target.value)}
+          onChange={(e) => set("project", e.target.value)}
         >
           <option value="">All projects</option>
           {projects?.map((p) => (
@@ -126,7 +116,7 @@ export function SessionsPage() {
           id="s-a"
           className="input"
           value={agent}
-          onChange={(e) => setAgent(e.target.value as typeof agent)}
+          onChange={(e) => set("agent", e.target.value)}
         >
           <option value="">All agents</option>
           {AGENT_KINDS.map((k) => (
@@ -142,7 +132,7 @@ export function SessionsPage() {
           id="s-s"
           className="input"
           value={status}
-          onChange={(e) => setStatus(e.target.value as typeof status)}
+          onChange={(e) => set("status", e.target.value)}
         >
           <option value="">Live and ended</option>
           <option value="live">Live</option>
@@ -152,7 +142,7 @@ export function SessionsPage() {
           <input
             type="checkbox"
             checked={failedOnly}
-            onChange={(e) => setFailedOnly(e.target.checked)}
+            onChange={(e) => set("failed", e.target.checked)}
           />
           Has failures
         </label>
@@ -160,7 +150,7 @@ export function SessionsPage() {
           <input
             type="checkbox"
             checked={loopsOnly}
-            onChange={(e) => setLoopsOnly(e.target.checked)}
+            onChange={(e) => set("loops", e.target.checked)}
           />
           Possible loops
         </label>
@@ -180,6 +170,24 @@ export function SessionsPage() {
         )}
       </search>
 
+      {day && (
+        <p className="faint">
+          Session start day in {zone || Intl.DateTimeFormat().resolvedOptions().timeZone}.
+        </p>
+      )}
+      {model && (
+        <p className="filter-chip">
+          Model: {model}{" "}
+          <button type="button" onClick={() => set("model", "")}>
+            Clear model filter
+          </button>
+        </p>
+      )}
+      {filtered && (
+        <button className="btn" type="button" onClick={reset}>
+          Clear all filters
+        </button>
+      )}
       {sessions && recorded > sessions.length && (
         <p className="faint">
           Showing the newest {sessions.length} of {recorded} recorded sessions. Older ones are kept
@@ -209,56 +217,60 @@ export function SessionsPage() {
       )}
       {rows.length > 0 && (
         <>
-          <table className="table sessions">
-            <caption className="sr-only">Sessions, newest first</caption>
-            <thead>
-              <tr>
-                <th scope="col" className="c-dot">
-                  <span className="sr-only">Status</span>
-                </th>
-                <th scope="col">Title</th>
-                <th scope="col" className="c-agent">
-                  Agent
-                </th>
-                <th scope="col" className="c-proj">
-                  Project
-                </th>
-                <th scope="col" className="c-branch">
-                  Branch
-                </th>
-                <th scope="col" className="c-when">
-                  Started
-                </th>
-                <th scope="col" className="num c-dur">
-                  Duration
-                </th>
-                <th scope="col" className="num c-n">
-                  Tools
-                </th>
-                <th
-                  scope="col"
-                  className="num c-n c-opt"
-                  title="Files the agent read or edited. Changed files are in the Review lens"
-                >
-                  Touched
-                </th>
-                <th scope="col" className="num c-n c-opt">
-                  Tokens
-                </th>
-                <th scope="col" className="num c-n" title="Estimate from list prices">
-                  Cost
-                </th>
-                <th scope="col" className="num c-n">
-                  Failed
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.slice(0, shown).map((s) => (
-                <Row key={s.id} s={s} name={projectName(projects, s.projectId)} />
-              ))}
-            </tbody>
-          </table>
+          <p className="table-hint faint">Scroll the table for agent, project and usage details.</p>
+          {/* biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users must be able to scroll the session table. */}
+          <section className="table-scroll" aria-label="Sessions, scroll for details" tabIndex={0}>
+            <table className="table sessions">
+              <caption className="sr-only">Sessions, newest first</caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="c-dot">
+                    <span className="sr-only">Status</span>
+                  </th>
+                  <th scope="col">Title</th>
+                  <th scope="col" className="c-agent">
+                    Agent
+                  </th>
+                  <th scope="col" className="c-proj">
+                    Project
+                  </th>
+                  <th scope="col" className="c-branch">
+                    Branch
+                  </th>
+                  <th scope="col" className="c-when">
+                    Started
+                  </th>
+                  <th scope="col" className="num c-dur">
+                    Duration
+                  </th>
+                  <th scope="col" className="num c-n">
+                    Tools
+                  </th>
+                  <th
+                    scope="col"
+                    className="num c-n c-opt"
+                    title="Files the agent read or edited. Changed files are in the Review lens"
+                  >
+                    Touched
+                  </th>
+                  <th scope="col" className="num c-n c-opt">
+                    Tokens
+                  </th>
+                  <th scope="col" className="num c-n" title="Estimate from list prices">
+                    Cost
+                  </th>
+                  <th scope="col" className="num c-n">
+                    Failed
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.slice(0, shown).map((s) => (
+                  <Row key={s.id} s={s} name={projectName(projects, s.projectId)} />
+                ))}
+              </tbody>
+            </table>
+          </section>
           {rows.length > shown && (
             <p className="card-foot center">
               <button type="button" className="btn" onClick={() => setShown((n) => n + PAGE)}>
@@ -286,7 +298,7 @@ function Row({ s, name }: { s: SessionSummary; name: string }) {
       </td>
       <td className="ellip" title={s.title}>
         <Link to={to} className="strong">
-          {s.title}
+          <SessionName session={s} />
         </Link>
         {s.loops > 0 && (
           <span

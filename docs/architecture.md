@@ -195,3 +195,42 @@ Survey contours carry animated signals behind the terminal, product captures,
 team view and footer. A visibility observer in the isolated landing entry also
 pauses CSS/SVG art when offscreen, hidden or reduced motion is requested. Artwork
 is static before hydration; canvas clocks and recorder transport remain local.
+
+Phase 1 #32 makes analysis headers reflow before controls squeeze their descriptions.
+Project tables scroll inside a named keyboard-accessible region; repository paths
+stay within their cards. Compact/coarse-pointer controls have 44px targets. Checked
+with synthetic data at 320–1920px in both themes, including enlarged root text.
+
+Phase 1 #33 shares the stepped Q geometry between marketing, first-run and the
+local app. The navigation identifies this computer, reads summary-sync status and
+links to sync settings and the existing account page. Navigation never enables
+sharing. Claude Code now has the same explicit recorder label as other agents.
+
+Phase 1 #34 replaces Dashboard's large spend chart with a compact USD estimate
+strip and a Usage link. Live work, file overlaps and review reasons retain their
+evidence semantics; the other-recent queue excludes sessions already in live or
+review queues. A session may still be live and need review, because both matter.
+
+Phase 1 #36 connects Spend & tokens and Session trends with URL-backed range,
+agent, project and model context. Usage filters token rows by project/model; trends
+filter sessions that used a model. Both reports expose the server's IANA reporting
+zone. Day links carry that zone and model into Sessions; original timestamps stay
+unchanged. Calendar-day subtraction uses calendar arithmetic across DST. Charts
+have one tab entry each, arrow/Home/End exploration, and daily table alternatives.
+Usage activation inspects token-day values; trend activation opens start-day sessions.
+
+Phase 1 #35 saves optional session display names in browser localStorage, separately
+from append-only evidence. Rename is available in the selected session header;
+clearing the override restores the recorded title. Names apply to local lists and
+title search, are limited to 120 characters and never enter server/sync payloads.
+They do not follow users to other browsers. Sessions filters round-trip through
+URLs; typed query changes replace the current history entry, discrete filters push
+one. Search identifies its scope and separates recorded-search loading/failure from
+successful zero matches, while keeping available local results usable.
+
+The Sessions table uses the same keyboard-scroll containment as Projects so its
+task column cannot collapse underneath agent and timing columns on narrow screens.
+On phones the navigation wraps, keeps Projects reachable and omits the duplicate
+live strip; the Sessions live count and Dashboard live queue remain available.
+The hosted account/team header also reuses the shared mark, so following the new
+account destination retains the same identity.

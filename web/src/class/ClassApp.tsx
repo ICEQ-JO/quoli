@@ -2,6 +2,7 @@ import { createClient, type Session, type SupabaseClient } from "@supabase/supab
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { HOSTED_SUPABASE } from "../../../shared/hosted.ts";
 import { AGENT_NAMES, type AgentKind } from "../../../shared/model.ts";
+import { Mark } from "../components/Mark.tsx";
 import { ago, compact, usd } from "../format.ts";
 import { Activity } from "./Activity.tsx";
 import { type LiveRow, overlaps } from "./live.ts";
@@ -110,7 +111,7 @@ export function ClassApp() {
     <div className="class-shell">
       <header className="class-top">
         <a className="class-brand" href="/landing/">
-          <span className="class-logo" aria-hidden="true" />
+          <Mark small />
           Quoli
         </a>
         {session && client && (
