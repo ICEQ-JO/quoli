@@ -2015,3 +2015,227 @@ ul.reasons li {
   font-size: var(--fs-sm);
   color: var(--warn);
 }
+
+/* Reflow the page header before filters can squeeze its description. */
+.page {
+  width: 100%;
+  min-width: 0;
+}
+.page-head {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.page-head > div:first-child {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+.page-actions {
+  flex: 0 1 auto;
+  max-width: 100%;
+  justify-content: flex-start;
+}
+.page-actions .input,
+.filters .input {
+  min-width: 0;
+  max-width: 100%;
+}
+.filters input[type="search"] {
+  width: min(280px, 100%);
+}
+.segmented {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.table-scroll {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.table-scroll > .table {
+  min-width: 760px;
+}
+.every-head > div,
+.every-row > span {
+  min-width: 0;
+}
+.every-state {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1100px) {
+  .page-actions {
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 760px), (pointer: coarse) {
+  .page :is(.btn, .input, .segmented button),
+  .nav :is(button, .nav-item, .nav-add) {
+    min-height: 44px;
+  }
+  .page .check {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .page-actions {
+    gap: 10px;
+  }
+  .page-actions > .input {
+    flex: 1 1 10rem;
+  }
+  .page-actions .segmented {
+    flex: 1 1 auto;
+  }
+  .page-actions .segmented button {
+    flex: 1;
+  }
+}
+
+.every-row .path {
+  max-width: 100%;
+}
+.connect-one > summary {
+  max-width: 100%;
+}
+
+.nav-brand .q-mark {
+  width: 25px;
+  height: 25px;
+  flex: none;
+}
+.nav-scope {
+  display: grid;
+  gap: 5px;
+  margin: 0 6px 12px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.nav-scope strong {
+  color: var(--text-2);
+  font-weight: 550;
+}
+.nav-scope a {
+  color: inherit;
+  width: fit-content;
+}
+.nav-scope a:hover {
+  color: var(--text);
+}
+
+.spend-compact .spend-body {
+  display: block;
+}
+.spend-compact .spend-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+.spend-compact .figure-stat dd {
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .spend-compact .spend-stats {
+    grid-template-columns: 1fr;
+  }
+}
+.analysis-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.analysis-nav a {
+  padding: 10px 14px;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.analysis-nav a[aria-current="page"] {
+  color: var(--text);
+  border-color: var(--text);
+}
+.palette-scope,
+.palette-status {
+  padding: 10px 16px;
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.recorded-title {
+  overflow-wrap: anywhere;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+.rename-session {
+  flex: none;
+}
+
+@media (max-width: 760px) {
+  .nav-top {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .nav-brand {
+    min-height: 44px;
+  }
+  .nav-search {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .nav-scope {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 12px;
+    margin: 0 4px;
+  }
+  .nav-scope a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .nav .live-strip {
+    display: none;
+  }
+  .nav-list {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .nav > .nav-list:not(.nav-bottom):not(.nav-projects) {
+    flex-basis: 100%;
+  }
+  .nav .nav-projects {
+    display: none;
+  }
+  .nav-section {
+    display: flex;
+    margin: 0;
+  }
+  .nav-heading {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+.table-scroll > .table.sessions {
+  min-width: 1100px;
+}
+.table-hint {
+  display: none;
+}
+@media (max-width: 1400px) {
+  .table-hint {
+    display: block;
+    margin-bottom: -12px;
+  }
+}
+/* Expanded maintenance actions stay inside the scroll region instead of being clipped. */
+.table-scroll .row-more-menu {
+  position: static;
+  margin-top: 8px;
+  box-shadow: none;
+}

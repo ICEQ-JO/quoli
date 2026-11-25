@@ -1,11 +1,7 @@
-import { useState } from "react";
-import {
-  AGENT_KINDS,
-  AGENT_NAMES,
-  type AgentKind,
-  type TokenTotals,
-} from "../../../shared/model.ts";
+import { AGENT_KINDS, AGENT_NAMES, type TokenTotals } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
+import { AnalysisNav, useAnalysis } from "../components/AnalysisNav.tsx";
+import { SessionName } from "../components/SessionName.tsx";
 import { SpendChart } from "../components/SpendChart.tsx";
 import { EmptyState, ErrorState, Loading, PageHead } from "../components/ui.tsx";
 import { ago, compact, money, tokenSum, usd } from "../format.ts";
@@ -17,22 +13,12 @@ const RANGES = [
   { days: 90, label: "90 days" },
 ];
 
-const remember = (v?: number) => {
-  try {
-    if (v !== undefined) localStorage.setItem("quoli.usage.days", String(v));
-    const n = Number(localStorage.getItem("quoli.usage.days"));
-    return RANGES.some((r) => r.days === n) ? n : 30;
-  } catch {
-    return v ?? 30;
-  }
-};
-
 /** Spend and tokens over time, where they went, and how close you are to your budgets. */
 export function UsagePage() {
-  const [days, setDays] = useState(() => remember());
-  const [agent, setAgent] = useState<"" | AgentKind>("");
-  const [report, refresh, error] = useData(`usage:${days}:${agent}`, () =>
-    api.usage(days, agent || undefined),
+  const { days, agent, project, model, set } = useAnalysis();
+  const [projects] = useData("projects", api.projects);
+  const [report, refresh, error] = useData(`usage:${days}:${agent}:${project}:${model}`, () =>
+    api.usage(days, agent || undefined, project || undefined, model || undefined),
   );
   const [settings] = useData("settings", api.settings);
   useLiveEvents(refresh);
@@ -44,6 +30,22 @@ export function UsagePage() {
         title="Usage"
         actions={
           <>
+            <label className="sr-only" htmlFor="u-project">
+              Project
+            </label>
+            <select
+              id="u-project"
+              className="input"
+              value={project}
+              onChange={(e) => set("project", e.target.value)}
+            >
+              <option value="">All projects</option>
+              {projects?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
             <label className="sr-only" htmlFor="u-agent">
               Agent
             </label>
@@ -51,7 +53,7 @@ export function UsagePage() {
               id="u-agent"
               className="input"
               value={agent}
-              onChange={(e) => setAgent(e.target.value as typeof agent)}
+              onChange={(e) => set("agent", e.target.value)}
             >
               <option value="">All agents</option>
               {AGENT_KINDS.map((k) => (
@@ -68,7 +70,7 @@ export function UsagePage() {
                   key={r.days}
                   aria-pressed={days === r.days}
                   className={days === r.days ? "active" : ""}
-                  onClick={() => setDays(remember(r.days))}
+                  onClick={() => set("days", r.days)}
                 >
                   {r.label}
                 </button>
@@ -81,6 +83,24 @@ export function UsagePage() {
         without a price are counted in tokens but not in spend.
       </PageHead>
 
+      <AnalysisNav />
+      {model && (
+        <p className="filter-chip">
+          Model: {model} · token usage only{" "}
+          <button type="button" onClick={() => set("model", "")}>
+            Clear model filter
+          </button>
+        </p>
+      )}
+      {report && (
+        <p className="faint">
+          Reporting zone: {report.timeZone} · USD estimates · Usage is grouped by token timestamp;
+          session trends by session start.
+        </p>
+      )}
+      {(agent || project || model) && (
+        <p className="faint">Budget targets are global; the spend amounts follow these filters.</p>
+      )}
       {!report && (error ? <ErrorState message={error} retry={refresh} /> : <Loading />)}
       {report && (
         <>
@@ -126,6 +146,33 @@ export function UsagePage() {
               />
             </dl>
             <SpendChart days={report.days} budget={budgets?.budgetDailyUsd} height={160} />
+            <details>
+              <summary>Daily spend and tokens</summary>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th className="num">USD estimate</th>
+                    <th className="num">Tokens</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.days.map((d) => (
+                    <tr key={d.date}>
+                      <td>{d.date}</td>
+                      <td className="num">
+                        {d.usd === null
+                          ? tokenSum(d.tokens)
+                            ? "price unknown"
+                            : "no usage"
+                          : usd(d.usd)}
+                      </td>
+                      <td className="num">{tokenSum(d.tokens).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
             {report.total.cost.unpriced.length > 0 && (
               <p className="panel-note">
                 No price for {report.total.cost.unpriced.join(", ")}; their tokens are counted but
@@ -136,7 +183,7 @@ export function UsagePage() {
 
           {tokenSum(report.total.tokens) === 0 ? (
             <EmptyState title={`No usage in the last ${days} days`}>
-              <span>Token usage appears here once Claude Code sessions are recorded.</span>
+              <span>Token usage appears here once an agent reports it.</span>
             </EmptyState>
           ) : (
             <div className="dash-grid">
@@ -188,7 +235,7 @@ export function UsagePage() {
                         <tr key={s.id}>
                           <td className="t-title">
                             <Link to={paths.board(s.projectId, s.id)} title={s.title}>
-                              {s.title}
+                              <SessionName session={s} />
                             </Link>
                             <span className="faint">{s.startedAt ? ago(s.startedAt) : ""}</span>
                           </td>
@@ -222,7 +269,7 @@ function Budget({
       <div className="figure-stat">
         <dt>{label}</dt>
         <dd>
-          <b className="num">{usd(spent ?? 0)}</b>
+          <b className="num">{usd(spent)}</b>
           <Link to={paths.settings()} className="faint">
             Set a budget
           </Link>
@@ -230,21 +277,23 @@ function Budget({
       </div>
     );
   }
-  const share = (spent ?? 0) / budget;
-  const tone = share >= 1 ? "over" : share >= 0.8 ? "near" : "";
+  const share = spent === null ? null : spent / budget;
+  const tone = share !== null && share >= 1 ? "over" : share !== null && share >= 0.8 ? "near" : "";
   return (
     <div className="figure-stat">
       <dt>{label}</dt>
       <dd>
-        <b className="num">{usd(spent ?? 0)}</b>
-        <span className={`budget ${tone}`}>
-          <span className="meter" aria-hidden>
-            <i style={{ width: `${Math.min(100, share * 100)}%` }} />
+        <b className="num">{usd(spent)}</b>
+        {share !== null && (
+          <span className={`budget ${tone}`}>
+            <span className="meter" aria-hidden>
+              <i style={{ width: `${Math.min(100, share * 100)}%` }} />
+            </span>
+            <span>
+              {tone === "over" ? "Over" : `${Math.round(share * 100)}% of`} {usd(budget)}
+            </span>
           </span>
-          <span>
-            {tone === "over" ? "Over" : `${Math.round(share * 100)}% of`} {usd(budget)}
-          </span>
-        </span>
+        )}
       </dd>
     </div>
   );

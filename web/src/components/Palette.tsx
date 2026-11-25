@@ -3,6 +3,7 @@ import { api } from "../api.ts";
 import { CATEGORY, fileName } from "../format.ts";
 import { searchGraph } from "../lenses/map/search.ts";
 import { navigate, paths } from "../router.ts";
+import { displayTitle, useTitleVersion } from "../session-titles.ts";
 import type { Lens, LensContext, Selection } from "../state.ts";
 import { useDialog } from "./Dialog.tsx";
 
@@ -32,13 +33,15 @@ interface BoardProps extends LensContext {
 
 /** ⌘K on the board: files, tool calls, sessions, services and branches of this project. */
 export function Palette(p: BoardProps) {
+  const titlesVersion = useTitleVersion();
   const graph = p.codeGraph.graph;
   const inGraph = useMemo(() => new Set(graph?.files.map((f) => f.path)), [graph]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: display titles live outside the evidence model.
   const items: PaletteItem[] = useMemo(
     () => [
       ...p.sessions.map((s) => ({
         group: "Sessions",
-        label: s.title,
+        label: displayTitle(s),
         detail: s.branch ?? "",
         run: () => p.openSession(s.id),
       })),
@@ -72,7 +75,7 @@ export function Palette(p: BoardProps) {
       })),
       ...pageItems(),
     ],
-    [p.sessions, p.session, p.code, p.infra, p.git, p.openSession, p.goto, inGraph],
+    [p.sessions, p.session, p.code, p.infra, p.git, p.openSession, p.goto, inGraph, titlesVersion],
   );
   // Code first (functions, routes, tables, files), ranked by the graph; recorded text comes from the server.
   const code = useMemo(
@@ -94,7 +97,7 @@ export function Palette(p: BoardProps) {
         hits.map((h) => ({
           group: h.kind === "prompt" ? "Prompts" : h.kind === "command" ? "Commands" : "Errors",
           label: h.text,
-          detail: h.sessionTitle,
+          detail: displayTitle({ id: h.sessionId, title: h.sessionTitle }),
           run: () =>
             navigate(
               paths.board(p.projectId, h.sessionId, {
@@ -108,6 +111,7 @@ export function Palette(p: BoardProps) {
   );
   return (
     <PaletteView
+      scope="This project · sessions, code, services, branches and recorded evidence"
       items={items}
       near={code}
       remote={recorded}
@@ -123,8 +127,10 @@ export function PaletteView({
   remote,
   close,
   placeholder,
+  scope = "This computer · navigation, projects and session titles",
 }: {
   items: PaletteItem[];
+  scope?: string;
   /** Already ranked matches computed in memory; listed before the other results. */
   near?: (query: string) => PaletteItem[];
   /** Matches that need the server (recorded prompts, commands, errors); listed last. */
@@ -136,21 +142,27 @@ export function PaletteView({
   const [active, setActive] = useState(0);
   const dialog = useDialog(close);
 
-  const [far, setFar] = useState<{ q: string; items: PaletteItem[] }>({ q: "", items: [] });
+  const [far, setFar] = useState<{ q: string; items: PaletteItem[]; error?: boolean }>({
+    q: "",
+    items: [],
+  });
+  const [retry, setRetry] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: retry explicitly repeats the same search.
   useEffect(() => {
     const q = query.trim();
     if (!remote || q.length < 2) return;
     let live = true;
+    setFar({ q: "", items: [] });
     const t = setTimeout(() => {
       remote(q)
         .then((r) => live && setFar({ q, items: r }))
-        .catch(() => live && setFar({ q, items: [] }));
+        .catch(() => live && setFar({ q, items: [], error: true }));
     }, 160);
     return () => {
       live = false;
       clearTimeout(t);
     };
-  }, [query, remote]);
+  }, [query, remote, retry]);
 
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -169,6 +181,8 @@ export function PaletteView({
     return groups.flatMap((g) => everything.filter((i) => i.group === g)).slice(0, 60);
   }, [all, query, near, far]);
 
+  const selected = Math.max(0, Math.min(active, items.length - 1));
+
   return (
     <div className="palette-backdrop">
       <button
@@ -186,7 +200,11 @@ export function PaletteView({
         aria-label="Search"
         onKeyDown={dialog.onKeyDown}
       >
+        <p className="palette-scope" id="palette-scope">
+          {scope}
+        </p>
         <input
+          aria-describedby="palette-scope"
           aria-label="Search"
           value={query}
           placeholder={placeholder}
@@ -195,17 +213,50 @@ export function PaletteView({
             setActive(0);
           }}
           onKeyDown={(e) => {
-            if (e.key === "ArrowDown") setActive((a) => Math.min(items.length - 1, a + 1));
-            if (e.key === "ArrowUp") setActive((a) => Math.max(0, a - 1));
-            if (e.key === "Enter" && items[active]) {
-              items[active].run();
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              setActive(Math.min(items.length - 1, selected + 1));
+            }
+            if (e.key === "ArrowUp") {
+              e.preventDefault();
+              setActive(Math.max(0, selected - 1));
+            }
+            if (e.key === "Enter" && items[selected]) {
+              items[selected].run();
               close();
             }
           }}
         />
         <p className="sr-only" role="status">
-          {items.length ? `${items.length} results` : "No results"}
+          {items.length
+            ? `${items.length} available results`
+            : remote && query.trim().length >= 2 && (far.q !== query.trim() || far.error)
+              ? "No local matches; recorded evidence search incomplete"
+              : "No results"}
         </p>
+        {remote && query.trim().length >= 2 && (
+          <p className="palette-status" role="status">
+            {far.q !== query.trim() ? (
+              "Searching recorded evidence…"
+            ) : far.error ? (
+              <>
+                Recorded evidence search failed.{" "}
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={() => {
+                    setFar({ q: "", items: [] });
+                    setRetry((n) => n + 1);
+                  }}
+                >
+                  Try again
+                </button>
+              </>
+            ) : (
+              `${far.items.length} recorded evidence matches`
+            )}
+          </p>
+        )}
         <ul>
           {items.map((item, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: labels can repeat (two identical commands)
@@ -215,9 +266,9 @@ export function PaletteView({
               )}
               <button
                 type="button"
-                className={i === active ? "active" : ""}
+                className={i === selected ? "active" : ""}
                 tabIndex={-1}
-                aria-current={i === active ? "true" : undefined}
+                aria-current={i === selected ? "true" : undefined}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => {
                   item.run();
@@ -233,7 +284,13 @@ export function PaletteView({
               </button>
             </li>
           ))}
-          {!items.length && <li className="faint pad">Nothing matches “{query}”.</li>}
+          {!items.length && (
+            <li className="faint pad">
+              {remote && query.trim().length >= 2 && (far.q !== query.trim() || far.error)
+                ? "No local matches. Recorded evidence search is incomplete."
+                : `Nothing matches “${query}”.`}
+            </li>
+          )}
         </ul>
       </div>
     </div>

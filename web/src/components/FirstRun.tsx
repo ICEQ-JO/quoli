@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { api, useData } from "../api.ts";
 import { hosted, LOCAL, localPort, setLocalPort } from "../host.ts";
 import { PixelScene } from "../landing/PixelScene.tsx";
-import { Mark } from "../landing/ui.tsx";
+import { Mark } from "./Mark.tsx";
 import "../firstrun.css";
 
 const START = "npx https://iceq.best/quoli.tgz";

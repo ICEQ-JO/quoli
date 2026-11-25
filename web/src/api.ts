@@ -87,8 +87,10 @@ export const api = {
     send<SyncStatus>("PUT", "/api/sync", patch),
   connectSync: () => send<SyncStatus>("POST", "/api/sync/connect", {}),
   cancelConnect: () => send<SyncStatus>("DELETE", "/api/sync/connect", {}),
-  usage: (days: number, agent?: AgentKind) =>
-    get<UsageReport>(`/api/usage?days=${days}${agent ? `&agent=${agent}` : ""}`),
+  usage: (days: number, agent?: AgentKind, project?: string, model?: string) =>
+    get<UsageReport>(
+      `/api/usage?${new URLSearchParams({ days: String(days), ...(agent && { agent }), ...(project && { project }), ...(model && { model }) })}`,
+    ),
   insights: (days: number, f: { project?: string; agent?: string; model?: string }) => {
     const q = new URLSearchParams({ days: String(days) });
     for (const [k, v] of Object.entries(f)) if (v) q.set(k, v);

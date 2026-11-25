@@ -819,6 +819,7 @@ export interface InsightsGroup {
 
 /** GET /api/insights — trends across sessions, bucketed by the local day each session started. */
 export interface InsightsReport {
+  timeZone: string;
   days: {
     date: string;
     sessions: number;
@@ -857,6 +858,7 @@ export interface InsightsReport {
 
 /** GET /api/usage?days=N — spend and tokens over the last N days (1–365), all derived from usage rows. */
 export interface UsageReport {
+  timeZone: string;
   days: UsageDay[];
   total: { tokens: TokenTotals; cost: Cost };
   byModel: { model: string | null; tokens: TokenTotals; usd: number | null }[];
