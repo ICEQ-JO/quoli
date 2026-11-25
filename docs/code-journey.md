@@ -1,43 +1,31 @@
-# Code understanding: request-to-data prototype
+# Understanding code in Quoli
 
-Roadmap **Phase 2 — Deeper code**, [#50](https://github.com/ICEQ-JO/quoli/issues/50). This is the first increment of the owner-approved code-understanding rework, informed by Nodeway's feature-oriented exploration. It validates an interaction before replacing the production Map.
+Roadmap **Phase 2 — Deeper code**, [#50](https://github.com/ICEQ-JO/quoli/issues/50), [#52](https://github.com/ICEQ-JO/quoli/issues/52) and [#53](https://github.com/ICEQ-JO/quoli/issues/53). The Code lens uses real indexed source and deliberate expansion in place of hop columns. The interaction follows the owner-approved request-to-data direction inspired by Nodeway.
 
 ## Try it
 
-Run `pnpm prototype` from a clone. Vite opens `http://127.0.0.1:4490/prototype/index.html`. This command starts a web development server, not the Quoli recorder. It needs no agent, account, API key or recorded sessions. An existing Quoli install is unaffected.
+Run `pnpm demo` and open the local pairing link Quoli prints. Choose the **shop** project, then **Code**. No session is required. Open **POST /orders/**, reveal **What this uses**, select its handler, reveal and select `createOrder`, then reveal its calls and write to `orders`. Select any connection to read its source. **Who uses this** explores the reverse direction. **Fit exploration** brings the revealed working set into view; selecting or expanding keeps existing node positions. **Project overview** clears that working set.
 
-Choose **Explore POST /orders**. Select a function or table to read its example source beside the request path. **Show calculation** expands `totalCents`; **Show related test** opens its test. Expanded branches remain visible as the selection changes. **Back to previous selection** retraces reader selections; **Project overview** resets the exploration. These are in-page actions; browser history, refresh persistence and shareable selection URLs are not part of this prototype.
+Search finds indexed functions, routes and tables, plus files from the existing file map. Files without indexed symbols still open in the reader. `/` focuses search; `o` opens the selected source in VS Code. Relationship buttons provide a keyboard path alongside the canvas. Browser back/forward and reload restore the selected item. The expanded working set lives in memory while the Code lens remains mounted; reload or leaving the lens rebuilds it from the selection.
 
-The normal `pnpm build` includes `dist/prototype/index.html`. The public landing build excludes it. The production Map and all real-session flows remain unchanged.
+Choose the synthetic **Add refunds** session to see recorded edited files and source matches. The existing source reader exposes **Agent edits**, **Git diff** when a working-tree diff exists, and the original recorded action in Agents. Replay filters activity; the source graph continues to describe current files, not a historical snapshot. A test importing the selected file is a source relationship, not evidence of a test run.
 
-## What the example proves
+## Discovery and limits
 
-The authored teaching example connects `POST /orders` to `createOrder`, `saveOrder` and the `orders` table, with a calculation branch and a related test. Each connection names its relation and source line. Source and map selections agree; the path and node positions remain stable during exploration. Keyboard focus moves to the reader heading when a selection changes. The map and source have keyboard-scrollable regions; at narrow widths the reader moves below the map.
+The existing Tree-sitter symbol/import/call engine is retained. New route discovery recognizes directly imported Hono/Express constructors and literal HTTP registrations, named/imported or inline handlers, and literal direct router mounts. FastAPI/Flask constructor imports and route decorators are recognized. Dynamic mount prefixes retain a local path with an unresolved-prefix label. Dynamic route paths, complex registration chains, Python router mounts, re-exported router mounts, middleware execution order and runtime dispatch are not resolved.
 
-Source strings and relationships are synthetic, manually authored fixtures, not extracted from the repository. They show static relationships, not runtime order, observed execution, successful tests or proof of feature correctness. No example code is executed by the page. No evidence, cloud or agent APIs are called. The existing theme preference is shared with Quoli; example exploration stays in memory.
+SQL discovery reads `CREATE TABLE` declarations in local `.sql` files and literal database `exec`, `prepare`, `query` or `execute` arguments. Literal SQL references link reads/writes to a uniquely declared table. Duplicate declarations stay unlinked; dynamic SQL and queries starting with `WITH` are skipped. ORM models, migrations' effective state, triggers and computed query builders are not inferred. This lexical scan is not a full SQL parser. Column metadata describes the declaration, not the live database.
 
-## Evaluate with a new user
+Source files and SQL files each have a 5,000-file scan budget; files over 512 KB, generated code and paths resolving outside the repository are skipped. Existing partial-index indicators remain visible. Exploration reveals up to 12 related nodes at a time, at most 120; the relationship list still exposes source connections. Existing nodes do not move and every relationship between visible nodes is retained, including cycles and cross-links. The graph is derived from current source; successful calls do not prove execution of a feature or exclusive file authorship.
 
-Give someone unfamiliar with the example these tasks without teaching them the controls:
+All analysis stays local. The facts cache stores identifiers and source locations, never literal SQL values or complete SQL statements. No new dependency, paid API, cloud call or source execution was added.
 
-1. Find where an order enters the application and where it is saved.
-2. Explain where the total comes from and what rejects a negative quantity.
-3. Find the relevant test, then return to the function you were reading.
+## Design reference and evaluation
 
-Record completion, wrong turns and explanations in their words. Success means they can explain the path and distinguish source evidence from execution evidence. Automated checks cannot establish comprehension; this human evaluation has not been run.
+`pnpm prototype` still opens the isolated authored teaching example at `http://127.0.0.1:4490/prototype/index.html`. It is a design reference, excluded from production builds. Its fixtures are synthetic and manually connected; the production Code lens uses the real graph API.
 
-## Next increments
+With a person unfamiliar with the repository, ask them to find where an order enters and is stored, explain its calculation, locate its test, then distinguish source relationships from recorded execution. Human comprehension and screen-reader evaluation remain outstanding. The separate privacy/recording findings from the readiness audit remain prerequisites for inviting students to install recording; this code-exploration change does not resolve them.
 
-1. Produce trustworthy route, table and read/write relationships for one supported stack (#2), with source locations and explicit resolution limits.
-2. Replace the production Map interaction with deliberate expansion and persistent exploration, using real indexed data.
-3. Attach recorded agent changes, diffs, prompts and command results to the explored code path.
+## Validation
 
-The privacy and recording bugs found in the readiness audit remain separate prerequisites for inviting students to install recording. This synthetic prototype does not fix them.
-
-## Validation for #50
-
-- Three focused tests pass: exploration/back/reset behavior, relationship source references and the exact displayed cents-calculation example.
-- Typecheck and app build pass. Lint exits successfully, with the existing unused `fileOfNode` import warning in `MapLens.tsx`.
-- Chromium checks cover overview and expanded exploration in light/dark at 320, 390, 1280 and 1440 px: no page-level overflow and no axe violations in all 16 combinations. Keyboard entry, branch focus, back/reset and stable path positions were checked. Built assets make no external resource requests.
-- Local full suite: 223/224 pass. The project-disconnect assertion at `tests/app.test.ts:82` also fails on unchanged main in this environment (13/14 in that test file), reporting `receiving` instead of `not_connected`; it is outside this prototype's code path.
-- No real-device, screen-reader or human-comprehension evaluation has been performed.
+Engine and map regression tests cover route-to-data paths, aliases/mounts, negative SQL cases, cache privacy, nested calls, repository symlink boundaries, stable positions, cycles and cross-links. Local full suite: 232/233 pass; the disconnect-status assertion at `tests/app.test.ts:82` fails here and on unchanged main (`receiving` instead of `not_connected`). Typecheck, lint, production build and browser results are recorded in the pull request. Browser checks use only the local synthetic demo. No real private sessions were uploaded or replayed.

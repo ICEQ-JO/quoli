@@ -62,13 +62,29 @@ Quoli is a tool for working, not a showcase. Scanning comes first: a developer n
 - All controls are keyboard reachable: a skip link, visible focus rings, roving focus on canvas cards, and `?` for the shortcuts.
 - Colour is never the only signal: kinds have icons and labels, failures have text, legends name every mark.
 
-## Code-journey prototype (#50)
+## Code lens exploration (#50, #52, #53)
 
-The separate synthetic prototype uses the existing neutral palette and type system.
-Project navigation provides an endpoint as the starting point. The request path remains
-visible above a stable relationship map, with a source reader alongside it on laptops and
-below it on narrow screens. API, business logic and data boundaries describe the example;
-tests are outside the API boundary. Branch expansion never recentres the map. Source
-relationships use explicit verbs and file/line references, with provenance stated beside
-the map. Selection is neutral; syntax highlighting reuses the code reader's colours.
-This is an interaction experiment, not a change to the production board's design contract.
+The production Code lens uses the existing neutral surfaces, semantic colours, Inter and
+JetBrains Mono. It starts with HTTP entry points, tables, exported functions and files;
+**Find code** searches indexed source. No session is needed. The isolated synthetic
+prototype remains a design reference, not the production experience.
+
+A deliberate working set stays beside the real source reader. The exploration trail
+preserves visited selections; **Who uses this** and **What this uses** show counts of
+connections still hidden and reveal a bounded batch. Existing cards keep their positions
+when selecting or expanding. Selection does not refit the camera; **Fit exploration** is
+explicit. **Project overview** clears the working set. That set persists in memory while
+the lens is mounted, rather than promising a saved board.
+
+Cards use neutral selection borders, kind icons and file/line references. Orange remains
+reserved for recorded file edits. Relationship arrows carry verbs; possible relationships
+are dashed and labelled. **Connections in source** repeats connections as keyboard-reachable
+buttons with source locations, providing an alternative to canvas navigation. The source
+reader sits alongside on wide screens and below the exploration at 1100px and narrower;
+at 700px and narrower, starting-point navigation stacks above it.
+
+Evidence labels distinguish **File edited · recorded** and **File read · recorded** from
+**Edit text matched here · derived**. The legend and status explain that relationships
+come from current source. Related tests are labelled as imports, not evidence of a test
+run. Preserve these distinctions beside the graph and source, rather than relying on
+colour alone.

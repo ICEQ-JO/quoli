@@ -630,7 +630,7 @@
 }
 
 .rd-line.in {
-  background: color-mix(in srgb, var(--text) 8%, transparent);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
 }
 
 .rd-line.edited .rd-no {

@@ -24,7 +24,7 @@ const LENSES: { id: Lens; label: string; hint: string }[] = [
   { id: "summary", label: "Summary", hint: "What was asked, changed, run and spent" },
   { id: "review", label: "Review", hint: "What to read before you merge" },
   { id: "agents", label: "Agents", hint: "What the agent did" },
-  { id: "map", label: "Map", hint: "Every function, who calls it, what the agent touched" },
+  { id: "map", label: "Code", hint: "Understand a feature and what the agent changed" },
   { id: "git", label: "Git", hint: "Which branch and commits" },
   { id: "infra", label: "Infra", hint: "Where it runs" },
 ];
@@ -94,9 +94,9 @@ export function BoardPage({
   const refreshGraph = useRef(codeGraph.retry);
   refreshGraph.current = codeGraph.retry;
   // The sessions list is open when you arrive at a project and folds away once a session is open.
-  const [listOpen, setListOpen] = useState(!sessionId);
+  const [listOpen, setListOpen] = useState(!sessionId && lens !== "map");
   // biome-ignore lint/correctness/useExhaustiveDependencies: fold the list when a session opens
-  useEffect(() => setListOpen(!sessionId), [Boolean(sessionId)]);
+  useEffect(() => setListOpen(!sessionId && lens !== "map"), [Boolean(sessionId), lens === "map"]);
   // Details without a selection (lens overview lists) are opt-in; a selection always opens them.
   const agentsView = useAgentsView();
   const [details, setDetails] = useState(() => remember("quoli.details") === "open");
