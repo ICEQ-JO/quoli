@@ -192,3 +192,18 @@ Survey contours carry animated signals behind the terminal, product captures,
 team view and footer. A visibility observer in the isolated landing entry also
 pauses CSS/SVG art when offscreen, hidden or reduced motion is requested. Artwork
 is static before hydration; canvas clocks and recorder transport remain local.
+
+## Code-journey interaction prototype (Phase 2, #50)
+
+`pnpm prototype` runs a separate Vite entry at `/prototype/index.html`, implemented in
+`web/src/prototype/`. It reads only authored shop fixtures and reuses the app's fonts,
+theme tokens and syntax highlighter. A stable request-to-storage map, explicit branch
+expansion, reader selection history and source-line relationships demonstrate the proposed
+code-understanding interaction. It has no access to evidence APIs and does not start the
+recorder. The normal app build includes the entry; the public landing build excludes it.
+
+This is not automatic code analysis or a replacement for the production Map. The fixtures
+manually define routes and tables; the current code graph builder still does not extract
+those entities. There is no runtime trace, agent overlay, refresh persistence or shareable
+selection URL. Human comprehension testing remains outstanding. Usage, evaluation tasks
+and subsequent increments: [code-journey.md](code-journey.md).

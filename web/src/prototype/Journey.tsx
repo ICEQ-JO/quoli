@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { highlight } from "../lenses/map/highlight.ts";
 import { setThemePref, useTheme } from "../theme.ts";
@@ -18,6 +18,10 @@ import "./journey.css";
 function JourneyPrototype() {
   const [state, dispatch] = useReducer(navigateJourney, initialJourney);
   const theme = useTheme();
+  const readerTitle = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (state.selected) readerTitle.current?.focus({ preventScroll: true });
+  }, [state.selected]);
   const select = (id: ShopNode) => dispatch({ type: "select", id });
   const current = state.selected ? shop[state.selected] : null;
   const visible = new Set<ShopNode>(state.selected ? mainPath : []);
@@ -156,24 +160,23 @@ function JourneyPrototype() {
                     <span>Request to storage</span>
                     <small>Static source relationships</small>
                   </div>
-                  {/* biome-ignore lint/a11y/noNoninteractiveTabindex: keyboard users must be able to scroll the wide map. */}
-                  <div
-                    role="region"
+                  <section
                     className="journey-map-scroll"
-                    tabIndex={0}
                     aria-label="Scrollable relationship map"
+                    // biome-ignore lint/a11y/noNoninteractiveTabindex: keyboard users need to scroll the wide map.
+                    tabIndex={0}
                   >
                     <div className="journey-canvas">
-                      <div className="journey-area" style={{ left: 16 }}>
+                      <div className="journey-area" style={{ left: 8 }}>
                         <span>API</span>
                       </div>
-                      <div className="journey-area" style={{ left: 286 }}>
+                      <div className="journey-area" style={{ left: 218 }}>
                         <span>Business logic</span>
                       </div>
-                      <div className="journey-area" style={{ left: 556 }}>
+                      <div className="journey-area" style={{ left: 428 }}>
                         <span>Data</span>
                       </div>
-                      <svg className="journey-edges" viewBox="0 0 840 450" aria-hidden="true">
+                      <svg className="journey-edges" viewBox="0 0 640 450" aria-hidden="true">
                         <defs>
                           <marker
                             id="journey-arrow"
@@ -192,13 +195,13 @@ function JourneyPrototype() {
                             b = shop[e.to];
                           const vertical = a.x === b.x;
                           const d = vertical
-                            ? `M ${a.x + 112} ${a.y + 91} V ${b.y - 6}`
-                            : `M ${a.x + 224} ${a.y + 46} H ${b.x - 6}`;
+                            ? `M ${a.x + 90} ${a.y + 91} V ${b.y - 6}`
+                            : `M ${a.x + 180} ${a.y + 46} H ${b.x - 6}`;
                           return (
                             <g key={`${e.from}-${e.to}`}>
                               <path d={d} markerEnd="url(#journey-arrow)" />
                               <text
-                                x={vertical ? a.x + 122 : (a.x + 224 + b.x) / 2}
+                                x={vertical ? a.x + 100 : (a.x + 180 + b.x) / 2}
                                 y={vertical ? (a.y + 91 + b.y) / 2 : a.y + 35}
                                 textAnchor={vertical ? "start" : "middle"}
                               >
@@ -226,7 +229,7 @@ function JourneyPrototype() {
                         <button
                           type="button"
                           className="journey-expand"
-                          style={{ left: 300, top: 270 }}
+                          style={{ left: 230, top: 270 }}
                           onClick={() => select("total")}
                         >
                           Show calculation <span>1 function</span>
@@ -236,14 +239,14 @@ function JourneyPrototype() {
                         <button
                           type="button"
                           className="journey-expand"
-                          style={{ left: 30, top: 270 }}
+                          style={{ left: 20, top: 270 }}
                           onClick={() => select("test")}
                         >
                           Show related test <span>Not run</span>
                         </button>
                       )}
                     </div>
-                  </div>
+                  </section>
                   <p className="journey-map-note">
                     Arrows show source relationships, not execution order or a recorded runtime
                     trace.
@@ -252,19 +255,20 @@ function JourneyPrototype() {
                 <section className="journey-reader" aria-label="Source and explanation">
                   <header>
                     <span>{current.kind}</span>
-                    <h2>{current.name}</h2>
+                    <h2 ref={readerTitle} tabIndex={-1}>
+                      {current.name}
+                    </h2>
                     <p>{current.description}</p>
                   </header>
                   <div className="journey-source-head">
                     <code>{current.file}</code>
                     <span>Example source</span>
                   </div>
-                  {/* biome-ignore lint/a11y/noNoninteractiveTabindex: source may overflow horizontally and needs keyboard scrolling. */}
-                  <div
-                    role="region"
-                    tabIndex={0}
+                  <section
                     aria-label={`Source of ${current.name}`}
                     className="journey-source-scroll"
+                    // biome-ignore lint/a11y/noNoninteractiveTabindex: source needs keyboard scrolling.
+                    tabIndex={0}
                   >
                     <pre>
                       <code>
@@ -276,10 +280,10 @@ function JourneyPrototype() {
                             </span>
                             <span>
                               {line.map((t, j) => (
-                                // biome-ignore lint/suspicious/noArrayIndexKey: immutable syntax tokens are identified by their source position.
                                 <span
                                   className={`journey-token-${t.cls || "plain"}`}
-                                  key={`${i}-${j}`}
+                                  // biome-ignore lint/suspicious/noArrayIndexKey: static syntax tokens keep their source positions.
+                                  key={j}
                                 >
                                   {t.text}
                                 </span>
@@ -289,7 +293,7 @@ function JourneyPrototype() {
                         ))}
                       </code>
                     </pre>
-                  </div>
+                  </section>
                   <div className="journey-connections">
                     <h3>Connected code</h3>
                     {relationships

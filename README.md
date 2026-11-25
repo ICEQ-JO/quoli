@@ -106,6 +106,7 @@ Node.js 24 (22.13+ works) and pnpm.
 ```sh
 pnpm install
 pnpm demo               # synthetic demo project on http://127.0.0.1:4400
+pnpm prototype          # isolated code-journey prototype, synthetic data only
 pnpm dev                # the app against your real data, with hot reload
 pnpm test               # unit and API tests
 pnpm typecheck && pnpm lint

@@ -61,3 +61,14 @@ Quoli is a tool for working, not a showcase. Scanning comes first: a developer n
 - No page scrolls horizontally at 1280px.
 - All controls are keyboard reachable: a skip link, visible focus rings, roving focus on canvas cards, and `?` for the shortcuts.
 - Colour is never the only signal: kinds have icons and labels, failures have text, legends name every mark.
+
+## Code-journey prototype (#50)
+
+The separate synthetic prototype uses the existing neutral palette and type system.
+Project navigation provides an endpoint as the starting point. The request path remains
+visible above a stable relationship map, with a source reader alongside it on laptops and
+below it on narrow screens. API, business logic and data boundaries describe the example;
+tests are outside the API boundary. Branch expansion never recentres the map. Source
+relationships use explicit verbs and file/line references, with provenance stated beside
+the map. Selection is neutral; syntax highlighting reuses the code reader's colours.
+This is an interaction experiment, not a change to the production board's design contract.

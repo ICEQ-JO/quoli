@@ -4,7 +4,6 @@ export const shop = {
     name: "POST /orders",
     kind: "Endpoint",
     file: "api/orders.ts",
-    line: 4,
     description:
       "Accepts an order and passes its items to the order service. The response contains the new order ID.",
     code: `import { Hono } from "hono";
@@ -15,14 +14,13 @@ app.post("/orders", async (c) => {
   const order = createOrder(items);
   return c.json(order, 201);
 });`,
-    x: 30,
+    x: 20,
     y: 70,
   },
   create: {
     name: "createOrder",
     kind: "Function",
     file: "services/orders.ts",
-    line: 4,
     description:
       "Calculates the total before saving the order. Inspect the calculation branch to see how invalid quantities are rejected.",
     code: `import { totalCents, type Item } from "./total";
@@ -32,14 +30,13 @@ export function createOrder(items: Item[]) {
   const amount = totalCents(items);
   return saveOrder(amount);
 }`,
-    x: 300,
+    x: 230,
     y: 70,
   },
   save: {
     name: "saveOrder",
     kind: "Function",
     file: "data/orders.ts",
-    line: 4,
     description:
       "Inserts the calculated total using a bound SQL parameter, then returns the generated ID. This is where the request changes stored data.",
     code: `import { db } from "./db";
@@ -51,14 +48,13 @@ export function saveOrder(totalCents: number) {
   ).run(totalCents);
   return { id: Number(result.lastInsertRowid) };
 }`,
-    x: 570,
+    x: 440,
     y: 70,
   },
   orders: {
     name: "orders",
     kind: "Table",
     file: "data/schema.sql",
-    line: 1,
     description:
       "Stores the order ID and its total in integer cents. The schema refuses negative totals. No customer or payment information is stored in this example.",
     code: `create table orders (
@@ -66,14 +62,13 @@ export function saveOrder(totalCents: number) {
   total_cents integer not null
     check (total_cents >= 0)
 );`,
-    x: 570,
+    x: 440,
     y: 270,
   },
   total: {
     name: "totalCents",
     kind: "Function",
     file: "services/total.ts",
-    line: 3,
     description:
       "Requires at least one item, nonnegative integer prices and positive integer quantities. It sums prices in cents without floating-point currency conversion.",
     code: `export type Item = { priceCents: number; quantity: number };
@@ -93,14 +88,13 @@ export function totalCents(items: Item[]) {
     return next;
   }, 0);
 }`,
-    x: 300,
+    x: 230,
     y: 270,
   },
   test: {
     name: "total.test.ts",
     kind: "Test",
     file: "services/total.test.ts",
-    line: 5,
     description:
       "Documents an expected total and checks that a negative quantity is rejected. Showing this test does not mean it has been run.",
     code: `import assert from "node:assert/strict";
@@ -117,7 +111,7 @@ test("rejects negative quantities", () => {
     { priceCents: 1999, quantity: -1 }
   ]));
 });`,
-    x: 30,
+    x: 20,
     y: 270,
   },
 } as const;

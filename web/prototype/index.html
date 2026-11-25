@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
     <meta name="color-scheme" content="dark light" />
+    <script>
+      // Apply the stored theme before first paint (see web/src/theme.ts).
+      (() => {
+        var t = "dark";
+        var s = null;
+        try {
+          s = localStorage.getItem("quoli.theme");
+          t = s === "dark" || s === "light" ? s : matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        } catch (_e) {
+          t = "dark";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <link rel="icon" href="data:," />
     <title>Explore an order · Quoli prototype</title>
   </head>
   <body>
