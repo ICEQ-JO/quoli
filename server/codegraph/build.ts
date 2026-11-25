@@ -3,16 +3,18 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   renameSync,
   rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
-import { extname, join, posix } from "node:path";
+import { extname, isAbsolute, join, posix, relative } from "node:path";
 import { Language, Parser } from "web-tree-sitter";
 import type { CodeGraph, CodeGraphFile } from "../../shared/model.ts";
 import { extract, type FileFacts, type Lang, moduleId } from "./extract.ts";
 import { type PathConfig, resolveGraph } from "./resolve.ts";
+import { queryEdges, sqlTables } from "./sql.ts";
 import { detectStack } from "./stack.ts";
 
 export interface BuildOptions {
@@ -29,7 +31,7 @@ export interface BuildOptions {
 /** Same ideas as the file map in code.ts: bounded file count and file size. */
 export const MAX_SCANNED = 5_000;
 const MAX_BYTES = 512 * 1024;
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 const KEEP_CACHES = 3;
 
 const BY_EXT: Record<string, { lang: Lang; name: string }> = {
@@ -123,7 +125,9 @@ function pruneCaches(dir: string, projectId: string) {
 
 function readText(root: string, path: string): string | null {
   try {
-    const abs = join(root, path);
+    const abs = realpathSync(join(root, path));
+    const rel = relative(realpathSync(root), abs);
+    if (rel.startsWith("..") || isAbsolute(rel)) return null;
     return statSync(abs).size <= MAX_BYTES ? readFileSync(abs, "utf8") : null;
   } catch {
     return null;
@@ -271,13 +275,32 @@ export async function buildCodeGraph(o: BuildOptions): Promise<CodeGraph> {
       const module = /^module\s+(\S+)/m.exec(readText(o.root, p) ?? "")?.[1];
       return module ? [{ dir: posix.dirname(p) === "." ? "" : posix.dirname(p), module }] : [];
     });
-  const { edges, modules } = resolveGraph({
+  const { edges, modules, routes } = resolveGraph({
     files: facts,
     pathConfigs: pathConfigs(o.root, listed),
     goModules,
   });
 
+  const sqlCandidates = listed.filter((p) => p.endsWith(".sql") && !IGNORED_DIR.test(p));
+  const sqlFiles = sqlCandidates.slice(0, MAX_SCANNED);
+  const tables = facts.flatMap((f) => f.tables);
+  for (const path of sqlFiles) {
+    const text = readText(o.root, path);
+    if (text === null) {
+      skipped++;
+      continue;
+    }
+    tables.push(...sqlTables(text, path));
+    files.push({ path, language: "SQL", lines: text.split("\n").length });
+  }
+  edges.push(
+    ...queryEdges(
+      facts.map((f) => ({ file: f.path, queries: f.queries })),
+      tables,
+    ),
+  );
   const symbols = facts.flatMap((f) => f.symbols);
+  for (const edge of edges) if (edge.from.endsWith("#<module>")) modules.add(edge.from);
   for (const id of modules) {
     const path = id.slice(0, id.lastIndexOf("#"));
     symbols.push({
@@ -316,11 +339,13 @@ export async function buildCodeGraph(o: BuildOptions): Promise<CodeGraph> {
     files,
     symbols,
     edges,
-    truncated: candidates.length > MAX_SCANNED,
+    routes,
+    tables,
+    truncated: candidates.length > MAX_SCANNED || sqlCandidates.length > MAX_SCANNED,
     stats: {
       files: files.length,
       symbols: symbols.length,
-      imports: edges.length - calls.length,
+      imports: edges.filter((e) => e.kind === "import").length,
       calls: calls.filter((e) => e.certainty === "resolved").length,
       possibleCalls: calls.filter((e) => e.certainty === "possible").length,
       parsed,

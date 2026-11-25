@@ -106,10 +106,14 @@ export async function codeGraphIdle(projectId: string): Promise<void> {
 export function scopeGraph(g: CodeGraph, prefix: string): CodeGraph {
   const inScope = (p: string) => p.startsWith(prefix);
   const fileOf = (id: string) => (id.includes("#") ? id.slice(0, id.lastIndexOf("#")) : id);
+  const edges = g.edges.filter((e) => inScope(fileOf(e.from)) || inScope(fileOf(e.to)));
+  const related = new Set(edges.flatMap((e) => [e.from, e.to]));
   return {
     ...g,
     files: g.files.filter((f) => inScope(f.path)),
-    symbols: g.symbols.filter((s) => inScope(s.file)),
-    edges: g.edges.filter((e) => inScope(fileOf(e.from)) || inScope(fileOf(e.to))),
+    symbols: g.symbols.filter((s) => inScope(s.file) || related.has(s.id)),
+    routes: g.routes?.filter((r) => inScope(r.file) || related.has(r.id)),
+    tables: g.tables?.filter((t) => inScope(t.file) || related.has(t.id)),
+    edges,
   };
 }
