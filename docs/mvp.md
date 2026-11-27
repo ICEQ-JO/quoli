@@ -163,6 +163,37 @@ Limits: loading states are text, not skeletons; tested with axe and keyboard wal
 
 **Privacy/security:** unchanged.
 
+## Increment 5: Usability, clarity and trust (planned)
+
+Status: **planned**. Source: local design/value audit (2026-11-28) on the demo app. The MVP has the core pipeline, but a developer new to Quoli cannot quickly see what happened, what is trustworthy, and what needs review. This increment makes the existing value legible before adding more surface area.
+
+Split into concrete GitHub issues before implementation; each issue names the phase/track it advances and stays M-sized or smaller.
+
+**User value:** A developer can open Quoli and understand, in seconds, what agents did, what needs attention, and how much to trust the numbers.
+
+**Scope**
+- **Trust states:** Replace ambiguous `$0.00`, `—`, and `0 tokens` with explicit states: estimated from list prices, no usage reported, unpriced model, or no cost data. Show cost confidence (priced/unpriced coverage) where spend is shown.
+- **Dashboard value clarity:** Make Home answer "what should I look at now?" with review queues that explain why a session needs attention (failed commands, wide edits, loops, long-running, unpriced/missing usage). Keep empty states educational, not blank.
+- **Navigation and noise:** Reduce sidebar/global-nav load. Collapse "Record every repository" after setup. Group/hide agent worktrees and internal worktree noise by default. Make hook status compact, with detail on demand.
+- **Lens jobs and onboarding:** Give Summary/Review/Agents/Code/Git/Infra clear job labels, first-use guidance, and empty states. Summary should lead with decisions; Review with trust-before-merge; Code with a "start here" path.
+- **Visual/status language:** One consistent status vocabulary and legend for live/receiving/not recording/ended/failed/estimated/inferred. Make trace colors understandable without hover-only meaning.
+- **Provenance visible:** Surface recorded/derived/inferred labels where users make decisions. Never present missing capture as zero activity or zero cost.
+
+**Non-goals:** New agent integrations, hosted sync, symbol-level call graph, mobile app, or controlling agents. No invented summaries; any future model-written summary must be optional and cite evidence.
+
+**Dependencies:** Increments 1–4; Observability (#127–#130) for richer review signals where applicable.
+
+**Acceptance criteria**
+- A first-time user can identify live work, review-needed work, and cost confidence from Home without opening docs.
+- No spend view presents missing usage/price as `$0.00` without an explicit qualifier.
+- Trace/status colors have a visible legend or text equivalent in context.
+- Projects default view hides internal agent/worktree noise; users can reveal it.
+- Each lens has a clear empty state describing what it shows and how to populate it.
+
+**Test plan:** Playwright screenshots of Home, Sessions, Projects, Settings, and each session lens in dark/light at 1280 px and 390 px; axe checks; unit tests for cost/trust-state formatting and project grouping; manual walkthrough with a person unfamiliar with Quoli.
+
+**Privacy/security:** unchanged. No new data leaves the machine; provenance labels must not expose raw captured sensitive content.
+
 ## After the MVP
 
 These come from the [vision roadmap](vision.md#roadmap) and are not in MVP scope: more agents (Codex, OpenCode, Pi), symbol-level code map, hosted provider metrics, hosted sync and teams.

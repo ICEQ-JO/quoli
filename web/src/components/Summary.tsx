@@ -5,7 +5,7 @@ import {
   type SessionDetail,
   type SessionReview,
 } from "../../../shared/model.ts";
-import { clock, compact, fileName, span, tokenSum, usd } from "../format.ts";
+import { clock, compact, costKind, fileName, money, span, tokenSum, usd } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import type { Lens, Selection } from "../state.ts";
 import { ContextCard } from "./ContextCard.tsx";
@@ -309,7 +309,7 @@ export function Summary({
 
         <TimeAndMoney session={session} href={href} />
 
-        <Sec id="sum-cost" title="What it cost" aside={usd(totalCost.usd)}>
+        <Sec id="sum-cost" title="What it cost" aside={money(totalCost, session.tokens)}>
           {totalCost.unpriced.length > 0 && (
             <p className="sum-warn" role="note">
               No price for {totalCost.unpriced.map((m) => `"${m}"`).join(", ")}. Those tokens are
@@ -365,9 +365,19 @@ export function Summary({
                     </td>
                     <td
                       className="num strong"
-                      title={r.usd === null ? "No price for this model" : undefined}
+                      title={
+                        r.usd === null
+                          ? tokenSum(r.tokens) > 0
+                            ? "Usage reported but no list price for this model"
+                            : "No token usage reported for this model"
+                          : "Estimate from list prices"
+                      }
                     >
-                      {usd(r.usd)}
+                      {r.usd === null
+                        ? tokenSum(r.tokens) > 0
+                          ? "Unpriced"
+                          : "No usage"
+                        : usd(r.usd)}
                     </td>
                   </tr>
                 ))}
@@ -380,7 +390,7 @@ export function Summary({
                     <td className="num">{compact(sum.output)}</td>
                     <td className="num">{compact(sum.cacheRead)}</td>
                     <td className="num">{compact(sum.cacheWrite)}</td>
-                    <td className="num strong">{usd(totalCost.usd)}</td>
+                    <td className="num strong">{money(totalCost, session.tokens)}</td>
                   </tr>
                 </tfoot>
               )}
@@ -548,14 +558,18 @@ function TimeAndMoney({ session, href }: { session: SessionDetail; href: Href })
                     <td
                       className="num strong"
                       title={
-                        t.cost.unpriced.length
-                          ? `No price for ${t.cost.unpriced.join(", ")}`
-                          : costliest.has(t.index)
+                        costKind(t.cost, t.tokens) === "estimated"
+                          ? costliest.has(t.index)
                             ? "One of the most expensive prompts"
-                            : undefined
+                            : "Estimate from list prices"
+                          : costKind(t.cost, t.tokens) === "no-usage"
+                            ? "No token usage reported"
+                            : costKind(t.cost, t.tokens) === "unpriced"
+                              ? `Usage reported but no list price for: ${t.cost.unpriced.join(", ") || "this model"}`
+                              : undefined
                       }
                     >
-                      {tokenSum(t.tokens) ? usd(t.cost.usd) : <span className="faint">—</span>}
+                      {money(t.cost, t.tokens)}
                     </td>
                   </tr>
                 );

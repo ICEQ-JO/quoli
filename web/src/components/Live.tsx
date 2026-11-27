@@ -1,5 +1,5 @@
 import type { LiveSession, Project } from "../../../shared/model.ts";
-import { CATEGORY, duration, plural, span, usd } from "../format.ts";
+import { CATEGORY, costKind, duration, money, plural, span, usd } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import { SessionName } from "./SessionName.tsx";
 import { AgentTag, LiveDot, projectName, useNow } from "./ui.tsx";
@@ -49,10 +49,21 @@ export function LiveRow({ s, projects }: { s: LiveSession; projects: Project[] |
         </span>
         <Step s={s} now={now} />
       </div>
-      <span className="live-cost num" title="Estimate from list prices">
-        <b>{s.cost.usd === null ? "—" : usd(s.cost.usd)}</b>
+      <span
+        className="live-cost num"
+        title={
+          costKind(s.cost, s.tokens) === "estimated"
+            ? "Estimate from list prices"
+            : costKind(s.cost, s.tokens) === "no-usage"
+              ? "No token usage reported"
+              : costKind(s.cost, s.tokens) === "unpriced"
+                ? `Usage reported but no list price for: ${s.cost.unpriced.join(", ") || "this model"}`
+                : "Cost unavailable"
+        }
+      >
+        <b>{money(s.cost, s.tokens)}</b>
         <span className="faint">
-          {s.recentUsd === null ? "no spend" : `+${usd(s.recentUsd)}`} in 10 min
+          {s.recentUsd === null ? "no recent spend" : `+${usd(s.recentUsd)}`} in 10 min
         </span>
       </span>
     </li>

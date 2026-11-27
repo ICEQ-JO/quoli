@@ -1,5 +1,5 @@
 import type { SessionSummary } from "../../../shared/model.ts";
-import { ago, money, plural } from "../format.ts";
+import { ago, costKind, money, plural } from "../format.ts";
 import { Link } from "../router.ts";
 import { SessionName } from "./SessionName.tsx";
 import { Trace } from "./Trace.tsx";
@@ -64,7 +64,20 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error
                     {s.branch}
                   </span>
                 )}
-                <span className="cost" title="Estimate from list prices">
+                <span
+                  className="cost"
+                  title={
+                    costKind(s.cost, s.tokens) === "estimated"
+                      ? s.cost.unpriced.length
+                        ? `Estimate from list prices. No price for: ${s.cost.unpriced.join(", ")}`
+                        : "Estimate from list prices"
+                      : costKind(s.cost, s.tokens) === "no-usage"
+                        ? "No token usage reported"
+                        : costKind(s.cost, s.tokens) === "unpriced"
+                          ? `Usage reported but no list price for: ${s.cost.unpriced.join(", ") || "this model"}`
+                          : "Cost unavailable"
+                  }
+                >
                   {money(s.cost, s.tokens)}
                 </span>
               </span>

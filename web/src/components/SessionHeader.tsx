@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { SessionDetail, SessionReview } from "../../../shared/model.ts";
-import { ago, duration, money, tokenSum } from "../format.ts";
+import { ago, costKind, duration, money } from "../format.ts";
 import { Link } from "../router.ts";
 import { RenameSession, SessionName } from "./SessionName.tsx";
 import { Trace } from "./Trace.tsx";
@@ -44,7 +44,15 @@ export function SessionHeader({
         <Link
           to={summaryHref}
           className="sh-cost"
-          title="Estimate from list prices. Open the cost breakdown."
+          title={
+            costKind(session.cost, session.tokens) === "estimated"
+              ? "Estimate from list prices. Open the cost breakdown."
+              : costKind(session.cost, session.tokens) === "no-usage"
+                ? "No token usage reported for this session."
+                : costKind(session.cost, session.tokens) === "unpriced"
+                  ? `Usage reported but no list price for: ${session.cost.unpriced.join(", ") || "this model"}. Open the cost breakdown.`
+                  : "Cost unavailable. Open the cost breakdown."
+          }
           onClick={() =>
             setTimeout(
               () => document.getElementById("sum-cost")?.scrollIntoView({ block: "start" }),
@@ -52,12 +60,12 @@ export function SessionHeader({
             )
           }
         >
-          {session.cost.usd === null && tokenSum(session.tokens) > 0 ? (
-            "price unknown"
-          ) : (
+          {costKind(session.cost, session.tokens) === "estimated" ? (
             <>
               <b>{money(session.cost, session.tokens)}</b> est.
             </>
+          ) : (
+            <span className="faint">{money(session.cost, session.tokens)}</span>
           )}
         </Link>
       </div>

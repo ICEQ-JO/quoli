@@ -164,11 +164,11 @@ export function InsightsPage() {
               top={(max) => usd(max)}
               readout={(d) =>
                 d.medianUsd === null ? (
-                  <b>{d.sessions ? "price unknown" : "no sessions"}</b>
+                  <b>{d.sessions ? "Unpriced" : "no sessions"}</b>
                 ) : (
                   <>
                     median <b>{usd(d.medianUsd)}</b> · p90 <b>{usd(d.p90Usd)}</b>
-                    {d.unpricedSessions > 0 && <span> · {d.unpricedSessions} unknown</span>}
+                    {d.unpricedSessions > 0 && <span> · {d.unpricedSessions} unpriced</span>}
                   </>
                 )
               }

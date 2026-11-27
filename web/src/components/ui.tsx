@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AGENT_NAMES, type Project, type SessionSummary } from "../../../shared/model.ts";
 import { api } from "../api.ts";
-import { ago, compact, money, plural } from "../format.ts";
+import { ago, compact, costKind, money, plural } from "../format.ts";
 import { Link, paths } from "../router.ts";
 import { useDialog } from "./Dialog.tsx";
 import { SessionName } from "./SessionName.tsx";
@@ -151,7 +151,20 @@ export function SessionRow({
         </span>
       </div>
       <Trace trace={session.trace} max={32} />
-      <span className="srow-cost num" title="Estimate from list prices">
+      <span
+        className="srow-cost num"
+        title={
+          costKind(session.cost, session.tokens) === "estimated"
+            ? session.cost.unpriced.length
+              ? `Estimate from list prices. No price for: ${session.cost.unpriced.join(", ")}`
+              : "Estimate from list prices"
+            : costKind(session.cost, session.tokens) === "no-usage"
+              ? "No token usage reported"
+              : costKind(session.cost, session.tokens) === "unpriced"
+                ? `Usage reported but no list price for: ${session.cost.unpriced.join(", ") || "this model"}`
+                : "Cost unavailable"
+        }
+      >
         {money(session.cost, session.tokens)}
       </span>
     </li>
