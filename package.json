@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "node --import tsx server/main.ts",
+    "prototype": "vite --host 127.0.0.1 --port 4490 --open /prototype/index.html",
     "demo": "node --import tsx server/main.ts --demo",
     "start": "vite build && NODE_ENV=production node --import tsx server/main.ts",
     "connect": "node --import tsx server/connect.ts",

@@ -11,7 +11,7 @@ export interface FileEdit {
 /** The text an Edit, MultiEdit or Write call put into its file, as recorded. */
 export function editOf(call: ToolCall): FileEdit | null {
   const file = call.files[0];
-  if (call.category !== "edit" || !file) return null;
+  if (call.category !== "edit" || call.status === "failed" || !file) return null;
   const input = (call.input ?? {}) as Record<string, unknown>;
   const added: string[] = [];
   if (typeof input.new_string === "string") added.push(input.new_string);

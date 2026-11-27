@@ -68,7 +68,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `server/demo.ts` | Builds a sample repo and records three synthetic sessions |
 | `web/src/App.tsx` | Shell: navigation sidebar (Dashboard, Sessions, Usage, projects, Settings) and routes |
 | `web/src/pages/*` | Dashboard, Sessions, Usage, Insights, Projects, Settings (General, Prices, Data, Appearance) and the Board (session list, lens tabs, canvas, details panel, replay bar) |
-| `web/src/lenses/*` | The four lenses. Agents opens on Steps (one row per call, prompt sections, subagent threads, filters, details in place; `agents/Timeline.tsx`) with Lanes (the graph) as the alternative; Map (`MapLens.tsx`, `map/`, #172; replaces the Code lens, and old `?lens=code` links open it) puts an explorer (packages → folders → files → functions; this session's files or the whole codebase) beside a focus graph: the selected function, route, table or file in the middle, its callers by hop on the left and callees on the right (1–3 hops, 12 per column, import edges left out), changed functions marked from the recorded edit text found in the file as it is now, and the code reader on the right (Source, Agent edits, Git diff; open in VS Code or Cursor). With nothing selected it focuses what the session changed, else the entry points. Ctrl K adds functions, routes, tables and files from the code graph and recorded prompts, commands and failed-call output from the last 60 sessions (`server/search.ts`, `GET /api/search`); Infra draws only things that run (`infra/split.ts`); CI workflows are listed beside the board under Checks and pipelines with what they appear to deploy, next to Hosted connections, which lists providers the repository's files mention and marks every one not connected; services can also be added by hand there (`server/manual.ts`, stored per project in the local settings table, never in the repository), and a detected service can be renamed and given a dashboard link; Map, Git and Infra draw on React Flow via `Board.tsx` |
+| `web/src/lenses/*` | The four lenses. Agents opens on Steps (one row per call, prompt sections, subagent threads, filters, details in place; `agents/Timeline.tsx`) with Lanes (the graph) as the alternative; Code (`MapLens.tsx`, `map/`, #50/#52/#53; URL `?lens=map`, legacy `?lens=code` links still open it) starts from routes, tables, functions and files, then reveals incoming/outgoing source relationships into a stable bounded working set beside the source reader (Source, Agent edits, Git diff; open in VS Code or Cursor). Recorded file activity and derived edit-text matches remain separate; session replay filters activity while the graph describes current source. Selection survives back/forward and reload; expansion stays in memory while mounted. Ctrl K adds functions, routes, tables and files from the code graph and recorded prompts, commands and failed-call output from the last 60 sessions (`server/search.ts`, `GET /api/search`); Infra draws only things that run (`infra/split.ts`); CI workflows are listed beside the board under Checks and pipelines with what they appear to deploy, next to Hosted connections, which lists providers the repository's files mention and marks every one not connected; services can also be added by hand there (`server/manual.ts`, stored per project in the local settings table, never in the repository), and a detected service can be renamed and given a dashboard link; Map, Git and Infra draw on React Flow via `Board.tsx` |
 | `web/src/components/*` | NavSidebar, session Sidebar, Inspector, Timeline (replay bar), Trace (one tick per tool call), SpendChart, Palette (⌘K), Diff, FirstRun |
 | `web/src/components/FirstRun.tsx`, `web/src/firstrun.css` | The first run (#203), in the landing page's world (docs/landing-design.md; it reuses the landing `PixelScene` valley, the `Mark` and the two self-hosted fonts, which the package now keeps): a full-window page from "start Quoli" through "turn on recording" to the first session, each step read from real state, with a live progress bar in the scene. Shown by `LocalGate` while Quoli is unreachable from the website and by `App` while there is no session (Skip is remembered per browser; the empty dashboard brings it back). When it ends, `PixelDissolve` breaks the page into pixels over the app (off with reduced motion) |
 
@@ -195,6 +195,28 @@ Survey contours carry animated signals behind the terminal, product captures,
 team view and footer. A visibility observer in the isolated landing entry also
 pauses CSS/SVG art when offscreen, hidden or reduced motion is requested. Artwork
 is static before hydration; canvas clocks and recorder transport remain local.
+
+## Code exploration (Phase 2, #50, #52, #53)
+
+The production Code lens replaces global hop columns with entry-point search and a bounded,
+persistent working set. It uses the existing code graph worker, local source reader, recorded
+changes, Git diff and replay filtering. Nodes retain their positions as connections are revealed;
+visible cross-links and cycles are preserved. URL selection survives back/forward and reload;
+the expanded working set is in-memory, not persisted. Recorded file activity and derived text
+matches are labelled separately from static source relationships.
+
+`server/codegraph/routes.ts` detects direct Hono/Express registrations/mounts and
+FastAPI/Flask decorators. `sql.ts` reads literal table declarations and unambiguous query
+references. Graph edges carry source locations and optional read/write access. Unknown paths
+and dynamic SQL remain unresolved. The version-2 facts cache stores names and locations,
+not SQL statements/values; source reads reject paths resolving outside the repository.
+SQL files use the existing size and scan bounds. Scope responses include endpoint entities for
+retained boundary edges. See [code-journey.md](code-journey.md) for supported patterns,
+bounds, validation and known limitations.
+
+`pnpm prototype` retains the isolated authored example in `web/src/prototype/` for design
+reference. It is excluded from production build inputs, reads no evidence and starts no recorder.
+Human comprehension testing and the separate recording readiness fixes remain outstanding.
 
 Phase 1 #32 makes analysis headers reflow before controls squeeze their descriptions.
 Project tables scroll inside a named keyboard-accessible region; repository paths

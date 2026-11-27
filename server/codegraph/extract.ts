@@ -1,5 +1,8 @@
 import type { Node } from "web-tree-sitter";
-import type { CodeSymbol, SymbolKind } from "../../shared/model.ts";
+import type { CodeSymbol, CodeTable, SymbolKind } from "../../shared/model.ts";
+
+import { literal, type MountFact, type RouteFact, type RouterFact, routeFacts } from "./routes.ts";
+import { type QueryFact, sqlReferences, sqlTables } from "./sql.ts";
 
 export type Lang = "typescript" | "tsx" | "javascript" | "python" | "go";
 
@@ -21,7 +24,7 @@ export interface RawCall {
   /** undefined: a bare `name()`. string: dotted receiver (`this`, `ns.sub`). null: a receiver that is not a plain name. */
   object: string | null | undefined;
   line: number;
-  kind: "call" | "new" | "jsx";
+  kind: "call" | "new" | "jsx" | "route";
 }
 
 /** Everything the resolver needs from one file; contains names and lines only, never source text. */
@@ -40,6 +43,11 @@ export interface FileFacts {
   pkg: string | null;
   /** Go methods: receiver variable and type, by symbol id. */
   receivers: Record<string, { var: string; type: string }>;
+  routers: RouterFact[];
+  mounts: MountFact[];
+  routes: RouteFact[];
+  tables: CodeTable[];
+  queries: QueryFact[];
 }
 
 interface Item {
@@ -96,7 +104,18 @@ export function extract(lang: Lang, path: string, text: string, root: Node): Fil
     calls: [],
     pkg: null,
     receivers: {},
+    routers: [],
+    mounts: [],
+    routes: [],
+    tables: [],
+    queries: [],
   };
+  const declarations = routeFacts(root, path, lang === "python");
+  facts.routers = declarations.routers;
+  facts.mounts = declarations.mounts;
+  facts.routes = declarations.routes;
+  facts.calls.push(...declarations.refs.map((r) => ({ ...r, object: r.object })));
+  if (lang === "python") for (const r of facts.routers) facts.exports[r.name] = r.name;
   const mod = moduleId(path);
   const seen = new Set<string>();
   const js = lang !== "python" && lang !== "go";
@@ -163,9 +182,11 @@ export function extract(lang: Lang, path: string, text: string, root: Node): Fil
         wrapped = true;
       }
     }
-    if (!fn || !topLevel(it)) return false;
+    if (!fn || it.cls !== null) return false;
     const kind: SymbolKind = wrapped || isComponent(name, fn) ? "component" : "variable-function";
-    const id = define(name, kind, range);
+    const qualified =
+      it.owner === mod ? name : `${it.owner.slice(it.owner.lastIndexOf("#") + 1)}.${name}`;
+    const id = define(qualified, kind, range, name);
     if (it.exp) facts.exports[it.exp === "default" ? "default" : name] = name;
     push(value, it, { owner: id, cls: null });
     return true;
@@ -317,6 +338,13 @@ export function extract(lang: Lang, path: string, text: string, root: Node): Fil
   while (stack.length) {
     const it = stack.pop() as Item;
     const n = it.n;
+    const handlerName = declarations.inline.get(n.startIndex);
+    if (handlerName) {
+      const id = define(handlerName, "function", n, handlerName);
+      const body = n.childForFieldName("body");
+      if (body) push(body, it, { owner: id, cls: null });
+      continue;
+    }
     switch (n.type) {
       case "export_statement":
         jsExport(it);
@@ -338,10 +366,13 @@ export function extract(lang: Lang, path: string, text: string, root: Node): Fil
       case "generator_function_declaration":
       case "function_definition": {
         const name = n.childForFieldName("name")?.text ?? (it.exp === "default" ? "default" : null);
-        const allowed = lang === "python" ? it.cls !== null || it.owner === mod : topLevel(it);
+        const allowed = lang === "python" ? it.cls !== null || it.owner === mod : true;
         if (!name || !allowed) break;
         let kind: SymbolKind = "function";
-        let qualified = name;
+        let qualified =
+          js && it.owner !== mod
+            ? `${it.owner.slice(it.owner.lastIndexOf("#") + 1)}.${name}`
+            : name;
         if (lang === "python" && it.cls !== null) {
           kind = "method";
           qualified = `${it.cls}.${name}`;
@@ -410,6 +441,8 @@ export function extract(lang: Lang, path: string, text: string, root: Node): Fil
           if (!value) continue;
           if (jsRequire(value, nameNode)) continue;
           const range = decls.length > 1 ? d : (it.outer ?? n);
+          if (it.exp && nameNode?.type === "identifier")
+            facts.exports[nameNode.text] = nameNode.text;
           if (nameNode?.type === "identifier" && jsFunctionValue(it, nameNode.text, value, range))
             continue;
           push(value, it);
@@ -421,6 +454,14 @@ export function extract(lang: Lang, path: string, text: string, root: Node): Fil
         break;
       case "call_expression": {
         const fn = n.childForFieldName("function");
+        const sql = literal(n.childForFieldName("arguments")?.namedChild(0));
+        if (fn && sql !== null && /(?:^|\.)(?:query|execute|exec|prepare)$/.test(fn.text)) {
+          const line =
+            n.childForFieldName("arguments")?.namedChild(0)?.startPosition.row ??
+            n.startPosition.row;
+          facts.queries.push(...sqlReferences(sql, it.owner, line + 1));
+          facts.tables.push(...sqlTables(sql, path, line + 1));
+        }
         if (!fn) break;
         if (js && fn.type === "identifier" && fn.text === "require" && jsRequire(n, null)) continue;
         if (js && fn.type === "import") {
@@ -443,6 +484,14 @@ export function extract(lang: Lang, path: string, text: string, root: Node): Fil
       }
       case "call": {
         const fn = n.childForFieldName("function");
+        const sql = literal(n.childForFieldName("arguments")?.namedChild(0));
+        if (fn && sql !== null && /(?:^|\.)(?:execute|executemany|executescript)$/.test(fn.text)) {
+          const line =
+            n.childForFieldName("arguments")?.namedChild(0)?.startPosition.row ??
+            n.startPosition.row;
+          facts.queries.push(...sqlReferences(sql, it.owner, line + 1));
+          facts.tables.push(...sqlTables(sql, path, line + 1));
+        }
         if (fn?.type === "identifier") call(it, n, fn.text, undefined, "call");
         else if (fn?.type === "attribute") {
           const attr = fn.childForFieldName("attribute");

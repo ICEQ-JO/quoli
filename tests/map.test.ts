@@ -3,7 +3,13 @@ import { test } from "node:test";
 import { searchEvents } from "../server/search.ts";
 import type { CodeGraph, CodeSymbol, SessionDetail } from "../shared/model.ts";
 import { editedSymbols } from "../web/src/lenses/map/edits.ts";
-import { defaultFocus, focusColumns, focusOf, indexGraph } from "../web/src/lenses/map/graph.ts";
+import {
+  EXPLORATION_LIMIT,
+  neighbours,
+  revealNodes,
+  visibleRelationships,
+} from "../web/src/lenses/map/exploration.ts";
+import { focusOf, indexGraph } from "../web/src/lenses/map/graph.ts";
 import { searchGraph } from "../web/src/lenses/map/search.ts";
 
 const sym = (file: string, name: string, startLine: number, endLine: number): CodeSymbol => ({
@@ -65,32 +71,44 @@ const graph = {
   stats: {},
 } as unknown as CodeGraph;
 
-test("focus puts callers left and callees right by hop, without import edges", () => {
-  const idx = indexGraph(graph);
-  const f = focusColumns(idx, [id("OrderService.save")], 2);
-  assert.equal(f.centerColumn, 2);
-  assert.deepEqual(f.columns[2], [id("OrderService.save")]);
-  assert.deepEqual(new Set(f.columns[1]), new Set([id("OrderService.create"), id("cron")]));
-  assert.deepEqual(f.columns[0], [id("handler")]);
-  assert.deepEqual(new Set(f.columns[3]), new Set([id("db"), "table:orders"]));
-  assert.ok(f.edges.every((e) => (f.hop.get(e.to) ?? 0) - (f.hop.get(e.from) ?? 0) === 1));
-  assert.ok(!f.edges.some((e) => e.kind === "import"));
-  // One hop out from the route reaches its handler.
-  const r = focusColumns(idx, ["route:GET /orders"], 1);
-  assert.deepEqual(r.columns[2], [id("handler")]);
+test("exploration preserves node positions and every visible cross-link and cycle", () => {
+  const g = {
+    ...graph,
+    edges: [...graph.edges, call("db", "handler"), call("handler", "OrderService.save")],
+  };
+  const idx = indexGraph(g);
+  const initial = revealNodes([], [id("handler")]);
+  const next = revealNodes(initial, neighbours(idx, id("handler"), "out"), id("handler"));
+  const expanded = revealNodes(next, [id("db")], id("OrderService.save"));
+  assert.deepEqual(expanded[0], initial[0], "expansion must not recenter existing nodes");
+  const edges = visibleRelationships(idx, expanded);
+  assert.ok(
+    edges.some((e) => e.from === id("db") && e.to === id("handler")),
+    "cycle remains visible",
+  );
+  assert.ok(
+    edges.some((e) => e.from === id("handler") && e.to === id("OrderService.save")),
+    "cross-link remains visible",
+  );
+  assert.ok(!edges.some((e) => e.kind === "import"));
+  assert.equal(new Set(expanded.map((n) => n.id)).size, expanded.length);
+  assert.equal(
+    revealNodes(
+      [],
+      Array.from({ length: 200 }, (_, i) => String(i)),
+    ).length,
+    EXPLORATION_LIMIT,
+  );
 });
 
-test("a file focuses its connected functions; nothing selected focuses changes or entry points", () => {
+test("a file exposes its functions and a route/table remains a selectable node", () => {
   const idx = indexGraph(graph);
   assert.deepEqual(
     new Set(focusOf(idx, { kind: "file", id: "orders.ts" })),
     new Set([id("OrderService.create"), id("OrderService.save")]),
   );
-  assert.deepEqual(defaultFocus(idx, [id("db")]), { ids: [id("db")], why: "changed" });
-  const entry = defaultFocus(idx, []);
-  assert.equal(entry.why, "entry");
-  assert.equal(entry.ids[0], "route:GET /orders", "routes come first");
-  assert.ok(entry.ids.includes(id("cron")), "an uncalled function is an entry point");
+  assert.deepEqual(focusOf(idx, { kind: "route", id: "route:GET /orders" }), ["route:GET /orders"]);
+  assert.deepEqual(neighbours(idx, "table:orders", "in"), [id("OrderService.save")]);
 });
 
 test("search ranks names before paths and finds routes and tables", () => {

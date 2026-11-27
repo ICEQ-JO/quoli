@@ -5,8 +5,10 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,6 +16,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { type BuildOptions, buildCodeGraph } from "../server/codegraph/build.ts";
 import { codeGraphFor, codeGraphIdle, scopeGraph } from "../server/codegraph/index.ts";
+import { sqlReferences } from "../server/codegraph/sql.ts";
 import type { CodeGraph } from "../shared/model.ts";
 
 const modules = join(import.meta.dirname, "..", "node_modules");
@@ -468,5 +471,195 @@ test("codeGraphFor builds in a worker thread and then serves the graph", async (
     else process.env.QUOLI_HOME = previous;
     rmSync(dir, { recursive: true, force: true });
     rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("real Hono route -> inline handler -> service -> SQL table, with source evidence", async () => {
+  const g = await graphOf({
+    "api.ts": `import { Hono as Router } from "hono";
+import { createOrder } from "./orders";
+export const app = new Router();
+app.post("/orders", async (c) => c.json(createOrder()));`,
+    "orders.ts": `import { db } from "./db";
+export function createOrder() {
+  return db.prepare("INSERT INTO orders (total) VALUES (?)").run(100);
+}`,
+    "db.ts": `export const db = {} as any;`,
+    "schema.sql": `-- CREATE TABLE fake (x text);
+create table orders (id integer primary key, total integer not null, user_id integer references users(id));`,
+  });
+  assert.equal(g.routes?.length, 1);
+  const route = g.routes?.[0];
+  assert.equal(route?.path, "/orders");
+  assert.ok(route?.handler);
+  assert.ok(
+    g.edges.some((e) => e.from === route?.id && e.to === route?.handler && e.kind === "route"),
+  );
+  assert.ok(g.edges.some((e) => e.from === route?.handler && e.to === "orders.ts#createOrder"));
+  assert.equal(g.tables?.length, 1);
+  const table = g.tables?.[0];
+  assert.equal(table?.name, "orders");
+  assert.equal(table?.line, 2);
+  assert.equal(table?.columns[0].pk, true);
+  assert.deepEqual(table?.columns[2].references, { table: "users", column: "id" });
+  const write = g.edges.find((e) => e.from === "orders.ts#createOrder" && e.to === table?.id);
+  assert.equal(write?.access, "write");
+  assert.equal(write?.file, "orders.ts");
+  assert.equal(write?.line, 3);
+});
+
+test("mounted routers and named imported handlers resolve without treating arbitrary get calls as routes", async () => {
+  const g = await graphOf({
+    "main.ts": `import { Hono } from "hono"; import { routes } from "./routes";
+const app = new Hono().basePath("/v1"); app.route("/api", routes);`,
+    "routes.ts": `import { Hono } from "hono"; import { handler } from "./handler";
+export const routes = new Hono();
+routes.get("/orders", handler); routes.get("/other", handler);
+routes.get(dynamic, handler);
+const cache = new Map(); cache.get("/not-an-endpoint");`,
+    "handler.ts": `export function handler() { return "ok"; }`,
+  });
+  assert.deepEqual(g.routes?.map((r) => r.path).sort(), ["/v1/api/orders", "/v1/api/other"]);
+  assert.ok(g.routes?.every((r) => r.handler === "handler.ts#handler"));
+  assert.equal(new Set(g.routes?.map((r) => r.id)).size, 2);
+});
+
+test("a router name shadowed by a parameter or local variable does not invent endpoints", async () => {
+  const g = await graphOf({
+    "api.ts": `import { Hono } from "hono";
+const app = new Hono();
+function fallback() {}
+app.get("/real", fallback);
+function helper(app: Map<string,string>) { app.get("/fake", fallback); }
+function other() { const app = new Map(); app.get("/also-fake", fallback); }
+function setup() { const nested = new Hono(); nested.get("/nested", fallback); }`,
+  });
+  assert.deepEqual(g.routes?.map((r) => r.path).sort(), ["/nested", "/real"]);
+});
+
+test("Express named routers, dynamic mount disclosure and FastAPI route handlers", async () => {
+  const g = await graphOf({
+    "server.ts": `import express, { Router as MakeRouter } from "express";
+const app = express(); const router = MakeRouter();
+function handle() { return true; }
+router.get("/things", handle); app.use(prefix, router);`,
+    "api.py": `from fastapi import FastAPI as API
+app = API()
+@app.get("/users/{id}")
+def read_user(id):
+    return lookup(id)
+def lookup(id):
+    return id
+`,
+  });
+  const express = g.routes?.find((r) => r.framework === "express");
+  assert.equal(express?.path, "/things");
+  assert.equal(express?.pathResolved, false);
+  assert.equal(express?.handler, "server.ts#handle");
+  const python = g.routes?.find((r) => r.framework === "fastapi");
+  assert.equal(python?.handler, "api.py#read_user");
+  assert.ok(g.edges.some((e) => e.from === python?.handler && e.to === "api.py#lookup"));
+});
+
+test("SQL literals do not turn comments, string values, dynamic queries or duplicate table names into resolved links", async () => {
+  const g = await graphOf({
+    "db.ts": `declare const db: any;
+export function read() { return db.query("SELECT * FROM orders JOIN users ON users.id = orders.user_id"); }
+export function remove() { return db.query("DELETE FROM users WHERE id = ?"); }
+export function dynamic(name: string) { return db.query(\`SELECT * FROM \${name}\`); }
+export function prose() { return "CREATE TABLE fake (x text)"; }`,
+    "a.sql": `create table orders (id integer); create table users (id integer);`,
+    "b.sql": `create table orders (id integer); -- create table fake(x int);`,
+  });
+  assert.equal(g.tables?.length, 3);
+  const queries = g.edges.filter((e) => e.kind === "query");
+  assert.equal(queries.length, 2);
+  assert.ok(queries.every((e) => e.to.includes("table:users:")));
+  assert.ok(queries.some((e) => e.access === "read"));
+  assert.ok(queries.some((e) => e.access === "write"));
+  assert.ok(!queries.some((e) => e.from.endsWith("#dynamic")));
+});
+
+test("nested functions keep their lexical call path, and SQL values never enter the facts cache", async () => {
+  const dir = repo({
+    "app.ts": `declare const db: any;
+export function api() {
+  function save() { return db.prepare("INSERT INTO notes (value) VALUES ('SYNTHETIC_PRIVATE_VALUE')").run(); }
+  return save();
+}`,
+    "schema.sql": "create table notes (value text);",
+  });
+  const cache = mkdtempSync(join(tmpdir(), "quoli-entity-cache-"));
+  try {
+    const g = await buildCodeGraph(options(dir, cache));
+    assert.ok(g.edges.some((e) => e.from === "app.ts#api" && e.to === "app.ts#api.save"));
+    assert.ok(g.edges.some((e) => e.from === "app.ts#api.save" && e.kind === "query"));
+    const cached = readdirSync(cache)
+      .map((f) => readFileSync(join(cache, f), "utf8"))
+      .join("");
+    assert.ok(!cached.includes("SYNTHETIC_PRIVATE_VALUE"));
+    assert.ok(!cached.includes("INSERT INTO"));
+    assert.equal((await buildCodeGraph(options(dir, cache))).stats.parsed, 0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(cache, { recursive: true, force: true });
+  }
+});
+
+test("SQL conflict updates and quoted values do not create extra table writes", () => {
+  const refs = sqlReferences(
+    "INSERT INTO notes(value) VALUES ('FROM private') ON CONFLICT DO UPDATE SET value = 'UPDATE private'; UPDATE users SET name = 'FROM notes'",
+    "api.ts#save",
+    2,
+  );
+  assert.deepEqual(
+    refs.map((r) => [r.name, r.access]),
+    [
+      ["notes", "write"],
+      ["users", "write"],
+    ],
+  );
+});
+
+test("Python triple-quoted CTEs and shadowed router parameters stay unresolved", async () => {
+  const g = await graphOf({
+    "api.py": `from flask import Flask
+app = Flask(__name__)
+@app.route("/real", methods=["POST"])
+def handler():
+    db.execute("""WITH orders AS (SELECT * FROM archive) SELECT * FROM orders""")
+def setup(app):
+    @app.get("/fake")
+    def fake():
+        return True
+`,
+    "schema.sql": "create table orders(id integer); create table archive(id integer);",
+  });
+  assert.deepEqual(
+    g.routes?.map((r) => [r.method, r.path]),
+    [["POST", "/real"]],
+  );
+  assert.equal(g.edges.filter((e) => e.kind === "query").length, 0);
+});
+
+test("code discovery does not follow source or SQL symlinks outside the project", {
+  skip: process.platform === "win32",
+}, async () => {
+  const dir = repo({ "app.ts": "export function local() {}" });
+  const outside = mkdtempSync(join(tmpdir(), "quoli-outside-"));
+  const cache = mkdtempSync(join(tmpdir(), "quoli-symlink-cache-"));
+  try {
+    writeFileSync(join(outside, "secret.ts"), "export function privateCode() {}");
+    writeFileSync(join(outside, "secret.sql"), "create table private_table(id integer);");
+    symlinkSync(join(outside, "secret.ts"), join(dir, "linked.ts"));
+    symlinkSync(join(outside, "secret.sql"), join(dir, "linked.sql"));
+    const g = await buildCodeGraph(options(dir, cache));
+    assert.ok(!g.files.some((f) => f.path.startsWith("linked")));
+    assert.ok(!g.symbols.some((s) => s.name === "privateCode"));
+    assert.ok(!g.tables?.length);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+    rmSync(cache, { recursive: true, force: true });
   }
 });

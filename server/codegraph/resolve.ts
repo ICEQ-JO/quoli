@@ -1,6 +1,7 @@
 import { posix } from "node:path";
-import type { CodeEdge, CodeSymbol } from "../../shared/model.ts";
+import type { CodeEdge, CodeRoute, CodeSymbol } from "../../shared/model.ts";
 import type { Binding, FileFacts } from "./extract.ts";
+import { mountedRoutes } from "./routes.ts";
 
 /** tsconfig/jsconfig `compilerOptions`, as far as import resolution needs them. */
 export interface PathConfig {
@@ -29,7 +30,11 @@ interface Target {
   name: string | null;
 }
 
-export function resolveGraph(ctx: ResolveContext): { edges: CodeEdge[]; modules: Set<string> } {
+export function resolveGraph(ctx: ResolveContext): {
+  edges: CodeEdge[];
+  modules: Set<string>;
+  routes: CodeRoute[];
+} {
   const byPath = new Map(ctx.files.map((f) => [f.path, f]));
   const symbolsOf = new Map<string, Map<string, CodeSymbol>>();
   const methodsByName = new Map<string, CodeSymbol[]>();
@@ -165,6 +170,8 @@ export function resolveGraph(ctx: ResolveContext): { edges: CodeEdge[]; modules:
     to: string,
     kind: CodeEdge["kind"],
     certainty: CodeEdge["certainty"],
+    file?: string,
+    line?: number,
   ) => {
     if (kind === "import" && from === to) return;
     const key = `${kind}|${certainty}|${from}|${to}`;
@@ -172,7 +179,7 @@ export function resolveGraph(ctx: ResolveContext): { edges: CodeEdge[]; modules:
       !edges.has(key) &&
       !(certainty === "possible" && edges.has(`${kind}|resolved|${from}|${to}`))
     )
-      edges.set(key, { from, to, kind, certainty });
+      edges.set(key, { from, to, kind, certainty, ...(file ? { file, line } : {}) });
   };
 
   const possibleByName = (owner: string, name: string) => {
@@ -229,8 +236,13 @@ export function resolveGraph(ctx: ResolveContext): { edges: CodeEdge[]; modules:
     for (const c of f.calls) {
       let target: CodeSymbol | null = null;
       if (c.object === undefined) {
+        let prefix = byId.get(c.owner)?.qualifiedName ?? "";
+        while (prefix && !target) {
+          target = mine.get(`${prefix}.${c.name}`) ?? null;
+          prefix = prefix.includes(".") ? prefix.slice(0, prefix.lastIndexOf(".")) : "";
+        }
         const top = local(c.name);
-        target = top && !top.qualifiedName.includes(".") ? top : null;
+        target ??= top && (c.kind === "route" || !top.qualifiedName.includes(".")) ? top : null;
         const b = scope.get(c.name);
         if (!target && b) target = member(b.files, b.name ?? "default", f.lang);
       } else if (c.object === null) {
@@ -265,11 +277,20 @@ export function resolveGraph(ctx: ResolveContext): { edges: CodeEdge[]; modules:
           }
         }
       }
-      if (target) add(c.owner, target.id, "call", "resolved");
+      if (target)
+        add(c.owner, target.id, c.kind === "route" ? "route" : "call", "resolved", f.path, c.line);
     }
   }
 
+  const routes = mountedRoutes(ctx.files, files);
+  for (const route of routes) {
+    const original = route.id.replace(/:mount\d+$/, "");
+    const edge = [...edges.values()].find((e) => e.kind === "route" && e.from === original);
+    route.handler = edge?.to ?? null;
+    if (edge && route.id !== original)
+      add(route.id, edge.to, "route", "resolved", route.file, route.line);
+  }
   const modules = new Set<string>();
   for (const e of edges.values()) if (e.from.endsWith("#<module>")) modules.add(e.from);
-  return { edges: [...edges.values()], modules };
+  return { edges: [...edges.values()], modules, routes };
 }

@@ -307,6 +307,10 @@ export interface CodeEdge {
   to: string;
   kind: "import" | "call" | "route" | "query";
   certainty: "resolved" | "possible";
+  /** Source evidence for this relationship, not evidence of execution. */
+  file?: string;
+  line?: number;
+  access?: "read" | "write";
 }
 
 /** An HTTP route. A `route` edge goes from the route id to its handler symbol id. */
@@ -318,6 +322,8 @@ export interface CodeRoute {
   file: string;
   line: number;
   handler: string | null;
+  /** False when a router prefix/mount is dynamic; path then stays as declared. */
+  pathResolved?: boolean;
 }
 
 /** A database table. A `query` edge goes from a symbol id to the table id. */
