@@ -313,6 +313,7 @@ export function BoardPage({
             ),
           )}
         </div>
+        <p className="lens-job faint">{LENSES.find((l) => l.id === lens)?.hint}</p>
         <button
           type="button"
           className="search-button"
