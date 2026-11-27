@@ -568,7 +568,12 @@ export interface Overview {
   recent: SessionSummary[];
   /** Calendar day / last 7 days in the server's local time. */
   tokens: { today: TokenTotals; week: TokenTotals };
-  cost: { today: Cost; week: Cost };
+  cost: {
+    today: Cost;
+    week: Cost;
+    /** Session cost trust in the last 7 days (by session start), for confidence summaries. */
+    weekSessions: { noUsage: number; unpriced: number; estimated: number };
+  };
   counts: { projects: number; sessions: number; sessionsToday: number };
 }
 

@@ -407,6 +407,7 @@ test("prices API: guarded mutations, validation, reset, overview cost", async ()
     assert.deepEqual(overview.cost, {
       today: { usd: null, unpriced: [] },
       week: { usd: null, unpriced: [] },
+      weekSessions: { noUsage: 0, unpriced: 0, estimated: 0 },
     });
   } finally {
     server.close();
