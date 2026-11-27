@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { AGENT_KINDS, AGENT_NAMES, type SessionSummary } from "../../../shared/model.ts";
 import { api, useData, useLiveEvents } from "../api.ts";
 import { SessionName } from "../components/SessionName.tsx";
+import { TraceLegend } from "../components/Trace.tsx";
 import {
   AgentTag,
   EmptyState,
@@ -218,6 +219,7 @@ export function SessionsPage() {
       {rows.length > 0 && (
         <>
           <p className="table-hint faint">Scroll the table for agent, project and usage details.</p>
+          <TraceLegend />
           {/* biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users must be able to scroll the session table. */}
           <section className="table-scroll" aria-label="Sessions, scroll for details" tabIndex={0}>
             <table className="table sessions">
