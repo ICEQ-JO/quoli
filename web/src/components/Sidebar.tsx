@@ -2,7 +2,7 @@ import type { SessionSummary } from "../../../shared/model.ts";
 import { ago, money, plural } from "../format.ts";
 import { Link } from "../router.ts";
 import { SessionName } from "./SessionName.tsx";
-import { Trace } from "./Trace.tsx";
+import { Trace, TraceLegend } from "./Trace.tsx";
 import { AgentTag, ErrorState, LiveDot, Loading } from "./ui.tsx";
 
 interface Props {
@@ -44,6 +44,7 @@ export function Sidebar({ sessions, activeId, hrefFor, projectPath, total, error
           <code>pnpm connect {projectPath || "<repo>"}</code>
         </div>
       )}
+      {sessions && sessions.length > 0 && <TraceLegend />}
       <ul className="session-list">
         {sessions?.map((s) => (
           <li key={s.id}>

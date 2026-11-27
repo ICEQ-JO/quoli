@@ -8,6 +8,7 @@ import {
 import { api, useData, useLiveEvents } from "../api.ts";
 import { setFirstRunSkipped } from "../components/FirstRun.tsx";
 import { LiveRow } from "../components/Live.tsx";
+import { TraceLegend } from "../components/Trace.tsx";
 import {
   EmptyState,
   ErrorState,
@@ -169,6 +170,7 @@ export function DashboardPage() {
                 All sessions
               </Link>
             </div>
+            {recent.length > 0 && <TraceLegend />}
             {recent.length === 0 ? (
               <EmptyState title="No other recent sessions">
                 <span>Live sessions and sessions needing review appear in their own queues.</span>
