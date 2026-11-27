@@ -12,7 +12,7 @@ import {
   projectName,
   useNow,
 } from "../components/ui.tsx";
-import { ago, compact, duration, money, tokenSum } from "../format.ts";
+import { ago, compact, costKind, duration, money, tokenSum } from "../format.ts";
 import { Link, navigate, paths, useLocation } from "../router.ts";
 import { filterQuery, matchesSessionDay, sessionFilters } from "../session-filters.ts";
 import { displayTitle, useTitleVersion } from "../session-titles.ts";
@@ -330,9 +330,15 @@ function Row({ s, name }: { s: SessionSummary; name: string }) {
       <td
         className="num nowrap"
         title={
-          s.cost.unpriced.length
-            ? `Estimate. No price for: ${s.cost.unpriced.join(", ")}`
-            : "Estimate from list prices"
+          costKind(s.cost, s.tokens) === "estimated"
+            ? s.cost.unpriced.length
+              ? `Estimate from list prices. No price for: ${s.cost.unpriced.join(", ")}`
+              : "Estimate from list prices"
+            : costKind(s.cost, s.tokens) === "no-usage"
+              ? "No token usage reported"
+              : costKind(s.cost, s.tokens) === "unpriced"
+                ? `Usage reported but no list price for: ${s.cost.unpriced.join(", ") || "this model"}`
+                : "Cost unavailable"
         }
       >
         {money(s.cost, s.tokens)}

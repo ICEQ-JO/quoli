@@ -164,11 +164,11 @@ export function InsightsPage() {
               top={(max) => usd(max)}
               readout={(d) =>
                 d.medianUsd === null ? (
-                  <b>{d.sessions ? "price unknown" : "no sessions"}</b>
+                  <b>{d.sessions ? "Unpriced" : "no sessions"}</b>
                 ) : (
                   <>
                     median <b>{usd(d.medianUsd)}</b> · p90 <b>{usd(d.p90Usd)}</b>
-                    {d.unpricedSessions > 0 && <span> · {d.unpricedSessions} unknown</span>}
+                    {d.unpricedSessions > 0 && <span> · {d.unpricedSessions} unpriced</span>}
                   </>
                 )
               }
@@ -234,7 +234,7 @@ function Totals({ report }: { report: InsightsReport }) {
         <div className="figure-stat">
           <dt>Cost per session</dt>
           <dd>
-            <b className="num">{t.medianUsd === null ? "unknown" : usd(t.medianUsd)}</b>
+            <b className="num">{t.medianUsd === null ? "Unpriced" : usd(t.medianUsd)}</b>
             {t.p90Usd !== null && <span className="faint">p90 {usd(t.p90Usd)}</span>}
           </dd>
         </div>
@@ -543,7 +543,7 @@ function Groups({
               <td className="num mono" title={`${g.failures} of ${g.calls} calls`}>
                 {pct(g.failures, g.calls)}
               </td>
-              <td className="num mono">{g.medianUsd === null ? "unknown" : usd(g.medianUsd)}</td>
+              <td className="num mono">{g.medianUsd === null ? "Unpriced" : usd(g.medianUsd)}</td>
               <td className="num mono">{g.medianMs === null ? "—" : span(g.medianMs)}</td>
               <td className="num mono">{g.loops}</td>
             </tr>
@@ -649,8 +649,12 @@ function DayTable({ days, open }: { days: Day[]; open: (date: string) => string 
                 <Link to={open(d.date)}>{long(d.date)}</Link>
               </td>
               <td className="num mono">{d.sessions}</td>
-              <td className="num mono">{d.medianUsd === null ? "—" : usd(d.medianUsd)}</td>
-              <td className="num mono">{d.p90Usd === null ? "—" : usd(d.p90Usd)}</td>
+              <td className="num mono">
+                {d.medianUsd === null ? (d.sessions ? "Unpriced" : "—") : usd(d.medianUsd)}
+              </td>
+              <td className="num mono">
+                {d.p90Usd === null ? (d.sessions ? "Unpriced" : "—") : usd(d.p90Usd)}
+              </td>
               <td className="num mono">{d.unpricedSessions}</td>
               <td className="num mono">{d.calls}</td>
               <td className="num mono">{pct(d.failures, d.calls)}</td>

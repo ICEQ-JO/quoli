@@ -61,17 +61,28 @@ export function usd(n: number | null): string {
 /** "1 file", "2 files". Pass `many` for irregular plurals. */
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-/**
- * Cost of a session or period. With `tokens`, zero tokens means nothing to price: `$0.00`,
- * not `—`. `—` stays for usage that exists but could not be priced.
- */
-/** A cost; when no model in it has a price, its token count instead of a dash. */
+/** How a cost/usage value should be trusted in the UI. */
+export type CostKind = "estimated" | "no-usage" | "unpriced" | "unknown";
+
+export function costKind(c: Cost, tokens?: TokenTotals): CostKind {
+  if (c.usd !== null) return "estimated";
+  if (tokens && tokenSum(tokens) === 0) return "no-usage";
+  if ((tokens && tokenSum(tokens) > 0) || c.unpriced.length > 0) return "unpriced";
+  return "unknown";
+}
+
+/** Short, explicit cost label. Never shows missing usage/price as a confident $0.00. */
 export function money(c: Cost, tokens?: TokenTotals): string {
-  if (c.usd === null && tokens) {
-    const n = tokenSum(tokens);
-    return n === 0 ? usd(0) : `${compact(n)} tokens`;
+  switch (costKind(c, tokens)) {
+    case "estimated":
+      return usd(c.usd);
+    case "no-usage":
+      return "No usage";
+    case "unpriced":
+      return "Unpriced";
+    default:
+      return "—";
   }
-  return usd(c.usd);
 }
 
 export const fileName = (path: string) => path.split("/").at(-1) ?? path;

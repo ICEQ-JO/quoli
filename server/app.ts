@@ -244,6 +244,18 @@ export function createApp(store: Store, port: () => number, token?: string) {
       cost: {
         today: costOf(store.usageByModelSince(startOfDay.toISOString()), prices),
         week: costOf(store.usageByModelSince(week), prices),
+        weekSessions: all
+          .filter((d) => d.startedAt >= week)
+          .reduce(
+            (acc, d) => {
+              const n = d.tokens.input + d.tokens.output + d.tokens.cacheRead + d.tokens.cacheWrite;
+              if (d.cost.usd !== null) acc.estimated += 1;
+              else if (n === 0) acc.noUsage += 1;
+              else acc.unpriced += 1;
+              return acc;
+            },
+            { noUsage: 0, unpriced: 0, estimated: 0 },
+          ),
       },
       counts: {
         projects: projects().length,

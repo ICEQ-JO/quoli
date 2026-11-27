@@ -11,15 +11,21 @@ test("plural uses the singular only for exactly one", () => {
   assert.equal(plural(2, "branch", "branches"), "2 branches");
 });
 
-test("money shows $0.00 when there are no tokens to price", () => {
-  assert.equal(money({ usd: null, unpriced: [] }, zero), "$0.00");
+test("money shows an explicit no-usage state instead of $0.00", () => {
+  assert.equal(money({ usd: null, unpriced: [] }, zero), "No usage");
 });
 
-test("money shows the tokens when they exist but nothing could be priced", () => {
-  assert.equal(money({ usd: null, unpriced: ["x"] }, { ...zero, input: 5 }), "5 tokens");
+test("money shows an explicit unpriced state when usage cannot be priced", () => {
+  assert.equal(money({ usd: null, unpriced: ["x"] }, { ...zero, input: 5 }), "Unpriced");
   assert.equal(
     money({ usd: null, unpriced: ["x"] }, { ...zero, input: 1200, output: 300 }),
-    "1.5k tokens",
+    "Unpriced",
   );
+  assert.equal(money({ usd: null, unpriced: ["x"] }), "Unpriced");
   assert.equal(money({ usd: null, unpriced: [] }), "—");
+});
+
+test("money shows estimated dollars when priced", () => {
+  assert.equal(money({ usd: 1.234, unpriced: [] }, { ...zero, input: 10 }), "$1.23");
+  assert.equal(money({ usd: 0, unpriced: [] }, { ...zero, input: 10 }), "$0.00");
 });

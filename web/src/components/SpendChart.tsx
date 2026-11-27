@@ -40,7 +40,7 @@ export function SpendChart({
             ? "Today"
             : dayLabel(d.date, { weekday: "short", month: "short", day: "numeric" })}
         </span>
-        <b>{d.usd === null ? (tokenSum(d.tokens) ? "price unknown" : usd(0)) : usd(d.usd)}</b>
+        <b>{d.usd === null ? (tokenSum(d.tokens) ? "Unpriced" : "No usage") : usd(d.usd)}</b>
         <span className="faint">{compact(tokenSum(d.tokens))} tokens</span>
       </figcaption>
       <div
@@ -79,9 +79,9 @@ export function SpendChart({
               aria-label={`${dayLabel(day.date, { weekday: "long", month: "long", day: "numeric" })}: ${
                 day.usd === null
                   ? tokenSum(day.tokens)
-                    ? "price unknown"
-                    : "no usage"
-                  : usd(day.usd)
+                    ? "Unpriced, no list price for reported usage"
+                    : "No token usage reported"
+                  : `Estimated ${usd(day.usd)}`
               }`}
             >
               {!byTokens && day.usd === null && tokenSum(day.tokens) > 0 ? (

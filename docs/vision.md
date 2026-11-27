@@ -93,6 +93,7 @@ Each phase is something a developer can use on its own.
 | --- | --- | --- |
 | **0 — Foundation** | Claude Code hooks → local server; sessions, tool calls, tokens; four lenses; replay; demo | **Built** (proof of concept) |
 | **1 — MVP** | App shell with Home, Projects, Sessions and Settings; session Summary with cost in dollars and a review checklist; lenses that stay readable on real repos; polish and light theme. See the [MVP plan](mvp.md) | **Built** |
+| **1.5 — Usability & trust** | Make existing value legible to a first-time developer: explicit cost/usage trust states, review queues, quieter navigation/project noise, lens jobs/empty states, and visible status/provenance language. See the [MVP plan](mvp.md#increment-5-usability-clarity-and-trust-planned) | **Planned** |
 | **2 — Deeper code** | Symbol-level code map (functions, routes, tables) for TS/Python | Code-understanding rework: request-to-data prototype #50, real route/SQL discovery #52 and integrated persistent exploration #53 (PR #51). Broader framework/ORM coverage remains in #2. |
 | **3 — More agents** | Codex, OpenCode and Pi adapters on the same event model; MCP/skill/plugin usage per session | In progress: Codex (#117), OpenCode (#118), extensions per session (#135), Pi (#139) |
 | **4 — Live infra** | Provider connections (Vercel, Railway, Fly, AWS) for real deploys and metrics; link a deploy back to the commit and the session that produced it | |

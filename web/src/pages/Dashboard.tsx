@@ -101,10 +101,27 @@ export function DashboardPage() {
             />
           </dl>
         </div>
-        {overview.cost.week.unpriced.length > 0 && (
+        {(overview.cost.week.unpriced.length > 0 ||
+          overview.cost.weekSessions.noUsage > 0 ||
+          overview.cost.weekSessions.unpriced > 0) && (
           <p className="panel-note">
-            No price for {overview.cost.week.unpriced.join(", ")}; their tokens are not in these
-            amounts. <Link to={paths.settings("prices")}>Edit prices</Link>
+            {overview.cost.week.unpriced.length > 0 && (
+              <>
+                No price for {overview.cost.week.unpriced.join(", ")}; their tokens are not in these
+                amounts. <Link to={paths.settings("prices")}>Edit prices</Link>
+              </>
+            )}
+            {overview.cost.week.unpriced.length > 0 &&
+              (overview.cost.weekSessions.noUsage > 0 ||
+                overview.cost.weekSessions.unpriced > 0) && <br />}
+            {(overview.cost.weekSessions.noUsage > 0 ||
+              overview.cost.weekSessions.unpriced > 0) && (
+              <>
+                Last 7 days: {overview.cost.weekSessions.estimated} estimated,{" "}
+                {overview.cost.weekSessions.unpriced} unpriced, {overview.cost.weekSessions.noUsage}{" "}
+                with no usage reported.
+              </>
+            )}
           </p>
         )}
       </section>
