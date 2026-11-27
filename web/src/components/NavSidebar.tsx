@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Overview, Project } from "../../../shared/model.ts";
 import { modKey } from "../a11y.ts";
 import { api, useData } from "../api.ts";
 import { Link, paths } from "../router.ts";
 import { sharingLabel } from "../scope.ts";
+import { isInternalAgentWorktree } from "../worktrees.ts";
 import { LiveStrip } from "./Live.tsx";
 import { Mark } from "./Mark.tsx";
 import { Icon } from "./ui.tsx";
@@ -28,6 +29,7 @@ export function NavSidebar({ pathname, projects, overview }: Props) {
   }, [refreshSync]);
   const live = overview?.live ?? [];
   const liveIn = (id: string) => live.filter((s) => s.projectId === id).length;
+  const [showInternal, setShowInternal] = useState(false);
   const projectLink = (p: Project, worktrees: number) => {
     const n = liveIn(p.id);
     const active = pathname.startsWith(`/projects/${p.id}`);
@@ -132,28 +134,60 @@ export function NavSidebar({ pathname, projects, overview }: Props) {
             <Link to={paths.projects()}>Connect a repository</Link>
           </li>
         )}
-        {projects
-          ?.filter((p) => !p.worktreeOf)
-          .map((p) => {
-            const worktrees = projects.filter((w) => w.worktreeOf === p.id);
-            // Worktrees (agent checkouts of the same repository) show under it while it is open,
-            // or while one of them is open or live; otherwise they only add to its count.
-            const open =
-              pathname.startsWith(`/projects/${p.id}`) ||
-              worktrees.some((w) => liveIn(w.id) || pathname.startsWith(`/projects/${w.id}`));
-            return (
-              <li key={p.id}>
-                {projectLink(p, worktrees.length)}
-                {open && worktrees.length > 0 && (
-                  <ul className="nav-worktrees" aria-label={`Worktrees of ${p.name}`}>
-                    {worktrees.map((w) => (
-                      <li key={w.id}>{projectLink(w, 0)}</li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
+        {(() => {
+          const hiddenInternal = (projects ?? []).filter(
+            (p) => isInternalAgentWorktree(p) && !pathname.startsWith(`/projects/${p.id}`),
+          ).length;
+          const visibleProjects = (projects ?? []).filter(
+            (p) =>
+              showInternal ||
+              !isInternalAgentWorktree(p) ||
+              pathname.startsWith(`/projects/${p.id}`),
+          );
+          return (
+            <>
+              {visibleProjects
+                .filter((p) => !p.worktreeOf)
+                .map((p) => {
+                  const worktrees = visibleProjects.filter((w) => w.worktreeOf === p.id);
+                  const allWorktrees = (projects ?? []).filter((w) => w.worktreeOf === p.id);
+                  const open =
+                    pathname.startsWith(`/projects/${p.id}`) ||
+                    allWorktrees.some(
+                      (w) => liveIn(w.id) || pathname.startsWith(`/projects/${w.id}`),
+                    );
+                  return (
+                    <li key={p.id}>
+                      {projectLink(p, worktrees.length)}
+                      {open && worktrees.length > 0 && (
+                        <ul className="nav-worktrees" aria-label={`Worktrees of ${p.name}`}>
+                          {worktrees.map((w) => (
+                            <li key={w.id}>{projectLink(w, 0)}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              {hiddenInternal > 0 && (
+                <li>
+                  <button
+                    type="button"
+                    className="nav-item nav-note-btn"
+                    onClick={() => setShowInternal((v) => !v)}
+                    aria-pressed={showInternal}
+                  >
+                    <span className="nav-label">
+                      {showInternal
+                        ? "Hide internal worktrees"
+                        : `Show ${hiddenInternal} internal worktrees`}
+                    </span>
+                  </button>
+                </li>
+              )}
+            </>
+          );
+        })()}
       </ul>
 
       <LiveStrip live={live} />

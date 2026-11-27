@@ -1,32 +1,42 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { test } from "node:test";
-import { groupRoot, mainCheckout } from "../server/worktrees.ts";
+import { isInternalAgentWorktree } from "../web/src/worktrees.ts";
 
-const sh = (cwd: string, args: string[]) =>
-  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd });
+const base = {
+  id: "p1",
+  root: "/repo",
+  name: "repo",
+  sessions: 0,
+  lastActivity: null,
+  hookStatus: "receiving" as const,
+  agents: [],
+  connectedAt: null,
+  github: null,
+};
 
-test("a linked worktree, live or removed, groups under its repository", () => {
-  const main = realpathSync.native(mkdtempSync(join(tmpdir(), "quoli-wt-")));
-  try {
-    sh(main, ["init", "-q", "-b", "main"]);
-    writeFileSync(join(main, "a.txt"), "a\n");
-    sh(main, ["add", "."]);
-    sh(main, ["commit", "-qm", "base"]);
-    const wt = join(main, ".claude", "worktrees", "agent-1");
-    sh(main, ["worktree", "add", "-q", "-b", "agent-1", wt]);
+test("internal agent worktrees are hidden by default", () => {
+  assert.equal(
+    isInternalAgentWorktree({
+      ...base,
+      id: "a1",
+      name: "agent-a123",
+      root: "/repo/.claude/worktrees/agent-a123",
+      worktreeOf: "p1",
+    }),
+    true,
+  );
+});
 
-    assert.equal(mainCheckout(wt), main);
-    assert.equal(mainCheckout(main), null, "a main checkout stands on its own");
-    assert.equal(groupRoot(wt, new Set([main, wt])), main);
-    assert.equal(groupRoot(wt, new Set([wt])), null, "only under a repository Quoli knows");
-    const gone = join(main, ".claude", "worktrees", "agent-gone");
-    assert.equal(groupRoot(gone, new Set([main, gone])), main, "a removed agent worktree too");
-    assert.equal(mainCheckout("/nowhere/else"), null);
-  } finally {
-    rmSync(main, { recursive: true, force: true });
-  }
+test("real worktrees are not treated as internal agent worktrees", () => {
+  assert.equal(
+    isInternalAgentWorktree({
+      ...base,
+      id: "w1",
+      name: "trial",
+      root: "/repo/.claude/worktrees/trial",
+      worktreeOf: "p1",
+    }),
+    false,
+  );
+  assert.equal(isInternalAgentWorktree({ ...base, worktreeOf: null }), false);
 });
