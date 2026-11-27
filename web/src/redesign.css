@@ -651,6 +651,31 @@ ul.reasons li {
   width: 1px;
 }
 
+.trace-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.trace-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trace-key i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}
+
 /* ---------- Projects list ---------- */
 
 .plist {

@@ -1,4 +1,4 @@
-import { type ToolCategory, TRACE_CODES } from "../../../shared/model.ts";
+import { CATEGORY_ORDER, type ToolCategory, TRACE_CODES } from "../../../shared/model.ts";
 import { CATEGORY } from "../format.ts";
 
 const COLOR: Record<string, string> = Object.fromEntries([
@@ -35,5 +35,22 @@ export function Trace({ trace, max = 48, label }: { trace: string; max?: number;
         <i key={i} style={{ background: COLOR[c] ?? "var(--muted)" }} />
       ))}
     </span>
+  );
+}
+
+export function TraceLegend() {
+  const items = [
+    ...CATEGORY_ORDER.map((cat) => ({ label: CATEGORY[cat].label, color: CATEGORY[cat].color })),
+    { label: "Failed", color: "var(--fail)" },
+  ];
+  return (
+    <ul className="trace-legend" aria-label="Trace legend">
+      {items.map((item) => (
+        <li key={item.label} className="trace-key">
+          <i aria-hidden style={{ background: item.color }} />
+          {item.label}
+        </li>
+      ))}
+    </ul>
   );
 }
