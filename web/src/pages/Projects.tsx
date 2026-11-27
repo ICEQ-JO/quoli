@@ -475,60 +475,72 @@ function EveryRepository({ onChange }: { onChange: () => void }) {
     onChange();
     setBusy(false);
   };
+  const defaultOpen = missing.length > 0;
   return (
-    <section className="card every-repo" aria-labelledby="every-repo-title">
-      <div className="every-head">
-        <div>
-          <h2 id="every-repo-title">Record every repository</h2>
-          <p className="faint">
-            Set up once per agent and every repository you open with it is recorded, with nothing to
-            connect per project. Sessions run while Quoli is closed appear when it starts.
-          </p>
+    <details className="card every-repo" open={defaultOpen}>
+      <summary className="every-summary">
+        <div className="every-head">
+          <div>
+            <h2 id="every-repo-title">Record every repository</h2>
+            <p className="faint">
+              {defaultOpen
+                ? "Set up once per agent and every repository you open with it is recorded."
+                : "Global agent setup is active. Expand to manage it."}
+            </p>
+          </div>
+          <div className="every-actions">
+            {missing.length > 0 && (
+              <button
+                type="button"
+                className="btn primary"
+                disabled={busy}
+                onClick={(e) => {
+                  e.preventDefault();
+                  run(
+                    missing.map((s) => s.agent),
+                    false,
+                  );
+                }}
+              >
+                {busy ? "Setting up…" : installed.length ? "Set up the rest" : "Set up"}
+              </button>
+            )}
+            {installed.length > 0 && (
+              <button
+                type="button"
+                className="btn"
+                disabled={busy}
+                onClick={(e) => {
+                  e.preventDefault();
+                  run(
+                    installed.map((s) => s.agent),
+                    true,
+                  );
+                }}
+              >
+                Remove
+              </button>
+            )}
+          </div>
         </div>
-        <div className="every-actions">
-          {missing.length > 0 && (
-            <button
-              type="button"
-              className="btn primary"
-              disabled={busy}
-              onClick={() =>
-                run(
-                  missing.map((s) => s.agent),
-                  false,
-                )
-              }
-            >
-              {busy ? "Setting up…" : installed.length ? "Set up the rest" : "Set up"}
-            </button>
-          )}
-          {installed.length > 0 && (
-            <button
-              type="button"
-              className="btn"
-              disabled={busy}
-              onClick={() =>
-                run(
-                  installed.map((s) => s.agent),
-                  true,
-                )
-              }
-            >
-              Remove
-            </button>
-          )}
-        </div>
-      </div>
-      <ul className="every-list">
-        {status.map((s) => (
-          <SetupRow key={s.agent} s={s} />
-        ))}
-      </ul>
-      {failure && (
-        <p className="form-error" role="alert">
-          {failure}
+      </summary>
+      <div className="every-body">
+        <p className="faint">
+          Set up once per agent and every repository you open with it is recorded, with nothing to
+          connect per project. Sessions run while Quoli is closed appear when it starts.
         </p>
-      )}
-    </section>
+        <ul className="every-list">
+          {status.map((s) => (
+            <SetupRow key={s.agent} s={s} />
+          ))}
+        </ul>
+        {failure && (
+          <p className="form-error" role="alert">
+            {failure}
+          </p>
+        )}
+      </div>
+    </details>
   );
 }
 

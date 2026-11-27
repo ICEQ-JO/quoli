@@ -1697,6 +1697,23 @@ ul.reasons li {
 }
 
 /* Projects: record every repository (user-level setup) */
+.every-repo > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.every-repo > summary::-webkit-details-marker {
+  display: none;
+}
+.every-summary .every-head {
+  align-items: flex-start;
+}
+.every-body {
+  margin-top: 12px;
+}
+.every-body > .faint {
+  margin: 0 0 8px;
+  max-width: 68ch;
+}
 .every-head {
   display: flex;
   gap: 16px;
