@@ -24,6 +24,7 @@ import { insightsReport } from "./insights.ts";
 import { saveLinkedKey, startLink, waitForLink } from "./link.ts";
 import { liveStatusOf, updateLivePrices } from "./liveprices.ts";
 import { addManual, loadManual, mergeManual, saveManual, validateManual } from "./manual.ts";
+import { placeNotes } from "./notes.ts";
 import {
   costOf,
   defaultPrices,
@@ -336,7 +337,8 @@ export function createApp(store: Store, port: () => number, token?: string) {
     if (path === "/api/setup") return json(res, 200, setupStatus());
     if (path === "/api/overview") return json(res, 200, overview());
     if (path === "/api/settings") return json(res, 200, settingsResponse());
-    if (path === "/api/prices") return json(res, 200, loadPrices(store));
+    if (path === "/api/prices")
+      return json(res, 200, { ...loadPrices(store), edited: store.getSetting("prices") !== null });
     if (path === "/api/sync") return json(res, 200, syncState());
     if (path === "/api/prices/live") {
       return json(res, 200, liveStatusOf(store.settings().livePrices));
@@ -348,7 +350,14 @@ export function createApp(store: Store, port: () => number, token?: string) {
       }
       const agent = url.searchParams.get("agent");
       if (agent !== null && !isAgentKind(agent)) return json(res, 400, { error: "Unknown agent" });
-      return json(res, 200, usageReport(store, days, details, new Date(), agent));
+      return json(
+        res,
+        200,
+        usageReport(store, days, details, new Date(), agent, {
+          project: url.searchParams.get("project"),
+          model: url.searchParams.get("model"),
+        }),
+      );
     }
     if (path === "/api/insights") {
       const q = url.searchParams;
@@ -373,7 +382,8 @@ export function createApp(store: Store, port: () => number, token?: string) {
     if (path === "/api/session") {
       const id = url.searchParams.get("id") ?? "";
       const [detail = null] = details([id]);
-      return json(res, detail ? 200 : 404, detail);
+      if (!detail) return json(res, 404, null);
+      return json(res, 200, { ...detail, notes: placeNotes(store.notes(id), detail.toolCalls) });
     }
     if (path === "/api/review" || path === "/api/review/diff") {
       const [detail = null] = details([url.searchParams.get("id") ?? ""]);
@@ -651,12 +661,12 @@ export function createApp(store: Store, port: () => number, token?: string) {
       }
       savePrices(store, table);
       broadcast({ type: "projects" });
-      return json(res, 200, loadPrices(store));
+      return json(res, 200, { ...loadPrices(store), edited: true });
     }
     if (method === "DELETE" && path === "/api/prices") {
       resetPrices(store);
       broadcast({ type: "projects" });
-      return json(res, 200, defaultPrices());
+      return json(res, 200, { ...defaultPrices(), edited: false });
     }
     if (method === "POST" && path === "/api/redact-preview") {
       const { text } = await payload();

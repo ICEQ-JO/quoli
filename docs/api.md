@@ -73,7 +73,7 @@ Retention runs at startup, hourly, and when settings change.
 
 | Method & path | Body | Returns |
 | --- | --- | --- |
-| `GET /api/prices` | | `PriceTable` (the saved table, or the built-in default) |
+| `GET /api/prices` | | `PriceTable` (the saved table, or the built-in default) with `edited`: true when it is the user's saved table; PUT and DELETE answer with it too |
 | `PUT /api/prices` | `PriceTable` | `PriceTable`. Validates: currency `USD`, 1–200 rows, non-empty unique `model`, every price a finite number ≥ 0 and ≤ 1000. 400 with a readable `error` otherwise. |
 | `DELETE /api/prices` | `{}` | `PriceTable`, after resetting to the built-in default |
 

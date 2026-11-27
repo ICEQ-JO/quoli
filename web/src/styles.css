@@ -1546,6 +1546,10 @@ kbd {
 
 /* ---------- Timeline ---------- */
 
+.timeline.replaying {
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+}
+
 .timeline {
   grid-area: timeline;
   display: grid;
@@ -3273,4 +3277,100 @@ textarea.input {
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
+}
+
+/* Summary: the Review action right under what to review (#37). */
+.sum-sec .sum-action {
+  margin-top: 12px;
+}
+
+/* Projects: maintenance actions grouped with their effects (#39). */
+.row-more {
+  position: relative;
+  display: inline-block;
+}
+.row-more > summary {
+  list-style: none;
+}
+.row-more > summary::-webkit-details-marker {
+  display: none;
+}
+.row-more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  width: 300px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  text-align: left;
+}
+.row-more-item p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  white-space: normal;
+}
+.table.projects .row-more-menu .btn,
+.table.projects .row-more-menu .add-agent {
+  margin: 0;
+}
+
+/* Settings (#40): installation administration collapsed at the end; unsaved-change status. */
+.settings-admin > summary {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  cursor: pointer;
+}
+.settings-admin > summary::-webkit-details-marker {
+  display: none;
+}
+.settings-admin > summary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: translateY(-2px) rotate(-45deg);
+  transition: transform 0.15s ease-out;
+  align-self: center;
+}
+.settings-admin[open] > summary::before {
+  transform: translateY(-3px) rotate(45deg);
+}
+.settings-admin > summary h2 {
+  margin: 0;
+}
+.settings-admin[open] > summary {
+  margin-bottom: 8px;
+}
+.price-dirty {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+.price-source {
+  margin: 10px 0;
+}
+.price-source p {
+  margin: 2px 0;
+  font-size: var(--fs-sm);
+}
+.price-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+.price-search .input {
+  max-width: 320px;
 }

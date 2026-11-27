@@ -21,7 +21,7 @@ import { basename, dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SPOOL_MAX = 50 * 1024 * 1024;
-// Redacted before the queue touches the disk; keep equal to SECRETS in server/ingest.ts
+// Redacted before the queue touches the disk; keep equal to SECRETS in server/redact.ts
 // (tests/local-files.test.ts checks).
 const SECRETS = [
   /sk-[A-Za-z0-9_-]{20,}/g,

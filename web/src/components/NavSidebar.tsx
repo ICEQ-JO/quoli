@@ -1,7 +1,11 @@
+import { useEffect } from "react";
 import type { Overview, Project } from "../../../shared/model.ts";
 import { modKey } from "../a11y.ts";
+import { api, useData } from "../api.ts";
 import { Link, paths } from "../router.ts";
+import { sharingLabel } from "../scope.ts";
 import { LiveStrip } from "./Live.tsx";
+import { Mark } from "./Mark.tsx";
 import { Icon } from "./ui.tsx";
 
 interface Props {
@@ -12,6 +16,16 @@ interface Props {
 
 /** The app's main navigation: pages, then every project, then settings. */
 export function NavSidebar({ pathname, projects, overview }: Props) {
+  const [sync, refreshSync, syncError] = useData(`shell:sync:${pathname}`, api.sync);
+  useEffect(() => {
+    const timer = setInterval(refreshSync, 30_000);
+    const onShow = () => document.visibilityState === "visible" && refreshSync();
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [refreshSync]);
   const live = overview?.live ?? [];
   const liveIn = (id: string) => live.filter((s) => s.projectId === id).length;
   const projectLink = (p: Project, worktrees: number) => {
@@ -56,9 +70,16 @@ export function NavSidebar({ pathname, projects, overview }: Props) {
     <nav className="nav" aria-label="Main">
       <div className="nav-top">
         <Link to={paths.home()} className="nav-brand" aria-label="Quoli dashboard">
-          <span className="logo" aria-hidden />
+          <Mark small />
           <span>Quoli</span>
         </Link>
+        <div className="nav-scope">
+          <strong>This computer</strong>
+          <Link to={paths.settings("sync")}>{sharingLabel(sync, !!syncError)}</Link>
+          <a href="https://iceq.best/app/" target="_blank" rel="noreferrer">
+            Account &amp; team ↗
+          </a>
+        </div>
         <button
           type="button"
           className="nav-search"
@@ -96,7 +117,7 @@ export function NavSidebar({ pathname, projects, overview }: Props) {
           Projects
         </Link>
         <Link
-          to={paths.projects()}
+          to={`${paths.projects()}?connect`}
           className="nav-add"
           title="Connect a repository"
           aria-label="Connect a repository"

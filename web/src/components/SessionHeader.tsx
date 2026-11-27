@@ -1,6 +1,8 @@
+import { useState } from "react";
 import type { SessionDetail, SessionReview } from "../../../shared/model.ts";
 import { ago, duration, money, tokenSum } from "../format.ts";
 import { Link } from "../router.ts";
+import { RenameSession, SessionName } from "./SessionName.tsx";
 import { Trace } from "./Trace.tsx";
 import { AgentTag, useNow } from "./ui.tsx";
 
@@ -21,6 +23,7 @@ export function SessionHeader({
   reviewHref: string;
 }) {
   useNow();
+  const [renaming, setRenaming] = useState(false);
   const unpriced = session.cost.unpriced;
   const when = new Date(session.startedAt).toLocaleString();
   return (
@@ -30,7 +33,13 @@ export function SessionHeader({
           <i aria-hidden />
           {session.live ? "Live" : "Ended"}
         </span>
-        <h1 title={session.title}>{session.title}</h1>
+        <h1 title={session.title}>
+          <SessionName session={session} />
+        </h1>
+        <button type="button" className="btn rename-session" onClick={() => setRenaming(true)}>
+          Rename
+        </button>
+        {renaming && <RenameSession session={session} close={() => setRenaming(false)} />}
         <Trace trace={session.trace} max={64} />
         <Link
           to={summaryHref}

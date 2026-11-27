@@ -8,7 +8,6 @@ import {
 import { api, useData, useLiveEvents } from "../api.ts";
 import { setFirstRunSkipped } from "../components/FirstRun.tsx";
 import { LiveRow } from "../components/Live.tsx";
-import { SpendChart } from "../components/SpendChart.tsx";
 import {
   EmptyState,
   ErrorState,
@@ -58,16 +57,21 @@ export function DashboardPage() {
       </div>
     );
 
-  const { live, needsReview, recent } = overview;
+  const { live, needsReview } = overview;
+  const attention = new Set([
+    ...live.map((s) => s.id),
+    ...needsReview.map(({ session }) => session.id),
+  ]);
+  const recent = overview.recent.filter((s) => !attention.has(s.id));
   const budgets = settings?.settings;
   return (
     <div className="page wide">
       <PageHead title="Dashboard">{headline(overview)}</PageHead>
       {error && <ErrorState title="Showing the last data we had" message={error} retry={refresh} />}
 
-      <section className="panel spend" aria-labelledby="d-spend">
+      <section className="panel spend spend-compact" aria-labelledby="d-spend">
         <div className="sec-head">
-          <h2 id="d-spend">Spend</h2>
+          <h2 id="d-spend">Spend · USD</h2>
           <span className="faint">estimated at list prices</span>
           <Link to={paths.usage()} className="panel-link">
             Usage details
@@ -90,19 +94,12 @@ export function DashboardPage() {
             />
             <Stat
               label="This month"
-              value={usage ? usd(usage.spend.month ?? 0) : "…"}
+              value={usage ? usd(usage.spend.month) : "…"}
               spent={usage?.spend.month ?? null}
               budget={budgets?.budgetMonthlyUsd ?? null}
               budgetLabel="monthly budget"
             />
           </dl>
-          <div className="spend-chart-wrap">
-            {usage ? (
-              <SpendChart days={usage.days} budget={budgets?.budgetDailyUsd} height={96} />
-            ) : (
-              <Loading label="Loading spend…" />
-            )}
-          </div>
         </div>
         {overview.cost.week.unpriced.length > 0 && (
           <p className="panel-note">
@@ -167,14 +164,14 @@ export function DashboardPage() {
         <div className="dash-col">
           <section className="panel" aria-labelledby="d-recent">
             <div className="sec-head">
-              <h2 id="d-recent">Recent sessions</h2>
+              <h2 id="d-recent">Other recent sessions</h2>
               <Link to={paths.sessions()} className="panel-link">
                 All sessions
               </Link>
             </div>
             {recent.length === 0 ? (
-              <EmptyState title="No sessions yet">
-                <span>Start a Claude Code session in a connected repository.</span>
+              <EmptyState title="No other recent sessions">
+                <span>Live sessions and sessions needing review appear in their own queues.</span>
               </EmptyState>
             ) : (
               <ul className="slist">
@@ -215,7 +212,7 @@ function Stat({
   budget?: number | null;
   budgetLabel?: string;
 }) {
-  const share = budget && spent !== undefined ? (spent ?? 0) / budget : null;
+  const share = budget && spent !== undefined && spent !== null ? spent / budget : null;
   const tone = share === null ? "" : share >= 1 ? "over" : share >= 0.8 ? "near" : "";
   return (
     <div className="figure-stat">

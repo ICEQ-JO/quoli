@@ -169,6 +169,20 @@ export interface Turn {
   reply: string | null;
 }
 
+/**
+ * Text the agent wrote while it worked (#46), recorded from its transcript: what it said
+ * between tool calls (`said`) and, when the transcript holds it, its thinking (`thinking`).
+ * Only what the agent wrote down; hidden reasoning is never inferred.
+ */
+export interface AgentNote {
+  at: string;
+  agentId: string;
+  kind: "said" | "thinking";
+  text: string;
+  /** The first call the same agent started after this note; null when none followed. */
+  beforeCallId: string | null;
+}
+
 export interface SessionDetail extends SessionSummary {
   agents: AgentNode[];
   turns: Turn[];
@@ -180,6 +194,8 @@ export interface SessionDetail extends SessionSummary {
   report: SessionReport;
   /** What the agent had in its context: size over time, compactions, instruction files, commands. */
   context: SessionContext;
+  /** What the agent said and thought between calls; only on the single-session read. */
+  notes?: AgentNote[];
 }
 
 /**
@@ -620,6 +636,8 @@ export interface PriceTable {
   version: string;
   currency: "USD";
   prices: ModelPrice[];
+  /** From GET/PUT/DELETE /api/prices: true when the table is the user's own saved one (#40). */
+  edited?: boolean;
 }
 
 export interface Cost {
@@ -823,6 +841,7 @@ export interface InsightsGroup {
 
 /** GET /api/insights — trends across sessions, bucketed by the local day each session started. */
 export interface InsightsReport {
+  timeZone: string;
   days: {
     date: string;
     sessions: number;
@@ -861,6 +880,7 @@ export interface InsightsReport {
 
 /** GET /api/usage?days=N — spend and tokens over the last N days (1–365), all derived from usage rows. */
 export interface UsageReport {
+  timeZone: string;
   days: UsageDay[];
   total: { tokens: TokenTotals; cost: Cost };
   byModel: { model: string | null; tokens: TokenTotals; usd: number | null }[];

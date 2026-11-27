@@ -6,10 +6,9 @@ import {
   type UsageReport,
   zeroTokens,
 } from "../shared/model.ts";
+import { reportingZone } from "../shared/reporting.ts";
 import { projectId, type Store, type UsageRow } from "./db.ts";
 import { costOf, effectivePrices, priceFor, usdOf } from "./prices.ts";
-
-const DAY = 86_400_000;
 
 /** YYYY-MM-DD in the server's local time zone. */
 export const localDate = (t: Date | string) => {
@@ -46,6 +45,7 @@ export function usageReport(
   details: (ids: string[]) => SessionDetail[],
   now = new Date(),
   agent: AgentKind | null = null,
+  filter: { project?: string | null; model?: string | null } = {},
 ): UsageReport {
   const prices = effectivePrices(store);
   const start = new Date(now);
@@ -53,14 +53,19 @@ export function usageReport(
   const today = start.toISOString();
   const monthStart = new Date(start);
   monthStart.setDate(1);
-  start.setTime(start.getTime() - (days - 1) * DAY);
+  start.setDate(start.getDate() - (days - 1));
   // Daylight-saving shifts can move midnight by an hour; snap back to it.
   start.setHours(0, 0, 0, 0);
   const from = new Date(Math.min(start.getTime(), monthStart.getTime())).toISOString();
   const agents = agent ? store.sessionAgents() : null;
   const rows = store
     .usageSince(from)
-    .filter((u) => !agents || (agents.get(u.sessionId) ?? "claude-code") === agent);
+    .filter(
+      (u) =>
+        (!agents || (agents.get(u.sessionId) ?? "claude-code") === agent) &&
+        (!filter.project || projectId(u.root) === filter.project) &&
+        (!filter.model || u.model === filter.model),
+    );
 
   const priced = (u: UsageRow) => {
     const p = u.model ? priceFor(u.model, prices) : null;
@@ -122,6 +127,7 @@ export function usageReport(
   }));
 
   return {
+    timeZone: reportingZone(),
     days: [...dayMap].map(([date, v]) => ({ date, ...v })),
     total: { tokens: total, cost: costOf(modelRows, prices) },
     byModel: modelRows.sort(byUsd),

@@ -331,3 +331,19 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+
+/* Providers absent from the repository: a collapsed reference (#39). */
+.prov-reference {
+  margin-top: 10px;
+}
+.prov-reference > summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.prov-reference .prov-names {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}

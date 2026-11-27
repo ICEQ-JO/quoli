@@ -45,6 +45,9 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 | `server/db.ts` | SQLite store: append-only `events`, deduplicated `usage`, transcript read offsets, `projects` registry, `settings` |
 | `server/adapters.ts` | One adapter per coding agent, mapping its hook payload into the shared Claude Code-shaped event and, where the agent reports it in hooks, a token usage row. Claude Code (identity), Codex, OpenCode and Pi are registered |
 | `server/ingest.ts` | Runs the agent's adapter, resolves repo root, records the branch at session start, redacts secrets, stores (stamping `quoli_agent` on non-Claude events), reads Claude Code transcripts |
+| `server/redact.ts` | The credential shapes removed before anything is stored (prompts, events, agent notes); the hook, OpenCode plugin and Pi extension carry equal copies |
+| `server/notes.ts`, `server/transcript.ts` (`notesFromLines`) | Agent notes (#46): what a Claude Code agent wrote between tool calls (`text` blocks) and its thinking (`thinking` blocks, only when the transcript holds the text), read from the same transcript pass as token usage, redacted, cut at 4,000 characters and kept in the `notes` table (one row per transcript line and block, deleted with the session). `placeNotes` puts each before the next call by the same agent; `/api/session` returns them as `notes` |
+| `shared/explain.ts` | One plain sentence per tool call (#47), by rule (no model, nothing leaves the computer): reads, edits with line counts, searches, web, subagents, MCP tools, and commands by kind (tests, type checks, lint, build, install, Git, …). Claude Code's own Bash `description` is used when present. Shown as the main text of each call in the Agents lens, with the exact tool and input beneath |
 | `server/sessions.ts` | Pure derivation: raw events + usage + price table → session view (turns, tool calls, agents, files, tokens, cost, report) |
 | `server/context.ts` | The Summary's Context window card: prompt size per main-agent model request (input + cache read + cache write from usage), compactions (`PreCompact`/`PostCompact`, or `SessionStart` with source `compact`) with size before and after, instruction files (`InstructionsLoaded`: path, scope, load reason, reloads), slash commands, skills and MCP prompts the user ran (`UserPromptExpansion`) and model switches (`PostModelSwitch`). Claude Code only; the window's limit is not reported, so it is not shown. An install made before these events existed is rewritten on start (`missingEvents`) |
 | `server/steps.ts` | Pure functions behind the Summary's "Where the time and money went": per-prompt time, tool time, calls, failures, tokens and cost; the slowest calls |
@@ -122,7 +125,7 @@ Claude Code ──hook (stdin JSON)──▶ server/hook.mjs ──POST /ingest�
 - User-level setup (#142). Each agent's user-level location is from its own docs: Claude Code user settings, Codex `~/.codex/hooks.json` (learn.chatgpt.com/docs/hooks: user hooks load in every project, trusted or not, but like any non-managed hook must be approved once in `/hooks`, and again whenever the hook command changes, for example after a port change), OpenCode global plugins in `~/.config/opencode/plugins/` (opencode.ai/docs/plugins), Pi global extensions in `~/.pi/agent/extensions/` (Pi docs/extensions.md). Limitations:
   - Verified with unit tests against a temporary HOME. Not yet observed with each agent loading the user-level file: OpenCode's `ctx.location.directory` for a global plugin is assumed to be the project directory, as it is for a project plugin.
   - Queued events are read only when the server starts. An event whose post timed out while Quoli was running waits for the next start and is then recorded after that session's newer events.
-  - The queue stops growing at 50 MB. It holds hook payloads (prompts and tool output) on the local disk with owner-only permissions. The hook, plugin and extension redact them before writing, with the same rules as `server/ingest.ts` (`tests/local-files.test.ts` keeps the copies equal), so credentials never reach the disk even when redaction is turned off in Settings for live events.
+  - The queue stops growing at 50 MB. It holds hook payloads (prompts and tool output) on the local disk with owner-only permissions. The hook, plugin and extension redact them before writing, with the same rules as `server/redact.ts` (`tests/local-files.test.ts` keeps the copies equal), so credentials never reach the disk even when redaction is turned off in Settings for live events.
   - Projects are still keyed by their local folder; `github` is a label and link. Two clones of one repository are two projects.
 - Pi specifics (Pi 0.75; contract: the `docs/extensions.md` and `docs/session-format.md` shipped with `@earendil-works/pi-coding-agent`):
   - Pi auto-discovers project extensions in `.pi/extensions/*.ts` with no trust prompt. Quoli's extension uses `session_start`, `before_agent_start` (prompt), `tool_execution_start`/`_end` (`toolCallId`, `toolName`, `args`, `isError`, text of `result`), `message_end` (assistant messages: `model`, `usage.input/output/cacheRead/cacheWrite`), `agent_end` and `session_shutdown`. A shutdown for `reload` keeps the session open.
@@ -170,7 +173,7 @@ or Upstash Redis on Vercel. No automatic email is sent. Mission, Roadmap and Pri
 use query navigation within the isolated entry. Public hosting never exposes the
 private evidence APIs. See [landing.md](landing.md) and [landing-design.md](landing-design.md).
 
-- Agent replies (#166): each turn keeps the agent's final reply (`Turn.reply`, recorded). Claude Code and Codex send it on Stop as `last_assistant_message` (code.claude.com/docs/en/hooks; `openai/codex` `codex-rs/hooks/schema/generated/stop.command.input.schema.json`); OpenCode's plugin and Pi's extension send the last assistant text with the turn end. Text between tool calls, reasoning and subagent replies are not shown. Replies are redacted like prompts, stay local, and are never part of Team sync.
+- Agent replies (#166): each turn keeps the agent's final reply (`Turn.reply`, recorded). Claude Code and Codex send it on Stop as `last_assistant_message` (code.claude.com/docs/en/hooks; `openai/codex` `codex-rs/hooks/schema/generated/stop.command.input.schema.json`); OpenCode's plugin and Pi's extension send the last assistant text with the turn end. For Claude Code, what the agent wrote between tool calls and its recorded thinking are shown as agent notes (#46, `server/notes.ts`); for Codex, OpenCode and Pi they are not yet, and subagent replies are not shown. Notes recorded before #46 are not back-filled: transcripts already read are not read again. Replies are redacted like prompts, stay local, and are never part of Team sync.
 
 Phase 1 [#197](https://github.com/ICEQ-JO/quoli/issues/197) replaces the marketing
 product captures with six owner-supplied screenshots approved for public use.
@@ -214,3 +217,42 @@ bounds, validation and known limitations.
 `pnpm prototype` retains the isolated authored example in `web/src/prototype/` for design
 reference. It is excluded from production build inputs, reads no evidence and starts no recorder.
 Human comprehension testing and the separate recording readiness fixes remain outstanding.
+
+Phase 1 #32 makes analysis headers reflow before controls squeeze their descriptions.
+Project tables scroll inside a named keyboard-accessible region; repository paths
+stay within their cards. Compact/coarse-pointer controls have 44px targets. Checked
+with synthetic data at 320–1920px in both themes, including enlarged root text.
+
+Phase 1 #33 shares the stepped Q geometry between marketing, first-run and the
+local app. The navigation identifies this computer, reads summary-sync status and
+links to sync settings and the existing account page. Navigation never enables
+sharing. Claude Code now has the same explicit recorder label as other agents.
+
+Phase 1 #34 replaces Dashboard's large spend chart with a compact USD estimate
+strip and a Usage link. Live work, file overlaps and review reasons retain their
+evidence semantics; the other-recent queue excludes sessions already in live or
+review queues. A session may still be live and need review, because both matter.
+
+Phase 1 #36 connects Spend & tokens and Session trends with URL-backed range,
+agent, project and model context. Usage filters token rows by project/model; trends
+filter sessions that used a model. Both reports expose the server's IANA reporting
+zone. Day links carry that zone and model into Sessions; original timestamps stay
+unchanged. Calendar-day subtraction uses calendar arithmetic across DST. Charts
+have one tab entry each, arrow/Home/End exploration, and daily table alternatives.
+Usage activation inspects token-day values; trend activation opens start-day sessions.
+
+Phase 1 #35 saves optional session display names in browser localStorage, separately
+from append-only evidence. Rename is available in the selected session header;
+clearing the override restores the recorded title. Names apply to local lists and
+title search, are limited to 120 characters and never enter server/sync payloads.
+They do not follow users to other browsers. Sessions filters round-trip through
+URLs; typed query changes replace the current history entry, discrete filters push
+one. Search identifies its scope and separates recorded-search loading/failure from
+successful zero matches, while keeping available local results usable.
+
+The Sessions table uses the same keyboard-scroll containment as Projects so its
+task column cannot collapse underneath agent and timing columns on narrow screens.
+On phones the navigation wraps, keeps Projects reachable and omits the duplicate
+live strip; the Sessions live count and Dashboard live queue remain available.
+The hosted account/team header also reuses the shared mark, so following the new
+account destination retains the same identity.

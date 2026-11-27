@@ -19,6 +19,7 @@ import { SessionsPage } from "./pages/Sessions.tsx";
 import { SettingsPage } from "./pages/Settings.tsx";
 import { UsagePage } from "./pages/Usage.tsx";
 import { Link, navigate, paths, useLocation } from "./router.ts";
+import { displayTitle, useTitleVersion } from "./session-titles.ts";
 
 export function App() {
   const { pathname, route } = useLocation();
@@ -168,6 +169,7 @@ function GlobalPalette() {
 function GlobalPaletteBody({ close }: { close: () => void }) {
   const [projects] = useData("projects", api.projects);
   const [sessions] = useData("sessions:all", () => api.sessions());
+  useTitleVersion();
   const items: PaletteItem[] = [
     ...pageItems(),
     ...(projects ?? []).map((p) => ({
@@ -178,7 +180,7 @@ function GlobalPaletteBody({ close }: { close: () => void }) {
     })),
     ...(sessions ?? []).map((s) => ({
       group: "Sessions",
-      label: s.title,
+      label: displayTitle(s),
       detail: s.branch ?? "",
       run: () => navigate(paths.board(s.projectId, s.id)),
     })),
