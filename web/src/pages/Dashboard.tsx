@@ -139,7 +139,8 @@ export function DashboardPage() {
             {needsReview.length === 0 ? (
               <EmptyState title="Nothing to review">
                 <span>
-                  No session in the last 7 days had failed calls or unusually wide changes.
+                  No session in the last 7 days flagged derived review reasons like failed calls,
+                  wide edits, loops, missing usage, or long runs.
                 </span>
               </EmptyState>
             ) : (
