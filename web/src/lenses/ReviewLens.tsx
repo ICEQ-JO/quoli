@@ -364,11 +364,11 @@ export function ReviewLens(p: Props) {
         </p>
       )}
       {review.files.length === 0 ? (
-        <EmptyState title="This session changed no files">
+        <EmptyState title="No file changes to review">
           <p>
             {review.source === "git"
-              ? "Git shows no difference from where the session began."
-              : "The agent recorded no file edits."}
+              ? "Git shows no difference from where this session began. If the agent edits files, they’ll appear here for review."
+              : "No file edits were recorded for this session. When an agent edits files, Review shows the diff here."}
           </p>
         </EmptyState>
       ) : (

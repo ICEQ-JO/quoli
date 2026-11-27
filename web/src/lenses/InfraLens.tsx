@@ -197,7 +197,7 @@ export function InfraLens(ctx: LensContext) {
               infra
                 ? split?.services.length
                   ? null
-                  : "No running services found in this repository's files. Add one by hand from the side panel."
+                  : "No services detected from repository files. Add one from the side panel, or connect config such as compose, Dockerfile, Vercel, Fly, or Railway."
                 : "Reading infrastructure files…"
             }
             legend={
@@ -272,7 +272,10 @@ function InfraSide({
           />
         )}
         {used.length === 0 ? (
-          <p className="faint">No hosting provider found in this repository's files.</p>
+          <p className="faint">
+            No hosting provider detected in repository files. Add one if this project runs somewhere
+            Quoli can’t detect.
+          </p>
         ) : (
           <ul className="providers">
             {used.map((p) => (
@@ -318,7 +321,10 @@ function InfraSide({
           workflow files, not their runs.
         </p>
         {pipelines.length === 0 ? (
-          <p className="faint">No workflow files found.</p>
+          <p className="faint">
+            No CI workflow files detected. Add a workflow under <code>.github/workflows</code> to
+            see pipelines here.
+          </p>
         ) : (
           <ul className="pipes">
             {pipelines.map((p) => (

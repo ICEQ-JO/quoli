@@ -85,7 +85,9 @@ export function GitLens(ctx: LensContext) {
     return (
       <div className="git-lens">
         <p className="git-empty">
-          {git ? "This project has no Git branches yet." : "Reading Git history…"}
+          {git
+            ? "No Git history yet. When this repository has commits, the branch graph will appear here."
+            : "Reading Git history…"}
         </p>
       </div>
     );
