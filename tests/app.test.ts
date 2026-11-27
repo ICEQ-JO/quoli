@@ -256,7 +256,7 @@ test("overview reports plain-sentence review reasons and token totals", async ()
       messageId: "m",
       sessionId: "a",
       agentId: "main",
-      model: null,
+      model: "claude-sonnet-4-6",
       at: at(1000),
       input: 7,
       output: 3,
@@ -264,10 +264,21 @@ test("overview reports plain-sentence review reasons and token totals", async ()
       cacheWrite: 0,
     });
     store.upsertUsage({
+      messageId: "mb",
+      sessionId: "b",
+      agentId: "main",
+      model: "claude-sonnet-4-6",
+      at: at(1000),
+      input: 1,
+      output: 1,
+      cacheRead: 0,
+      cacheWrite: 0,
+    });
+    store.upsertUsage({
       messageId: "old",
       sessionId: "a",
       agentId: "main",
-      model: null,
+      model: "claude-sonnet-4-6",
       at: at(3 * DAY),
       input: 100,
       output: 0,
@@ -285,10 +296,10 @@ test("overview reports plain-sentence review reasons and token totals", async ()
       "No command was run after the last edit",
     ]);
     assert.equal(body.recent.length, 3);
-    assert.equal(body.tokens.week.input, 107);
+    assert.equal(body.tokens.week.input, 108);
     assert.equal(body.counts.sessions, 3);
     assert.equal(body.counts.projects, 1);
-    assert.ok(body.tokens.today.input === 7 || body.tokens.today.input === 0);
+    assert.ok(body.tokens.today.input === 8 || body.tokens.today.input === 0);
   } finally {
     close();
   }
@@ -314,9 +325,10 @@ test("ten or more changed files is a review reason", () => {
     });
   }
   e("PreToolUse", { tool_name: "Bash", tool_use_id: "r", tool_input: { command: "t" } });
+  e("SessionEnd", {});
   const d = deriveSession(events, [], defaultPrices());
   assert.ok(d);
-  assert.deepEqual(reviewReasons(d), ["10 files changed"]);
+  assert.deepEqual(reviewReasons(d), ["10 files changed", "No token usage reported"]);
 });
 
 test("session titles drop image placeholders and collapse whitespace", () => {

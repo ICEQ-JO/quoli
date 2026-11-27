@@ -716,5 +716,16 @@ export function reviewReasons(d: SessionDetail): string[] {
   if (lastEdit >= 0 && !d.toolCalls.slice(lastEdit + 1).some((c) => c.category === "run")) {
     reasons.push("No command was run after the last edit");
   }
+  if (d.report.loops.length > 0) {
+    reasons.push(
+      `${d.report.loops.length} possible ${d.report.loops.length === 1 ? "loop" : "loops"} detected`,
+    );
+  }
+  const tokens = d.tokens.input + d.tokens.output + d.tokens.cacheRead + d.tokens.cacheWrite;
+  if (tokens === 0) reasons.push("No token usage reported");
+  else if (d.cost.usd === null) reasons.push("Usage reported, but cost is unpriced");
+  const ended = d.endedAt ? Date.parse(d.endedAt) : Date.now();
+  const mins = (ended - Date.parse(d.startedAt)) / 60_000;
+  if (Number.isFinite(mins) && mins >= 60) reasons.push("Ran for an hour or more");
   return reasons;
 }
