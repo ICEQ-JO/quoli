@@ -133,7 +133,7 @@ export function DashboardPage() {
                 className="faint"
                 title="Derived from recorded events; never a claim that the work is correct"
               >
-                last 7 days
+                Derived · last 7 days
               </span>
             </div>
             {needsReview.length === 0 ? (
@@ -285,7 +285,7 @@ function CollisionsPanel({ collisions }: { collisions: Collision[] }) {
         <h2 id="d-collide">Agents on the same files</h2>
         <span className="sec-count">{collisions.length}</span>
         <span className="faint" title="Sessions in the same repository, worktrees included">
-          last 24 hours
+          Recorded overlap · inferred conflicts · last 24 hours
         </span>
       </div>
       <ul className="slist collisions">
@@ -302,15 +302,15 @@ function CollisionsPanel({ collisions }: { collisions: Collision[] }) {
               Both edited <FileList files={c.files} />
             </p>
             {c.conflicts && c.conflicts.length > 0 && (
-              <p
-                className="collision-conflict"
-                title="Inferred: Git's merge-tree on the two branches' committed work"
-              >
-                Merging these branches will conflict in <FileList files={c.conflicts} />
+              <p className="collision-conflict">
+                Inferred merge conflict in <FileList files={c.conflicts} />{" "}
+                <span className="faint">(from Git merge-tree)</span>
               </p>
             )}
             {c.conflicts && c.conflicts.length === 0 && (
-              <p className="faint collision-note">Their committed work still merges cleanly.</p>
+              <p className="faint collision-note">
+                Inferred: their committed work still merges cleanly.
+              </p>
             )}
           </li>
         ))}
