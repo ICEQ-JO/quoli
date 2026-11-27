@@ -240,7 +240,13 @@ export function UsagePage() {
                             <span className="faint">{s.startedAt ? ago(s.startedAt) : ""}</span>
                           </td>
                           <td className="num mono">{compact(tokenSum(s.tokens))}</td>
-                          <td className="num mono">{usd(s.usd)}</td>
+                          <td className="num mono">
+                            {s.usd === null
+                              ? tokenSum(s.tokens)
+                                ? "Unpriced"
+                                : "No usage"
+                              : usd(s.usd)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
