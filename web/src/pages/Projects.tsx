@@ -16,6 +16,7 @@ import {
 } from "../components/ui.tsx";
 import { ago, plural } from "../format.ts";
 import { Link, navigate, paths, useLocation } from "../router.ts";
+import { isInternalAgentWorktree } from "../worktrees.ts";
 
 export function hookLabel(p: Project): string {
   if (p.recording === false) return "Not recording · you stopped it";
@@ -78,6 +79,7 @@ export function ProjectsPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [rowError, setRowError] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<string | null>(null);
+  const [showInternal, setShowInternal] = useState(false);
   useNow();
   useLiveEvents(refresh);
   // The sidebar's + opens /projects?connect (#39): the form is open and focused, also after reload.
@@ -198,143 +200,168 @@ export function ProjectsPage() {
         </EmptyState>
       )}
       {projects && projects.length > 0 && (
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users must be able to scroll this overflow region.
-        <section className="table-scroll" aria-label="Connected projects" tabIndex={0}>
-          <table className="table projects">
-            <caption className="sr-only">Connected projects</caption>
-            <thead>
-              <tr>
-                <th scope="col">Project</th>
-                <th scope="col">Hooks</th>
-                <th scope="col" className="num">
-                  Sessions
-                </th>
-                <th scope="col">Last activity</th>
-                <th scope="col">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map((p) => (
-                <tr key={p.id}>
-                  <td className="cell-main">
-                    <Link to={paths.board(p.id)} className="strong" title={p.name}>
-                      {p.name}
-                    </Link>
-                    {p.github && (
-                      <a
-                        className="gh-repo"
-                        href={`https://github.com/${p.github}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Open on GitHub"
-                      >
-                        {p.github}
-                      </a>
-                    )}
-                    <code className="path" title={p.root}>
-                      {p.root}
-                    </code>
-                  </td>
-                  <td className="hooks">
-                    <HookBadge project={p} />
-                    <AgentHooks project={p} />
-                    {rowError[p.id] && (
-                      <p className="form-error" role="alert">
-                        {rowError[p.id]}
-                      </p>
-                    )}
-                  </td>
-                  <td className="num">{p.sessions}</td>
-                  <td className="nowrap">{p.lastActivity ? ago(p.lastActivity) : "never"}</td>
-                  <td className="actions">
-                    <Link to={paths.board(p.id)} className="btn">
-                      Open
-                    </Link>
-                    <button
-                      type="button"
-                      className="btn"
-                      disabled={busy === p.id}
-                      title={
-                        p.recording === false
-                          ? "Save new sessions in this repository again"
-                          : "New sessions here are not saved. Hooks and recorded sessions stay."
-                      }
-                      onClick={() => toggleRecording(p)}
-                    >
-                      {p.recording === false ? "Record again" : "Stop recording"}
-                    </button>
-                    <details className="row-more">
-                      <summary className="btn" aria-label={`More actions for ${p.name}`}>
-                        More
-                      </summary>
-                      <div className="row-more-menu">
-                        {p.agents.length < HOOK_AGENTS.length && (
-                          <div className="row-more-item">
-                            <select
-                              className="input add-agent"
-                              aria-label={`Record another agent's sessions in ${p.name}`}
-                              disabled={busy === p.id}
-                              value=""
-                              onChange={(e) => addAgent(p, e.target.value as AgentKind)}
-                            >
-                              <option value="">Add agent…</option>
-                              {HOOK_AGENTS.filter((a) => !p.agents.some((x) => x.agent === a)).map(
-                                (a) => (
-                                  <option key={a} value={a}>
-                                    {AGENT_NAMES[a]}
-                                  </option>
-                                ),
-                              )}
-                            </select>
-                            <p>Installs that agent's hooks in this repository.</p>
-                          </div>
-                        )}
-                        <div className="row-more-item">
-                          <button
-                            type="button"
-                            className="btn"
-                            disabled={!p.agents.some((a) => !a.everywhere) || busy === p.id}
-                            onClick={(e) => {
-                              e.currentTarget.closest("details")?.removeAttribute("open");
-                              disconnect(p);
-                            }}
-                          >
-                            Disconnect
-                          </button>
-                          <p>
-                            {p.agents.some((a) => !a.everywhere)
-                              ? "Removes Quoli's hooks from this repository's files. Recorded sessions stay."
-                              : p.agents.length
-                                ? "Recorded through the setup for every repository; remove that at the top of this page."
-                                : "No hooks are installed in this repository."}
-                          </p>
-                        </div>
-                        <div className="row-more-item">
-                          <button
-                            type="button"
-                            className="btn danger"
-                            onClick={(e) => {
-                              e.currentTarget.closest("details")?.removeAttribute("open");
-                              setDeleting(p);
-                            }}
-                          >
-                            Delete data…
-                          </button>
-                          <p>
-                            Permanently erases this project's recorded sessions and removes its
-                            hooks. Your repository files are not touched. Asks first.
-                          </p>
-                        </div>
-                      </div>
-                    </details>
-                  </td>
+        <>
+          {(() => {
+            const hiddenInternal = projects.filter(isInternalAgentWorktree).length;
+            return (
+              hiddenInternal > 0 && (
+                <div className="table-note">
+                  <span className="faint">
+                    {hiddenInternal} internal agent{" "}
+                    {hiddenInternal === 1 ? "worktree is" : "worktrees are"} hidden.
+                  </span>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => setShowInternal((v) => !v)}
+                    aria-pressed={showInternal}
+                  >
+                    {showInternal ? "Hide internal worktrees" : "Show internal worktrees"}
+                  </button>
+                </div>
+              )
+            );
+          })()}
+          {/* biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users must be able to scroll this overflow region. */}
+          <section className="table-scroll" aria-label="Connected projects" tabIndex={0}>
+            <table className="table projects">
+              <caption className="sr-only">Connected projects</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Project</th>
+                  <th scope="col">Hooks</th>
+                  <th scope="col" className="num">
+                    Sessions
+                  </th>
+                  <th scope="col">Last activity</th>
+                  <th scope="col">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+              </thead>
+              <tbody>
+                {projects
+                  .filter((p) => showInternal || !isInternalAgentWorktree(p))
+                  .map((p) => (
+                    <tr key={p.id}>
+                      <td className="cell-main">
+                        <Link to={paths.board(p.id)} className="strong" title={p.name}>
+                          {p.name}
+                        </Link>
+                        {p.github && (
+                          <a
+                            className="gh-repo"
+                            href={`https://github.com/${p.github}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Open on GitHub"
+                          >
+                            {p.github}
+                          </a>
+                        )}
+                        <code className="path" title={p.root}>
+                          {p.root}
+                        </code>
+                      </td>
+                      <td className="hooks">
+                        <HookBadge project={p} />
+                        <AgentHooks project={p} />
+                        {rowError[p.id] && (
+                          <p className="form-error" role="alert">
+                            {rowError[p.id]}
+                          </p>
+                        )}
+                      </td>
+                      <td className="num">{p.sessions}</td>
+                      <td className="nowrap">{p.lastActivity ? ago(p.lastActivity) : "never"}</td>
+                      <td className="actions">
+                        <Link to={paths.board(p.id)} className="btn">
+                          Open
+                        </Link>
+                        <button
+                          type="button"
+                          className="btn"
+                          disabled={busy === p.id}
+                          title={
+                            p.recording === false
+                              ? "Save new sessions in this repository again"
+                              : "New sessions here are not saved. Hooks and recorded sessions stay."
+                          }
+                          onClick={() => toggleRecording(p)}
+                        >
+                          {p.recording === false ? "Record again" : "Stop recording"}
+                        </button>
+                        <details className="row-more">
+                          <summary className="btn" aria-label={`More actions for ${p.name}`}>
+                            More
+                          </summary>
+                          <div className="row-more-menu">
+                            {p.agents.length < HOOK_AGENTS.length && (
+                              <div className="row-more-item">
+                                <select
+                                  className="input add-agent"
+                                  aria-label={`Record another agent's sessions in ${p.name}`}
+                                  disabled={busy === p.id}
+                                  value=""
+                                  onChange={(e) => addAgent(p, e.target.value as AgentKind)}
+                                >
+                                  <option value="">Add agent…</option>
+                                  {HOOK_AGENTS.filter(
+                                    (a) => !p.agents.some((x) => x.agent === a),
+                                  ).map((a) => (
+                                    <option key={a} value={a}>
+                                      {AGENT_NAMES[a]}
+                                    </option>
+                                  ))}
+                                </select>
+                                <p>Installs that agent's hooks in this repository.</p>
+                              </div>
+                            )}
+                            <div className="row-more-item">
+                              <button
+                                type="button"
+                                className="btn"
+                                disabled={!p.agents.some((a) => !a.everywhere) || busy === p.id}
+                                onClick={(e) => {
+                                  e.currentTarget.closest("details")?.removeAttribute("open");
+                                  disconnect(p);
+                                }}
+                              >
+                                Disconnect
+                              </button>
+                              <p>
+                                {p.agents.some((a) => !a.everywhere)
+                                  ? "Removes Quoli's hooks from this repository's files. Recorded sessions stay."
+                                  : p.agents.length
+                                    ? "Recorded through the setup for every repository; remove that at the top of this page."
+                                    : "No hooks are installed in this repository."}
+                              </p>
+                            </div>
+                            <div className="row-more-item">
+                              <button
+                                type="button"
+                                className="btn danger"
+                                onClick={(e) => {
+                                  e.currentTarget.closest("details")?.removeAttribute("open");
+                                  setDeleting(p);
+                                }}
+                              >
+                                Delete data…
+                              </button>
+                              <p>
+                                Permanently erases this project's recorded sessions and removes its
+                                hooks. Your repository files are not touched. Asks first.
+                              </p>
+                            </div>
+                          </div>
+                        </details>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </section>
+        </>
       )}
 
       {deleting && (
