@@ -197,7 +197,7 @@ export function InfraLens(ctx: LensContext) {
               infra
                 ? split?.services.length
                   ? null
-                  : "No running services found in this repository's files. Add one by hand from the side panel."
+                  : "No services detected from repository files. Add one from the side panel, or connect config such as compose, Dockerfile, Vercel, Fly, or Railway."
                 : "Reading infrastructure files…"
             }
             legend={

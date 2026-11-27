@@ -227,7 +227,7 @@ export function AgentsLens(ctx: LensContext) {
           focus={total > GRAPH_FIT_ALL ? recent : undefined}
           onNodeClick={(n) => n.type === "tool" && select({ kind: "tool", id: n.id })}
           onPaneClick={() => select(null)}
-          empty="Pick a session on the left to see what the agent did."
+          empty="Select a session to see recorded prompts, tool calls, and subagents in time order."
           legend={
             <>
               {(["read", "edit", "run", "search", "agent", "web"] as const).map((c) => (
