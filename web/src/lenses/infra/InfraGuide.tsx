@@ -28,7 +28,9 @@ export function InfraGuide({ infra }: { infra: InfraMap }) {
         <h3>{n === 0 ? "No running services found" : `Detected (${n})`}</h3>
         {n === 0 ? (
           <p>
-            No service definitions were found in this repository's files, so the board is empty.
+            No services detected in repository files yet. Quoli reads config like compose,
+            Dockerfiles, Vercel, Fly, Railway, Render, Terraform, and GitHub Actions. You can also
+            add a service by hand.
           </p>
         ) : (
           <ul>
